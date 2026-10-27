@@ -419,12 +419,11 @@
         {
           "id": "cu-2",
           "type": "typed",
-          "prompt": "Complete: “There aren't ___ chairs for everyone.”",
+          "prompt": "Complete: “How ___ information do we need?”",
           "accepted": [
-            "enough",
-            "many"
+            "much"
           ],
-          "explanation": "Enough chairs berarti jumlah kursi memadai. Many chairs juga dapat benar pada konteks berbeda, tetapi kalimat dengan “aren't many chairs” bermakna jumlahnya tidak banyak. Dalam konteks semua orang perlu kursi, jawaban yang paling tepat untuk latihan ini adalah enough jika kalimatnya positif; karena bentuk soal negatif, jawaban dinilai memakai konteks dan perlu diperhatikan."
+          "explanation": "Information adalah uncountable noun, sehingga pertanyaan jumlahnya memakai how much information."
         },
         {
           "id": "cu-3",
