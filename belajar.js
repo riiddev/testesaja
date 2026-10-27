@@ -488,11 +488,11 @@
       const viewBtn=e.target.closest("[data-view-target]");
       if(viewBtn){setView(viewBtn.dataset.viewTarget);return;}
       const wordBtn=e.target.closest("[data-select-word]");
-      if(wordBtn){selectedWord=wordBtn.dataset.selectWord;renderVocabulary();return;}
+      if(wordBtn){selectedWord=wordBtn.dataset.selectWord;renderVocabulary(false);return;}
       const studyBtn=e.target.closest("[data-start-word],[data-study-word]");
       if(studyBtn){startStudy(studyBtn.dataset.startWord||studyBtn.dataset.studyWord,"learn");return;}
       const fav=e.target.closest("[data-favorite-word]");
-      if(fav){const id=fav.dataset.favoriteWord;state.favorites=state.favorites.includes(id)?state.favorites.filter(x=>x!==id):state.favorites.concat(id);await save();renderVocabulary();toast(state.favorites.includes(id)?"Kata disimpan ke favorit.":"Kata dihapus dari favorit.");return;}
+      if(fav){const id=fav.dataset.favoriteWord;state.favorites=state.favorites.includes(id)?state.favorites.filter(x=>x!==id):state.favorites.concat(id);await save();renderVocabulary(false);toast(state.favorites.includes(id)?"Kata disimpan ke favorit.":"Kata dihapus dari favorit.");return;}
       const topic=e.target.closest("[data-topic-id]");
       if(topic){activeTopic=topic.dataset.topicId;renderGrammar();return;}
       const openTopic=e.target.closest("[data-open-topic]");
