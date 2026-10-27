@@ -306,9 +306,11 @@
   "qualityAudit": {
     "editorialEntriesChecked": 261,
     "requiredFieldsAndContextAnswerKeysPassed": true,
+    "issueCount": 0,
     "duplicateContextOptions": 0,
     "missingEnglishExamplesOrTranslations": 0,
+    "targetOccurrencesChecked": true,
     "editorialTranslationsVerifiedByHuman": false,
-    "note": "Automated data-integrity checks passed; assistant-authored translations and examples still need independent human review."
+    "note": "Automated structure, target-example, and answer-key checks passed; assistant-authored translations and examples still require independent human review."
   }
 }
