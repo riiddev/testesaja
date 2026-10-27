@@ -413,3 +413,14 @@ p{color:var(--body)}
 .quiz-end h3{font-family:"Newsreader",Georgia,serif;font-size:1.65rem;font-weight:400}
 .quiz-end p:not(.eyebrow){max-width:530px;font-size:.73rem;line-height:1.7}
 @media(max-width:450px){.evidence-lines,.study-evidence-summary{grid-template-columns:1fr}.confidence-field{align-items:flex-start;flex-direction:column}.confidence-field select{max-width:none;width:100%}}
+
+
+/* Full source-corpus UX: visible content status, incremental loading, and metadata notes */
+.load-more-button{width:100%;margin-top:12px;padding:11px 13px;border:1px solid var(--line);background:transparent;color:var(--body);font-size:.7rem;cursor:pointer}
+.load-more-button:hover{background:var(--paper-deep);color:var(--ink)}
+.load-more-button[hidden]{display:none!important}
+.status-incomplete{color:#a66f55}
+.content-status-note{margin:14px 0 0;padding:10px 11px;border-left:2px solid #b99a65;background:color-mix(in srgb,var(--yellow) 30%,transparent);color:var(--body);font-size:.66rem;line-height:1.7}
+.definition-note{margin:12px 0 15px;padding:11px 12px;background:var(--paper-deep);color:var(--body);font-size:.7rem;line-height:1.75}
+.study-unavailable{padding:10px 0;color:var(--muted);font-size:.7rem;line-height:1.7}
+.vocab-row.is-unavailable .word-row-status{color:#a66f55}
