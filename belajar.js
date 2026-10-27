@@ -5,11 +5,11 @@
   const root = document.documentElement;
   root.classList.add("js-enabled");
   const DB = "sinauu-local-v1", STORE = "state", KEY = "main", FALLBACK = "sinauu-learning-state-v1";
-  const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
-  const LABELS = { A1:"Fondasi", A2:"Sehari-hari", B1:"Intermediate", B2:"Upper-intermediate", C1:"Advanced" };
+  const LEVELS = ["A1", "A2", "B1", "B2", "C1", "UNCLASSIFIED"];
+  const LABELS = { A1:"Fondasi", A2:"Sehari-hari", B1:"Intermediate", B2:"Upper-intermediate", C1:"Advanced", UNCLASSIFIED:"Belum diklasifikasikan" };
   const INTERVALS = [1, 3, 8, 16, 30];
   let words = [], topics = [], state, db = null, storageMode = "loading";
-  let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null;
+  let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100;
   const grammarUI = {};
 
   function freshState() {
@@ -105,16 +105,42 @@
       catch (_) { storageMode = "unavailable"; labelStorage(); toast("Browser tidak dapat menyimpan progres. Coba ekspor backup."); return false; }
     }
   }
+  async function loadGzipBase64(path) {
+    const response=await fetch(path,{cache:"no-cache"});
+    if(!response.ok)throw new Error("Korpus Oxford tidak bisa dimuat ("+path+").");
+    if(!("DecompressionStream" in window))throw new Error("Browser ini belum mendukung pembacaan korpus terkompresi. Coba browser yang lebih baru.");
+    const encoded=(await response.text()).trim(),binary=atob(encoded),bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    return JSON.parse(await new Response(stream).text());
+  }
+  function canStudyWord(w){return !!(w&&w.studyReady&&w.meaning&&w.example);}
   async function loadDatasets() {
-    const results = await Promise.all([fetch("/data/vocabulary.json",{cache:"no-cache"}), fetch("/data/grammar.json",{cache:"no-cache"})]);
-    if (!results[0].ok || !results[1].ok) throw new Error("Dataset tidak bisa dimuat. Periksa folder data/ pada deployment.");
-    const vd = await results[0].json(), gd = await results[1].json();
-    if (!Array.isArray(vd.entries) || !Array.isArray(gd.topics)) throw new Error("Bentuk dataset tidak sesuai skema.");
-    words = vd.entries; topics = gd.topics;
-    const ids = new Set(), lemmas = new Set();
-    for (const w of words) {
-      if (!w.id || !w.word || !w.meaning || !w.example || !w.translation || ids.has(w.id) || lemmas.has(w.word.toLowerCase())) throw new Error("Audit dataset gagal: ada entri wajib kosong atau duplikat.");
-      ids.add(w.id); lemmas.add(w.word.toLowerCase());
+    const paths=["A1","A2","B1","B2","UNCLASSIFIED"].map(level=>"/data/oxford3000/"+level+".json.gz.b64");
+    const requests=await Promise.all([
+      fetch("/data/vocabulary.json",{cache:"no-cache"}),
+      fetch("/data/grammar.json",{cache:"no-cache"}),
+      ...paths.map(loadGzipBase64)
+    ]);
+    if(!requests[0].ok||!requests[1].ok)throw new Error("Dataset kosakata dasar atau grammar tidak bisa dimuat.");
+    const vd=await requests[0].json(),gd=await requests[1].json(),corpora=requests.slice(2);
+    if(!Array.isArray(vd.entries)||!Array.isArray(gd.topics)||corpora.some(c=>!Array.isArray(c.entries)))throw new Error("Bentuk dataset tidak sesuai skema.");
+    const merged=new Map();
+    for(const corpus of corpora)for(const entry of corpus.entries)merged.set(norm(entry.word),Object.assign({},entry,{isOxford3000:true}));
+    for(const entry of vd.entries){
+      const key=norm(entry.word),sourceEntry=merged.get(key),curatedReady=Boolean(entry.meaning&&entry.example&&entry.translation);
+      const mergedEntry=sourceEntry
+        ?Object.assign({},sourceEntry,entry,{level:sourceEntry.level,source:sourceEntry.source,isOxford3000:true,studyReady:curatedReady,contentStatus:curatedReady?"curated-complete":sourceEntry.contentStatus})
+        :Object.assign({},entry,{isOxford3000:false,studyReady:curatedReady,contentStatus:curatedReady?"curated-complete":"needs-content",source:{name:"SinauuEnglish curated starter",note:"Entry starter independen, bukan bagian dari hitungan Oxford 3000."}});
+      merged.set(key,mergedEntry);
+    }
+    words=Array.from(merged.values());topics=gd.topics;
+    const ids=new Set(),lemmas=new Set();
+    for(const w of words){
+      w.partOfSpeech ||= "unclassified";w.topics ||= [];w.forms ||= [];w.collocations ||= [];w.acceptedMeanings ||= [];
+      if(!w.acceptedMeanings.length&&w.meaning)w.acceptedMeanings=w.meaning.split(/[;；]/).map(x=>x.trim()).filter(Boolean);
+      if(!w.id||!w.word||ids.has(w.id)||lemmas.has(norm(w.word)))throw new Error("Audit dataset gagal: ID atau headword duplikat.");
+      ids.add(w.id);lemmas.add(norm(w.word));
     }
   }
   function ensureProgress(id) {
@@ -140,7 +166,7 @@
     if (masteryGate(p)) return "mastered";
     return "learning";
   }
-  function dueWords() { return words.filter(w => ["due","weak"].includes(statusOf(w)) && state.wordProgress[w.id].nextReviewAt && new Date(state.wordProgress[w.id].nextReviewAt).getTime() <= Date.now()); }
+  function dueWords() { return words.filter(w => canStudyWord(w) && ["due","weak"].includes(statusOf(w)) && state.wordProgress[w.id].nextReviewAt && new Date(state.wordProgress[w.id].nextReviewAt).getTime() <= Date.now()); }
   function pushHistory(item) {
     state.history.unshift(Object.assign({id:uid(),at:new Date().toISOString(),date:dayKey()},item));
     if (state.history.length > 1000) state.history.length = 1000;
@@ -198,46 +224,56 @@
     $("#review-task-note").textContent=due?due+" kata menunggu review.":"Belum ada kata yang jatuh tempo.";
     $("#nav-word-count").textContent=words.length; $("#nav-grammar-count").textContent=topics.length; $("#nav-review-count").textContent=due;
     $("#overview-levels").innerHTML=LEVELS.map(l=>levelRow(l,stats[l],false)).join("");
-    $("#dataset-disclaimer").textContent="Korpus awal: "+words.length+" entri kurasi. Sumber asli belum diimpor dan cakupan level belum lengkap.";
+    $("#dataset-disclaimer").textContent=words.filter(w=>w.isOxford3000).length.toLocaleString("id-ID")+" headword Oxford 3000 + "+words.filter(w=>!w.isOxford3000).length+" kata starter tambahan. Entri tanpa arti dan contoh tidak dihitung sebagai materi siap-latih.";
     const suggestions=[];
     dueWords().slice(0,2).forEach(w=>suggestions.push({type:"REVIEW",title:w.word,description:w.meaning,wordId:w.id}));
     topics.filter(t=>!(state.grammarProgress[t.id]&&state.grammarProgress[t.id].attempts)).slice(0,2).forEach(t=>suggestions.push({type:"GRAMMAR",title:t.title,description:t.summary,topicId:t.id}));
-    words.filter(w=>statusOf(w)==="new").slice(0,3).forEach(w=>suggestions.push({type:"WORD",title:w.word,description:w.meaning,wordId:w.id}));
+    words.filter(w=>canStudyWord(w)&&statusOf(w)==="new").slice(0,3).forEach(w=>suggestions.push({type:"WORD",title:w.word,description:w.meaning,wordId:w.id}));
     $("#resume-list").innerHTML=suggestions.slice(0,4).map(x=>'<div class="resume-item"><span class="resume-type">'+esc(x.type)+'</span><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.description)+'</p></div><button class="resume-action" type="button" '+(x.wordId?'data-study-word="'+esc(x.wordId)+'"':'data-open-topic="'+esc(x.topicId)+'"')+'>Mulai ↗</button></div>').join("") || '<div class="empty-state">Materi yang tersedia sudah pernah dicoba. Pilih topik lain.</div>';
   }
-  function renderVocabulary() {
-    const topicSelect=$("#topic-filter"), old=topicSelect.value;
+  function renderVocabulary(resetList=true) {
+    if(resetList)listLimit=100;
+    const topicSelect=$("#topic-filter"),old=topicSelect.value;
     const topicOptions=Array.from(new Set(words.flatMap(w=>w.topics||[]))).sort();
     topicSelect.innerHTML='<option value="all">Semua topik</option>'+topicOptions.map(t=>'<option value="'+esc(t)+'">'+esc(t.replace(/-/g," "))+'</option>').join("");
     if(topicOptions.includes(old))topicSelect.value=old;
-    $("#source-note").innerHTML='<span aria-hidden="true">i</span><span><strong>'+words.length+' entri kurasi</strong> tersedia. Daftar kosakata sumber asli belum berhasil diimpor; cakupan sumber belum diverifikasi.</span>';
-    const q=norm($("#vocab-search").value), level=$("#level-filter").value, topic=topicSelect.value, fav=$("#favorites-only").checked;
+    const oxfordCount=words.filter(w=>w.isOxford3000).length,readyCount=words.filter(canStudyWord).length,extraCount=words.length-oxfordCount;
+    $("#source-note").innerHTML='<span aria-hidden="true">i</span><span><strong>'+oxfordCount.toLocaleString("id-ID")+' headword Oxford 3000</strong> tersedia, plus '+extraCount+' kata starter. '+readyCount.toLocaleString("id-ID")+' kata sudah punya arti dan contoh untuk dilatih; entri lain tetap bisa dicari, tetapi belum membuka sesi belajar.</span>';
+    const q=norm($("#vocab-search").value),level=$("#level-filter").value,topic=topicSelect.value,fav=$("#favorites-only").checked;
     const filtered=words.filter(w=>{
-      const searchable=norm([w.word,w.meaning,w.example,w.translation,w.partOfSpeech,...(w.topics||[])].join(" "));
+      const searchable=norm([w.word,w.meaning,w.example,w.translation,w.definitionEn,w.partOfSpeech,...(w.acceptedMeanings||[]),...(w.topics||[])].join(" "));
       return (!q||searchable.includes(q))&&(level==="all"||w.level===level)&&(topic==="all"||(w.topics||[]).includes(topic))&&(!fav||state.favorites.includes(w.id));
-    }).sort((a,b)=>LEVELS.indexOf(a.level)-LEVELS.indexOf(b.level)||a.word.localeCompare(b.word));
-    $("#vocab-result-count").textContent=filtered.length+" dari "+words.length+" kata";
+    }).sort((a,b)=>(LEVELS.indexOf(a.level)<0?99:LEVELS.indexOf(a.level))-(LEVELS.indexOf(b.level)<0?99:LEVELS.indexOf(b.level))||a.word.localeCompare(b.word));
+    $("#vocab-result-count").textContent=filtered.length.toLocaleString("id-ID")+" dari "+words.length.toLocaleString("id-ID")+" kata";
     $("#vocab-empty").hidden=filtered.length!==0;
-    $("#vocab-list").innerHTML=filtered.map(w=>{
-      const si=statusInfo[statusOf(w)];
-      return '<button class="vocab-row '+(selectedWord===w.id?"is-selected":"")+'" data-select-word="'+esc(w.id)+'" type="button"><span class="word-level">'+esc(w.level)+'</span><span class="word-row-main"><strong>'+esc(w.word)+(state.favorites.includes(w.id)?" ★":"")+'</strong><small>'+esc(w.meaning)+'</small></span><span class="word-row-status '+si.cls+'">'+si.label+'</span></button>';
+    const shown=filtered.slice(0,listLimit);
+    $("#vocab-list").innerHTML=shown.map(w=>{
+      const ready=canStudyWord(w),si=ready?statusInfo[statusOf(w)]:{label:"BELUM SIAP",cls:"status-incomplete"};
+      return '<button class="vocab-row '+(selectedWord===w.id?"is-selected":"")+'" data-select-word="'+esc(w.id)+'" type="button"><span class="word-level">'+esc(w.level||"—")+'</span><span class="word-row-main"><strong>'+esc(w.word)+(state.favorites.includes(w.id)?" ★":"")+'</strong><small>'+esc(w.meaning||(w.definitionEn?"Arti Indonesia belum tersedia":"Konten sedang dilengkapi"))+'</small></span><span class="word-row-status '+si.cls+'">'+si.label+'</span></button>';
     }).join("");
-    if(selectedWord && filtered.some(w=>w.id===selectedWord))renderWordDetail(selectedWord);
-    else if(filtered.length){selectedWord=filtered[0].id;renderWordDetail(selectedWord);$$(".vocab-row").forEach(b=>b.classList.toggle("is-selected",b.dataset.selectWord===selectedWord));}
+    const more=$("#vocab-load-more");more.hidden=shown.length>=filtered.length;
+    more.textContent="Tampilkan "+Math.min(100,filtered.length-shown.length)+" kata berikutnya ↓ · "+(filtered.length-shown.length).toLocaleString("id-ID")+" tersisa";
+    if(selectedWord&&shown.some(w=>w.id===selectedWord))renderWordDetail(selectedWord);
+    else if(shown.length){selectedWord=shown[0].id;renderWordDetail(selectedWord);$$(".vocab-row").forEach(b=>b.classList.toggle("is-selected",b.dataset.selectWord===selectedWord));}
     else $("#word-detail").innerHTML='<div class="detail-empty"><span class="detail-empty-mark">Aa</span><h2>Belum ada hasil</h2><p>Coba ubah kata pencarian atau filter.</p></div>';
   }
   function renderWordDetail(id) {
     const w=words.find(x=>x.id===id);if(!w)return;
-    const p=state.wordProgress[id], evidence=p?p.skillEvidence:{}, si=statusInfo[statusOf(w)];
-    $("#word-detail").innerHTML='<div class="detail-meta"><span>'+esc(w.level)+' / '+esc(w.partOfSpeech.toUpperCase())+'</span><span class="'+si.cls+'">'+si.label+'</span></div>'+
+    const p=state.wordProgress[id],evidence=p?p.skillEvidence:{},ready=canStudyWord(w),si=ready?statusInfo[statusOf(w)]:{label:"BELUM SIAP",cls:"status-incomplete"};
+    const exampleHtml=w.example?'<div class="detail-example"><p>'+esc(w.example)+'</p>'+(w.translation?'<p class="translation">'+esc(w.translation)+'</p>':'<p class="translation">Terjemahan contoh belum tersedia.</p>')+'</div>':'<p class="study-unavailable">Contoh penggunaan belum tersedia. Kata ini masih dapat dicari, tetapi belum bisa dilatih.</p>';
+    const noteHtml=!ready?'<div class="content-status-note">Entri ini termasuk daftar headword sumber, tetapi materi latihannya belum lengkap. Sesi belajar baru dibuka setelah arti dan contoh penggunaan dapat dipakai.</div>':(w.translationStatus==="machine-generated-unreviewed"||w.translation?'<div class="content-status-note">Terjemahan berasal dari data kamus atau terjemahan mesin dan belum ditinjau satu per satu. Cocokkan konteks sebelum mengandalkannya.</div>':"");
+    const variants=(w.contextVariants||[]).slice(0,3);
+    const variantHtml=variants.length?'<p class="detail-section-label">CONTOH TAMBAHAN</p><div class="detail-note">'+variants.map(v=>'<p>'+esc(v.sentence)+(v.translation?'<br><span>'+esc(v.translation)+'</span>':'')+'</p>').join("")+'</div>':"";
+    const defHtml=w.definitionEn?'<p class="detail-section-label">ENGLISH DEFINITION · REFERENCE</p><p class="definition-note">'+esc(w.definitionEn)+'</p>':"";
+    $("#word-detail").innerHTML='<div class="detail-meta"><span>'+esc(w.level||"Belum diklasifikasikan")+' / '+esc((w.partOfSpeech||"unclassified").toUpperCase())+'</span><span class="'+si.cls+'">'+si.label+'</span></div>'+
       '<div class="detail-word-row"><h2>'+esc(w.word)+'<span>.</span></h2><button class="audio-button" id="detail-speak" type="button" aria-label="Dengarkan '+esc(w.word)+'">♪</button></div>'+
-      '<p class="detail-pronunciation">'+esc(w.ipa||"IPA belum tersedia")+(w.forms&&w.forms.length?" · "+esc(w.forms.map(x=>x.form).join(" · ")):"")+'</p>'+
-      '<p class="detail-meaning">'+esc(w.meaning)+'</p><p class="detail-section-label">CONTOH PENGGUNAAN</p><div class="detail-example"><p>'+esc(w.example)+'</p><p class="translation">'+esc(w.translation)+'</p></div>'+
-      '<p class="detail-section-label">COLLOCATIONS</p><div class="collocation-list">'+(w.collocations||[]).map(x=>'<span>'+esc(x)+'</span>').join("")+'</div>'+
-      (w.commonMistake?'<p class="detail-section-label">CATATAN PENGGUNAAN</p><p class="detail-note">'+esc(w.commonMistake)+'</p>':"")+
+      '<p class="detail-pronunciation">'+esc(w.ipa||"IPA belum tersedia")+(w.forms&&w.forms.length?" · "+esc(w.forms.map(x=>x.form||x.label).join(" · ")):"")+'</p>'+
+      '<p class="detail-meaning">'+esc(w.meaning||"Arti Bahasa Indonesia belum tersedia.")+'</p>'+defHtml+'<p class="detail-section-label">CONTOH PENGGUNAAN</p>'+exampleHtml+variantHtml+
+      (w.collocations&&w.collocations.length?'<p class="detail-section-label">COLLOCATIONS</p><div class="collocation-list">'+w.collocations.map(x=>'<span>'+esc(x)+'</span>').join("")+'</div>':"")+
+      (w.commonMistake?'<p class="detail-section-label">CATATAN PENGGUNAAN</p><p class="detail-note">'+esc(w.commonMistake)+'</p>':"")+noteHtml+
       '<div class="evidence-mini"><p class="detail-section-label">BUKTI BELAJAR</p><div class="evidence-lines">'+
       '<span class="'+(evidence.recall?"done":"")+'">'+(evidence.recall?"✓":"○")+' Recall arti</span><span class="'+(evidence.context?"done":"")+'">'+(evidence.context?"✓":"○")+' Konteks</span><span class="'+(evidence.production?"done":"")+'">'+(evidence.production?"✓":"○")+' Penggunaan aktif</span><span class="'+((p&&p.reviewSuccesses>=3)?"done":"")+'">'+((p&&p.reviewSuccesses)||0)+'/3 review berjeda</span></div></div>'+
-      '<div class="detail-actions"><button class="primary-action" type="button" data-start-word="'+esc(w.id)+'">Latih kata ini ↗</button><button class="secondary-action" type="button" data-favorite-word="'+esc(w.id)+'">'+(state.favorites.includes(w.id)?"★ Tersimpan":"☆ Simpan kata")+'</button></div>'+
+      '<div class="detail-actions"><button class="primary-action" type="button" data-start-word="'+esc(w.id)+'" '+(ready?"":"disabled")+'>'+(ready?"Latih kata ini ↗":"Materi belum siap")+'</button><button class="secondary-action" type="button" data-favorite-word="'+esc(w.id)+'">'+(state.favorites.includes(w.id)?"★ Tersimpan":"☆ Simpan kata")+'</button></div>'+
       '<p class="detail-footnote">Mastery membutuhkan bukti recall, konteks, produksi, dan tiga review terpisah yang mencakup minimal 12 hari.</p>';
     $("#detail-speak").addEventListener("click",()=>speak(w.word));
   }
@@ -248,18 +284,25 @@
   function wordForms(w){return [w.word,...(w.forms||[]).map(x=>x.form)].map(norm).filter(Boolean);}
   function startStudy(id,mode) {
     const w=words.find(x=>x.id===id);if(!w)return;
+    if(!canStudyWord(w)){toast("Materi kata ini belum lengkap; sesi latihan belum dibuka.");return;}
     ensureProgress(id);selectedWord=id;
     activeStudy={wordId:id,mode:mode||"learn",stage:0,result:null,stepResults:[],sessionId:uid(),currentContext:null};
     $("#study-session-tag").textContent=activeStudy.mode==="review"?"SCHEDULED SPACED REVIEW":"VOCABULARY PRACTICE";
     setView("study");renderStudy();
   }
   function contextQuestion(w,p) {
-    const original=w.context, tried=new Set(p.contextQuestionIds||[]);
-    if(!tried.has(original.id))return {id:original.id,prompt:original.prompt,options:original.options,answer:original.answer,explanation:original.explanation};
-    const other=words.filter(x=>x.id!==w.id).slice(0,2).map(x=>x.meaning);
-    const options=[w.meaning].concat(other);const offset=(w.id.split("").reduce((n,c)=>n+c.charCodeAt(0),0))%options.length;
-    const ordered=options.slice(offset).concat(options.slice(0,offset));
-    return {id:w.id+"-example-context",prompt:'Dalam kalimat “'+w.example+'”, arti kata “'+w.word+'” paling dekat dengan…',options:ordered,answer:ordered.findIndex(x=>norm(x)===norm(w.meaning)),explanation:"Perhatikan makna kata dalam kalimat. "+(w.commonMistake||"")}
+    const tried=new Set(p.contextQuestionIds||[]),original=w.context;
+    if(original&&original.id&&original.prompt&&Array.isArray(original.options)&&Number.isInteger(original.answer)&&!tried.has(original.id))
+      return {id:original.id,prompt:original.prompt,options:original.options,answer:original.answer,explanation:original.explanation||"Perhatikan makna kata di dalam konteks."};
+    const next=(w.contextVariants||[]).find(v=>v.id&&v.sentence&&!tried.has(v.id));
+    const sentence=(next&&next.sentence)||w.example||"",id=(next&&next.id)||w.id+"-example-context";
+    const correct=(w.acceptedMeanings||[]).find(Boolean)||(w.meaning||"").split(/[;；]/)[0].trim();
+    const candidates=words.filter(x=>x.id!==w.id&&x.meaning).map(x=>(x.acceptedMeanings||[]).find(Boolean)||(x.meaning||"").split(/[;；]/)[0].trim()).filter(x=>x&&norm(x)!==norm(correct));
+    const unique=Array.from(new Map(candidates.map(x=>[norm(x),x])).values());
+    const seed=w.id.split("").reduce((n,c)=>n+c.charCodeAt(0),0)+tried.size;
+    const distractors=[0,1].map(offset=>unique[(seed+offset)%Math.max(1,unique.length)]).filter(Boolean);
+    const options=[correct,...distractors],shift=seed%Math.max(1,options.length),ordered=options.slice(shift).concat(options.slice(0,shift));
+    return {id,prompt:'Dalam kalimat “'+sentence+'”, arti kata “'+w.word+'” paling dekat dengan…',options:ordered,answer:ordered.findIndex(x=>norm(x)===norm(correct)),explanation:"Gunakan arti kata dan konteks kalimat untuk memilih jawaban."+(w.commonMistake?" "+w.commonMistake:"")};
   }
   function confidenceMarkup(){return '<label class="confidence-field"><span>SEBERAPA YAKIN?</span><select id="study-confidence"><option value="high">Yakin</option><option value="medium" selected>Agak yakin</option><option value="guess">Menebak</option></select></label>';}
   function renderStudy() {
@@ -456,7 +499,8 @@
       const review=e.target.closest("[data-review-word]");
       if(review){startStudy(review.dataset.reviewWord,"review");return;}
     });
-    $("#vocab-search").addEventListener("input",renderVocabulary);
+    $("#vocab-search").addEventListener("input",()=>renderVocabulary());
+    $("#vocab-load-more").addEventListener("click",()=>{listLimit+=100;renderVocabulary(false);});
     $("#level-filter").addEventListener("change",renderVocabulary);
     $("#topic-filter").addEventListener("change",renderVocabulary);
     $("#favorites-only").addEventListener("change",renderVocabulary);
