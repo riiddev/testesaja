@@ -27,14 +27,14 @@ The supplied simplified list contains **2,971 unique Oxford 3000 headwords**. It
 
 | Level | Headwords |
 |---|---:|
-| A1 | 861 |
-| A2 | 790 |
+| A1 | 892 |
+| A2 | 792 |
 | B1 | 689 |
 | B2 | 597 |
-| Not classified | 34 |
+| Not classified | 1 |
 | **Total** | **2,971** |
 
-The simple headword list does not preserve the per-sense part-of-speech and CEFR information present in Oxford's PDF. Thirty-four words are therefore left unclassified instead of being assigned a guessed level. The workspace also retains three independent SinauuEnglish starter words that are not in the supplied Oxford list, so it contains 2,974 unique display entries in total.
+The simple headword list does not preserve the per-sense part-of-speech and CEFR information present in Oxford's PDF. The CEFR/POS labels were matched against a third-party text transcription because the simplified Markdown omits them. One headword, “o”, remains unclassified instead of being assigned a guessed level. The workspace also retains three independent SinauuEnglish starter words that are not in the supplied Oxford list, so it contains 2,974 unique display entries in total.
 
 English–Indonesian meanings, definitions, IPA where available, and example material are enriched from the [KOReader English–Indonesian dictionary](https://github.com/DanielGregorini/koreader-dicts), a CC-BY-SA-4.0 compilation that includes WordNet Bahasa, Princeton WordNet 3.0, and English Wiktionary. See [data/oxford3000/ATTRIBUTION.md](data/oxford3000/ATTRIBUTION.md) for license/source details.
 
