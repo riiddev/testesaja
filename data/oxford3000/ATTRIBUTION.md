@@ -34,3 +34,10 @@ The dictionary compilation lists these source datasets:
 ## Translation and content status
 
 Indonesian translations present in dictionary-derived example records may be machine-generated. They have not all been individually human-reviewed. A record being marked study-ready only means the current app has a meaning and a usable example for its three-step practice flow; it does not mean the full entry has been pedagogically or linguistically reviewed. Dataset counts and real learning mastery are tracked separately.
+
+
+## SinauuEnglish editorial overrides (2026-10-27)
+
+A first quality pass rewrote 93 high-frequency A1/A2 headwords (86 additional overlay records plus updates to seven existing curated entries) with simpler Indonesian glosses, English explanations, examples, and Indonesian example translations. These overrides are assistant-authored editorial drafts. They are not represented as independently human-verified or Oxford-authored content. Their metadata uses `assistant-curated-draft` / `editorial-draft-needs-human-review` to preserve that distinction in the app and audit.
+
+The remaining entries continue to rely on the dictionary-enrichment pipeline described above, with gaps left blank where suitable information was not available. The compact runtime bundle is `data/oxford3000/editorial-overrides.json.gz.b64`; the original 34-entry starter file stays separate at `data/vocabulary.json`.
