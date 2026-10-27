@@ -228,7 +228,7 @@
   }
   function renderWordDetail(id) {
     const w=words.find(x=>x.id===id);if(!w)return;
-    const p=state.wordProgress[id], evidence=p?p.skillEvidence:{}, si=statusInfo[statusOf(w)};
+    const p=state.wordProgress[id], evidence=p?p.skillEvidence:{}, si=statusInfo[statusOf(w)];
     $("#word-detail").innerHTML='<div class="detail-meta"><span>'+esc(w.level)+' / '+esc(w.partOfSpeech.toUpperCase())+'</span><span class="'+si.cls+'">'+si.label+'</span></div>'+
       '<div class="detail-word-row"><h2>'+esc(w.word)+'<span>.</span></h2><button class="audio-button" id="detail-speak" type="button" aria-label="Dengarkan '+esc(w.word)+'">♪</button></div>'+
       '<p class="detail-pronunciation">'+esc(w.ipa||"IPA belum tersedia")+(w.forms&&w.forms.length?" · "+esc(w.forms.map(x=>x.form).join(" · ")):"")+'</p>'+
