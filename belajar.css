@@ -424,3 +424,6 @@ p{color:var(--body)}
 .definition-note{margin:12px 0 15px;padding:11px 12px;background:var(--paper-deep);color:var(--body);font-size:.7rem;line-height:1.75}
 .study-unavailable{padding:10px 0;color:var(--muted);font-size:.7rem;line-height:1.7}
 .vocab-row.is-unavailable .word-row-status{color:#a66f55}
+
+.primary-action:disabled,.secondary-action:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.45)}
+.primary-action:disabled:hover,.secondary-action:disabled:hover{transform:none}
