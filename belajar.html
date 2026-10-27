@@ -98,7 +98,7 @@
           <div class="source-note" id="source-note"></div>
           <div class="vocab-toolbar">
             <label class="search-field"><span aria-hidden="true">⌕</span><input id="vocab-search" type="search" placeholder="Cari kata atau arti…" autocomplete="off"><kbd>/</kbd></label>
-            <label class="select-field"><span>LEVEL</span><select id="level-filter"><option value="all">Semua level</option><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option></select></label>
+            <label class="select-field"><span>LEVEL</span><select id="level-filter"><option value="all">Semua level</option><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option value="UNCLASSIFIED">Belum diklasifikasikan</option></select></label>
             <label class="select-field"><span>TOPIK</span><select id="topic-filter"><option value="all">Semua topik</option></select></label>
             <label class="favorite-filter"><input id="favorites-only" type="checkbox"><span>Favorit saja</span></label>
           </div>
@@ -106,6 +106,7 @@
             <div class="vocab-list-panel">
               <div class="list-count-line"><span id="vocab-result-count">Memuat kosakata…</span><span>EN → ID</span></div>
               <div class="vocab-list" id="vocab-list"></div>
+              <button class="load-more-button" id="vocab-load-more" type="button" hidden>Tampilkan 100 kata berikutnya ↓</button>
               <p class="empty-state" id="vocab-empty" hidden>Tidak ada kata yang cocok dengan pencarian ini. Coba kata atau filter lain.</p>
             </div>
             <aside class="word-detail" id="word-detail">
