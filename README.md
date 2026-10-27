@@ -10,22 +10,39 @@ SinauuEnglish is a frontend-only English-learning workspace for Indonesian learn
 - Landing-page calls to action open the learning workspace.
 
 ### Learning workspace
-- Vocabulary search by word/meaning/example, CEFR filter, topic filter, and favorites.
-- Vocabulary details include Indonesian meaning, pronunciation when available, word forms, examples, collocations, and usage notes.
-- A vocabulary study flow records meaning recall, context recognition, typed sentence production/self-check, confidence, answer history, and study dates.
+- Vocabulary search by headword, Indonesian meaning, English example, definition, CEFR level, topic, and favorites.
+- The vocabulary index includes the supplied simplified American English Oxford 3000 headword list. Search results are rendered incrementally (100 words per batch) rather than mounting thousands of rows at once.
+- Entries are marked as practice-ready only when they include a usable meaning and example. Incomplete source entries remain searchable, with practice disabled rather than invented content.
+- Vocabulary details include Indonesian meaning, pronunciation when available, word forms, examples, collocations, additional contexts, and usage notes.
+- Vocabulary practice records typed meaning recall, context recognition, typed sentence production/self-check, confidence, answer history, and study dates.
 - Mastery is not awarded from exposure or a single correct answer. It requires recall, context, active-usage self-check, and three successful spaced reviews across separate dates spanning at least 12 days.
 - Topic-specific grammar lessons include Indonesian explanations, patterns, translated examples, common mistakes, checkpoints, and individual exercises.
-- Progress summaries are calculated from the real current dataset and saved study events.
+- Progress summaries are calculated from the loaded content and saved study events.
 - IndexedDB is used when available, with localStorage fallback. JSON backup export/import is included.
 - Browser-native speech synthesis is used only where supported; pronunciation quality is not automatically graded.
 
-## Actual content status
+## Vocabulary corpus and its limitations
 
-The starter corpus currently has **34 curated vocabulary entries** and **6 grammar topics with 18 topic-specific questions**. These counts come from the checked-in JSON datasets.
+The supplied simplified list contains **2,971 unique Oxford 3000 headwords**. Its available CEFR metadata is:
 
-The original Google Drive vocabulary source has **not yet been imported or audited**. Its contents could not be accessed by the available reader, so this build does not claim source coverage or full A1–C1 coverage. The current vocabulary set is seed content, not a replacement for the full source list.
+| Level | Headwords |
+|---|---:|
+| A1 | 861 |
+| A2 | 790 |
+| B1 | 689 |
+| B2 | 597 |
+| Not classified | 34 |
+| **Total** | **2,971** |
 
-The initial grammar curriculum covers a limited set of A1–B1 topics; the broader target curriculum remains incomplete. Topic/question counts are derived from the JSON data, not visual placeholders.
+The simple headword list does not preserve the per-sense part-of-speech and CEFR information present in Oxford's PDF. Thirty-four words are therefore left unclassified instead of being assigned a guessed level. The workspace also retains three independent SinauuEnglish starter words that are not in the supplied Oxford list, so it contains 2,974 unique display entries in total.
+
+English–Indonesian meanings, definitions, IPA where available, and example material are enriched from the [KOReader English–Indonesian dictionary](https://github.com/DanielGregorini/koreader-dicts), a CC-BY-SA-4.0 compilation that includes WordNet Bahasa, Princeton WordNet 3.0, and English Wiktionary. See [data/oxford3000/ATTRIBUTION.md](data/oxford3000/ATTRIBUTION.md) for license/source details.
+
+The imported Oxford corpus currently has **1,563 records with a usable meaning and example** under the dataset's basic readiness checks. Existing curated starter content takes precedence where the same headword exists. Some Indonesian translations are machine-generated and not human-reviewed; many entries still need better examples, translation review, or resolution of ambiguous senses. The app does not claim all 2,971 headwords are pedagogically complete or that every headword is ready to study. See [data/oxford3000/audit.json](data/oxford3000/audit.json) for the detailed data-quality summary.
+
+The Oxford source list is available at [Oxford Learner's Dictionaries — American Oxford 3000 PDF](https://www.oxfordlearnersdictionaries.com/external/pdf/wordlists/oxford-3000-5000/American_Oxford_3000.pdf). SinauuEnglish is an independent project and is not affiliated with or endorsed by Oxford University Press.
+
+The grammar curriculum currently contains **6 lessons and 18 topic-specific questions**. Broader grammar coverage and human review of the vocabulary corpus remain ongoing work.
 
 ## Technical constraints
 
@@ -36,18 +53,19 @@ The initial grammar curriculum covers a limited set of A1–B1 topics; the broad
 
 ## Files
 
-- index.html, styles.css, app.js — landing page.
-- belajar.html, belajar.css, belajar.js — local-first learning workspace.
-- data/vocabulary.json — curated starter vocabulary.
-- data/grammar.json — curated starter grammar curriculum and question bank.
+- `index.html`, `styles.css`, `app.js` — landing page.
+- `belajar.html`, `belajar.css`, `belajar.js` — local-first learning workspace.
+- `data/vocabulary.json` — curated starter vocabulary; its entries override the Oxford-derived entry for matching headwords.
+- `data/grammar.json` — starter grammar curriculum and question bank.
+- `data/oxford3000/*.json.gz.b64` — gzip-compressed, Base64-encoded corpus split by CEFR level for efficient static hosting.
+- `data/oxford3000/ATTRIBUTION.md`, `data/oxford3000/audit.json` — source attribution and content audit.
 
-## Roadmap
+## Next work
 
-1. Import and audit the complete original vocabulary source.
-2. Expand and review A1/A2 vocabulary, then substantially expand B1/B2 and selected C1 entries.
+1. Human-review high-frequency meanings, parts of speech, examples, and Indonesian translations, starting with A1/A2.
+2. Replace unreliable or fragmentary examples and improve context variants before expanding the mastery-ready pool.
 3. Expand grammar lessons and validated question banks topic by topic.
-4. Add additional context variants and refine mastery/review edge cases with automated tests.
-5. Build stories, everyday English, listening, speaking, writing, and placement-test modules.
-6. Run responsive, accessibility, persistence, backup/restore, and regression checks.
+4. Build stories, everyday English, listening, speaking, writing, and placement-test modules.
+5. Continue responsive, accessibility, persistence, backup/restore, and regression checks.
 
-**Data integrity rule:** only report counts and mastery metrics that can be derived from real validated content and saved learning records.
+**Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
