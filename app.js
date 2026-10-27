@@ -110,6 +110,7 @@
   const quizOptions = Array.from(document.querySelectorAll(".quiz-option"));
   const quizFeedback = document.getElementById("quiz-feedback");
   const quizReset = document.getElementById("quiz-reset");
+  const quizState = document.getElementById("quiz-state");
 
   function resetQuiz() {
     quizOptions.forEach((option) => {
@@ -122,6 +123,7 @@
       quizFeedback.textContent = "";
     }
     if (quizReset) quizReset.hidden = true;
+    if (quizState) quizState.textContent = "PILIH JAWABAN";
   }
 
   quizOptions.forEach((option) => {
@@ -141,6 +143,7 @@
           : "Belum tepat. Untuk subjek “she” dalam present simple, kata kerja perlu akhiran -s/-es. Jawaban yang benar: “She goes to school by bus.”";
       }
       if (quizReset) quizReset.hidden = false;
+      if (quizState) quizState.textContent = isCorrect ? "BENAR" : "PELAJARI LAGI";
     });
   });
   quizReset?.addEventListener("click", resetQuiz);
