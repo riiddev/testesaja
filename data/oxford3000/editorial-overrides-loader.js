@@ -6,7 +6,7 @@
     "/data/oxford3000/editorial-overrides-batch2-a.json.gz.b64",
     "/data/oxford3000/editorial-overrides-batch2-b.json.gz.b64",
     "/data/oxford3000/editorial-overrides-b1b2-a.json.gz",
-    "/data/oxford3000/editorial-overrides-b1b2-b.json.gz",
+    "/data/oxford3000/editorial-overrides-b1b2-b.json.gz.b64",
     "/data/oxford3000/editorial-overrides-b1b2-c.json.gz"
   ];
   const nativeFetch = window.fetch.bind(window);
