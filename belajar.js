@@ -322,7 +322,7 @@
     }else p.skillEvidence[skill]=correct;
     if(correct)p.consecutiveErrors=0;else{p.consecutiveErrors=(p.consecutiveErrors||0)+1;if(p.consecutiveErrors>=2||activeStudy.mode==="review")p.weak=true;}
     if(activeStudy.mode==="review"&&!correct)activeStudy.reviewFailed=true;
-    pushHistory({type:"vocabulary",title:w.word,detail=undefined});
+    pushHistory({type:"vocabulary",title:w.word,detail:""});
     const last=state.history[0];last.detail=({recall:"Recall arti",context:"Pengenalan konteks",production:"Penggunaan aktif"})[skill]+(correct?" · benar":" · perlu dilatih");last.correct=correct;last.wordId=w.id;last.skill=skill;last.mode=activeStudy.mode;
     await save();
   }
