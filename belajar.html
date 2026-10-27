@@ -15,6 +15,7 @@
   <script src="/motion.js" defer></script>
   <script src="/data/oxford3000/editorial-overrides-loader.js" defer></script>
   <script src="/belajar.js" defer></script>
+  <script src="/extra-learning.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#app-main">Lewati ke konten</a>
@@ -28,6 +29,8 @@
         <button class="side-link is-active" data-view-target="overview" type="button"><span class="nav-icon">⌂</span><span>Ringkasan</span></button>
         <button class="side-link" data-view-target="vocabulary" type="button"><span class="nav-icon">Aa</span><span>Kosakata</span><span class="nav-count" id="nav-word-count">—</span></button>
         <button class="side-link" data-view-target="grammar" type="button"><span class="nav-icon">¶</span><span>Grammar</span><span class="nav-count" id="nav-grammar-count">—</span></button>
+        <button class="side-link" data-view-target="matching" type="button"><span class="nav-icon">↔</span><span>Matching</span><span class="nav-count" id="nav-matching-count">0/6</span></button>
+        <button class="side-link" data-view-target="reading" type="button"><span class="nav-icon">¶R</span><span>Pemahaman teks</span><span class="nav-count" id="nav-reading-count">0/12</span></button>
         <button class="side-link" data-view-target="review" type="button"><span class="nav-icon">↻</span><span>Review</span><span class="nav-count" id="nav-review-count">0</span></button>
         <button class="side-link" data-view-target="progress" type="button"><span class="nav-icon">↗</span><span>Progres</span></button>
       </nav>
@@ -77,6 +80,8 @@
               <div class="today-tasks">
                 <button class="task-link" type="button" data-view-target="vocabulary"><span class="task-symbol task-sage">Aa</span><span><strong>Pelajari kosakata</strong><small>Coba ingat arti dan pakai dalam kalimat.</small></span><span class="task-arrow">↗</span></button>
                 <button class="task-link" type="button" data-view-target="grammar"><span class="task-symbol task-lilac">¶</span><span><strong>Pelajari grammar</strong><small>Pilih topik dan kerjakan soal khususnya.</small></span><span class="task-arrow">↗</span></button>
+                <button class="task-link" type="button" data-view-target="matching"><span class="task-symbol task-peach">↔</span><span><strong>Pasangkan kosakata</strong><small>Cocokkan kata Inggris dengan artinya.</small></span><span class="task-arrow">↗</span></button>
+                <button class="task-link" type="button" data-view-target="reading"><span class="task-symbol task-sage">R</span><span><strong>Latihan pemahaman teks</strong><small>Belajar ide pokok, detail, inferensi, dan lainnya.</small></span><span class="task-arrow">↗</span></button>
                 <button class="task-link" type="button" data-view-target="review"><span class="task-symbol task-peach">↻</span><span><strong>Ulangi materi</strong><small id="review-task-note">Jadwal review dihitung dari sesi belajarmu.</small></span><span class="task-arrow">↗</span></button>
               </div>
             </section>
@@ -134,6 +139,61 @@
         <section class="view" id="view-study" data-view="study">
           <div class="study-top"><button class="back-button" id="exit-study" type="button">← Kembali ke kosakata</button><span class="study-session-tag" id="study-session-tag">VOCABULARY PRACTICE</span></div>
           <div class="study-container" id="study-container"></div>
+        </section>
+
+
+        <section class="view" id="view-matching" data-view="matching">
+          <div class="page-heading compact-heading matching-heading">
+            <div class="matching-heading-copy">
+              <p class="eyebrow">WORD PAIRS / ENGLISH → INDONESIAN</p>
+              <h1>Matching, <em>satu pasangan pada satu waktu.</em></h1>
+              <p class="page-lede">Temukan arti yang tepat untuk setiap kata. Pasangan dinilai otomatis saat kedua pilihan cocok, atau kamu bisa mengubahnya ke mode periksa manual.</p>
+            </div>
+          </div>
+          <div class="matching-meta">
+            <div><span class="metric-label">PASANGAN COCOK</span><strong id="match-count">0/6</strong></div>
+            <div><span class="metric-label">SALAH PASANG</span><strong id="match-mistakes">0</strong></div>
+            <div><span class="metric-label">RONDE SELESAI</span><strong id="match-rounds">0</strong></div>
+          </div>
+          <div class="matching-toolbar">
+            <span class="matching-deck-note" id="matching-deck-note">Menyiapkan kata…</span>
+            <div class="matching-actions">
+              <button class="secondary-action" id="matching-auto" type="button" aria-pressed="true">OTOMATIS · ON</button>
+              <button class="primary-action" id="matching-new-round" type="button">Acak ronde ↻</button>
+            </div>
+          </div>
+          <div class="matching-instruction" id="matching-instruction">Pilih satu kata bahasa Inggris di kiri, lalu pilih artinya di kanan.</div>
+          <div class="matching-board" id="matching-board">
+            <div class="matching-loading">Memuat pasangan kata…</div>
+          </div>
+          <p class="matching-feedback" id="matching-feedback" role="status" aria-live="polite">Pasangan akan diperiksa setelah kamu memilih dua sisi.</p>
+          <div class="matching-manual-actions"><button class="primary-action" id="matching-check" type="button" hidden disabled>Periksa pasangan →</button></div>
+          <section class="matching-finish" id="matching-finish" hidden aria-live="polite"></section>
+          <p class="matching-footnote">Latihan ini memakai kosakata berisi arti yang sudah tersedia pada paket belajar SinauuEnglish. Progres ronde tersimpan di perangkatmu.</p>
+        </section>
+
+        <section class="view" id="view-reading" data-view="reading">
+          <div class="page-heading compact-heading reading-heading">
+            <p class="eyebrow">READING COMPREHENSION / TEXT SKILLS</p>
+            <h1>Baca lebih teliti, <em>bukan lebih cepat saja.</em></h1>
+            <p class="page-lede">Kenali jenis pertanyaannya, temukan petunjuk di teks, lalu pilih jawaban yang paling didukung bacaan. Mulai dari satu teks, lalu latih dua belas keterampilan membaca.</p>
+          </div>
+          <div class="reading-progress-strip">
+            <div><span class="metric-label">KETERAMPILAN DILATIH</span><strong id="reading-skills-done">0/12</strong></div>
+            <div><span class="metric-label">SOAL DIJAWAB</span><strong id="reading-question-count">0</strong></div>
+            <div><span class="metric-label">AKURASI</span><strong id="reading-accuracy">—</strong></div>
+          </div>
+          <div class="reading-category-tabs" id="reading-category-tabs" role="tablist" aria-label="Kelompok keterampilan membaca"></div>
+          <div class="reading-layout">
+            <aside class="reading-skill-panel">
+              <div class="reading-panel-heading"><span class="eyebrow">PILIH KETERAMPILAN</span><span id="reading-category-count">—</span></div>
+              <div id="reading-skill-list" class="reading-skill-list"></div>
+            </aside>
+            <article class="reading-lesson-panel" id="reading-lesson">
+              <div class="matching-loading">Menyiapkan bacaan dan latihan…</div>
+            </article>
+          </div>
+          <p class="reading-footnote">Bacaan dan soal latihan di bagian ini disusun khusus untuk SinauuEnglish. Ini latihan strategi membaca, bukan soal resmi atau prediksi ujian.</p>
         </section>
 
         <section class="view" id="view-review" data-view="review">

@@ -1,0 +1,373 @@
+{
+  "schemaVersion": 1,
+  "passage": {
+    "title": "A garden beside the library",
+    "source": "Original practice passage · SinauuEnglish",
+    "paragraphs": [
+      "Two years ago, students at Greenhill School turned an unused patch beside the library into a small garden. Every Wednesday, they grow spinach, tomatoes, and herbs with help from two science teachers. The harvest is too small to supply the cafeteria, but the kitchen adds some vegetables to a weekly soup.",
+      "The garden also serves as an outdoor classroom. Students measure plant growth and record rainfall, then compare their results during science lessons. Some families initially worried that gardening would take time away from academic work. After one term, a school survey found that most participating students felt more connected to classmates and were more willing to try vegetables.",
+      "Because the survey did not measure grades, it cannot prove that gardening improves academic performance. Still, the project has been popular enough that the school plans to add two raised beds next year. A garden is not a magical solution to every school problem, but it can turn an overlooked space into a shared place for learning."
+    ]
+  },
+  "groups": [
+    {
+      "id": "general",
+      "label": "Informasi umum",
+      "english": "General info",
+      "count": 3,
+      "note": "Menangkap gambaran besar teks."
+    },
+    {
+      "id": "specific",
+      "label": "Informasi spesifik",
+      "english": "Specific info",
+      "count": 5,
+      "note": "Menemukan bukti, makna, dan hubungan kata."
+    },
+    {
+      "id": "implied",
+      "label": "Informasi tersirat",
+      "english": "Implied info / HOTS",
+      "count": 4,
+      "note": "Menyimpulkan sesuatu dari petunjuk, bukan menebak."
+    }
+  ],
+  "skills": [
+    {
+      "id": "main-idea",
+      "group": "general",
+      "title": "Main idea / Primary idea",
+      "indonesian": "Ide pokok",
+      "tag": "GAGASAN UTAMA",
+      "definition": "Cari hal yang dibicarakan di seluruh teks, bukan satu detail yang hanya muncul di satu kalimat.",
+      "strategy": [
+        "Perhatikan kata dan gagasan yang berulang di beberapa paragraf.",
+        "Tanyakan: teks ini terutama membahas apa?",
+        "Singkirkan opsi yang terlalu sempit atau menambahkan klaim yang tidak dibahas."
+      ],
+      "questions": [
+        {
+          "prompt": "What is the passage mainly about?",
+          "options": [
+            "How Greenhill School grows enough food to supply its cafeteria.",
+            "How a school garden supports practical learning and student connection, while its academic effects remain unproven.",
+            "Why families should stop schools from starting gardening projects.",
+            "How to measure rainfall and plant growth in a science class."
+          ],
+          "answer": 1,
+          "explanation": "Pilihan B mencakup fungsi kebun untuk pembelajaran, hubungan antarsiswa, serta batas bukti tentang nilai akademik. Opsi lain hanya mengambil satu detail atau mengubah isi teks.",
+          "evidence": "The garden is an outdoor classroom, students report stronger connections, and the survey did not measure grades."
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "group": "general",
+      "title": "Summary / Restatement",
+      "indonesian": "Ringkasan isi",
+      "tag": "RANGKUMAN",
+      "definition": "Ringkasan memuat gagasan penting dari keseluruhan teks dan menghilangkan rincian yang tidak diperlukan.",
+      "strategy": [
+        "Gabungkan gagasan inti dari setiap paragraf.",
+        "Pastikan ringkasan tidak menambahkan sebab-akibat yang belum terbukti.",
+        "Pilih opsi yang seimbang, bukan sekadar kalimat yang terdengar bagus."
+      ],
+      "questions": [
+        {
+          "prompt": "Which option best summarizes the passage?",
+          "options": [
+            "Greenhill's small garden is used for science activities and some food, and students report social benefits; the school plans to expand it, although the survey does not establish an effect on grades.",
+            "The school built a garden because test scores were low, and grades improved after one term.",
+            "The garden now produces all the vegetables needed for the cafeteria.",
+            "Families opposed the project, so the school decided to close the garden."
+          ],
+          "answer": 0,
+          "explanation": "Ringkasan yang tepat merangkum fungsi kebun, hasil survei, rencana perluasan, dan batas penelitian tanpa menambahkan hasil yang tidak ada.",
+          "evidence": "The passage mentions science activities, weekly soup, a survey of student experiences, and a plan to add two raised beds."
+        }
+      ]
+    },
+    {
+      "id": "purpose",
+      "group": "general",
+      "title": "Purpose / Author's purpose",
+      "indonesian": "Tujuan penulis",
+      "tag": "MAKSUD TEKS",
+      "definition": "Tujuan penulis terlihat dari apa yang ingin dilakukan teks: menjelaskan, meyakinkan, menghibur, mengkritik, atau membandingkan.",
+      "strategy": [
+        "Bedakan topik dari tujuan: topik adalah kebun sekolah; tujuan adalah alasan teks membahasnya.",
+        "Perhatikan cara penulis menyampaikan manfaat sekaligus keterbatasan.",
+        "Hindari opsi yang menuduh penulis ingin membuktikan klaim yang tidak diukur."
+      ],
+      "questions": [
+        {
+          "prompt": "Why did the author most likely write this passage?",
+          "options": [
+            "To give a balanced explanation of the garden's educational and social value, while noting what the survey cannot prove.",
+            "To persuade every school to replace its science laboratory with a garden.",
+            "To prove that gardening always improves students' grades.",
+            "To provide step-by-step instructions for building raised garden beds."
+          ],
+          "answer": 0,
+          "explanation": "Penulis menjelaskan kegiatan, manfaat yang terlihat, lalu memberi batas pada kesimpulan tentang nilai akademik. Tidak ada petunjuk bahwa teks berupa instruksi atau klaim mutlak.",
+          "evidence": "The final paragraph is positive about the project but explicitly says the survey cannot prove academic improvement."
+        }
+      ]
+    },
+    {
+      "id": "detailed-info",
+      "group": "specific",
+      "title": "Detailed information",
+      "indonesian": "Informasi tersurat",
+      "tag": "BUKTI LANGSUNG",
+      "definition": "Jawaban dapat ditemukan secara eksplisit dalam satu bagian teks; tugasmu adalah mencocokkan pertanyaan dengan bukti yang tepat.",
+      "strategy": [
+        "Temukan kata kunci dari pertanyaan.",
+        "Pindai teks untuk nama, waktu, angka, atau tindakan yang disebut.",
+        "Jangan memilih jawaban hanya karena masuk akal di dunia nyata."
+      ],
+      "questions": [
+        {
+          "prompt": "What do students grow with the help of two science teachers?",
+          "options": [
+            "Rice, corn, and potatoes.",
+            "Spinach, tomatoes, and herbs.",
+            "Apples, oranges, and bananas.",
+            "Flowers only."
+          ],
+          "answer": 1,
+          "explanation": "Daftar tanaman disebut langsung pada paragraf pertama.",
+          "evidence": "“Every Wednesday, they grow spinach, tomatoes, and herbs with help from two science teachers.”"
+        }
+      ]
+    },
+    {
+      "id": "vocab-context",
+      "group": "specific",
+      "title": "Synonym / Antonym / Vocabulary in Context",
+      "indonesian": "Makna kata dalam konteks",
+      "tag": "KOSAKATA KONTEKSTUAL",
+      "definition": "Makna kata harus cocok dengan konteks kalimat. Kata yang tampak mirip belum tentu bisa saling menggantikan pada semua situasi.",
+      "strategy": [
+        "Baca kalimat sebelum dan sesudah kata target.",
+        "Untuk synonym, cari makna yang paling dekat; untuk antonym, cari makna yang berlawanan.",
+        "Masukkan pilihan ke kalimat semula untuk memeriksa apakah maknanya tetap masuk akal."
+      ],
+      "questions": [
+        {
+          "prompt": "In the last paragraph, the word “overlooked” is closest in meaning to…",
+          "options": [
+            "unused or not given attention",
+            "carefully protected",
+            "recently purchased",
+            "full of people"
+          ],
+          "answer": 0,
+          "explanation": "Lahan itu sebelumnya tidak digunakan, lalu diubah menjadi kebun. Jadi, “overlooked” berarti tidak diperhatikan atau terabaikan.",
+          "evidence": "The text says the garden turns an “overlooked space” into a shared place for learning."
+        },
+        {
+          "prompt": "Which word is the best antonym of “popular” in the sentence “the project has been popular enough…”?",
+          "options": [
+            "welcomed",
+            "common",
+            "unpopular",
+            "successful"
+          ],
+          "answer": 2,
+          "explanation": "Antonym adalah lawan makna. “Unpopular” berlawanan dengan “popular”; “welcomed” justru memiliki nuansa makna yang dekat.",
+          "evidence": "The word describes that many people like or support the project."
+        }
+      ]
+    },
+    {
+      "id": "referent",
+      "group": "specific",
+      "title": "Referent",
+      "indonesian": "Rujukan kata ganti",
+      "tag": "REFERENSI",
+      "definition": "Kata seperti it, they, this, atau these biasanya merujuk pada benda, orang, gagasan, atau peristiwa yang telah disebut sebelumnya.",
+      "strategy": [
+        "Lihat kalimat yang memuat kata ganti dan kalimat sebelumnya.",
+        "Cocokkan jumlahnya: it/this biasanya tunggal; they/these jamak.",
+        "Ganti kata ganti dengan kandidat rujukan dan baca ulang kalimatnya."
+      ],
+      "questions": [
+        {
+          "prompt": "In the sentence “Because the survey did not measure grades, it cannot prove that gardening improves academic performance,” what does “it” refer to?",
+          "options": [
+            "The school garden",
+            "Academic performance",
+            "The survey",
+            "The cafeteria"
+          ],
+          "answer": 2,
+          "explanation": "Subjek yang tepat adalah “the survey”: survei itulah yang tidak mengukur nilai sehingga tidak dapat membuktikan dampak akademik.",
+          "evidence": "The sentence begins with “Because the survey did not measure grades…”"
+        }
+      ]
+    },
+    {
+      "id": "paraphrase",
+      "group": "specific",
+      "title": "Paraphrase",
+      "indonesian": "Pernyataan ulang",
+      "tag": "MAKNA TETAP",
+      "definition": "Paraphrase menyampaikan gagasan yang sama dengan susunan kata berbeda. Detail penting, hubungan sebab-akibat, dan tingkat kepastian harus tetap sama.",
+      "strategy": [
+        "Identifikasi inti kalimat sebelum melihat opsi.",
+        "Cari sinonim dan perubahan struktur, bukan tambahan informasi baru.",
+        "Waspadai kata absolut seperti always, never, atau proves."
+      ],
+      "questions": [
+        {
+          "prompt": "Which sentence best paraphrases “The harvest is too small to supply the cafeteria, but the kitchen adds some vegetables to a weekly soup”?",
+          "options": [
+            "The garden produces every vegetable the cafeteria needs.",
+            "Although the garden cannot provide all cafeteria vegetables, some of its produce is used in soup each week.",
+            "The kitchen stopped using vegetables because the harvest was small.",
+            "The cafeteria buys soup from another school every week."
+          ],
+          "answer": 1,
+          "explanation": "Opsi B mempertahankan dua informasi utama: hasil kebun tidak mencukupi seluruh kebutuhan, tetapi sebagian hasilnya tetap digunakan dalam sup mingguan.",
+          "evidence": "“Too small to supply the cafeteria” and “adds some vegetables to a weekly soup.”"
+        }
+      ]
+    },
+    {
+      "id": "fact-opinion",
+      "group": "specific",
+      "title": "Fact vs. Opinion",
+      "indonesian": "Fakta dan opini",
+      "tag": "KLAIM YANG BISA DIUJI",
+      "definition": "Fakta dapat diperiksa melalui data atau sumber; opini berisi penilaian, keyakinan, atau bahasa evaluatif yang tidak hanya ditentukan lewat verifikasi.",
+      "strategy": [
+        "Cari informasi yang bisa dicek, seperti tanggal, tindakan, atau hasil survei.",
+        "Tandai kata evaluatif seperti magical, best, terrible, atau wonderful.",
+        "Ingat: sebuah opini dapat didukung alasan, tetapi tetap merupakan penilaian."
+      ],
+      "questions": [
+        {
+          "prompt": "Which statement is an opinion rather than a directly verifiable fact?",
+          "options": [
+            "Students measure plant growth and record rainfall.",
+            "The school plans to add two raised beds next year.",
+            "The garden is not a magical solution to every school problem.",
+            "The garden began two years ago."
+          ],
+          "answer": 2,
+          "explanation": "“Not a magical solution” adalah penilaian/metafora penulis. Pernyataan lain merujuk pada tindakan, rencana, atau waktu yang bisa diverifikasi.",
+          "evidence": "The wording “magical solution” expresses an evaluation rather than a measurable result."
+        }
+      ]
+    },
+    {
+      "id": "inference",
+      "group": "implied",
+      "title": "Inference",
+      "indonesian": "Kesimpulan tersirat",
+      "tag": "PETUNJUK → KESIMPULAN",
+      "definition": "Inferensi adalah kesimpulan yang tidak ditulis secara langsung tetapi didukung oleh beberapa petunjuk dalam bacaan.",
+      "strategy": [
+        "Kumpulkan dua atau lebih petunjuk dari teks.",
+        "Pilih simpulan yang masuk akal dan tetap dekat dengan bukti.",
+        "Jangan menganggap korelasi atau perasaan sebagai bukti sebab-akibat."
+      ],
+      "questions": [
+        {
+          "prompt": "What can reasonably be inferred about the garden's role for students?",
+          "options": [
+            "It offers a chance to learn by doing and may help students feel part of a group.",
+            "It has already raised every student's science grade.",
+            "It has replaced all classroom science lessons.",
+            "It guarantees that students will eat vegetables every day."
+          ],
+          "answer": 0,
+          "explanation": "Siswa mengukur pertumbuhan tanaman dan mencatat hujan, sementara survei menyebut mereka merasa lebih terhubung. Itu mendukung manfaat praktis dan sosial, bukan jaminan nilai atau kebiasaan makan.",
+          "evidence": "Students collect science data and most participating students reported stronger connections with classmates."
+        }
+      ]
+    },
+    {
+      "id": "assumption",
+      "group": "implied",
+      "title": "Assumption / Hypothesis",
+      "indonesian": "Asumsi atau hipotesis",
+      "tag": "DASAR PENALARAN",
+      "definition": "Asumsi adalah hal yang dianggap benar sebagai dasar tindakan; hipotesis adalah dugaan yang masih perlu diuji dengan data.",
+      "strategy": [
+        "Perhatikan tindakan atau rencana yang dibuat berdasarkan suatu harapan.",
+        "Tentukan apa yang mungkin dianggap akan tetap berlaku.",
+        "Bedakan dugaan yang wajar dari fakta yang benar-benar sudah dibuktikan."
+      ],
+      "questions": [
+        {
+          "prompt": "What assumption most likely supports the school's decision to add two raised beds?",
+          "options": [
+            "The garden will certainly improve exam scores.",
+            "There is enough interest or perceived value to justify expanding the project.",
+            "The cafeteria no longer needs food supplies.",
+            "Every family supported the garden from the beginning."
+          ],
+          "answer": 1,
+          "explanation": "Rencana memperluas kebun paling masuk akal berangkat dari anggapan bahwa proyek cukup diminati atau bermanfaat untuk dilanjutkan. Teks tidak menyatakan bahwa nilai pasti naik atau semua keluarga mendukung.",
+          "evidence": "The project has been popular enough that the school plans to expand it."
+        }
+      ]
+    },
+    {
+      "id": "tone-attitude",
+      "group": "implied",
+      "title": "Tone / Author's attitude",
+      "indonesian": "Nada dan sikap penulis",
+      "tag": "SIKAP PENULIS",
+      "definition": "Tone terlihat dari pilihan kata dan cara penulis menilai topik: netral, optimistis, kritis, sarkastik, khawatir, atau seimbang.",
+      "strategy": [
+        "Perhatikan kata evaluatif dan kalimat penutup.",
+        "Cari apakah penulis hanya memuji, hanya mengkritik, atau mengakui kelebihan dan batasan.",
+        "Jangan menyimpulkan nada dari satu kata saja."
+      ],
+      "questions": [
+        {
+          "prompt": "Which phrase best describes the author's tone toward the garden project?",
+          "options": [
+            "Cautiously positive: the author notes benefits but acknowledges limits.",
+            "Sarcastic and dismissive: the author makes fun of the students.",
+            "Completely neutral: the author gives no evaluation at all.",
+            "Strongly negative: the author argues that the garden should be closed."
+          ],
+          "answer": 0,
+          "explanation": "Sikapnya positif tetapi berhati-hati. Penulis menyebut manfaat praktis dan sosial, lalu menegaskan bahwa survei tidak membuktikan peningkatan akademik.",
+          "evidence": "The final sentence appreciates the garden as a learning space, while the preceding sentence limits the academic claim."
+        }
+      ]
+    },
+    {
+      "id": "coherence-analogy",
+      "group": "implied",
+      "title": "Coherence / Analogy",
+      "indonesian": "Keterkaitan dan analogi",
+      "tag": "HUBUNGAN GAGASAN",
+      "definition": "Coherence menilai bagaimana gagasan saling terhubung. Analogi menjelaskan suatu hal lewat perbandingan dengan hal lain yang punya fungsi atau pola serupa.",
+      "strategy": [
+        "Cari fungsi tiap paragraf: pengenalan, contoh, hasil, batasan, atau simpulan.",
+        "Lihat kata penghubung seperti however, because, still, dan but.",
+        "Untuk analogi, bandingkan fungsi yang sama, bukan ciri yang kebetulan mirip."
+      ],
+      "questions": [
+        {
+          "prompt": "Which analogy best explains why the garden is called an “outdoor classroom”?",
+          "options": [
+            "Like a science lab, it lets students observe, measure, and compare real results.",
+            "Like a cafeteria, it serves a complete meal to every student.",
+            "Like a library, it stores every book used in the school.",
+            "Like an exam, it gives students a final grade every Wednesday."
+          ],
+          "answer": 0,
+          "explanation": "Kebun menjalankan fungsi pembelajaran langsung: siswa mengamati pertumbuhan, mengukur, mencatat, lalu membandingkan hasil—serupa dengan kegiatan eksperimen di laboratorium.",
+          "evidence": "Students measure plant growth and record rainfall, then compare their results during science lessons."
+        }
+      ]
+    }
+  ]
+}

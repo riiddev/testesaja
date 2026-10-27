@@ -469,3 +469,161 @@ p{color:var(--body)}
   .sidebar .brand-name { font-size: 1.01rem; }
   .sidebar .brand-name span { margin-top: 3px; font-size: .43rem; letter-spacing: .07em; }
 }
+
+
+/* Matching — vocabulary pairs with immediate, local feedback */
+#view-matching .matching-heading { align-items:flex-start; padding-bottom:22px; }
+.matching-heading-copy { max-width:760px; }
+.matching-meta,.reading-progress-strip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:5px 0 29px; border-block:1px solid var(--line); }
+.matching-meta>div,.reading-progress-strip>div { padding:16px 20px 17px 0; min-width:0; }
+.matching-meta>div+div,.reading-progress-strip>div+div { border-left:1px solid var(--line); padding-left:22px; }
+.matching-meta strong,.reading-progress-strip strong { display:block; margin-top:6px; font:400 1.8rem/1.1 "Newsreader",Georgia,serif; letter-spacing:-.04em; }
+.matching-toolbar { display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:12px; }
+.matching-deck-note { color:var(--muted); font:500 .61rem "DM Mono",monospace; letter-spacing:.035em; }
+.matching-actions { display:flex; align-items:center; gap:8px; }
+.matching-actions .primary-action,.matching-actions .secondary-action { min-height:36px; padding:8px 12px; font-size:.64rem; }
+.matching-instruction { margin:0 0 17px; color:var(--body); font-size:.75rem; }
+.matching-board { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(14px,3vw,30px); align-items:start; }
+.matching-column { min-width:0; }
+.matching-column-label { display:flex; align-items:center; gap:10px; padding:11px 0; border-top:1px solid var(--ink); border-bottom:1px solid var(--line); color:var(--muted); font:500 .57rem "DM Mono",monospace; letter-spacing:.08em; }
+.matching-column-label span { color:var(--sage-deep); }
+.matching-choices { display:grid; gap:8px; padding-top:10px; }
+.matching-choice { min-width:0; min-height:58px; display:flex; align-items:center; gap:11px; padding:12px 13px; border:1px solid var(--line); background:var(--sheet); color:var(--ink); text-align:left; font-size:.79rem; line-height:1.5; cursor:pointer; transition:background .18s ease,border-color .18s ease,transform .18s ease; }
+.matching-choice:hover:not(:disabled) { border-color:var(--sage-deep); transform:translateY(-1px); }
+.matching-choice:focus-visible { outline:2px solid var(--sage-deep); outline-offset:2px; }
+.matching-choice:disabled { opacity:.9; cursor:default; }
+.matching-index { width:22px; flex:0 0 22px; color:var(--muted); font:500 .58rem "DM Mono",monospace; }
+.matching-meaning { justify-content:space-between; }
+.matching-meaning>span:first-child { min-width:0; }
+.matching-choice.is-selected { border-color:var(--sage-deep); background:color-mix(in srgb,var(--sage) 48%,var(--sheet)); box-shadow:inset 3px 0 var(--sage-deep); }
+.matching-choice.is-matched { border-color:#8ba17e; background:color-mix(in srgb,var(--sage) 42%,var(--sheet)); color:var(--sage-deep); }
+.matching-choice.is-wrong { border-color:#bc7d68; background:color-mix(in srgb,var(--peach) 58%,var(--sheet)); color:#925743; }
+.matching-mark { flex:0 0 20px; display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--sage-deep); color:#fffdf7; font-size:.64rem; }
+.matching-feedback { min-height:25px; margin:17px 0 10px; color:var(--muted); font-size:.72rem; line-height:1.6; }
+.matching-feedback.is-success { color:var(--sage-deep); }
+.matching-feedback.is-error { color:#a76855; }
+.matching-manual-actions { margin:0 0 15px; }
+.matching-manual-actions button[hidden] { display:none; }
+.matching-finish { margin:20px 0 6px; padding:18px 0 4px; border-top:1px solid var(--ink); }
+.matching-finish[hidden] { display:none; }
+.matching-finish h2 { margin:0 0 7px; font:400 2rem/1.1 "Newsreader",Georgia,serif; }
+.matching-finish p:not(.eyebrow) { max-width:560px; margin:0 0 14px; color:var(--body); font-size:.74rem; line-height:1.7; }
+.matching-footnote,.reading-footnote { color:var(--muted); font-size:.62rem; line-height:1.7; }
+.matching-loading { color:var(--muted); font-size:.75rem; line-height:1.7; }
+
+/* Reading comprehension — editorial lesson list, passage and evidence-based questions */
+.reading-heading { padding-bottom:25px; }
+.reading-progress-strip { margin-top:4px; margin-bottom:23px; }
+.reading-progress-strip .metric-label { font-size:.56rem; }
+.reading-category-tabs { display:flex; gap:0; margin:0 0 23px; border-bottom:1px solid var(--ink); overflow-x:auto; scrollbar-width:thin; }
+.reading-category-tab { min-width:170px; display:grid; gap:4px; justify-items:start; padding:13px 17px 14px 0; margin-right:25px; border:0; border-bottom:3px solid transparent; background:transparent; color:var(--body); text-align:left; cursor:pointer; }
+.reading-category-tab span { font-size:.75rem; font-weight:600; white-space:nowrap; }
+.reading-category-tab small { color:var(--muted); font:500 .55rem "DM Mono",monospace; letter-spacing:.03em; }
+.reading-category-tab.is-active { border-bottom-color:var(--sage-deep); color:var(--ink); }
+.reading-layout { display:grid; grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr); gap:clamp(22px,4vw,48px); align-items:start; }
+.reading-skill-panel { min-width:0; }
+.reading-panel-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--ink); border-bottom:1px solid var(--line); }
+.reading-panel-heading .eyebrow { margin:0; }
+.reading-panel-heading>span:last-child { color:var(--muted); font:500 .55rem "DM Mono",monospace; }
+.reading-skill-list { border-bottom:1px solid var(--line); }
+.reading-skill-button { width:100%; min-width:0; display:grid; grid-template-columns:26px minmax(0,1fr) 16px; align-items:center; gap:9px; padding:13px 4px 13px 0; border:0; border-bottom:1px solid var(--line); background:transparent; color:var(--body); text-align:left; cursor:pointer; }
+.reading-skill-button:last-child { border-bottom:0; }
+.reading-skill-number { align-self:start; padding-top:1px; color:var(--muted); font:500 .59rem "DM Mono",monospace; }
+.reading-skill-copy { min-width:0; }
+.reading-skill-copy strong { display:block; color:var(--ink); font-size:.7rem; font-weight:600; line-height:1.45; }
+.reading-skill-copy small { display:block; margin-top:3px; color:var(--muted); font-size:.62rem; line-height:1.45; }
+.reading-skill-state { color:var(--muted); font-size:.76rem; text-align:right; }
+.reading-skill-button.is-active { padding-left:10px; border-left:2px solid var(--sage-deep); background:color-mix(in srgb,var(--sage) 27%,transparent); }
+.reading-skill-button.is-active .reading-skill-number,.reading-skill-button.is-active .reading-skill-state { color:var(--sage-deep); }
+.reading-lesson-panel { min-width:0; }
+.reading-skill-title { display:flex; align-items:flex-start; justify-content:space-between; gap:13px; margin-bottom:20px; }
+.reading-skill-title .eyebrow { margin-bottom:7px; }
+.reading-skill-title h2 { margin:0; font:400 clamp(2rem,3vw,2.8rem)/1.05 "Newsreader",Georgia,serif; letter-spacing:-.035em; }
+.reading-skill-subtitle { margin:6px 0 0; color:var(--muted); font-size:.71rem; }
+.reading-done-tag { flex:0 0 auto; margin-top:2px; padding:5px 7px; border:1px solid var(--line); color:var(--muted); font:500 .48rem "DM Mono",monospace; letter-spacing:.04em; }
+.reading-definition { margin-bottom:17px; padding:15px 0 18px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.reading-definition>p { margin:0 0 16px; color:var(--body); font-size:.75rem; line-height:1.8; }
+.reading-strategy .eyebrow { margin-bottom:8px; }
+.reading-strategy ol { display:grid; gap:6px; margin:0; padding-left:20px; }
+.reading-strategy li { padding-left:3px; color:var(--body); font-size:.68rem; line-height:1.65; }
+.reading-passage { margin:0 0 19px; border:1px solid var(--line); background:var(--sheet); }
+.reading-passage summary { display:flex; justify-content:space-between; align-items:center; gap:15px; padding:13px 15px; cursor:pointer; list-style:none; }
+.reading-passage summary::-webkit-details-marker { display:none; }
+.reading-passage summary>span:first-child { display:grid; gap:4px; }
+.reading-passage summary small { color:var(--muted); font:500 .52rem "DM Mono",monospace; letter-spacing:.08em; }
+.reading-passage summary strong { font:400 1.26rem/1.2 "Newsreader",Georgia,serif; }
+.reading-passage-toggle { color:var(--muted); font-size:1.1rem; }
+.reading-passage[open] .reading-passage-toggle { transform:rotate(45deg); }
+.reading-passage-body { padding:2px 15px 15px; }
+.reading-passage-body p { display:grid; grid-template-columns:22px minmax(0,1fr); gap:8px; margin:12px 0 0; color:var(--body); font-size:.72rem; line-height:1.85; }
+.passage-paragraph-number { padding-top:2px; color:var(--sage-deep); font:500 .53rem "DM Mono",monospace; }
+.reading-passage-source { display:block; margin-top:12px; color:var(--muted); font:500 .48rem "DM Mono",monospace; letter-spacing:.03em; }
+.reading-question-block { margin:0 0 20px; }
+.reading-question-meta { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font:500 .52rem "DM Mono",monospace; letter-spacing:.055em; }
+.reading-question-block h3 { margin:10px 0 15px; font:400 1.35rem/1.35 "Newsreader",Georgia,serif; }
+.reading-options { display:grid; gap:7px; }
+.reading-option { display:grid; grid-template-columns:25px minmax(0,1fr) 14px; align-items:start; gap:9px; width:100%; padding:11px 12px; border:1px solid var(--line); background:transparent; color:var(--body); text-align:left; font-size:.7rem; line-height:1.65; cursor:pointer; }
+.reading-option:hover:not(:disabled) { border-color:var(--sage-deep); }
+.reading-option.is-selected { border-color:var(--sage-deep); background:color-mix(in srgb,var(--sage) 26%,transparent); color:var(--ink); }
+.reading-option.is-correct { border-color:#87a27b; background:color-mix(in srgb,var(--sage) 38%,transparent); }
+.reading-option.is-incorrect { border-color:#b87e68; background:color-mix(in srgb,var(--peach) 42%,transparent); }
+.reading-option:disabled { cursor:default; }
+.reading-option-letter { display:grid; place-items:center; width:22px; height:22px; background:var(--paper-deep); color:var(--muted); font:500 .55rem "DM Mono",monospace; }
+.reading-option.is-selected .reading-option-letter { background:var(--sage-deep); color:var(--sheet); }
+.reading-option-mark { color:var(--sage-deep); font-weight:700; }
+.reading-check-button { margin-top:12px; }
+.reading-check-button:disabled { opacity:.45; cursor:not-allowed; }
+.reading-answer-explanation { margin-top:13px; padding:13px; border-left:2px solid var(--sage-deep); background:color-mix(in srgb,var(--sage) 25%,transparent); }
+.reading-answer-explanation.is-incorrect { border-left-color:#b87e68; background:color-mix(in srgb,var(--peach) 22%,transparent); }
+.reading-answer-explanation>strong { display:block; font-size:.72rem; }
+.reading-answer-explanation>p { margin:5px 0 0; color:var(--body); font-size:.7rem; line-height:1.7; }
+.reading-evidence { margin-top:11px; padding-top:10px; border-top:1px solid color-mix(in srgb,var(--line) 75%,transparent); }
+.reading-evidence>span { color:var(--muted); font:500 .51rem "DM Mono",monospace; letter-spacing:.08em; }
+.reading-evidence p { margin:5px 0 0; color:var(--body); font:italic .86rem/1.7 "Newsreader",Georgia,serif; }
+.reading-result { padding:26px 0; border-top:1px solid var(--ink); }
+.reading-result-number { display:block; color:var(--sage-deep); font:400 4rem/.95 "Newsreader",Georgia,serif; letter-spacing:-.055em; }
+.reading-result h2 { margin:12px 0 7px; font:400 2.1rem/1.1 "Newsreader",Georgia,serif; }
+.reading-result>p:not(.eyebrow) { max-width:500px; color:var(--body); font-size:.74rem; line-height:1.75; }
+.reading-result-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.reading-result-actions .primary-action,.reading-result-actions .secondary-action { min-height:38px; }
+@media(max-width:900px) {
+  .reading-layout { grid-template-columns:minmax(190px,.7fr) minmax(0,1.3fr); gap:20px; }
+  .reading-skill-button { grid-template-columns:22px minmax(0,1fr) 13px; gap:6px; }
+  .reading-skill-copy strong { font-size:.66rem; }
+}
+@media(max-width:680px) {
+  .matching-meta>div,.reading-progress-strip>div { padding-right:10px; }
+  .matching-meta>div+div,.reading-progress-strip>div+div { padding-left:11px; }
+  .matching-meta strong,.reading-progress-strip strong { font-size:1.5rem; }
+  .matching-toolbar { align-items:flex-start; flex-direction:column; }
+  .matching-actions { width:100%; justify-content:space-between; }
+  .matching-actions .primary-action,.matching-actions .secondary-action { font-size:.58rem; padding-inline:9px; }
+  .matching-board { gap:9px; }
+  .matching-choice { gap:6px; padding:10px 8px; font-size:.67rem; }
+  .matching-index { width:17px; flex-basis:17px; font-size:.52rem; }
+  .matching-meaning { align-items:flex-start; }
+  .matching-mark { width:17px; height:17px; flex-basis:17px; font-size:.58rem; }
+  .reading-layout { grid-template-columns:1fr; gap:20px; }
+  .reading-skill-panel { order:0; }
+  .reading-lesson-panel { order:1; }
+  .reading-skill-list { display:flex; gap:7px; overflow-x:auto; padding:7px 0; scrollbar-width:thin; border-bottom:1px solid var(--line); }
+  .reading-skill-button { min-width:185px; grid-template-columns:23px minmax(0,1fr) 13px; padding:10px; border:1px solid var(--line); }
+  .reading-skill-button.is-active { padding-left:10px; border-left:1px solid var(--sage-deep); border-bottom:2px solid var(--sage-deep); }
+  .reading-skill-copy strong { font-size:.67rem; }
+  .reading-category-tab { min-width:150px; margin-right:13px; padding-right:10px; }
+  .reading-skill-title { flex-direction:column; }
+  .reading-done-tag { margin-top:-6px; }
+}
+@media(max-width:420px) {
+  .matching-board { grid-template-columns:1fr; gap:18px; }
+  .matching-choice { min-height:47px; font-size:.76rem; padding:10px 12px; }
+  .matching-index { width:22px; flex-basis:22px; }
+  .matching-meaning { align-items:center; }
+  .matching-meta .metric-label,.reading-progress-strip .metric-label { font-size:.44rem; letter-spacing:.01em; }
+  .matching-meta strong,.reading-progress-strip strong { font-size:1.38rem; }
+  .reading-question-block h3 { font-size:1.22rem; }
+  .reading-skill-title h2 { font-size:2.1rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .matching-choice,.reading-option,.reading-skill-button { transition:none; }
+}
