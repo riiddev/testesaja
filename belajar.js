@@ -187,7 +187,8 @@
     if (next === "grammar") renderGrammar();
     if (next === "review") renderReview();
     if (next === "progress") renderProgress();
-    window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+    if (window.sinauMotionScrollToTop) window.sinauMotionScrollToTop();
+    else window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   }
   async function setTheme(theme) {
     root.dataset.theme = theme;
