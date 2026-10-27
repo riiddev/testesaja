@@ -468,7 +468,8 @@
     $("#history-list").innerHTML=history.length?history.map(x=>'<div class="history-row"><time>'+esc(fmtDate(new Date(x.at),{day:"2-digit",month:"short"}))+' · '+esc(new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(new Date(x.at)))+'</time><div><strong>'+esc((x.type==="vocabulary"?"Kosakata: ":"Grammar: ")+x.title)+'</strong><small>'+esc(x.detail||"")+'</small></div><span class="history-result">'+(x.correct===true?"BENAR":x.correct===false?"PERLU ULANG":"")+'</span></div>').join(""):'<div class="empty-state">Belum ada aktivitas. Latihan pertamamu akan tercatat di sini.</div>';
   }
   function exportBackup() {
-    let extraLearning={};try{extraLearning=JSON.parse(localStorage.getItem("sinauu-extra-learning-v1")||"{}");}catch(_){}\n    const backup=Object.assign({product:"SinauuEnglish",exportedAt:new Date().toISOString(),extraLearning:extraLearning},state);
+    let extraLearning={};try{extraLearning=JSON.parse(localStorage.getItem("sinauu-extra-learning-v1")||"{}");}catch(_){}
+    const backup=Object.assign({product:"SinauuEnglish",exportedAt:new Date().toISOString(),extraLearning:extraLearning},state);
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
     a.href=url;a.download="sinauuenglish-backup-"+dayKey()+".json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
     $("#backup-status").textContent="Backup dibuat dari data lokal.";
