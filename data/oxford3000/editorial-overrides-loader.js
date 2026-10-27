@@ -4,7 +4,10 @@
   const overlayPaths = [
     "/data/oxford3000/editorial-overrides-context-fixes.json.gz.b64",
     "/data/oxford3000/editorial-overrides-batch2-a.json.gz.b64",
-    "/data/oxford3000/editorial-overrides-batch2-b.json.gz.b64"
+    "/data/oxford3000/editorial-overrides-batch2-b.json.gz.b64",
+    "/data/oxford3000/editorial-overrides-b1b2-a.json.gz",
+    "/data/oxford3000/editorial-overrides-b1b2-b.json.gz",
+    "/data/oxford3000/editorial-overrides-b1b2-c.json.gz"
   ];
   const nativeFetch = window.fetch.bind(window);
   let combinedPromise = null;
@@ -15,6 +18,17 @@
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
     return JSON.parse(await new Response(stream).text());
+  }
+
+  async function decodeResponse(response) {
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+      return JSON.parse(await new Response(stream).text());
+    }
+    const text = new TextDecoder().decode(bytes).trim();
+    if (text.startsWith("{")) return JSON.parse(text);
+    return decodeBundle(text);
   }
 
   async function encodeBundle(data) {
@@ -34,7 +48,7 @@
       const responses = await Promise.all(paths.map((path) => nativeFetch(path, { cache: "no-cache" })));
       if (!responses[0].ok) throw new Error("Editorial base bundle could not be loaded.");
 
-      const base = await decodeBundle(await responses[0].text());
+      const base = await decodeResponse(responses[0]);
       const entriesByWord = new Map();
       for (const entry of (base.entries || [])) {
         if (entry && entry.word) entriesByWord.set(String(entry.word).trim().toLowerCase(), entry);
@@ -46,7 +60,7 @@
           continue;
         }
         try {
-          const extra = await decodeBundle(await responses[i].text());
+          const extra = await decodeResponse(responses[i]);
           for (const entry of (extra.entries || [])) {
             if (entry && entry.word) entriesByWord.set(String(entry.word).trim().toLowerCase(), entry);
           }
