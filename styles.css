@@ -321,8 +321,8 @@ p { color: var(--ink-soft); }
 .footer-status i { width: 6px; height: 6px; border-radius: 50%; background: #9caf84; }
 .toast { position: fixed; z-index: 100; right: 22px; bottom: 22px; max-width: min(380px, calc(100vw - 44px)); padding: 12px 17px; border: 1px solid var(--line); border-radius: 13px; background: var(--white); color: var(--ink); box-shadow: var(--shadow-soft); font-size: .79rem; opacity: 0; pointer-events: none; transform: translateY(10px); transition: opacity .2s ease, transform .2s ease; }
 .toast.is-visible { opacity: 1; transform: translateY(0); }
-.reveal { opacity: 0; transform: translateY(18px); transition: opacity .65s ease, transform .65s cubic-bezier(.2,.7,.2,1); }
-.reveal.is-visible { opacity: 1; transform: translateY(0); }
+.js-enabled .reveal { opacity: 0; transform: translateY(18px); transition: opacity .65s ease, transform .65s cubic-bezier(.2,.7,.2,1); }
+.js-enabled .reveal.is-visible { opacity: 1; transform: translateY(0); }
 .principle-grid .reveal:nth-child(2), .level-grid .reveal:nth-child(2), .level-grid .reveal:nth-child(5) { transition-delay: .08s; }
 .principle-grid .reveal:nth-child(3), .level-grid .reveal:nth-child(3) { transition-delay: .15s; }
 @keyframes card-float { 0%, 100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-9px) rotate(-1.5deg); } }
