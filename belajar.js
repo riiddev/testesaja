@@ -130,8 +130,8 @@
     for(const entry of vd.entries){
       const key=norm(entry.word),sourceEntry=merged.get(key),curatedReady=Boolean(entry.meaning&&entry.example&&entry.translation);
       const mergedEntry=sourceEntry
-        ?Object.assign({},sourceEntry,entry,{level:sourceEntry.level,source:sourceEntry.source,isOxford3000:true,studyReady:curatedReady,translationStatus:"curated",contentStatus:curatedReady?"curated-complete":sourceEntry.contentStatus})
-        :Object.assign({},entry,{isOxford3000:false,studyReady:curatedReady,translationStatus:"curated",contentStatus:curatedReady?"curated-complete":"needs-content",source:{name:"SinauuEnglish curated starter",note:"Entry starter independen, bukan bagian dari hitungan Oxford 3000."}});
+        ?Object.assign({},sourceEntry,entry,{level:sourceEntry.level,source:sourceEntry.source,isOxford3000:true,studyReady:curatedReady,translationStatus:entry.translationStatus||"curated",contentStatus:entry.contentStatus|| (curatedReady?"curated-complete":sourceEntry.contentStatus)})
+        :Object.assign({},entry,{isOxford3000:false,studyReady:curatedReady,translationStatus:entry.translationStatus||"curated",contentStatus:entry.contentStatus|| (curatedReady?"curated-complete":"needs-content"),source:{name:"SinauuEnglish curated starter",note:"Entry starter independen, bukan bagian dari hitungan Oxford 3000."}});
       merged.set(key,mergedEntry);
     }
     words=Array.from(merged.values());topics=gd.topics;
@@ -261,8 +261,8 @@
     const w=words.find(x=>x.id===id);if(!w)return;
     const p=state.wordProgress[id],evidence=p?p.skillEvidence:{},ready=canStudyWord(w),si=ready?statusInfo[statusOf(w)]:{label:"BELUM SIAP",cls:"status-incomplete"};
     const exampleHtml=w.example?'<div class="detail-example"><p>'+esc(w.example)+'</p>'+(w.translation?'<p class="translation">'+esc(w.translation)+'</p>':'<p class="translation">Terjemahan contoh belum tersedia.</p>')+'</div>':'<p class="study-unavailable">Contoh penggunaan belum tersedia. Kata ini masih dapat dicari, tetapi belum bisa dilatih.</p>';
-    const hasUnreviewedContext=(w.contextVariants||[]).some(v=>v.translation&&v.translationStatus==="machine-generated-unreviewed");
-    const noteHtml=!ready?'<div class="content-status-note">Entri ini termasuk daftar headword sumber, tetapi materi latihannya belum lengkap. Sesi belajar baru dibuka setelah arti dan contoh penggunaan dapat dipakai.</div>':(w.translationStatus==="machine-generated-unreviewed"?'<div class="content-status-note">Terjemahan contoh berasal dari korpus kamus atau terjemahan mesin dan belum ditinjau satu per satu.</div>':(hasUnreviewedContext?'<div class="content-status-note">Beberapa contoh tambahan dan terjemahannya berasal dari korpus kamus dan belum ditinjau satu per satu.</div>':""));
+    const hasUnreviewedContext=(w.contextVariants||[]).some(v=>v.translation&&v.translationStatus&&v.translationStatus!=="human-reviewed"&&v.translationStatus!=="curated");
+    const noteHtml=!ready?'<div class="content-status-note">Entri ini termasuk daftar headword sumber, tetapi materi latihannya belum lengkap. Sesi belajar baru dibuka setelah arti dan contoh penggunaan dapat dipakai.</div>':(w.translationStatus==="machine-generated-unreviewed"?'<div class="content-status-note">Terjemahan contoh berasal dari korpus kamus atau terjemahan mesin dan belum ditinjau satu per satu.</div>':(w.translationStatus==="assistant-curated-draft"?'<div class="content-status-note">Arti dan terjemahan ini sudah dikurasi sebagai draf editorial SinauuEnglish, tetapi belum diverifikasi secara independen oleh penutur manusia.</div>':(hasUnreviewedContext?'<div class="content-status-note">Beberapa contoh tambahan dan terjemahannya berasal dari korpus kamus atau draf editorial yang belum diverifikasi satu per satu.</div>':"")));
     const variants=(w.contextVariants||[]).slice(0,3);
     const variantHtml=variants.length?'<p class="detail-section-label">CONTOH TAMBAHAN</p><div class="detail-note">'+variants.map(v=>'<p>'+esc(v.sentence)+(v.translation?'<br><span>'+esc(v.translation)+'</span>':'')+'</p>').join("")+'</div>':"";
     const defHtml=w.definitionEn?'<p class="detail-section-label">ENGLISH DEFINITION · REFERENCE</p><p class="definition-note">'+esc(w.definitionEn)+'</p>':"";
@@ -280,7 +280,7 @@
   }
   function speak(text) {
     if(!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window)){toast("Browser belum mendukung pemutaran ucapan.");return;}
-    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-GB";u.rate=.82;u.onerror=()=>toast("Audio tidak dapat diputar pada browser ini.");speechSynthesis.speak(u);
+    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=.82;u.onerror=()=>toast("Audio tidak dapat diputar pada browser ini.");speechSynthesis.speak(u);
   }
   function wordForms(w){return [w.word,...(w.forms||[]).map(x=>x.form)].map(norm).filter(Boolean);}
   function startStudy(id,mode) {
