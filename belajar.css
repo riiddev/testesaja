@@ -615,10 +615,11 @@ p{color:var(--body)}
   .reading-done-tag { margin-top:-6px; }
 }
 @media(max-width:420px) {
-  .matching-board { grid-template-columns:1fr; gap:18px; }
-  .matching-choice { min-height:47px; font-size:.76rem; padding:10px 12px; }
-  .matching-index { width:22px; flex-basis:22px; }
-  .matching-meaning { align-items:center; }
+  .matching-board { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+  .matching-choice { min-height:49px; font-size:.65rem; padding:9px 7px; gap:5px; }
+  .matching-index { width:15px; flex-basis:15px; font-size:.47rem; }
+  .matching-meaning { align-items:flex-start; }
+  .matching-mark { width:16px; height:16px; flex-basis:16px; }
   .matching-meta .metric-label,.reading-progress-strip .metric-label { font-size:.44rem; letter-spacing:.01em; }
   .matching-meta strong,.reading-progress-strip strong { font-size:1.38rem; }
   .reading-question-block h3 { font-size:1.22rem; }

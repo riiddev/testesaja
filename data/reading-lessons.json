@@ -366,6 +366,18 @@
           "answer": 0,
           "explanation": "Kebun menjalankan fungsi pembelajaran langsung: siswa mengamati pertumbuhan, mengukur, mencatat, lalu membandingkan hasil—serupa dengan kegiatan eksperimen di laboratorium.",
           "evidence": "Students measure plant growth and record rainfall, then compare their results during science lessons."
+        },
+        {
+          "prompt": "How do the second and third paragraphs relate to each other?",
+          "options": [
+            "The second describes learning activities and survey findings; the third qualifies what can be concluded and explains the school's next plan.",
+            "The second explains why the garden failed, and the third lists the steps to close it.",
+            "The second gives instructions for building the beds, and the third compares their costs.",
+            "The second focuses on cafeteria supplies, while the third says the school will stop growing food."
+          ],
+          "answer": 0,
+          "explanation": "Paragraf kedua menjelaskan kegiatan belajar dan temuan survei. Paragraf ketiga memberi batas pada kesimpulan tentang nilai akademik, kemudian menyebut rencana memperluas kebun. Hubungannya bergerak dari manfaat yang diamati ke batas bukti dan tindak lanjut.",
+          "evidence": "The second paragraph presents student activities and survey results; the third says the survey did not measure grades and mentions two new raised beds."
         }
       ]
     }
