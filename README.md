@@ -1,42 +1,53 @@
 # SinauuEnglish
 
-SinauuEnglish is a frontend-only English-learning platform for Indonesian learners. The goal is to make vocabulary, grammar, and everyday English easier to understand through contextual practice and spaced review.
+SinauuEnglish is a frontend-only English-learning workspace for Indonesian learners. It teaches vocabulary and grammar through contextual practice and spaced review, with study records stored on the learner's device.
 
-## Current stage
+## Current build
 
-**Phase 1: Landing page**
+### Landing page
+- Soft editorial visual direction with warm paper, sage, and lilac accents.
+- Responsive layout, light/dark theme, and reduced-motion support.
+- Landing-page calls to action open the learning workspace.
 
-The current build is a responsive, soft-pastel landing page with:
-- A responsive navigation menu.
-- Light and dark themes.
-- A vocabulary sample with browser-native speech synthesis when supported.
-- A short interactive grammar question with feedback.
-- Learning-path previews for CEFR A1–C1.
-- Reduced-motion support and keyboard-visible focus states.
+### Learning workspace
+- Vocabulary search by word/meaning/example, CEFR filter, topic filter, and favorites.
+- Vocabulary details include Indonesian meaning, pronunciation when available, word forms, examples, collocations, and usage notes.
+- A vocabulary study flow records meaning recall, context recognition, typed sentence production/self-check, confidence, answer history, and study dates.
+- Mastery is not awarded from exposure or a single correct answer. It requires recall, context, active-usage self-check, and three successful spaced reviews across separate dates spanning at least 12 days.
+- Topic-specific grammar lessons include Indonesian explanations, patterns, translated examples, common mistakes, checkpoints, and individual exercises.
+- Progress summaries are calculated from the real current dataset and saved study events.
+- IndexedDB is used when available, with localStorage fallback. JSON backup export/import is included.
+- Browser-native speech synthesis is used only where supported; pronunciation quality is not automatically graded.
 
-The learning workspace and full curriculum are planned next. CEFR cards and learning modules on this page describe the intended product direction; they do not claim that all learning content is already implemented.
+## Actual content status
 
-## Tech and constraints
+The starter corpus currently has **34 curated vocabulary entries** and **6 grammar topics with 18 topic-specific questions**. These counts come from the checked-in JSON datasets.
 
-- Static HTML, CSS, and vanilla JavaScript.
-- No backend, API server, login, or required paid service.
-- Browser-local storage is used only for the theme preference at this stage.
-- Learning progress storage, vocabulary import, grammar content, mastery scheduling, and backup/restore are not implemented yet.
+The original Google Drive vocabulary source has **not yet been imported or audited**. Its contents could not be accessed by the available reader, so this build does not claim source coverage or full A1–C1 coverage. The current vocabulary set is seed content, not a replacement for the full source list.
 
-## Run locally
+The initial grammar curriculum covers a limited set of A1–B1 topics; the broader target curriculum remains incomplete. Topic/question counts are derived from the JSON data, not visual placeholders.
 
-Open index.html in a browser, or serve the repository root with any static development server.
+## Technical constraints
 
-## Deploy
+- Static HTML, CSS, JavaScript, and JSON; no backend, API server, login, or required paid service.
+- The source repository is the source of truth. Content updates go through GitHub and redeploy through the connected Vercel project.
+- Study progress remains local to the browser/device. There is no automatic cross-device sync.
+- Back up progress before clearing browser storage or switching devices.
 
-The repository is designed for static deployment on Vercel. Import riiddev/testesaja into Vercel and use the default static setup; no build command is required for the current landing page.
+## Files
 
-## Planned sequence
+- index.html, styles.css, app.js — landing page.
+- belajar.html, belajar.css, belajar.js — local-first learning workspace.
+- data/vocabulary.json — curated starter vocabulary.
+- data/grammar.json — curated starter grammar curriculum and question bank.
 
-1. Landing page and brand system.
-2. Learning workspace frontend.
-3. Verified vocabulary corpus and grammar lessons.
-4. Local-first study history, mastery engine, spaced review, and backup/restore.
-5. Content audit, accessibility checks, and regression tests.
+## Roadmap
 
-**Data integrity rule:** only publish word counts, completion rates, and mastery metrics when they can be derived from real, validated content and saved learning records.
+1. Import and audit the complete original vocabulary source.
+2. Expand and review A1/A2 vocabulary, then substantially expand B1/B2 and selected C1 entries.
+3. Expand grammar lessons and validated question banks topic by topic.
+4. Add additional context variants and refine mastery/review edge cases with automated tests.
+5. Build stories, everyday English, listening, speaking, writing, and placement-test modules.
+6. Run responsive, accessibility, persistence, backup/restore, and regression checks.
+
+**Data integrity rule:** only report counts and mastery metrics that can be derived from real validated content and saved learning records.
