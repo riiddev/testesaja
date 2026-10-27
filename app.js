@@ -2,6 +2,7 @@
   "use strict";
 
   const root = document.documentElement;
+  root.classList.add("js-enabled");
   const themeToggle = document.getElementById("theme-toggle");
   const menuToggle = document.getElementById("menu-toggle");
   const primaryNav = document.getElementById("primary-nav");
