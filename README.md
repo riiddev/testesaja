@@ -38,7 +38,7 @@ The simple headword list does not preserve the per-sense part-of-speech and CEFR
 
 English–Indonesian meanings, definitions, IPA where available, and example material are enriched from the [KOReader English–Indonesian dictionary](https://github.com/DanielGregorini/koreader-dicts), a CC-BY-SA-4.0 compilation that includes WordNet Bahasa, Princeton WordNet 3.0, and English Wiktionary. See [data/oxford3000/ATTRIBUTION.md](data/oxford3000/ATTRIBUTION.md) for license/source details.
 
-The imported Oxford corpus currently has **1,563 records with a usable meaning and example** under the dataset's basic readiness checks. Existing curated starter content takes precedence where the same headword exists. Some Indonesian translations are machine-generated and not human-reviewed; many entries still need better examples, translation review, or resolution of ambiguous senses. The app does not claim all 2,971 headwords are pedagogically complete or that every headword is ready to study. See [data/oxford3000/audit.json](data/oxford3000/audit.json) for the detailed data-quality summary.
+The Oxford corpus currently has **1,587 records with a usable meaning and example** under the app's basic readiness checks. A first editorial pass has rewritten 93 high-frequency A1/A2 entries with simpler Indonesian meanings and fresh example sentences plus translations. These are assistant-authored editorial drafts, **not independently human-verified**. The remaining corpus still contains dictionary-derived or machine-translated material and needs careful review of word senses, examples, and translations. The app does not claim all 2,971 headwords are pedagogically complete or that every headword is ready to study. See [data/oxford3000/audit.json](data/oxford3000/audit.json) for the detailed data-quality summary.
 
 The Oxford source list is available at [Oxford Learner's Dictionaries — American Oxford 3000 PDF](https://www.oxfordlearnersdictionaries.com/external/pdf/wordlists/oxford-3000-5000/American_Oxford_3000.pdf). SinauuEnglish is an independent project and is not affiliated with or endorsed by Oxford University Press.
 
@@ -57,8 +57,9 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 - `belajar.html`, `belajar.css`, `belajar.js` — local-first learning workspace.
 - `data/vocabulary.json` — curated starter vocabulary; its entries override the Oxford-derived entry for matching headwords.
 - `data/grammar.json` — starter grammar curriculum and question bank.
-- `data/oxford3000/*.json.gz.b64` — gzip-compressed, Base64-encoded corpus split by CEFR level for efficient static hosting.
-- `data/oxford3000/ATTRIBUTION.md`, `data/oxford3000/audit.json` — source attribution and content audit.
+- `data/oxford3000/*.json.gz.b64` — gzip-compressed, Base64-encoded corpus split by CEFR level for static hosting.
+- `data/oxford3000/editorial-overrides.json.gz.b64` — compact bundle of 86 additional A1/A2 editorial-draft overlays; original curated entries stay in `data/vocabulary.json`.
+- `data/oxford3000/ATTRIBUTION.md`, `data/oxford3000/audit.json` — source attribution and content-quality audit.
 
 ## Next work
 
