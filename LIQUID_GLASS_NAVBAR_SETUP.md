@@ -1,60 +1,46 @@
-# Liquid Glass Navbar — integration notes
+# Liquid Glass Navbar — SinauuEnglish
 
-## Current repository status
+The component is now integrated into this repository's build instead of requiring a separate Vite project.
 
-SinauuEnglish currently runs as a static HTML/CSS/JavaScript site. It has no root `package.json`, React entry point, TypeScript configuration, Tailwind setup, or shadcn `components.json`. Its existing page styles are `/styles.css` and `/belajar.css`.
+## What is wired up
 
-The React component is saved at `/components/ui/liquid-glass-navbar.tsx` as requested. It is source code only at this stage; the existing static pages do not compile or render TSX. No root build configuration has been changed, so the production site remains on its current static deployment.
+- `components/ui/liquid-glass-navbar.tsx`: the reusable React + TypeScript component.
+- `index.html`: the landing page mounts the liquid navbar in the existing primary-navigation area.
+- `liquid-navbar.html`: an isolated demo route that uses the same component.
+- `src/navbar-mount.tsx`: React mount for the existing HTML landing page.
+- `src/main.tsx`: the standalone React demo entry.
+- `src/index.css`: Tailwind CSS v4 entry for React UI.
+- `vite.config.ts`: React and Tailwind plugins, `@` alias, and multi-page production build.
+- `components.json`: shadcn/ui aliases point UI components to `@/components/ui`.
+- `public/data` and `public/*.js`: copies of static datasets and classic scripts so the learning workspace keeps its original URLs after a Vite build.
 
-## Recommended folder paths
+## Run locally
 
-For a new Vite + React + TypeScript app using the usual shadcn alias:
-
-- Component: `src/components/ui/liquid-glass-navbar.tsx`
-- Global styles / Tailwind entry: `src/index.css`
-- Import alias: `@/* -> ./src/*`
-
-In this current repository, the requested component is stored at root `components/ui/liquid-glass-navbar.tsx`. The UI folder matters because shadcn's `components.json` `aliases.ui` tells the CLI where UI components belong. A consistent location also makes imports such as `@/components/ui/liquid-glass-navbar` predictable. In a Vite app that uses `src/`, the actual path normally lives under `src/components/ui`, not at the repository root.
-
-## Safest setup path
-
-Do not run a scaffold command over the current live static site unless you intend to migrate it. To create a separate React environment for this component:
+Requires Node.js 22.12 or newer.
 
 ```bash
-npm create vite@latest sinauu-react -- --template react-ts
-cd sinauu-react
 npm install
-npm install tailwindcss @tailwindcss/vite
-npx shadcn@latest init
+npm run dev
 ```
 
-Then copy `components/ui/liquid-glass-navbar.tsx` into `sinauu-react/src/components/ui/liquid-glass-navbar.tsx`. The Vite Tailwind entry in `src/index.css` should include:
+Open the Vite local URL. The landing page is at `/`, the learning workspace remains at `/belajar.html`, and the standalone navbar preview is at `/liquid-navbar.html`.
 
-```css
-@import "tailwindcss";
+Run the TypeScript check and production build with:
+
+```bash
+npm run build
 ```
 
-For Vite, configure the `@/*` alias in `tsconfig.json` and `tsconfig.app.json` to map to `./src/*`, and add the matching alias in `vite.config.ts`. The shadcn CLI will create `components.json`; check that its `aliases.ui` points to `@/components/ui`. Run `npm run dev` to preview the app.
+## Component path and alias
 
-## Minimal usage
+The component is at the requested path, `/components/ui/liquid-glass-navbar.tsx`. The `@` alias maps to the repository root, so this import resolves correctly:
 
 ```tsx
-import { LiquidNavbar, NimbusIcons } from "@/components/ui/liquid-glass-navbar"
-
-export function SiteNavigation() {
-  return (
-    <LiquidNavbar
-      tone="light"
-      defaultActive={0}
-      sound={false}
-      items={[
-        { label: "Home", href: "/", icon: NimbusIcons.home, fx: "glow" },
-        { label: "Explore", href: "/explore", icon: NimbusIcons.globe, fx: "spin" },
-        { label: "Profile", href: "/profile", icon: NimbusIcons.user, fx: "wave" },
-      ]}
-    />
-  )
-}
+import { LiquidNavbar, NimbusIcons } from "@/components/ui/liquid-glass-navbar";
 ```
 
-The component uses inline component CSS and WebGL with a CSS fallback; it does not require Tailwind classes itself. React and TypeScript are required to compile the TSX, while Tailwind/shadcn are recommended for the surrounding React project and consistent component paths.
+The `components/ui` directory matters because the `aliases.ui` field in `components.json` points the shadcn CLI to this location. Keeping reusable UI in one predictable directory makes generated components and imports consistent.
+
+## Notes
+
+The navbar uses its own glass/water CSS and WebGL shader with a CSS fallback. Tailwind is configured for the React demo and future UI components; the existing editorial CSS and vanilla-JavaScript learning modules remain in place. Learning progress storage and vocabulary/grammar data paths are preserved.

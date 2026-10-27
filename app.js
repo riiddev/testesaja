@@ -68,8 +68,9 @@
     primaryNav?.classList.toggle("is-open", !isOpen);
   });
 
-  primaryNav?.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", closeMenu);
+  // Delegate this event because the liquid navbar's React links mount after page parsing.
+  primaryNav?.addEventListener("click", (event) => {
+    if (event.target instanceof Element && event.target.closest("a")) closeMenu();
   });
 
   document.addEventListener("keydown", (event) => {

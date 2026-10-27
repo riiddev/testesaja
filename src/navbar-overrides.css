@@ -1,0 +1,15 @@
+/* Keep the liquid component's visual language separate from the legacy nav styles. */
+.primary-nav.has-liquid-nav { gap: 0; margin-left: auto; }
+.primary-nav.has-liquid-nav #liquid-nav-mount { display: flex; align-items: center; justify-content: center; }
+.primary-nav.has-liquid-nav .nimbus-nav { margin: 0; gap: 2px; }
+.primary-nav.has-liquid-nav .nimbus-item { padding: 0 12px; border: 0; border-radius: 999px; font-size: 14px; font-weight: 500; line-height: 1; }
+.primary-nav.has-liquid-nav .nimbus-item:last-child { border-bottom: 0; }
+.primary-nav.has-liquid-nav .nimbus-label { white-space: nowrap; }
+@media (max-width: 760px) {
+  .primary-nav.has-liquid-nav { padding: 10px 12px 14px; }
+  .primary-nav.has-liquid-nav #liquid-nav-mount { width: 100%; }
+  .primary-nav.has-liquid-nav .nimbus-nav { margin-inline: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary-nav.has-liquid-nav * { scroll-behavior: auto; }
+}

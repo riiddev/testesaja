@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/motion.css">
   <script src="/motion.js" defer></script>
   <script src="/app.js" defer></script>
+  <script type="module" src="/src/navbar-mount.tsx"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Lewati ke konten</a>
@@ -23,11 +24,14 @@
         <span class="brand-mark" aria-hidden="true"><img src="/assets/sinauu-mark.svg" alt=""></span>
         <span class="brand-name">sinauu<span>english / field notes</span></span>
       </a>
-      <nav class="primary-nav" id="primary-nav" aria-label="Navigasi utama">
-        <a href="#pendekatan">Pendekatan</a><a href="/belajar.html">Ruang belajar</a>
-        <a href="#materi">Peta materi</a>
-        <a href="#latihan">Coba latihan</a>
-      </nav>
+      <div class="primary-nav" id="primary-nav">
+        <div id="liquid-nav-mount">
+          <nav class="liquid-nav-fallback" aria-label="Navigasi utama">
+            <a href="#pendekatan">Pendekatan</a><a href="/belajar.html">Ruang belajar</a>
+            <a href="#materi">Peta materi</a><a href="#latihan">Coba latihan</a>
+          </nav>
+        </div>
+      </div>
       <div class="nav-actions">
         <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Aktifkan tema gelap" aria-pressed="false">
           <svg class="sun-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2m14.7-6.7-1.4 1.4M6.2 17.8l-1.4 1.4m13 0-1.4-1.4M6.2 6.2 4.8 4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>

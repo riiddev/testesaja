@@ -1,0 +1,1624 @@
+{
+  "schemaVersion": 1,
+  "dataset": "sinauu-curated-starter",
+  "provenance": "curated",
+  "sourceImportStatus": "not-imported-source-inaccessible",
+  "note": "Curated starter entries for the learning workspace. This is not the original source vocabulary list. Each listed entry is a real item with Indonesian meaning, usage example, and distinct contextual question.",
+  "entries": [
+    {
+      "id": "a1-hello",
+      "word": "hello",
+      "level": "A1",
+      "partOfSpeech": "interjection",
+      "topics": [
+        "greetings",
+        "everyday"
+      ],
+      "ipa": "/həˈləʊ/",
+      "meaning": "halo; sapaan untuk menyapa seseorang",
+      "acceptedMeanings": [
+        "halo",
+        "hai",
+        "sapaan"
+      ],
+      "forms": [
+        {
+          "form": "hello",
+          "label": "base"
+        }
+      ],
+      "example": "Hello, my name is Rina.",
+      "translation": "Halo, nama saya Rina.",
+      "collocations": [
+        "say hello",
+        "hello everyone"
+      ],
+      "commonMistake": "Hello adalah sapaan; untuk memperkenalkan diri, lanjutkan dengan nama atau kalimat perkenalan.",
+      "context": {
+        "id": "a1-hello-context-1",
+        "prompt": "You enter a classroom and see your teacher. What is a natural thing to say?",
+        "options": [
+          "Hello, Miss.",
+          "Good night, Miss.",
+          "See you yesterday."
+        ],
+        "answer": 0,
+        "explanation": "“Hello” adalah sapaan netral yang sesuai ketika bertemu seseorang."
+      }
+    },
+    {
+      "id": "a1-usually",
+      "word": "usually",
+      "level": "A1",
+      "partOfSpeech": "adverb",
+      "topics": [
+        "routine",
+        "time"
+      ],
+      "ipa": "/ˈjuː.ʒu.ə.li/",
+      "meaning": "biasanya; pada kebanyakan kesempatan",
+      "acceptedMeanings": [
+        "biasanya",
+        "umumnya",
+        "pada umumnya"
+      ],
+      "forms": [
+        {
+          "form": "usually",
+          "label": "adverb"
+        }
+      ],
+      "example": "I usually walk to school.",
+      "translation": "Saya biasanya berjalan kaki ke sekolah.",
+      "collocations": [
+        "usually get up",
+        "usually go",
+        "usually on time"
+      ],
+      "commonMistake": "Usually umumnya diletakkan sebelum kata kerja utama, tetapi setelah be: “She is usually early.”",
+      "context": {
+        "id": "a1-usually-context-1",
+        "prompt": "Maya eats breakfast at home on most days. Which sentence best describes her routine?",
+        "options": [
+          "Maya never eats breakfast.",
+          "Maya usually eats breakfast at home.",
+          "Maya is eating breakfast yesterday."
+        ],
+        "answer": 1,
+        "explanation": "Usually menyatakan kebiasaan yang terjadi pada kebanyakan kesempatan."
+      }
+    },
+    {
+      "id": "a1-enough",
+      "word": "enough",
+      "level": "A1",
+      "partOfSpeech": "determiner/adverb",
+      "topics": [
+        "quantity",
+        "daily-life"
+      ],
+      "ipa": "/ɪˈnʌf/",
+      "meaning": "cukup; dalam jumlah atau tingkat yang diperlukan",
+      "acceptedMeanings": [
+        "cukup",
+        "secukupnya"
+      ],
+      "forms": [
+        {
+          "form": "enough",
+          "label": "base"
+        }
+      ],
+      "example": "We have enough time to finish.",
+      "translation": "Kita punya cukup waktu untuk menyelesaikannya.",
+      "collocations": [
+        "enough time",
+        "enough money",
+        "good enough"
+      ],
+      "commonMistake": "Enough berada sebelum noun (“enough time”), tetapi setelah adjective (“warm enough”).",
+      "context": {
+        "id": "a1-enough-context-1",
+        "prompt": "The bus leaves in 20 minutes, and the walk takes 10 minutes. What can you say?",
+        "options": [
+          "We have enough time.",
+          "We have time enoughly.",
+          "We have many time."
+        ],
+        "answer": 0,
+        "explanation": "“Enough time” berarti waktu yang memadai untuk melakukan sesuatu."
+      }
+    },
+    {
+      "id": "a1-borrow",
+      "word": "borrow",
+      "level": "A1",
+      "partOfSpeech": "verb",
+      "topics": [
+        "school",
+        "everyday"
+      ],
+      "ipa": "/ˈbɒr.əʊ/",
+      "meaning": "meminjam sesuatu dari orang lain untuk sementara",
+      "acceptedMeanings": [
+        "meminjam",
+        "meminta pinjaman sementara"
+      ],
+      "forms": [
+        {
+          "form": "borrow",
+          "label": "base"
+        },
+        {
+          "form": "borrowed",
+          "label": "past"
+        },
+        {
+          "form": "borrowing",
+          "label": "-ing"
+        }
+      ],
+      "example": "Can I borrow your pencil for a minute?",
+      "translation": "Boleh aku meminjam pensilmu sebentar?",
+      "collocations": [
+        "borrow a book",
+        "borrow money",
+        "borrow from a friend"
+      ],
+      "commonMistake": "Borrow berarti menerima pinjaman; lend berarti meminjamkan kepada orang lain.",
+      "context": {
+        "id": "a1-borrow-context-1",
+        "prompt": "You need your friend's dictionary for five minutes. What do you ask?",
+        "options": [
+          "Can I lend your dictionary?",
+          "Can I borrow your dictionary?",
+          "Can I owe your dictionary?"
+        ],
+        "answer": 1,
+        "explanation": "Borrow digunakan dari sudut pandang orang yang menerima barang sementara."
+      }
+    },
+    {
+      "id": "a1-choose",
+      "word": "choose",
+      "level": "A1",
+      "partOfSpeech": "verb",
+      "topics": [
+        "decisions",
+        "everyday"
+      ],
+      "ipa": "/tʃuːz/",
+      "meaning": "memilih dari dua atau lebih kemungkinan",
+      "acceptedMeanings": [
+        "memilih",
+        "menentukan pilihan"
+      ],
+      "forms": [
+        {
+          "form": "choose",
+          "label": "base"
+        },
+        {
+          "form": "chose",
+          "label": "past"
+        },
+        {
+          "form": "chosen",
+          "label": "past participle"
+        }
+      ],
+      "example": "You can choose any seat you like.",
+      "translation": "Kamu boleh memilih kursi mana pun yang kamu suka.",
+      "collocations": [
+        "choose a seat",
+        "choose between",
+        "choose carefully"
+      ],
+      "commonMistake": "Bentuk lampau choose adalah chose, bukan choosed.",
+      "context": {
+        "id": "a1-choose-context-1",
+        "prompt": "There are three cakes. You point to the chocolate one. What did you do?",
+        "options": [
+          "You chose a cake.",
+          "You borrowed a cake.",
+          "You usually a cake."
+        ],
+        "answer": 0,
+        "explanation": "Choose berarti memilih; bentuk past simple-nya adalah chose."
+      }
+    },
+    {
+      "id": "a1-arrive",
+      "word": "arrive",
+      "level": "A1",
+      "partOfSpeech": "verb",
+      "topics": [
+        "travel",
+        "time"
+      ],
+      "ipa": "/əˈraɪv/",
+      "meaning": "tiba di suatu tempat",
+      "acceptedMeanings": [
+        "tiba",
+        "sampai",
+        "datang"
+      ],
+      "forms": [
+        {
+          "form": "arrive",
+          "label": "base"
+        },
+        {
+          "form": "arrived",
+          "label": "past"
+        },
+        {
+          "form": "arriving",
+          "label": "-ing"
+        }
+      ],
+      "example": "Our train arrives at six.",
+      "translation": "Kereta kami tiba pukul enam.",
+      "collocations": [
+        "arrive early",
+        "arrive at the station",
+        "arrive in Jakarta"
+      ],
+      "commonMistake": "Gunakan arrive at untuk titik/tempat spesifik dan arrive in untuk kota atau negara.",
+      "context": {
+        "id": "a1-arrive-context-1",
+        "prompt": "Your plane lands and you reach the airport building. You can say, “We have …”",
+        "options": [
+          "arrived at the airport",
+          "arrived to the airport",
+          "arrived on the airport"
+        ],
+        "answer": 0,
+        "explanation": "Dalam penggunaan standar, arrive at diikuti tempat spesifik seperti airport."
+      }
+    },
+    {
+      "id": "a1-afraid",
+      "word": "afraid",
+      "level": "A1",
+      "partOfSpeech": "adjective",
+      "topics": [
+        "feelings",
+        "everyday"
+      ],
+      "ipa": "/əˈfreɪd/",
+      "meaning": "takut atau khawatir terhadap sesuatu",
+      "acceptedMeanings": [
+        "takut",
+        "khawatir",
+        "merasa takut"
+      ],
+      "forms": [
+        {
+          "form": "afraid",
+          "label": "adjective"
+        }
+      ],
+      "example": "I am afraid of big dogs.",
+      "translation": "Saya takut pada anjing besar.",
+      "collocations": [
+        "afraid of",
+        "afraid to ask",
+        "a little afraid"
+      ],
+      "commonMistake": "Pola yang umum adalah afraid of + noun/-ing: “afraid of flying”.",
+      "context": {
+        "id": "a1-afraid-context-1",
+        "prompt": "Lina does not want to enter the dark room because it scares her. Lina is …",
+        "options": [
+          "afraid",
+          "enough",
+          "usually"
+        ],
+        "answer": 0,
+        "explanation": "Afraid menggambarkan rasa takut atau khawatir."
+      }
+    },
+    {
+      "id": "a1-neighbor",
+      "word": "neighbor",
+      "level": "A1",
+      "partOfSpeech": "noun",
+      "topics": [
+        "people",
+        "home"
+      ],
+      "ipa": "/ˈneɪ.bər/",
+      "meaning": "orang yang tinggal di dekat rumah kita",
+      "acceptedMeanings": [
+        "tetangga",
+        "orang yang tinggal di dekat kita"
+      ],
+      "forms": [
+        {
+          "form": "neighbor",
+          "label": "singular"
+        },
+        {
+          "form": "neighbors",
+          "label": "plural"
+        }
+      ],
+      "example": "Our neighbors have a friendly dog.",
+      "translation": "Tetangga kami punya anjing yang ramah.",
+      "collocations": [
+        "next-door neighbor",
+        "friendly neighbors",
+        "meet the neighbors"
+      ],
+      "commonMistake": "Neighbor adalah ejaan bahasa Inggris Amerika; neighbour umum digunakan dalam bahasa Inggris Britania.",
+      "context": {
+        "id": "a1-neighbor-context-1",
+        "prompt": "The family living in the house next to yours are your …",
+        "options": [
+          "colleagues",
+          "neighbors",
+          "passengers"
+        ],
+        "answer": 1,
+        "explanation": "Neighbor berarti orang yang tinggal di dekat tempat tinggal kita."
+      }
+    },
+    {
+      "id": "a1-expensive",
+      "word": "expensive",
+      "level": "A1",
+      "partOfSpeech": "adjective",
+      "topics": [
+        "shopping",
+        "money"
+      ],
+      "ipa": "/ɪkˈspen.sɪv/",
+      "meaning": "mahal; membutuhkan banyak uang",
+      "acceptedMeanings": [
+        "mahal",
+        "berharga mahal"
+      ],
+      "forms": [
+        {
+          "form": "expensive",
+          "label": "adjective"
+        },
+        {
+          "form": "more expensive",
+          "label": "comparative"
+        },
+        {
+          "form": "most expensive",
+          "label": "superlative"
+        }
+      ],
+      "example": "That jacket is too expensive for me.",
+      "translation": "Jaket itu terlalu mahal untuk saya.",
+      "collocations": [
+        "quite expensive",
+        "expensive clothes",
+        "too expensive"
+      ],
+      "commonMistake": "Expensive mendeskripsikan sesuatu yang berharga mahal; “costly” juga bisa bermakna mahal tetapi lebih formal.",
+      "context": {
+        "id": "a1-expensive-context-1",
+        "prompt": "You only have Rp50,000, but the shirt costs Rp500,000. The shirt is …",
+        "options": [
+          "cheap for you",
+          "too expensive for you",
+          "usually for you"
+        ],
+        "answer": 1,
+        "explanation": "Expensive berarti mahal; harga yang jauh di atas anggaran bisa disebut too expensive."
+      }
+    },
+    {
+      "id": "a1-improve",
+      "word": "improve",
+      "level": "A1",
+      "partOfSpeech": "verb",
+      "topics": [
+        "learning",
+        "work"
+      ],
+      "ipa": "/ɪmˈpruːv/",
+      "meaning": "menjadi lebih baik atau membuat sesuatu menjadi lebih baik",
+      "acceptedMeanings": [
+        "meningkatkan",
+        "memperbaiki",
+        "menjadi lebih baik"
+      ],
+      "forms": [
+        {
+          "form": "improve",
+          "label": "base"
+        },
+        {
+          "form": "improved",
+          "label": "past"
+        },
+        {
+          "form": "improvement",
+          "label": "noun"
+        }
+      ],
+      "example": "Reading every day can improve your vocabulary.",
+      "translation": "Membaca setiap hari dapat meningkatkan kosakatamu.",
+      "collocations": [
+        "improve your skills",
+        "improve a situation",
+        "show improvement"
+      ],
+      "commonMistake": "Improve dapat digunakan tanpa objek (“My English improved”) atau dengan objek (“improve your English”).",
+      "context": {
+        "id": "a1-improve-context-1",
+        "prompt": "After practising every week, Bima makes fewer mistakes. His English begins to …",
+        "options": [
+          "improve",
+          "borrow",
+          "arrive"
+        ],
+        "answer": 0,
+        "explanation": "Improve berarti berkembang atau menjadi lebih baik."
+      }
+    },
+    {
+      "id": "a2-notice",
+      "word": "notice",
+      "level": "A2",
+      "partOfSpeech": "verb/noun",
+      "topics": [
+        "observation",
+        "everyday"
+      ],
+      "ipa": "/ˈnəʊ.tɪs/",
+      "meaning": "memperhatikan atau menyadari sesuatu; juga dapat berarti pemberitahuan",
+      "acceptedMeanings": [
+        "memperhatikan",
+        "menyadari",
+        "pemberitahuan"
+      ],
+      "forms": [
+        {
+          "form": "notice",
+          "label": "base/noun"
+        },
+        {
+          "form": "noticed",
+          "label": "past"
+        },
+        {
+          "form": "noticeable",
+          "label": "adjective"
+        }
+      ],
+      "example": "I noticed a small change in her voice.",
+      "translation": "Saya menyadari perubahan kecil pada suaranya.",
+      "collocations": [
+        "notice a difference",
+        "notice a change",
+        "take notice of"
+      ],
+      "commonMistake": "See menekankan tindakan melihat; notice menekankan bahwa sesuatu tertangkap oleh perhatian.",
+      "context": {
+        "id": "a2-notice-context-1",
+        "prompt": "Rafi looks at the room and realizes that a chair is missing. He … the missing chair.",
+        "options": [
+          "noticed",
+          "borrowed",
+          "arrived"
+        ],
+        "answer": 0,
+        "explanation": "Notice berarti menyadari atau memperhatikan sesuatu, bukan sekadar melihat."
+      }
+    },
+    {
+      "id": "a2-avoid",
+      "word": "avoid",
+      "level": "A2",
+      "partOfSpeech": "verb",
+      "topics": [
+        "choices",
+        "daily-life"
+      ],
+      "ipa": "/əˈvɔɪd/",
+      "meaning": "menghindari seseorang, sesuatu, atau suatu tindakan",
+      "acceptedMeanings": [
+        "menghindari",
+        "menjauhi"
+      ],
+      "forms": [
+        {
+          "form": "avoid",
+          "label": "base"
+        },
+        {
+          "form": "avoided",
+          "label": "past"
+        },
+        {
+          "form": "avoidance",
+          "label": "noun"
+        }
+      ],
+      "example": "I try to avoid using my phone before bed.",
+      "translation": "Saya berusaha menghindari penggunaan ponsel sebelum tidur.",
+      "collocations": [
+        "avoid a mistake",
+        "avoid doing something",
+        "avoid traffic"
+      ],
+      "commonMistake": "Avoid diikuti noun atau verb-ing, bukan to-infinitive: “avoid making”, bukan “avoid to make”.",
+      "context": {
+        "id": "a2-avoid-context-1",
+        "prompt": "The road is very busy, so we take a quieter street instead. We want to … the traffic.",
+        "options": [
+          "avoid",
+          "explain",
+          "compare"
+        ],
+        "answer": 0,
+        "explanation": "Avoid berarti berusaha tidak menghadapi atau tidak melakukan sesuatu."
+      }
+    },
+    {
+      "id": "a2-realize",
+      "word": "realize",
+      "level": "A2",
+      "partOfSpeech": "verb",
+      "topics": [
+        "thinking",
+        "learning"
+      ],
+      "ipa": "/ˈrɪə.laɪz/",
+      "meaning": "menyadari atau memahami sesuatu yang sebelumnya belum disadari",
+      "acceptedMeanings": [
+        "menyadari",
+        "menginsafi",
+        "memahami setelah menyadari"
+      ],
+      "forms": [
+        {
+          "form": "realize",
+          "label": "base"
+        },
+        {
+          "form": "realized",
+          "label": "past"
+        },
+        {
+          "form": "realization",
+          "label": "noun"
+        }
+      ],
+      "example": "I realized that I had left my keys at home.",
+      "translation": "Saya menyadari bahwa kunci saya tertinggal di rumah.",
+      "collocations": [
+        "realize a mistake",
+        "suddenly realize",
+        "realize that"
+      ],
+      "commonMistake": "Realize sering menyoroti momen ketika pemahaman muncul; notice lebih menyoroti sesuatu yang tertangkap perhatian.",
+      "context": {
+        "id": "a2-realize-context-1",
+        "prompt": "Halfway to school, Dita understands that she forgot her homework. She … her mistake.",
+        "options": [
+          "realizes",
+          "arrives",
+          "borrows"
+        ],
+        "answer": 0,
+        "explanation": "Realize cocok untuk saat seseorang menyadari atau memahami suatu fakta."
+      }
+    },
+    {
+      "id": "a2-suggest",
+      "word": "suggest",
+      "level": "A2",
+      "partOfSpeech": "verb",
+      "topics": [
+        "communication",
+        "ideas"
+      ],
+      "ipa": "/səˈdʒest/",
+      "meaning": "mengusulkan ide atau menyarankan sesuatu",
+      "acceptedMeanings": [
+        "menyarankan",
+        "mengusulkan",
+        "memberi saran"
+      ],
+      "forms": [
+        {
+          "form": "suggest",
+          "label": "base"
+        },
+        {
+          "form": "suggested",
+          "label": "past"
+        },
+        {
+          "form": "suggestion",
+          "label": "noun"
+        }
+      ],
+      "example": "I suggest taking the earlier train.",
+      "translation": "Saya menyarankan untuk naik kereta yang lebih awal.",
+      "collocations": [
+        "suggest an idea",
+        "suggest doing something",
+        "make a suggestion"
+      ],
+      "commonMistake": "Suggest diikuti verb-ing atau that-clause; biasanya bukan “suggest to do”.",
+      "context": {
+        "id": "a2-suggest-context-1",
+        "prompt": "Your friend asks where to eat. You recommend a small café. You … the café.",
+        "options": [
+          "suggest",
+          "avoid",
+          "belong"
+        ],
+        "answer": 0,
+        "explanation": "Suggest digunakan untuk mengajukan ide atau rekomendasi."
+      }
+    },
+    {
+      "id": "a2-depend",
+      "word": "depend",
+      "level": "A2",
+      "partOfSpeech": "verb",
+      "topics": [
+        "relationships",
+        "decisions"
+      ],
+      "ipa": "/dɪˈpend/",
+      "meaning": "bergantung pada sesuatu atau ditentukan oleh sesuatu",
+      "acceptedMeanings": [
+        "bergantung",
+        "tergantung",
+        "ditentukan oleh"
+      ],
+      "forms": [
+        {
+          "form": "depend",
+          "label": "base"
+        },
+        {
+          "form": "depends",
+          "label": "third-person singular"
+        },
+        {
+          "form": "dependent",
+          "label": "adjective"
+        }
+      ],
+      "example": "The final cost depends on the number of people.",
+      "translation": "Biaya akhirnya bergantung pada jumlah orang.",
+      "collocations": [
+        "depend on",
+        "it depends",
+        "depend on the weather"
+      ],
+      "commonMistake": "Dalam makna ini, gunakan depend on, bukan depend of.",
+      "context": {
+        "id": "a2-depend-context-1",
+        "prompt": "Whether we have a picnic or not is decided by the weather. The plan … the weather.",
+        "options": [
+          "depends on",
+          "depends of",
+          "suggests on"
+        ],
+        "answer": 0,
+        "explanation": "Pola standar yang digunakan adalah depend on."
+      }
+    },
+    {
+      "id": "a2-realistic",
+      "word": "realistic",
+      "level": "A2",
+      "partOfSpeech": "adjective",
+      "topics": [
+        "planning",
+        "ideas"
+      ],
+      "ipa": "/ˌrɪəˈlɪs.tɪk/",
+      "meaning": "masuk akal dan sesuai dengan kenyataan atau keadaan yang mungkin terjadi",
+      "acceptedMeanings": [
+        "realistis",
+        "masuk akal",
+        "sesuai kenyataan"
+      ],
+      "forms": [
+        {
+          "form": "realistic",
+          "label": "adjective"
+        },
+        {
+          "form": "realistically",
+          "label": "adverb"
+        },
+        {
+          "form": "reality",
+          "label": "noun"
+        }
+      ],
+      "example": "Let's set a realistic goal for this week.",
+      "translation": "Mari tetapkan target yang realistis untuk minggu ini.",
+      "collocations": [
+        "realistic goal",
+        "realistic expectations",
+        "realistic plan"
+      ],
+      "commonMistake": "Realistic bukan berarti pesimistis; kata ini menekankan kesesuaian rencana dengan kondisi nyata.",
+      "context": {
+        "id": "a2-realistic-context-1",
+        "prompt": "You have one afternoon to finish a short assignment. Which plan is realistic?",
+        "options": [
+          "Write a 500-page book.",
+          "Finish the short assignment today.",
+          "Learn an entire language in an hour."
+        ],
+        "answer": 1,
+        "explanation": "Realistic berarti sesuai dengan waktu, sumber daya, dan keadaan yang ada."
+      }
+    },
+    {
+      "id": "a2-instead",
+      "word": "instead",
+      "level": "A2",
+      "partOfSpeech": "adverb",
+      "topics": [
+        "choices",
+        "communication"
+      ],
+      "ipa": "/ɪnˈsted/",
+      "meaning": "sebagai pengganti; bukan pilihan yang disebut sebelumnya",
+      "acceptedMeanings": [
+        "sebagai gantinya",
+        "alih-alih",
+        "sebagai pengganti"
+      ],
+      "forms": [
+        {
+          "form": "instead",
+          "label": "adverb"
+        },
+        {
+          "form": "instead of",
+          "label": "preposition phrase"
+        }
+      ],
+      "example": "It was raining, so we stayed inside instead.",
+      "translation": "Saat itu hujan, jadi kami tetap berada di dalam sebagai gantinya.",
+      "collocations": [
+        "instead of walking",
+        "try this instead",
+        "do something instead"
+      ],
+      "commonMistake": "Instead of diikuti noun atau verb-ing: “instead of driving”. Instead dapat berdiri di akhir kalimat.",
+      "context": {
+        "id": "a2-instead-context-1",
+        "prompt": "The shop is closed, so you buy your bread at another shop …",
+        "options": [
+          "instead",
+          "enough",
+          "usually"
+        ],
+        "answer": 0,
+        "explanation": "Instead menunjukkan pilihan pengganti ketika pilihan pertama tidak bisa dilakukan."
+      }
+    },
+    {
+      "id": "a2-available",
+      "word": "available",
+      "level": "A2",
+      "partOfSpeech": "adjective",
+      "topics": [
+        "work",
+        "time",
+        "shopping"
+      ],
+      "ipa": "/əˈveɪ.lə.bəl/",
+      "meaning": "tersedia atau dapat digunakan/didapatkan",
+      "acceptedMeanings": [
+        "tersedia",
+        "dapat digunakan",
+        "ada"
+      ],
+      "forms": [
+        {
+          "form": "available",
+          "label": "adjective"
+        },
+        {
+          "form": "availability",
+          "label": "noun"
+        },
+        {
+          "form": "unavailable",
+          "label": "opposite"
+        }
+      ],
+      "example": "Are you available for a quick call this afternoon?",
+      "translation": "Apakah kamu tersedia untuk panggilan singkat sore ini?",
+      "collocations": [
+        "available now",
+        "available online",
+        "check availability"
+      ],
+      "commonMistake": "Available dapat merujuk pada barang yang tersedia maupun orang yang punya waktu.",
+      "context": {
+        "id": "a2-available-context-1",
+        "prompt": "There are no seats left on the 8 a.m. train, but seats remain on the 10 a.m. train. The 10 a.m. train has seats …",
+        "options": [
+          "available",
+          "afraid",
+          "expensive only"
+        ],
+        "answer": 0,
+        "explanation": "Available berarti sesuatu masih tersedia untuk digunakan atau dipilih."
+      }
+    },
+    {
+      "id": "a2-unless",
+      "word": "unless",
+      "level": "A2",
+      "partOfSpeech": "conjunction",
+      "topics": [
+        "conditions",
+        "grammar"
+      ],
+      "ipa": "/ənˈles/",
+      "meaning": "kecuali jika; menyatakan kondisi yang membuat sesuatu tidak terjadi",
+      "acceptedMeanings": [
+        "kecuali jika",
+        "jika tidak",
+        "kecuali"
+      ],
+      "forms": [
+        {
+          "form": "unless",
+          "label": "conjunction"
+        }
+      ],
+      "example": "We will miss the bus unless we leave now.",
+      "translation": "Kita akan ketinggalan bus kecuali kita berangkat sekarang.",
+      "collocations": [
+        "unless you agree",
+        "unless otherwise stated",
+        "unless necessary"
+      ],
+      "commonMistake": "Unless sering bermakna if ... not. Hindari menambahkan not lagi jika membuat makna menjadi ganda.",
+      "context": {
+        "id": "a2-unless-context-1",
+        "prompt": "You must show your ticket. You cannot enter if you do not show it. “You cannot enter … you show your ticket.”",
+        "options": [
+          "unless",
+          "because",
+          "although"
+        ],
+        "answer": 0,
+        "explanation": "Unless memperkenalkan kondisi pengecualian: tanpa menunjukkan tiket, kamu tidak bisa masuk."
+      }
+    },
+    {
+      "id": "a2-although",
+      "word": "although",
+      "level": "A2",
+      "partOfSpeech": "conjunction",
+      "topics": [
+        "contrast",
+        "grammar"
+      ],
+      "ipa": "/ɔːlˈðəʊ/",
+      "meaning": "meskipun; memperkenalkan hal yang kontras dengan bagian utama kalimat",
+      "acceptedMeanings": [
+        "meskipun",
+        "walaupun"
+      ],
+      "forms": [
+        {
+          "form": "although",
+          "label": "conjunction"
+        }
+      ],
+      "example": "Although it was late, we continued studying.",
+      "translation": "Meskipun sudah larut, kami tetap belajar.",
+      "collocations": [
+        "although it seems",
+        "although I agree",
+        "although there is"
+      ],
+      "commonMistake": "Although tidak digabungkan dengan but dalam satu struktur yang sama: “Although it rained, we went out.”",
+      "context": {
+        "id": "a2-although-context-1",
+        "prompt": "It was cold, but Hana still went for a walk. Which sentence keeps that contrast?",
+        "options": [
+          "Although it was cold, Hana went for a walk.",
+          "Because it was cold, Hana went for a walk to get warmer.",
+          "Unless it was cold, Hana went for a walk."
+        ],
+        "answer": 0,
+        "explanation": "Although menandai kontras antara keadaan dingin dan keputusan tetap berjalan."
+      }
+    },
+    {
+      "id": "a2-prepare",
+      "word": "prepare",
+      "level": "A2",
+      "partOfSpeech": "verb",
+      "topics": [
+        "study",
+        "work"
+      ],
+      "ipa": "/prɪˈpeər/",
+      "meaning": "mempersiapkan diri atau sesuatu sebelum kegiatan terjadi",
+      "acceptedMeanings": [
+        "mempersiapkan",
+        "menyiapkan"
+      ],
+      "forms": [
+        {
+          "form": "prepare",
+          "label": "base"
+        },
+        {
+          "form": "prepared",
+          "label": "past/adjective"
+        },
+        {
+          "form": "preparation",
+          "label": "noun"
+        }
+      ],
+      "example": "I prepared my notes before the meeting.",
+      "translation": "Saya menyiapkan catatan sebelum rapat.",
+      "collocations": [
+        "prepare for an exam",
+        "prepare a meal",
+        "well prepared"
+      ],
+      "commonMistake": "Prepare something berarti menyiapkan sesuatu; prepare for something berarti mempersiapkan diri menghadapi sesuatu.",
+      "context": {
+        "id": "a2-prepare-context-1",
+        "prompt": "Your exam is next week, so you review notes and practise questions now. You are … for the exam.",
+        "options": [
+          "preparing",
+          "noticing",
+          "depending"
+        ],
+        "answer": 0,
+        "explanation": "Prepare for berarti mempersiapkan diri menghadapi suatu kegiatan atau peristiwa."
+      }
+    },
+    {
+      "id": "a2-occur",
+      "word": "occur",
+      "level": "A2",
+      "partOfSpeech": "verb",
+      "topics": [
+        "events",
+        "reading"
+      ],
+      "ipa": "/əˈkɜːr/",
+      "meaning": "terjadi; berlangsung sebagai sebuah peristiwa",
+      "acceptedMeanings": [
+        "terjadi",
+        "berlangsung"
+      ],
+      "forms": [
+        {
+          "form": "occur",
+          "label": "base"
+        },
+        {
+          "form": "occurred",
+          "label": "past"
+        },
+        {
+          "form": "occurrence",
+          "label": "noun"
+        }
+      ],
+      "example": "The accident occurred just before noon.",
+      "translation": "Kecelakaan itu terjadi sesaat sebelum tengah hari.",
+      "collocations": [
+        "occur naturally",
+        "problems occur",
+        "an unusual occurrence"
+      ],
+      "commonMistake": "Occur lebih formal daripada happen; ejaannya menggandakan r pada occurred dan occurring.",
+      "context": {
+        "id": "a2-occur-context-1",
+        "prompt": "A power cut happened at 9 p.m. You can report that the power cut … at 9 p.m.",
+        "options": [
+          "occurred",
+          "avoided",
+          "suggested"
+        ],
+        "answer": 0,
+        "explanation": "Occur berarti terjadi dan sering digunakan dalam tulisan yang sedikit lebih formal."
+      }
+    },
+    {
+      "id": "a2-remind",
+      "word": "remind",
+      "level": "A2",
+      "partOfSpeech": "verb",
+      "topics": [
+        "memory",
+        "communication"
+      ],
+      "ipa": "/rɪˈmaɪnd/",
+      "meaning": "membuat seseorang ingat kembali atau mengingatkan seseorang tentang sesuatu",
+      "acceptedMeanings": [
+        "mengingatkan",
+        "membuat ingat kembali"
+      ],
+      "forms": [
+        {
+          "form": "remind",
+          "label": "base"
+        },
+        {
+          "form": "reminded",
+          "label": "past"
+        },
+        {
+          "form": "reminder",
+          "label": "noun"
+        }
+      ],
+      "example": "Please remind me to bring my notebook.",
+      "translation": "Tolong ingatkan saya untuk membawa buku catatan.",
+      "collocations": [
+        "remind someone to",
+        "remind me of",
+        "set a reminder"
+      ],
+      "commonMistake": "Gunakan remind someone to do something untuk tindakan; remind someone of something untuk mengaitkan dengan ingatan.",
+      "context": {
+        "id": "a2-remind-context-1",
+        "prompt": "You ask a friend to tell you about the meeting tomorrow so you do not forget. You ask them to … you.",
+        "options": [
+          "remind",
+          "realize",
+          "occur"
+        ],
+        "answer": 0,
+        "explanation": "Remind berarti membantu seseorang agar tidak melupakan sesuatu."
+      }
+    },
+    {
+      "id": "b1-reliable",
+      "word": "reliable",
+      "level": "B1",
+      "partOfSpeech": "adjective",
+      "topics": [
+        "work",
+        "people"
+      ],
+      "ipa": "/rɪˈlaɪ.ə.bəl/",
+      "meaning": "dapat diandalkan karena konsisten, akurat, atau bisa dipercaya",
+      "acceptedMeanings": [
+        "dapat diandalkan",
+        "andal",
+        "tepercaya"
+      ],
+      "forms": [
+        {
+          "form": "reliable",
+          "label": "adjective"
+        },
+        {
+          "form": "rely",
+          "label": "verb"
+        },
+        {
+          "form": "reliability",
+          "label": "noun"
+        }
+      ],
+      "example": "We need a reliable source before sharing the news.",
+      "translation": "Kita membutuhkan sumber yang dapat diandalkan sebelum membagikan berita itu.",
+      "collocations": [
+        "reliable source",
+        "reliable information",
+        "highly reliable"
+      ],
+      "commonMistake": "Reliable mendeskripsikan sesuatu yang layak diandalkan; responsible lebih menekankan tanggung jawab.",
+      "context": {
+        "id": "b1-reliable-context-1",
+        "prompt": "A website checks its facts and corrects mistakes transparently. It is a more … source.",
+        "options": [
+          "reliable",
+          "temporary",
+          "ordinary"
+        ],
+        "answer": 0,
+        "explanation": "Reliable berarti dapat dipercaya atau diandalkan karena kualitasnya konsisten."
+      }
+    },
+    {
+      "id": "b1-approach",
+      "word": "approach",
+      "level": "B1",
+      "partOfSpeech": "noun/verb",
+      "topics": [
+        "problem-solving",
+        "work"
+      ],
+      "ipa": "/əˈprəʊtʃ/",
+      "meaning": "cara menangani sesuatu; atau mendekati seseorang/tempat",
+      "acceptedMeanings": [
+        "pendekatan",
+        "cara menangani sesuatu",
+        "mendekati"
+      ],
+      "forms": [
+        {
+          "form": "approach",
+          "label": "noun/base verb"
+        },
+        {
+          "form": "approached",
+          "label": "past"
+        },
+        {
+          "form": "approachable",
+          "label": "adjective"
+        }
+      ],
+      "example": "We need a different approach to this problem.",
+      "translation": "Kita membutuhkan pendekatan yang berbeda untuk masalah ini.",
+      "collocations": [
+        "take an approach",
+        "a practical approach",
+        "approach a problem"
+      ],
+      "commonMistake": "Approach sebagai kata benda berarti metode; sebagai kata kerja berarti mendekati. Umumnya tidak memerlukan “to” sebelum objek langsung.",
+      "context": {
+        "id": "b1-approach-context-1",
+        "prompt": "The first method failed, so the team tries a new way to solve the problem. They try a new …",
+        "options": [
+          "approach",
+          "neighbor",
+          "occurrence"
+        ],
+        "answer": 0,
+        "explanation": "Approach dapat berarti metode atau cara untuk menangani masalah."
+      }
+    },
+    {
+      "id": "b1-contribute",
+      "word": "contribute",
+      "level": "B1",
+      "partOfSpeech": "verb",
+      "topics": [
+        "community",
+        "work"
+      ],
+      "ipa": "/kənˈtrɪb.juːt/",
+      "meaning": "memberi sumbangan, bantuan, ide, atau usaha untuk suatu tujuan",
+      "acceptedMeanings": [
+        "berkontribusi",
+        "menyumbang",
+        "memberi sumbangan"
+      ],
+      "forms": [
+        {
+          "form": "contribute",
+          "label": "base"
+        },
+        {
+          "form": "contributed",
+          "label": "past"
+        },
+        {
+          "form": "contribution",
+          "label": "noun"
+        }
+      ],
+      "example": "Everyone contributed an idea to the discussion.",
+      "translation": "Semua orang menyumbangkan sebuah ide dalam diskusi.",
+      "collocations": [
+        "contribute to a project",
+        "make a contribution",
+        "contribute ideas"
+      ],
+      "commonMistake": "Contribute to diikuti noun atau gerund saat menyatakan hal yang dibantu atau dipengaruhi.",
+      "context": {
+        "id": "b1-contribute-context-1",
+        "prompt": "Several students each share an idea to help their club plan an event. They … to the discussion.",
+        "options": [
+          "contribute",
+          "avoid",
+          "occur"
+        ],
+        "answer": 0,
+        "explanation": "Contribute berarti memberi bagian berupa ide, tenaga, uang, atau bantuan."
+      }
+    },
+    {
+      "id": "b1-evidence",
+      "word": "evidence",
+      "level": "B1",
+      "partOfSpeech": "noun",
+      "topics": [
+        "study",
+        "reasoning"
+      ],
+      "ipa": "/ˈev.ɪ.dəns/",
+      "meaning": "fakta atau informasi yang mendukung atau menunjukkan bahwa sesuatu benar",
+      "acceptedMeanings": [
+        "bukti",
+        "petunjuk yang mendukung suatu klaim"
+      ],
+      "forms": [
+        {
+          "form": "evidence",
+          "label": "uncountable noun"
+        },
+        {
+          "form": "evident",
+          "label": "adjective"
+        }
+      ],
+      "example": "The study provides evidence for the claim.",
+      "translation": "Penelitian itu menyediakan bukti yang mendukung klaim tersebut.",
+      "collocations": [
+        "strong evidence",
+        "evidence suggests",
+        "evidence of"
+      ],
+      "commonMistake": "Evidence biasanya uncountable: “some evidence” atau “a piece of evidence”, bukan “an evidence”.",
+      "context": {
+        "id": "b1-evidence-context-1",
+        "prompt": "A researcher presents test results to support a conclusion. The results are … for the conclusion.",
+        "options": [
+          "evidence",
+          "approaches",
+          "neighbors"
+        ],
+        "answer": 0,
+        "explanation": "Evidence adalah informasi atau fakta yang mendukung suatu kesimpulan."
+      }
+    },
+    {
+      "id": "b1-maintain",
+      "word": "maintain",
+      "level": "B1",
+      "partOfSpeech": "verb",
+      "topics": [
+        "habits",
+        "work"
+      ],
+      "ipa": "/meɪnˈteɪn/",
+      "meaning": "menjaga agar sesuatu tetap dalam keadaan atau tingkat tertentu",
+      "acceptedMeanings": [
+        "mempertahankan",
+        "menjaga",
+        "memelihara"
+      ],
+      "forms": [
+        {
+          "form": "maintain",
+          "label": "base"
+        },
+        {
+          "form": "maintained",
+          "label": "past"
+        },
+        {
+          "form": "maintenance",
+          "label": "noun"
+        }
+      ],
+      "example": "It takes effort to maintain a healthy routine.",
+      "translation": "Dibutuhkan usaha untuk mempertahankan rutinitas yang sehat.",
+      "collocations": [
+        "maintain a balance",
+        "maintain contact",
+        "maintain standards"
+      ],
+      "commonMistake": "Maintain menekankan menjaga kondisi yang sudah ada; improve menekankan membuatnya lebih baik.",
+      "context": {
+        "id": "b1-maintain-context-1",
+        "prompt": "Dewi continues sleeping regularly and exercising so her routine stays healthy. She works to … the routine.",
+        "options": [
+          "maintain",
+          "suggest",
+          "occur"
+        ],
+        "answer": 0,
+        "explanation": "Maintain berarti menjaga agar sesuatu tetap berjalan atau tetap pada kondisi tertentu."
+      }
+    },
+    {
+      "id": "b1-interpret",
+      "word": "interpret",
+      "level": "B1",
+      "partOfSpeech": "verb",
+      "topics": [
+        "communication",
+        "reading"
+      ],
+      "ipa": "/ɪnˈtɜː.prɪt/",
+      "meaning": "menjelaskan atau memahami makna suatu informasi, tindakan, atau pesan",
+      "acceptedMeanings": [
+        "menafsirkan",
+        "menginterpretasikan",
+        "memahami makna"
+      ],
+      "forms": [
+        {
+          "form": "interpret",
+          "label": "base"
+        },
+        {
+          "form": "interpreted",
+          "label": "past"
+        },
+        {
+          "form": "interpretation",
+          "label": "noun"
+        }
+      ],
+      "example": "People may interpret the same message differently.",
+      "translation": "Orang-orang dapat menafsirkan pesan yang sama secara berbeda.",
+      "collocations": [
+        "interpret data",
+        "interpret a message",
+        "different interpretation"
+      ],
+      "commonMistake": "Interpret berarti menafsirkan makna; translate lebih khusus pada pemindahan antarbahasa.",
+      "context": {
+        "id": "b1-interpret-context-1",
+        "prompt": "Two readers understand a poem in different ways. They … the poem differently.",
+        "options": [
+          "interpret",
+          "prepare",
+          "borrow"
+        ],
+        "answer": 0,
+        "explanation": "Interpret menggambarkan proses memahami atau memberi makna pada sesuatu."
+      }
+    },
+    {
+      "id": "b1-specific",
+      "word": "specific",
+      "level": "B1",
+      "partOfSpeech": "adjective",
+      "topics": [
+        "communication",
+        "study"
+      ],
+      "ipa": "/spəˈsɪf.ɪk/",
+      "meaning": "jelas dan terperinci mengenai hal tertentu, bukan umum",
+      "acceptedMeanings": [
+        "spesifik",
+        "khusus",
+        "terperinci untuk hal tertentu"
+      ],
+      "forms": [
+        {
+          "form": "specific",
+          "label": "adjective"
+        },
+        {
+          "form": "specifically",
+          "label": "adverb"
+        },
+        {
+          "form": "specificity",
+          "label": "noun"
+        }
+      ],
+      "example": "Could you give a specific example?",
+      "translation": "Bisakah kamu memberikan contoh yang spesifik?",
+      "collocations": [
+        "specific reason",
+        "specific details",
+        "be specific about"
+      ],
+      "commonMistake": "Specific berarti tertentu dan jelas; special biasanya berarti istimewa atau tidak biasa.",
+      "context": {
+        "id": "b1-specific-context-1",
+        "prompt": "Instead of saying “do better,” a teacher explains exactly which paragraph needs revision. The feedback is …",
+        "options": [
+          "specific",
+          "reliable",
+          "available"
+        ],
+        "answer": 0,
+        "explanation": "Specific berarti menunjuk hal tertentu dengan detail yang jelas."
+      }
+    },
+    {
+      "id": "b2-substantial",
+      "word": "substantial",
+      "level": "B2",
+      "partOfSpeech": "adjective",
+      "topics": [
+        "academic",
+        "work"
+      ],
+      "ipa": "/səbˈstæn.ʃəl/",
+      "meaning": "cukup besar atau penting dalam jumlah, nilai, atau pengaruh",
+      "acceptedMeanings": [
+        "substansial",
+        "cukup besar",
+        "berarti",
+        "signifikan"
+      ],
+      "forms": [
+        {
+          "form": "substantial",
+          "label": "adjective"
+        },
+        {
+          "form": "substantially",
+          "label": "adverb"
+        }
+      ],
+      "example": "The project requires a substantial amount of time.",
+      "translation": "Proyek itu membutuhkan waktu yang cukup banyak.",
+      "collocations": [
+        "substantial evidence",
+        "substantial increase",
+        "substantial amount"
+      ],
+      "commonMistake": "Substantial menekankan ukuran atau pengaruh yang berarti, bukan sekadar sesuatu yang berisi substansi.",
+      "context": {
+        "id": "b2-substantial-context-1",
+        "prompt": "The new policy causes a large change in costs across the company. It has a … effect.",
+        "options": [
+          "substantial",
+          "minor",
+          "temporary only"
+        ],
+        "answer": 0,
+        "explanation": "Substantial menunjukkan sesuatu yang cukup besar atau penting, bukan kecil."
+      }
+    },
+    {
+      "id": "b2-undermine",
+      "word": "undermine",
+      "level": "B2",
+      "partOfSpeech": "verb",
+      "topics": [
+        "reasoning",
+        "communication"
+      ],
+      "ipa": "/ˌʌn.dəˈmaɪn/",
+      "meaning": "melemahkan secara bertahap, sering kali kepercayaan, otoritas, atau argumen",
+      "acceptedMeanings": [
+        "melemahkan",
+        "merusak secara bertahap"
+      ],
+      "forms": [
+        {
+          "form": "undermine",
+          "label": "base"
+        },
+        {
+          "form": "undermined",
+          "label": "past"
+        },
+        {
+          "form": "undermining",
+          "label": "-ing"
+        }
+      ],
+      "example": "Contradictory figures can undermine an otherwise strong argument.",
+      "translation": "Angka yang saling bertentangan dapat melemahkan argumen yang sebenarnya kuat.",
+      "collocations": [
+        "undermine confidence",
+        "undermine trust",
+        "undermine an argument"
+      ],
+      "commonMistake": "Undermine bukan sekadar mengkritik; kata ini berarti mengurangi kekuatan atau kredibilitas.",
+      "context": {
+        "id": "b2-undermine-context-1",
+        "prompt": "A report contains repeated factual errors, making readers trust its conclusion less. The errors … the report's credibility.",
+        "options": [
+          "undermine",
+          "maintain",
+          "contribute positively to"
+        ],
+        "answer": 0,
+        "explanation": "Undermine berarti mengurangi kekuatan atau kepercayaan secara merugikan."
+      }
+    },
+    {
+      "id": "b2-whereas",
+      "word": "whereas",
+      "level": "B2",
+      "partOfSpeech": "conjunction",
+      "topics": [
+        "contrast",
+        "academic"
+      ],
+      "ipa": "/ˌweərˈæz/",
+      "meaning": "sedangkan; menghubungkan dua fakta yang berbeda atau berlawanan",
+      "acceptedMeanings": [
+        "sedangkan",
+        "padahal"
+      ],
+      "forms": [
+        {
+          "form": "whereas",
+          "label": "conjunction"
+        }
+      ],
+      "example": "The first method is quick, whereas the second is more accurate.",
+      "translation": "Metode pertama cepat, sedangkan metode kedua lebih akurat.",
+      "collocations": [
+        "whereas the other",
+        "while whereas"
+      ],
+      "commonMistake": "Whereas berguna untuk membandingkan dua klausa; jangan menggabungkannya dengan but untuk kontras yang sama.",
+      "context": {
+        "id": "b2-whereas-context-1",
+        "prompt": "The north is usually dry, but the south receives heavy rain. Which word best introduces that contrast?",
+        "options": [
+          "whereas",
+          "unless",
+          "therefore"
+        ],
+        "answer": 0,
+        "explanation": "Whereas menghubungkan dua keadaan yang dibandingkan atau dikontraskan."
+      }
+    },
+    {
+      "id": "c1-nuance",
+      "word": "nuance",
+      "level": "C1",
+      "partOfSpeech": "noun",
+      "topics": [
+        "communication",
+        "academic"
+      ],
+      "ipa": "/ˈnjuː.ɑːns/",
+      "meaning": "perbedaan makna, perasaan, atau nada yang halus tetapi penting",
+      "acceptedMeanings": [
+        "nuansa",
+        "perbedaan makna yang halus",
+        "perbedaan halus"
+      ],
+      "forms": [
+        {
+          "form": "nuance",
+          "label": "singular"
+        },
+        {
+          "form": "nuances",
+          "label": "plural"
+        },
+        {
+          "form": "nuanced",
+          "label": "adjective"
+        }
+      ],
+      "example": "The translation captures the nuance of the original phrase.",
+      "translation": "Terjemahan itu menangkap nuansa frasa aslinya.",
+      "collocations": [
+        "subtle nuance",
+        "capture a nuance",
+        "nuanced argument"
+      ],
+      "commonMistake": "Nuance bukan selalu perbedaan besar; istilah ini sering dipakai untuk perbedaan kecil yang memengaruhi interpretasi.",
+      "context": {
+        "id": "c1-nuance-context-1",
+        "prompt": "Two words have similar dictionary meanings, but one sounds warmer and more personal. That difference in tone is a …",
+        "options": [
+          "nuance",
+          "routine",
+          "condition"
+        ],
+        "answer": 0,
+        "explanation": "Nuance mengacu pada perbedaan halus yang memengaruhi makna atau kesan."
+      }
+    }
+  ]
+}
