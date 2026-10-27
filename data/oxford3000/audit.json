@@ -121,5 +121,11 @@
   "withoutCEFR": [
     "o"
   ],
-  "editorialNote": "Assistant-authored editorial override for common A1/A2 headwords. These draft translations and examples still need independent human review; do not present them as human-verified."
+  "editorialNote": "Assistant-authored editorial override for high-frequency A1/A2 headwords. Draft meanings/translations/examples still need independent human review; do not present as human-verified.",
+  "editorialOverrideAdditionalBundleEntries": 86,
+  "editorialOverrideTotalEntries": 93,
+  "originalStarterOverlayEntries": 34,
+  "nonOxfordStarterWords": 3,
+  "appStudyReadyEstimate": 1602,
+  "appStudyReadyNote": "Observed in browser smoke test after merging the source corpus, the original curated starter set, and the editorial override bundle; this is a content-readiness count, not a mastery count."
 }
