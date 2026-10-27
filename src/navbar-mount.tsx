@@ -3,6 +3,15 @@ import { LiquidNavbar, NimbusIcons } from "@/components/ui/liquid-glass-navbar";
 import "./navbar-overrides.css";
 
 const mount = document.getElementById("liquid-nav-mount");
+
+function closeMobileNav() {
+  const container = document.getElementById("primary-nav");
+  container?.classList.remove("is-open");
+  const menuToggle = document.getElementById("menu-toggle");
+  menuToggle?.setAttribute("aria-expanded", "false");
+  menuToggle?.setAttribute("aria-label", "Buka navigasi");
+}
+
 if (mount) {
   const navContainer = mount.parentElement;
   navContainer?.classList.add("has-liquid-nav");
@@ -19,7 +28,7 @@ if (mount) {
   }, true);
 
   createRoot(mount).render(
-    <LiquidNavbar tone="light" defaultActive={0} sound={false} items={[
+    <LiquidNavbar tone="light" defaultActive={0} sound={false} onChange={closeMobileNav} items={[
       { label: "Pendekatan", href: "/#pendekatan", icon: NimbusIcons.globe, fx: "spin" },
       { label: "Peta materi", href: "/#materi", icon: NimbusIcons.drop, fx: "drop" },
       { label: "Coba latihan", href: "/#latihan", icon: NimbusIcons.plane, fx: "plane" },
