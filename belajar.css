@@ -389,3 +389,27 @@ p{color:var(--body)}
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .view{animation:none}
 }
+
+
+/* Interaction details */
+.evidence-mini{margin-top:15px;padding-top:13px;border-top:1px solid var(--line)}
+.evidence-lines{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.evidence-lines span,.study-evidence-summary span{color:var(--muted);font-size:.63rem}
+.evidence-lines .done,.study-evidence-summary .done{color:var(--sage-deep);font-weight:600}
+.detail-footnote{margin:12px 0 0;color:var(--muted);font-size:.62rem;line-height:1.65}
+.confidence-field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;color:var(--muted);font:500 .55rem "DM Mono",monospace;letter-spacing:.04em}
+.confidence-field select{max-width:155px;min-height:32px;padding:4px 8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font: .68rem "DM Sans",sans-serif}
+.production-input{height:auto;min-height:92px;resize:vertical}
+.study-small-note{margin:11px 0 0;color:var(--muted);font-size:.65rem;line-height:1.7}
+.study-correction{margin:10px 0 0;color:var(--body);font-size:.73rem}
+.study-option-label{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);background:transparent;cursor:pointer}
+.study-option-label:has(input:checked){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 30%,transparent)}
+.study-option-label input{accent-color:var(--sage-deep)}
+.study-option-label>span:nth-of-type(1){width:21px;height:21px;display:grid;place-items:center;background:var(--paper-deep);font:500 .58rem "DM Mono",monospace}
+.study-option-label>span:nth-of-type(2){font-size:.74rem}
+.study-evidence-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:21px 0;padding:15px 0;border-block:1px solid var(--line)}
+.lesson-progress-note{margin:13px 0 0;color:var(--muted);font-size:.64rem;line-height:1.65}
+.quiz-end{padding:19px 0 7px}
+.quiz-end h3{font-family:"Newsreader",Georgia,serif;font-size:1.65rem;font-weight:400}
+.quiz-end p:not(.eyebrow){max-width:530px;font-size:.73rem;line-height:1.7}
+@media(max-width:450px){.evidence-lines,.study-evidence-summary{grid-template-columns:1fr}.confidence-field{align-items:flex-start;flex-direction:column}.confidence-field select{max-width:none;width:100%}}
