@@ -30,6 +30,7 @@
     "/data/oxford3000/editorial-overrides-gap-20.json.gz.b64",
     "/data/oxford3000/editorial-overrides-gap-21.json.gz.b64",
     "/data/oxford3000/editorial-overrides-gap-22.json.gz.b64",
+    "/data/oxford3000/editorial-overrides-b1b2-translations.json.gz.b64",
   ];
   const nativeFetch = window.fetch.bind(window);
   let combinedPromise = null;
