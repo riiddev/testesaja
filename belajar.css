@@ -427,3 +427,45 @@ p{color:var(--body)}
 
 .primary-action:disabled,.secondary-action:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.45)}
 .primary-action:disabled:hover,.secondary-action:disabled:hover{transform:none}
+
+
+/* SinauuEnglish identity: open book + growing wordmark */
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  overflow: hidden;
+  padding: 2px;
+  border: 1px solid #cbd8c4;
+  border-radius: 10px;
+  background: #e3eadb;
+  color: #2f4635;
+  font-size: 0;
+}
+.brand-mark img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+}
+.brand-name {
+  display: block;
+  color: var(--ink);
+  font: 600 1.12rem/1 "Newsreader", Georgia, serif;
+  letter-spacing: -.045em;
+}
+.brand-name span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font: 500 .48rem/1.35 "DM Mono", monospace;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+@media (max-width: 450px) {
+  .sidebar .brand-mark { width: 33px; height: 33px; flex-basis: 33px; }
+  .sidebar .brand-name { font-size: 1.01rem; }
+  .sidebar .brand-name span { margin-top: 3px; font-size: .43rem; letter-spacing: .07em; }
+}
