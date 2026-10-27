@@ -482,7 +482,7 @@
       if(parsed.product&&parsed.product!=="SinauuEnglish")throw new Error("File bukan backup SinauuEnglish.");
       const safe=sanitize(parsed);
       if(!confirm("Pulihkan backup? Progres lokal saat ini akan diganti."))return;
-      state=safe;if(parsed.extraLearning&&typeof parsed.extraLearning==="object"){try{localStorage.setItem("sinauu-extra-learning-v1",JSON.stringify(parsed.extraLearning));}catch(_){}}root.dataset.theme=state.settings.theme;await save();
+      state=safe;if(parsed.extraLearning&&typeof parsed.extraLearning==="object"){try{localStorage.setItem("sinauu-extra-learning-v1",JSON.stringify(parsed.extraLearning));window.sinauuExtraLearningRestore?.(parsed.extraLearning);}catch(_){}}root.dataset.theme=state.settings.theme;await save();
       renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
       $("#backup-status").textContent="Backup berhasil dipulihkan.";toast("Progres berhasil dipulihkan.");
     }catch(e){$("#backup-status").textContent=e.message||"JSON tidak valid.";}

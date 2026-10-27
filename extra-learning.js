@@ -389,5 +389,16 @@
     }
   }
   window.sinauuExtraLearningBackup = exportProgress;
+  window.sinauuExtraLearningRestore = function (next) {
+    if (!next || typeof next !== "object") return;
+    progress = {
+      matching: Object.assign({rounds:0,totalMatches:0,totalMistakes:0,bestMistakes:null,auto:true}, next.matching || {}),
+      reading: Object.assign({}, next.reading || {})
+    };
+    autoMatch = progress.matching.auto !== false;
+    persistProgress();
+    if (matchGame) renderMatching();
+    if (lessonData) renderReading();
+  };
   init();
 })();
