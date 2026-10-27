@@ -1,35 +1,26 @@
 {
-  "source": "The Oxford 3000 — American English",
-  "sourceUrl": "https://www.oxfordlearnersdictionaries.com/external/pdf/wordlists/oxford-3000-5000/American_Oxford_3000.pdf",
-  "sourceFormat": "User-provided simplified, deduplicated headword list, cross-checked against American Oxford 3000 text",
   "headwordCount": 2971,
   "uniqueHeadwords": 2971,
   "levelCounts": {
-    "A1": 861,
-    "A2": 790,
+    "A1": 892,
+    "A2": 792,
     "B1": 689,
     "B2": 597,
-    "UNCLASSIFIED": 34
+    "UNCLASSIFIED": 1
   },
-  "contentAudit": {
-    "hasMeaning": 2862,
-    "hasUsableExample": 1563,
-    "hasExampleTranslation": 858,
-    "hasIPA": 2045,
-    "studyReadyBeforeCuratedOverlay": 1563,
-    "masteryReadyMetadata": 248
+  "contentStatusCounts": {
+    "needs-meaning": 109,
+    "study-ready-machine-translation-unreviewed": 858,
+    "needs-context-example": 1299,
+    "study-ready-needs-translation": 705
   },
-  "importantLimitations": [
-    "The plain-text headword list does not preserve the original PDF's per-sense CEFR and part-of-speech distinctions.",
-    "34 words remain without a matched CEFR level and are available under the unclassified filter.",
-    "Dictionary-derived entries and machine translations have not all been human-reviewed. Missing meanings, example sentences, and translations are intentionally not fabricated.",
-    "The 248 masteryReady count describes the dataset's availability of three additional translated contexts; actual mastery is controlled only by the app's evidence and elapsed-time gates."
-  ],
-  "enrichmentSource": {
-    "name": "KOReader English–Indonesian dictionary",
-    "url": "https://github.com/DanielGregorini/koreader-dicts",
-    "license": "CC-BY-SA-4.0",
-    "notes": "Compilation includes WordNet Bahasa/Open Multilingual Wordnet, Princeton WordNet 3.0, and English Wiktionary. See ATTRIBUTION.md."
-  },
-  "generatedAt": "2026-10-27"
+  "studyReady": 1563,
+  "masteryReady": 248,
+  "withMeaning": 2862,
+  "withUsableExample": 1563,
+  "withExampleTranslation": 858,
+  "withIPA": 2045,
+  "withoutCEFR": [
+    "o"
+  ]
 }
