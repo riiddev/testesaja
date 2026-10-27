@@ -145,6 +145,7 @@
         matchFeedback = "Semua pasangan ditemukan. Ronde ini selesai.";
       }
       persistProgress();
+      if (window.sinauuTrackExtraActivity) void window.sinauuTrackExtraActivity({type:"matching",title:pair.word,detail:"Pasangan: "+pair.meaning,correct:true});
       renderMatching();
     } else {
       matchGame.mistakes += 1;
@@ -153,6 +154,7 @@
       matchFeedback = "Belum cocok. Periksa kembali makna kata, lalu coba lagi.";
       matchFeedbackKind = "error";
       persistProgress();
+      if (window.sinauuTrackExtraActivity) void window.sinauuTrackExtraActivity({type:"matching",title:"Pasangan kosakata",detail:"Pasangan belum tepat",correct:false});
       renderMatching();
       if (matchGame._wrongTimer) clearTimeout(matchGame._wrongTimer);
       matchGame._wrongTimer = setTimeout(function () {
@@ -272,6 +274,7 @@
     progress.reading[skill.id] = record;
     readingRun.answered = true;
     persistProgress();
+    if (window.sinauuTrackExtraActivity) void window.sinauuTrackExtraActivity({type:"reading",title:skill.title,detail:"Soal "+String(readingRun.questionIndex+1)+": "+(correct ? "jawaban benar" : "jawaban perlu ditinjau"),correct:correct});
     renderReading();
   }
   function advanceReading() {

@@ -465,7 +465,7 @@
       return '<div class="grammar-progress-row"><span class="topic-code">'+esc(t.level)+'</span><div><strong>'+esc(t.title)+'</strong><p>'+n+'/'+t.questions.length+' soal unik dicoba · '+p.attempts+' percobaan total</p></div><span class="grammar-score">'+(score===null?"Belum dicoba":score+"% akurasi")+'</span></div>';
     }).join("");
     const history=state.history.slice(0,18);
-    $("#history-list").innerHTML=history.length?history.map(x=>'<div class="history-row"><time>'+esc(fmtDate(new Date(x.at),{day:"2-digit",month:"short"}))+' · '+esc(new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(new Date(x.at)))+'</time><div><strong>'+esc((x.type==="vocabulary"?"Kosakata: ":"Grammar: ")+x.title)+'</strong><small>'+esc(x.detail||"")+'</small></div><span class="history-result">'+(x.correct===true?"BENAR":x.correct===false?"PERLU ULANG":"")+'</span></div>').join(""):'<div class="empty-state">Belum ada aktivitas. Latihan pertamamu akan tercatat di sini.</div>';
+    $("#history-list").innerHTML=history.length?history.map(x=>'<div class="history-row"><time>'+esc(fmtDate(new Date(x.at),{day:"2-digit",month:"short"}))+' · '+esc(new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(new Date(x.at)))+'</time><div><strong>'+esc((x.type==="vocabulary"?"Kosakata: ":x.type==="grammar"?"Grammar: ":x.type==="matching"?"Matching: ":x.type==="reading"?"Reading: ":"Aktivitas: ")+x.title)+'</strong><small>'+esc(x.detail||"")+'</small></div><span class="history-result">'+(x.correct===true?"BENAR":x.correct===false?"PERLU ULANG":"")+'</span></div>').join(""):'<div class="empty-state">Belum ada aktivitas. Latihan pertamamu akan tercatat di sini.</div>';
   }
   function exportBackup() {
     let extraLearning={};try{extraLearning=JSON.parse(localStorage.getItem("sinauu-extra-learning-v1")||"{}");}catch(_){}
@@ -534,5 +534,18 @@
       console.error(e);
     }
   }
+  window.sinauuTrackExtraActivity = async function(item) {
+    if (!state || !item) return;
+    const type = item.type === "matching" ? "matching" : "reading";
+    pushHistory({
+      type:type,
+      title:String(item.title || (type === "matching" ? "Pasangan kosakata" : "Pemahaman teks")).slice(0,120),
+      detail:String(item.detail || "Latihan tambahan").slice(0,300),
+      correct:item.correct === true ? true : item.correct === false ? false : null
+    });
+    await save();
+    renderOverview();
+    renderProgress();
+  };
   init();
 })();
