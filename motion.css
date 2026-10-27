@@ -128,9 +128,21 @@ html.motion-enabled :is(
   transition-duration: .14s;
 }
 
-.view {
+html.motion-enabled .view {
   animation-duration: .48s !important;
   animation-timing-function: var(--motion-weighted) !important;
+}
+
+html.motion-enabled .motion-item.is-in-view.task-link:hover,
+html.motion-enabled .motion-item.is-in-view.resume-item:hover {
+  transform: translate3d(0, -2px, 0);
+}
+
+html.motion-enabled .motion-item.is-in-view.vocab-row:hover,
+html.motion-enabled .motion-item.is-in-view.quiz-option:hover,
+html.motion-enabled .motion-item.is-in-view.step:hover,
+html.motion-enabled .motion-item.is-in-view.level-row:hover {
+  transform: translate3d(3px, 0, 0);
 }
 
 @keyframes view-enter {
@@ -156,6 +168,7 @@ html.motion-enabled :is(
 
 @media (prefers-reduced-motion: reduce) {
   .motion-scroll-progress { display: none !important; }
+  html.motion-enabled .view { animation: none !important; }
   html.motion-enabled .motion-item,
   html.motion-enabled .motion-item.is-in-view,
   html.motion-enabled .hero-visual.motion-parallax {
