@@ -120,11 +120,14 @@
     const requests=await Promise.all([
       fetch("/data/vocabulary.json",{cache:"no-cache"}),
       fetch("/data/grammar.json",{cache:"no-cache"}),
-      ...paths.map(loadGzipBase64)
+      ...paths.map(loadGzipBase64),
+      loadGzipBase64("/data/oxford3000/editorial-overrides.json.gz.b64")
     ]);
     if(!requests[0].ok||!requests[1].ok)throw new Error("Dataset kosakata dasar atau grammar tidak bisa dimuat.");
-    const vd=await requests[0].json(),gd=await requests[1].json(),corpora=requests.slice(2);
-    if(!Array.isArray(vd.entries)||!Array.isArray(gd.topics)||corpora.some(c=>!Array.isArray(c.entries)))throw new Error("Bentuk dataset tidak sesuai skema.");
+    const vd=await requests[0].json(),gd=await requests[1].json(),corpora=requests.slice(2,7),editorial=requests[7];
+    if(!Array.isArray(vd.entries)||!Array.isArray(gd.topics)||corpora.some(c=>!Array.isArray(c.entries))||!Array.isArray(editorial.entries))throw new Error("Bentuk dataset tidak sesuai skema.");
+    // The compressed editorial bundle contains high-frequency A1/A2 entries added to the original starter set.
+    vd.entries=vd.entries.concat(editorial.entries);
     const merged=new Map();
     for(const corpus of corpora)for(const entry of corpus.entries)merged.set(norm(entry.word),Object.assign({},entry,{isOxford3000:true}));
     for(const entry of vd.entries){
