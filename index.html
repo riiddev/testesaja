@@ -42,39 +42,52 @@
     <section class="hero">
       <div class="container hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow"><span class="eyebrow-line"></span> CATATAN BELAJAR BAHASA INGGRIS</p>
-          <h1>Belajar sampai<br><em>benar-benar</em><br>kepakai.</h1>
-          <p class="hero-description">Kosakata dan grammar bukan buat dihafal lalu dilupakan. Pahami artinya, lihat cara kerjanya dalam kalimat, lalu coba pakai sendiri.</p>
+          <p class="eyebrow"><span class="eyebrow-line"></span> STUDIO KATA / CATATAN BAHASA NO. 001</p>
+          <h1>Kata baru<br>belum jadi<br><em>milikmu.</em></h1>
+          <p class="hero-description">Mengetahui terjemahan belum berarti tahu cara memakainya. Amati kata dalam kalimat, bedakan nuansanya, lalu uji apakah kamu benar-benar paham.</p>
           <div class="hero-actions">
             <a class="button-primary" href="/belajar.html">Masuk ruang belajar <span aria-hidden="true">↘</span></a>
-            <span class="hero-aside">Dibuat untuk penutur<br>bahasa Indonesia.</span>
+            <span class="hero-aside">DIRANCANG UNTUK<br>PENUTUR BAHASA INDONESIA</span>
           </div>
-          <div class="hero-footnote"><span>01</span><span>Mulai dari satu kata dulu.</span></div>
+          <div class="hero-footnote"><span>01—03</span><span>Makna → konteks → ingatan.</span></div>
         </div>
 
         <div class="hero-visual">
-          <div class="visual-topline"><span>VOCABULARY FIELD NOTE</span><span>NO. 001</span></div>
-          <article class="word-sheet" aria-label="Contoh catatan kosakata">
-            <div class="sheet-meta"><span>VERB</span><span>A2 / EVERYDAY</span></div>
+          <div class="visual-topline"><span>WORD SPECIMEN / 001</span><span>EN → ID</span></div>
+          <article class="word-sheet specimen-sheet" id="specimen-sheet" aria-label="Contoh kata yang dapat dibandingkan">
+            <div class="sheet-meta"><span id="specimen-category">VERB / A2</span><span>FIELD NOTE</span></div>
             <div class="word-row">
-              <h2>notice<span>.</span></h2>
+              <span class="specimen-counter" id="specimen-counter">01</span>
+              <div class="specimen-title-group">
+                <p class="specimen-part">THE WORD</p>
+                <h2><span id="specimen-word">notice</span><span class="specimen-period">.</span></h2>
+              </div>
               <button class="audio-button" id="speak-word" type="button" aria-label="Dengarkan kata notice" title="Dengarkan pengucapan">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M16 9a4 4 0 0 1 0 6m2.5-8.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
               </button>
             </div>
-            <p class="pronunciation">/ˈnəʊ.tɪs/ <span>UK pronunciation</span></p>
+            <p class="pronunciation"><span id="specimen-ipa">/ˈnəʊ.tɪs/</span><span id="specimen-accent">UK · PRONUNCIATION</span></p>
             <div class="sheet-rule"></div>
-            <p class="meaning-label">ARTI</p>
-            <p class="meaning">memperhatikan; menyadari sesuatu</p>
+            <p class="meaning-label">MAKNA / ID</p>
+            <p class="meaning" id="specimen-meaning">Memperhatikan; menyadari sesuatu.</p>
             <div class="example">
-              <p class="example-en">I <strong>noticed</strong> a small change.</p>
-              <p class="example-id">Aku menyadari ada perubahan kecil.</p>
+              <p class="example-label">DILIHAT DALAM KALIMAT <span>01</span></p>
+              <p class="example-en"><span id="specimen-before">I </span><strong id="specimen-focus">noticed</strong><span id="specimen-after"> a small change.</span></p>
+              <p class="example-id" id="specimen-translation">Aku menyadari ada perubahan kecil.</p>
             </div>
-            <div class="margin-note"><span class="margin-dash"></span><span>notice ≠ just see<br>ada kesadaran saat melihat</span></div>
-            <div class="sheet-bottom"><span>MAKNA</span><span>→</span><span>KONTEKS</span><span>→</span><span>INGAT</span></div>
+            <div class="margin-note"><span class="margin-dash"></span><span id="specimen-note">notice → sesuatu masuk ke perhatianmu</span></div>
+            <div class="sheet-bottom"><span>MAKNA</span><span>01</span><span>KONTEKS</span><span>02</span><span>INGAT</span><span>03</span></div>
           </article>
-          <p class="visual-caption"><span class="caption-asterisk">*</span> Contoh tampilan materi, bukan hitungan progres.</p>
-          <span class="visual-stamp" aria-hidden="true">study<br>slowly</span>
+
+          <div class="specimen-controls">
+            <span class="selector-label">BANDINGKAN NUANSANYA</span>
+            <div class="specimen-choices" role="group" aria-label="Pilih kata untuk dibandingkan">
+              <button class="specimen-choice is-active" type="button" data-specimen="notice" aria-pressed="true">notice <span>01</span></button>
+              <button class="specimen-choice" type="button" data-specimen="realize" aria-pressed="false">realize <span>02</span></button>
+              <button class="specimen-choice" type="button" data-specimen="recognize" aria-pressed="false">recognize <span>03</span></button>
+            </div>
+          </div>
+          <p class="visual-caption"><span class="caption-asterisk">↳</span> Kata serupa tidak selalu punya pekerjaan yang sama.</p>
         </div>
       </div>
     </section>
@@ -82,24 +95,24 @@
     <section class="approach section-rule" id="pendekatan">
       <div class="container approach-grid">
         <div class="section-intro">
-          <p class="eyebrow">CARANYA SEDERHANA</p>
-          <h2>Kenal. Paham.<br><em>Bisa pakai.</em></h2>
-          <p>Jawaban benar sekali belum tentu berarti sudah ingat. Karena itu, latihan perlu menguji lebih dari sekadar terjemahan.</p>
+          <p class="eyebrow">BUKAN CUMA TERJEMAHAN</p>
+          <h2>Arti saja<br><em>belum cukup.</em></h2>
+          <p>Kamu bisa mengenali arti kata saat melihatnya, tetapi tetap kesulitan mengambilnya dari ingatan. Karena itu, latihan punya tiga lapis.</p>
         </div>
         <div class="steps-list">
           <article class="step">
             <span class="step-number">01</span>
-            <div><h3>Ingat tanpa melihat</h3><p>Coba ambil makna dari ingatanmu sendiri, bukan dari pilihan jawaban yang memberi petunjuk.</p></div>
+            <div><h3>Ambil dari ingatan</h3><p>Coba jelaskan artinya tanpa membuka daftar arti atau mengandalkan pilihan jawaban.</p></div>
             <span class="step-mark" aria-hidden="true">↗</span>
           </article>
           <article class="step">
             <span class="step-number">02</span>
-            <div><h3>Temui di konteks baru</h3><p>Kenali kata atau aturan yang sama di kalimat yang belum pernah kamu kerjakan.</p></div>
+            <div><h3>Pindahkan ke konteks lain</h3><p>Temukan kata yang sama dalam kalimat berbeda. Maknanya harus tetap masuk akal di sana.</p></div>
             <span class="step-mark" aria-hidden="true">↗</span>
           </article>
           <article class="step">
             <span class="step-number">03</span>
-            <div><h3>Pakai dengan caramu</h3><p>Tulis atau susun jawaban sendiri, kemudian ulangi lagi setelah jeda.</p></div>
+            <div><h3>Pakai tanpa petunjuk</h3><p>Bentuk kalimatmu sendiri, lalu kembali menguji ingatan setelah jeda waktu.</p></div>
             <span class="step-mark" aria-hidden="true">↗</span>
           </article>
         </div>
@@ -110,10 +123,10 @@
       <div class="container">
         <div class="curriculum-heading">
           <div>
-            <p class="eyebrow">PETA MATERI</p>
-            <h2>Dari fondasi ke<br><em>kalimat yang rumit.</em></h2>
+            <p class="eyebrow">PETA PERJALANAN / CEFR</p>
+            <h2>Lima level.<br><em>Jaraknya berbeda.</em></h2>
           </div>
-          <p>Jalur belajar akan disusun berdasarkan level CEFR. Ini peta arah kurikulum, bukan klaim bahwa semua pelajaran sudah tersedia.</p>
+          <p>CEFR adalah peta, bukan skor untuk dipamerkan. Mulai dari struktur yang kamu kuasai, lalu bergerak saat contoh mulai terasa masuk akal. Tidak semua level punya kurikulum lengkap saat ini.</p>
         </div>
         <div class="level-list">
           <div class="level-row"><span class="level-code">A1</span><span class="level-title">Fondasi</span><span class="level-detail">Perkenalan, kata dasar, dan kalimat sederhana.</span><span class="level-range">BEGINNER</span></div>
@@ -128,10 +141,10 @@
     <section class="practice" id="latihan">
       <div class="container practice-grid">
         <div class="practice-copy">
-          <p class="eyebrow">COBA SEKARANG</p>
-          <h2>Satu aturan kecil<br>bisa mengubah <em>arti.</em></h2>
-          <p>Dalam present simple, kata kerja berubah mengikuti subjek. Pilih kalimat yang tepat untuk melihat contohnya.</p>
-          <span class="practice-note">LATIHAN CONTOH · BUKAN TES LEVEL</span>
+          <p class="eyebrow">UJI KECIL / 01</p>
+          <h2>Bisa lihat<br><em>bedanya?</em></h2>
+          <p>Perbedaan satu huruf bisa mengubah ketepatan kalimat. Pilih contoh yang benar, lalu lihat alasan di balik jawabannya.</p>
+          <span class="practice-note">DEMO / JAWABAN TIDAK DISIMPAN</span>
         </div>
         <div class="quiz">
           <div class="quiz-heading"><span>01 / SUBJECT–VERB AGREEMENT</span><span id="quiz-state">PILIH JAWABAN</span></div>
@@ -151,10 +164,10 @@
   <footer class="site-footer">
     <div class="container footer-top">
       <a class="brand" href="#" aria-label="Kembali ke atas"><span class="brand-mark" aria-hidden="true">s.</span><span class="brand-name">sinauu<span>english notes</span></span></a>
-      <p>Belajar bahasa, satu pemahaman dalam satu waktu.</p>
+      <p>Catat katanya. Perhatikan pekerjaannya dalam kalimat.</p>
       <a class="footer-top-link" href="#">Kembali ke atas ↑</a>
     </div>
-    <div class="container footer-bottom"><span>© <span id="current-year">2026</span> SinauuEnglish</span><span>Landing page · ruang belajar menyusul</span></div>
+    <div class="container footer-bottom"><span>© <span id="current-year">2026</span> SinauuEnglish</span><span>FIELD NOTES / SINAUUENGLISH</span></div>
   </footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>

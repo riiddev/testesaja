@@ -92,19 +92,81 @@
     revealElements.forEach((element) => element.classList.add("is-visible"));
   }
 
+  const specimens = {
+    notice: {
+      number: "01", word: "notice", category: "VERB / A2", ipa: "/ˈnəʊ.tɪs/",
+      meaning: "Memperhatikan; menyadari sesuatu.",
+      before: "I ", focus: "noticed", after: " a small change.",
+      translation: "Aku menyadari ada perubahan kecil.",
+      note: "notice → sesuatu masuk ke perhatianmu"
+    },
+    realize: {
+      number: "02", word: "realize", category: "VERB / B1", ipa: "/ˈrɪə.laɪz/",
+      meaning: "Menyadari atau memahami sesuatu setelah berpikir.",
+      before: "I ", focus: "realized", after: " I was wrong.",
+      translation: "Aku menyadari bahwa aku salah.",
+      note: "realize → sebuah pemahaman akhirnya muncul"
+    },
+    recognize: {
+      number: "03", word: "recognize", category: "VERB / B1", ipa: "/ˈrek.əɡ.naɪz/",
+      meaning: "Mengenali sesuatu atau seseorang yang pernah diketahui.",
+      before: "I ", focus: "recognized", after: " her voice.",
+      translation: "Aku mengenali suaranya.",
+      note: "recognize → terasa akrab karena pernah kamu kenal"
+    }
+  };
+  let activeSpecimen = "notice";
+  const specimenSheet = document.getElementById("specimen-sheet");
   const speakButton = document.getElementById("speak-word");
+
+  function chooseSpecimen(key) {
+    const specimen = specimens[key];
+    if (!specimen) return;
+    activeSpecimen = key;
+    const put = (id, value) => {
+      const node = document.getElementById(id);
+      if (node) node.textContent = value;
+    };
+    put("specimen-counter", specimen.number);
+    put("specimen-category", specimen.category);
+    put("specimen-word", specimen.word);
+    put("specimen-ipa", specimen.ipa);
+    put("specimen-meaning", specimen.meaning);
+    put("specimen-before", specimen.before);
+    put("specimen-focus", specimen.focus);
+    put("specimen-after", specimen.after);
+    put("specimen-translation", specimen.translation);
+    put("specimen-note", specimen.note);
+    if (speakButton) speakButton.setAttribute("aria-label", "Dengarkan kata " + specimen.word);
+    document.querySelectorAll("[data-specimen]").forEach((button) => {
+      const active = button.dataset.specimen === key;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    if (specimenSheet) {
+      specimenSheet.classList.remove("is-switching");
+      void specimenSheet.offsetWidth;
+      specimenSheet.classList.add("is-switching");
+      window.setTimeout(() => specimenSheet.classList.remove("is-switching"), 420);
+    }
+  }
+
+  document.querySelectorAll("[data-specimen]").forEach((button) => {
+    button.addEventListener("click", () => chooseSpecimen(button.dataset.specimen));
+  });
+
   speakButton?.addEventListener("click", () => {
     if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
       showToast("Pemutaran suara belum didukung oleh browser ini.");
       return;
     }
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance("notice");
+    const utterance = new SpeechSynthesisUtterance(specimens[activeSpecimen].word);
     utterance.lang = "en-GB";
     utterance.rate = 0.82;
     utterance.onerror = () => showToast("Suara tidak dapat diputar. Coba periksa pengaturan browser.");
     window.speechSynthesis.speak(utterance);
-    showToast("Memutar pengucapan bahasa Inggris.");
+    showToast("Memutar pengucapan: " + specimens[activeSpecimen].word + ".");
   });
 
   const quizOptions = Array.from(document.querySelectorAll(".quiz-option"));
