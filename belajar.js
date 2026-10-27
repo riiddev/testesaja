@@ -223,7 +223,7 @@
       return '<button class="vocab-row '+(selectedWord===w.id?"is-selected":"")+'" data-select-word="'+esc(w.id)+'" type="button"><span class="word-level">'+esc(w.level)+'</span><span class="word-row-main"><strong>'+esc(w.word)+(state.favorites.includes(w.id)?" ★":"")+'</strong><small>'+esc(w.meaning)+'</small></span><span class="word-row-status '+si.cls+'">'+si.label+'</span></button>';
     }).join("");
     if(selectedWord && filtered.some(w=>w.id===selectedWord))renderWordDetail(selectedWord);
-    else if(filtered.length){selectedWord=filtered[0].id;renderWordDetail(selectedWord);$(".vocab-row").forEach(b=>b.classList.toggle("is-selected",b.dataset.selectWord===selectedWord));}
+    else if(filtered.length){selectedWord=filtered[0].id;renderWordDetail(selectedWord);$$(".vocab-row").forEach(b=>b.classList.toggle("is-selected",b.dataset.selectWord===selectedWord));}
     else $("#word-detail").innerHTML='<div class="detail-empty"><span class="detail-empty-mark">Aa</span><h2>Belum ada hasil</h2><p>Coba ubah kata pencarian atau filter.</p></div>';
   }
   function renderWordDetail(id) {
