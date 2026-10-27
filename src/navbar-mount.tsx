@@ -7,11 +7,12 @@ if (mount) {
   const navContainer = mount.parentElement;
   navContainer?.classList.add("has-liquid-nav");
 
-  // Close the legacy mobile drawer when a React-rendered navbar link is chosen.
-  navContainer?.addEventListener("click", (event) => {
-    const target = event.target;
-    if (!(target instanceof Element) || !target.closest(".nimbus-item")) return;
-    navContainer.classList.remove("is-open");
+  // Capture at document level so this also works for SVG icons inside React links.
+  document.addEventListener("click", (event) => {
+    const target = event.target as Element | null;
+    if (!target?.closest?.(".nimbus-item")) return;
+    const container = document.getElementById("primary-nav");
+    container?.classList.remove("is-open");
     const menuToggle = document.getElementById("menu-toggle");
     menuToggle?.setAttribute("aria-expanded", "false");
     menuToggle?.setAttribute("aria-label", "Buka navigasi");
