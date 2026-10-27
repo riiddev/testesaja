@@ -58,7 +58,10 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 - `data/vocabulary.json` — curated starter vocabulary; its entries override the Oxford-derived entry for matching headwords.
 - `data/grammar.json` — starter grammar curriculum and question bank.
 - `data/oxford3000/*.json.gz.b64` — gzip-compressed, Base64-encoded corpus split by CEFR level for static hosting.
-- `data/oxford3000/editorial-overrides.json.gz.b64` — compact bundle of 254 additional A1/A2 editorial-draft overlays plus 7 updates to existing curated starter entries; original curated entries stay in `data/vocabulary.json`.
+- `data/oxford3000/editorial-overrides.json.gz.b64` — original bundle for 204 editorial drafts (197 new headwords plus 7 updates to existing curated entries).
+- `data/oxford3000/editorial-overrides-batch2-a.json.gz.b64` and `editorial-overrides-batch2-b.json.gz.b64` — 57 additional high-frequency A1/A2 draft entries.
+- `data/oxford3000/editorial-overrides-context-fixes.json.gz.b64` — corrected context-choice options for four earlier entries.
+- `data/oxford3000/editorial-overrides-loader.js` — combines the compressed overlays in the browser before the learning workspace loads.
 - `data/oxford3000/ATTRIBUTION.md`, `data/oxford3000/audit.json` — source attribution and content-quality audit.
 
 ## Next work
