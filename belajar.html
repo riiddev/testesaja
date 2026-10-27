@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3eb">
+  <meta name="description" content="Ruang belajar SinauuEnglish: kosakata, grammar, review, dan latihan dengan progres yang tersimpan di perangkatmu.">
+  <title>Ruang Belajar — SinauuEnglish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,400italic;6..72,500italic&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/belajar.css">
+  <script src="/belajar.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#app-main">Lewati ke konten</a>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/index.html" aria-label="SinauuEnglish, kembali ke landing page">
+        <span class="brand-mark">s.</span><span class="brand-name">sinauu<span>english notes</span></span>
+      </a>
+      <p class="sidebar-label">RUANG BELAJAR</p>
+      <nav class="side-nav" aria-label="Menu belajar">
+        <button class="side-link is-active" data-view-target="overview" type="button"><span class="nav-icon">⌂</span><span>Ringkasan</span></button>
+        <button class="side-link" data-view-target="vocabulary" type="button"><span class="nav-icon">Aa</span><span>Kosakata</span><span class="nav-count" id="nav-word-count">—</span></button>
+        <button class="side-link" data-view-target="grammar" type="button"><span class="nav-icon">¶</span><span>Grammar</span><span class="nav-count" id="nav-grammar-count">—</span></button>
+        <button class="side-link" data-view-target="review" type="button"><span class="nav-icon">↻</span><span>Review</span><span class="nav-count" id="nav-review-count">0</span></button>
+        <button class="side-link" data-view-target="progress" type="button"><span class="nav-icon">↗</span><span>Progres</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="local-note"><span class="local-note-dot"></span><div><strong>Belajar di perangkatmu</strong><p>Progres tersimpan lokal. Tidak perlu akun.</p></div></div>
+        <a class="back-link" href="/index.html">← Kembali ke beranda</a>
+      </div>
+    </aside>
+
+    <main class="app-main" id="app-main">
+      <header class="app-topbar">
+        <div class="breadcrumbs"><span>SINAUUENGLISH</span><span>/</span><strong id="breadcrumb-current">RINGKASAN</strong></div>
+        <div class="topbar-actions">
+          <span class="storage-indicator" id="storage-indicator"><i></i><span>Menyiapkan penyimpanan</span></span>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Aktifkan tema gelap" aria-pressed="false">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2m14.7-6.7-1.4 1.4M6.2 17.8l-1.4 1.4m13 0-1.4-1.4M6.2 6.2 4.8 4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.1A8.4 8.4 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <div class="load-error" id="load-error" hidden role="alert"></div>
+
+        <section class="view is-visible" id="view-overview" data-view="overview">
+          <div class="page-heading overview-heading">
+            <div>
+              <p class="eyebrow" id="today-label">CATATAN HARI INI</p>
+              <h1>Pelan-pelan,<br><em>yang penting paham.</em></h1>
+              <p class="page-lede">Pilih satu hal untuk dipelajari. Kemajuan akan tercatat dari latihan yang kamu kerjakan, bukan dari halaman yang kamu buka.</p>
+            </div>
+            <div class="daily-date"><span class="date-day" id="date-day">—</span><span class="date-month" id="date-month">—</span></div>
+          </div>
+
+          <div class="overview-metrics">
+            <article class="metric metric-plain"><span class="metric-label">KATA MASTERED</span><strong id="metric-mastered">0</strong><p id="metric-mastered-note">Belum ada kata yang memenuhi kriteria mastery.</p></article>
+            <article class="metric metric-plain"><span class="metric-label">PERLU REVIEW</span><strong id="metric-due">0</strong><p>Kata yang jadwal review-nya sudah tiba.</p></article>
+            <article class="metric metric-plain"><span class="metric-label">AKTIVITAS HARI INI</span><strong id="metric-today">0</strong><p>Langkah latihan yang benar-benar tercatat hari ini.</p></article>
+          </div>
+
+          <div class="overview-columns">
+            <section class="section-block daily-block">
+              <div class="block-heading"><div><p class="eyebrow">TARGET HARIAN</p><h2>Sedikit, tapi rutin.</h2></div><button class="plain-action" id="edit-goal" type="button">Ubah target ↗</button></div>
+              <div class="goal-line"><span id="goal-summary">0 dari 10 aktivitas</span><span id="goal-percent">0%</span></div>
+              <div class="progress-track"><span id="goal-bar"></span></div>
+              <p class="small-muted" id="goal-note">Target adalah pengingat, bukan syarat untuk menguasai kata.</p>
+              <div class="today-tasks">
+                <button class="task-link" type="button" data-view-target="vocabulary"><span class="task-symbol task-sage">Aa</span><span><strong>Pelajari kosakata</strong><small>Coba ingat arti dan pakai dalam kalimat.</small></span><span class="task-arrow">↗</span></button>
+                <button class="task-link" type="button" data-view-target="grammar"><span class="task-symbol task-lilac">¶</span><span><strong>Pelajari grammar</strong><small>Pilih topik dan kerjakan soal khususnya.</small></span><span class="task-arrow">↗</span></button>
+                <button class="task-link" type="button" data-view-target="review"><span class="task-symbol task-peach">↻</span><span><strong>Ulangi materi</strong><small id="review-task-note">Jadwal review dihitung dari sesi belajarmu.</small></span><span class="task-arrow">↗</span></button>
+              </div>
+            </section>
+
+            <section class="section-block level-block">
+              <div class="block-heading"><div><p class="eyebrow">PETA KOSAKATA</p><h2>Per level</h2></div><button class="plain-action" data-view-target="progress" type="button">Lihat detail ↗</button></div>
+              <div class="level-progress-list" id="overview-levels"></div>
+              <p class="dataset-disclaimer" id="dataset-disclaimer">Menghitung entri kosakata yang tersedia di aplikasi.</p>
+            </section>
+          </div>
+          <section class="section-block resume-block">
+            <div class="block-heading"><div><p class="eyebrow">MATERI PILIHAN</p><h2>Mulai dari sini</h2></div></div>
+            <div class="resume-list" id="resume-list"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-vocabulary" data-view="vocabulary">
+          <div class="page-heading compact-heading">
+            <p class="eyebrow">WORD COLLECTION</p>
+            <h1>Kosakata, <em>dalam konteks.</em></h1>
+            <p class="page-lede">Cari kata, baca contoh, simpan yang berguna, lalu latih sampai kamu bisa mengingat dan menggunakannya sendiri.</p>
+          </div>
+          <div class="source-note" id="source-note"></div>
+          <div class="vocab-toolbar">
+            <label class="search-field"><span aria-hidden="true">⌕</span><input id="vocab-search" type="search" placeholder="Cari kata atau arti…" autocomplete="off"><kbd>/</kbd></label>
+            <label class="select-field"><span>LEVEL</span><select id="level-filter"><option value="all">Semua level</option><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option></select></label>
+            <label class="select-field"><span>TOPIK</span><select id="topic-filter"><option value="all">Semua topik</option></select></label>
+            <label class="favorite-filter"><input id="favorites-only" type="checkbox"><span>Favorit saja</span></label>
+          </div>
+          <div class="vocab-layout">
+            <div class="vocab-list-panel">
+              <div class="list-count-line"><span id="vocab-result-count">Memuat kosakata…</span><span>EN → ID</span></div>
+              <div class="vocab-list" id="vocab-list"></div>
+              <p class="empty-state" id="vocab-empty" hidden>Tidak ada kata yang cocok dengan pencarian ini. Coba kata atau filter lain.</p>
+            </div>
+            <aside class="word-detail" id="word-detail">
+              <div class="detail-empty"><span class="detail-empty-mark">Aa</span><h2>Pilih satu kata</h2><p>Arti, contoh, kolokasi, dan latihan kata akan muncul di sini.</p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-grammar" data-view="grammar">
+          <div class="page-heading compact-heading">
+            <p class="eyebrow">GRAMMAR NOTES</p>
+            <h1>Aturan yang <em>mulai masuk akal.</em></h1>
+            <p class="page-lede">Setiap topik punya penjelasan, contoh terjemahan, kesalahan umum, dan kumpulan soal sendiri.</p>
+          </div>
+          <div class="grammar-layout">
+            <aside class="topic-list-panel"><div class="list-count-line"><span>DAFTAR TOPIK</span><span id="grammar-count">—</span></div><div id="grammar-topic-list"></div></aside>
+            <article class="lesson-panel" id="lesson-panel"><div class="detail-empty"><span class="detail-empty-mark">¶</span><h2>Pilih topik grammar</h2><p>Pilih materi di sebelah kiri untuk membuka pelajaran dan latihan khusus topik.</p></div></article>
+          </div>
+        </section>
+
+        <section class="view" id="view-study" data-view="study">
+          <div class="study-top"><button class="back-button" id="exit-study" type="button">← Kembali ke kosakata</button><span class="study-session-tag" id="study-session-tag">VOCABULARY PRACTICE</span></div>
+          <div class="study-container" id="study-container"></div>
+        </section>
+
+        <section class="view" id="view-review" data-view="review">
+          <div class="page-heading compact-heading"><p class="eyebrow">SPACED REVIEW</p><h1>Kembali saat <em>waktunya.</em></h1><p class="page-lede">Review terjadwal membantu mengecek apakah kata masih bisa kamu ingat setelah jeda. Jawaban benar hari ini saja tidak membuat kata langsung mastered.</p></div>
+          <div class="review-summary"><div><span class="metric-label">JATUH TEMPO</span><strong id="review-due-total">0</strong></div><div><span class="metric-label">REVIEW BERHASIL</span><strong id="review-success-total">0</strong></div><p>Review diatur dari tanggal sesi yang tercatat pada perangkat ini. Mengubah tanggal sistem dapat memengaruhi jadwal.</p></div>
+          <div class="review-list" id="review-list"></div>
+        </section>
+
+        <section class="view" id="view-progress" data-view="progress">
+          <div class="page-heading compact-heading"><p class="eyebrow">YOUR STUDY RECORD</p><h1>Progres yang <em>bisa dilacak.</em></h1><p class="page-lede">Ringkasan ini dihitung dari korpus dan aktivitas yang tersimpan di perangkatmu.</p></div>
+          <section class="section-block progress-levels-block"><div class="block-heading"><div><p class="eyebrow">VOCABULARY</p><h2>Kemajuan per level</h2></div></div><div class="level-progress-list detailed-levels" id="progress-levels"></div></section>
+          <section class="section-block grammar-progress-block"><div class="block-heading"><div><p class="eyebrow">GRAMMAR</p><h2>Topik yang sudah dicoba</h2></div></div><div id="grammar-progress-list" class="grammar-progress-list"></div></section>
+          <section class="section-block history-block"><div class="block-heading"><div><p class="eyebrow">ACTIVITY LOG</p><h2>Aktivitas terbaru</h2></div><button class="plain-action" id="export-backup" type="button">Ekspor backup ↓</button></div><div class="history-list" id="history-list"></div><div class="backup-row"><label class="import-button" for="import-backup">Pulihkan dari backup JSON ↑</label><input id="import-backup" type="file" accept="application/json,.json" hidden><span id="backup-status" role="status"></span></div></section>
+        </section>
+
+        <footer class="workspace-footer"><span>SinauuEnglish / Local study workspace</span><span>Progres milikmu. Tersimpan di perangkatmu.</span></footer>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog class="goal-dialog" id="goal-dialog"><form method="dialog" id="goal-form"><p class="eyebrow">PENGATURAN HARIAN</p><h2>Target yang realistis.</h2><p>Pilih jumlah aktivitas belajar yang ingin kamu usahakan tiap hari.</p><label for="daily-goal-input">Aktivitas per hari</label><select id="daily-goal-input"><option value="5">5 aktivitas</option><option value="10">10 aktivitas</option><option value="15">15 aktivitas</option><option value="20">20 aktivitas</option></select><div class="dialog-actions"><button class="dialog-cancel" value="cancel">Batal</button><button class="dialog-save" id="save-goal" value="default">Simpan target</button></div></form></dialog>
+</body>
+</html>
