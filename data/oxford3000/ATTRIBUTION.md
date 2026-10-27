@@ -38,6 +38,6 @@ Indonesian translations present in dictionary-derived example records may be mac
 
 ## SinauuEnglish editorial overrides (2026-10-27)
 
-A first quality pass rewrote 138 high-frequency A1/A2 headwords (131 additional overlay records plus updates to seven existing curated entries) with simpler Indonesian glosses, English explanations, examples, and Indonesian example translations. These overrides are assistant-authored editorial drafts. They are not represented as independently human-verified or Oxford-authored content. Their metadata uses `assistant-curated-draft` / `editorial-draft-needs-human-review` to preserve that distinction in the app and audit.
+A first quality pass rewrote 204 high-frequency A1/A2 headwords (197 additional overlay records plus updates to seven existing curated entries) with simpler Indonesian glosses, English explanations, examples, and Indonesian example translations. These overrides are assistant-authored editorial drafts. They are not represented as independently human-verified or Oxford-authored content. Their metadata uses `assistant-curated-draft` / `editorial-draft-needs-human-review` to preserve that distinction in the app and audit.
 
 The remaining entries continue to rely on the dictionary-enrichment pipeline described above, with gaps left blank where suitable information was not available. The compact runtime bundle is `data/oxford3000/editorial-overrides.json.gz.b64`; the original 34-entry starter file stays separate at `data/vocabulary.json`.
