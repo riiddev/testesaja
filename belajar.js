@@ -238,12 +238,12 @@
     topicSelect.innerHTML='<option value="all">Semua topik</option>'+topicOptions.map(t=>'<option value="'+esc(t)+'">'+esc(t.replace(/-/g," "))+'</option>').join("");
     if(topicOptions.includes(old))topicSelect.value=old;
     const oxfordCount=words.filter(w=>w.isOxford3000).length,readyCount=words.filter(canStudyWord).length,extraCount=words.length-oxfordCount;
-    $("#source-note").innerHTML='<span aria-hidden="true">i</span><span><strong>'+oxfordCount.toLocaleString("id-ID")+' headword Oxford 3000</strong> tersedia, plus '+extraCount+' kata starter. '+readyCount.toLocaleString("id-ID")+' kata sudah punya arti dan contoh untuk dilatih; entri lain tetap bisa dicari, tetapi belum membuka sesi belajar.</span>';
+    $("#source-note").innerHTML='<span aria-hidden="true">i</span> <span><strong>'+oxfordCount.toLocaleString("id-ID")+' headword Oxford 3000</strong> tersedia, plus '+extraCount+' kata starter. '+readyCount.toLocaleString("id-ID")+' kata sudah punya arti dan contoh untuk dilatih; entri lain tetap bisa dicari, tetapi belum membuka sesi belajar.</span>';
     const q=norm($("#vocab-search").value),level=$("#level-filter").value,topic=topicSelect.value,fav=$("#favorites-only").checked;
     const filtered=words.filter(w=>{
       const searchable=norm([w.word,w.meaning,w.example,w.translation,w.definitionEn,w.partOfSpeech,...(w.acceptedMeanings||[]),...(w.topics||[])].join(" "));
       return (!q||searchable.includes(q))&&(level==="all"||w.level===level)&&(topic==="all"||(w.topics||[]).includes(topic))&&(!fav||state.favorites.includes(w.id));
-    }).sort((a,b)=>(LEVELS.indexOf(a.level)<0?99:LEVELS.indexOf(a.level))-(LEVELS.indexOf(b.level)<0?99:LEVELS.indexOf(b.level))||a.word.localeCompare(b.word));
+    }).sort((a,b)=>{const rank=w=>!q?0:norm(w.word)===q?0:norm(w.word).startsWith(q)?1:2;return rank(a)-rank(b)||(LEVELS.indexOf(a.level)<0?99:LEVELS.indexOf(a.level))-(LEVELS.indexOf(b.level)<0?99:LEVELS.indexOf(b.level))||a.word.localeCompare(b.word);});
     $("#vocab-result-count").textContent=filtered.length.toLocaleString("id-ID")+" dari "+words.length.toLocaleString("id-ID")+" kata";
     $("#vocab-empty").hidden=filtered.length!==0;
     const shown=filtered.slice(0,listLimit);
