@@ -127,7 +127,7 @@
     const vd=await requests[0].json(),gd=await requests[1].json(),corpora=requests.slice(2,7),editorial=requests[7];
     if(!Array.isArray(vd.entries)||!Array.isArray(gd.topics)||corpora.some(c=>!Array.isArray(c.entries))||!Array.isArray(editorial.entries))throw new Error("Bentuk dataset tidak sesuai skema.");
     // The compressed editorial bundle contains high-frequency A1/A2 entries added to the original starter set.
-    vd.entries=vd.entries.concat(editorial.entries);
+    vd.entries=editorial.entries.concat(vd.entries);
     const merged=new Map();
     for(const corpus of corpora)for(const entry of corpus.entries)merged.set(norm(entry.word),Object.assign({},entry,{isOxford3000:true}));
     for(const entry of vd.entries){
