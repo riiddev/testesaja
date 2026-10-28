@@ -296,10 +296,20 @@
     const next=(w.contextVariants||[]).find(v=>v.id&&v.sentence&&!tried.has(v.id));
     const sentence=(next&&next.sentence)||w.example||"",id=(next&&next.id)||w.id+"-example-context";
     const correct=(w.acceptedMeanings||[]).find(Boolean)||(w.meaning||"").split(/[;；]/)[0].trim();
-    const candidates=words.filter(x=>x.id!==w.id&&x.meaning).map(x=>(x.acceptedMeanings||[]).find(Boolean)||(x.meaning||"").split(/[;；]/)[0].trim()).filter(x=>x&&norm(x)!==norm(correct));
-    const unique=Array.from(new Map(candidates.map(x=>[norm(x),x])).values());
     const seed=w.id.split("").reduce((n,c)=>n+c.charCodeAt(0),0)+tried.size;
-    const distractors=[0,1].map(offset=>unique[(seed+offset)%Math.max(1,unique.length)]).filter(Boolean);
+    const correctAliases=new Set([correct,...(w.acceptedMeanings||[])].map(norm).filter(Boolean));
+    const candidateRows=words.filter(x=>x.id!==w.id&&x.meaning).map(x=>{
+      const meaning=(x.acceptedMeanings||[]).find(Boolean)||(x.meaning||"").split(/[;；]/)[0].trim();
+      return {id:x.id,meaning:meaning,level:x.level,pos:(x.partOfSpeech||"").split(/[\\/,]/).map(norm).filter(Boolean),topics:x.topics||[]};
+    }).filter(x=>x.meaning&&!correctAliases.has(norm(x.meaning)));
+    const unique=Array.from(new Map(candidateRows.map(x=>[norm(x.meaning),x])).values());
+    const targetPos=new Set((w.partOfSpeech||"").split(/[\\/,]/).map(norm).filter(Boolean));
+    const targetTopics=new Set(w.topics||[]);
+    const similarity=x=>(x.level===w.level?4:0)+(x.pos.some(pos=>targetPos.has(pos))?3:0)+(x.topics.some(topic=>targetTopics.has(topic))?2:0)-Math.min(2,Math.abs(x.meaning.length-correct.length)/20);
+    const stableRank=x=>{let hash=(seed>>>0)+2166136261;for(let i=0;i<x.id.length;i++)hash=Math.imul(hash^x.id.charCodeAt(i),16777619)>>>0;return hash;};
+    const ranked=unique.sort((a,b)=>similarity(b)-similarity(a)||stableRank(a)-stableRank(b));
+    const distractors=[];
+    for(const candidate of ranked){if(!distractors.some(item=>norm(item)===norm(candidate.meaning)))distractors.push(candidate.meaning);if(distractors.length===2)break;}
     const options=[correct,...distractors],shift=seed%Math.max(1,options.length),ordered=options.slice(shift).concat(options.slice(0,shift));
     return {id,prompt:'Dalam kalimat “'+sentence+'”, arti kata “'+w.word+'” paling dekat dengan…',options:ordered,answer:ordered.findIndex(x=>norm(x)===norm(correct)),explanation:"Gunakan arti kata dan konteks kalimat untuk memilih jawaban."+(w.commonMistake?" "+w.commonMistake:"")};
   }
