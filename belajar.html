@@ -54,45 +54,86 @@
         <div class="load-error" id="load-error" hidden role="alert"></div>
 
         <section class="view is-visible" id="view-overview" data-view="overview">
-          <div class="page-heading overview-heading">
-            <div>
-              
-              <h1>Pelan-pelan,<br><em>yang penting paham.</em></h1>
-              <p class="page-lede">Pilih satu hal untuk dipelajari. Kemajuan akan tercatat dari latihan yang kamu kerjakan, bukan dari halaman yang kamu buka.</p>
+          <div class="study-dashboard">
+            <div class="dashboard-main">
+              <section class="dashboard-hero">
+                <div class="dashboard-hero-copy">
+                  <span class="dashboard-kicker">SINAUUENGLISH · RUANG BELAJAR</span>
+                  <h1>Bahasa Inggris bukan sekadar hafal, tapi pahami cara <em>menggunakannya.</em></h1>
+                  <p class="page-lede">Latihan sedikit demi sedikit. Hasilnya akan terasa nanti.</p>
+                </div>
+                <div class="dashboard-hero-art" aria-hidden="true">
+                  <span class="art-sun"></span><span class="art-hill art-hill-back"></span><span class="art-hill art-hill-front"></span>
+                  <span class="art-book art-book-one"></span><span class="art-book art-book-two"></span><span class="art-leaf">✳</span>
+                </div>
+              </section>
+
+              <section class="dashboard-welcome">
+                <span class="welcome-mark" aria-hidden="true"><img src="/assets/sinauu-mark.svg" alt=""></span>
+                <div class="welcome-copy"><h2>Halo, selamat belajar.</h2><p>Hari ini saat yang tepat untuk melangkah lebih jauh.</p></div>
+                <span class="welcome-note">One level<br>at a time.</span>
+              </section>
+
+              <section class="dashboard-modes">
+                <div class="dashboard-section-heading"><div><h2>Pilih mode belajar</h2><p>Fokus pada satu keterampilan, atau eksplor semuanya.</p></div></div>
+                <div class="mode-card-grid">
+                  <button class="mode-card mode-matching" type="button" data-view-target="matching">
+                    <span class="mode-visual mode-visual-matching" aria-hidden="true"><span class="word-chip chip-one">abundant</span><span class="word-chip chip-two">berlimpah</span><span class="visual-spark">✳</span></span>
+                    <span class="mode-card-body"><span class="mode-icon">↔</span><strong>Matching</strong><small>Pasangkan kata dengan artinya. Latihan cepat untuk memperkaya kosakata.</small><span class="mode-arrow">↗</span></span>
+                  </button>
+                  <button class="mode-card mode-reading" type="button" data-view-target="reading">
+                    <span class="mode-visual mode-visual-reading" aria-hidden="true"><span class="paper-line"></span><span class="paper-line"></span><span class="paper-line short"></span><span class="highlight-line"></span><span class="reading-label">inference</span></span>
+                    <span class="mode-card-body"><span class="mode-icon">▤</span><strong>Reading Comprehension</strong><small>Tingkatkan pemahaman teks melalui berbagai jenis soal.</small><span class="mode-arrow">↗</span></span>
+                  </button>
+                  <button class="mode-card mode-vocabulary" type="button" data-view-target="vocabulary">
+                    <span class="mode-visual mode-visual-vocabulary" aria-hidden="true"><span class="check-row">✓ &nbsp; improve</span><span class="check-row">✓ &nbsp; increase</span><span class="check-row">✓ &nbsp; achieve</span><span class="visual-sprig">✳</span></span>
+                    <span class="mode-card-body"><span class="mode-icon">Aa</span><strong>Kosakata</strong><small>Pelajari kata baru, makna, dan penggunaannya dalam konteks.</small><span class="mode-arrow">↗</span></span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="section-block resume-block dashboard-resume">
+                <div class="block-heading"><div><h2>Lanjutkan perjalananmu</h2></div></div>
+                <div class="resume-list" id="resume-list"></div>
+              </section>
             </div>
-            <div class="daily-date"><span class="date-day" id="date-day">—</span><span class="date-month" id="date-month">—</span></div>
-          </div>
 
-          <div class="overview-metrics">
-            <article class="metric metric-plain"><span class="metric-label">KATA MASTERED</span><strong id="metric-mastered">0</strong><p id="metric-mastered-note">Belum ada kata yang memenuhi kriteria mastery.</p></article>
-            <article class="metric metric-plain"><span class="metric-label">PERLU REVIEW</span><strong id="metric-due">0</strong><p>Kata yang jadwal review-nya sudah tiba.</p></article>
-            <article class="metric metric-plain"><span class="metric-label">AKTIVITAS HARI INI</span><strong id="metric-today">0</strong><p>Langkah latihan yang benar-benar tercatat hari ini.</p></article>
-          </div>
+            <aside class="dashboard-rail" aria-label="Ringkasan belajar">
+              <section class="rail-card progress-card">
+                <div class="rail-card-heading"><h2>Progres belajar</h2><span aria-hidden="true">✳</span></div>
+                <div class="progress-card-body">
+                  <div class="progress-ring" id="dashboard-progress-ring"><span id="dashboard-progress-value">0%</span></div>
+                  <div class="progress-stats">
+                    <div class="progress-stat"><span class="stat-dot dot-sage"></span><span>Mastered</span><strong id="rail-mastered">0</strong></div>
+                    <div class="progress-stat"><span class="stat-dot dot-lilac"></span><span>Perlu review</span><strong id="rail-due">0</strong></div>
+                    <div class="progress-stat"><span class="stat-dot dot-peach"></span><span>Aktivitas hari ini</span><strong id="rail-today">0</strong></div>
+                  </div>
+                </div>
+                <div class="rail-hidden-metrics" aria-hidden="true">
+                  <span id="metric-mastered">0</span><span id="metric-due">0</span><span id="metric-today">0</span>
+                  <span id="metric-mastered-note">Belum ada kata yang memenuhi kriteria mastery.</span>
+                </div>
+              </section>
 
-          <div class="overview-columns">
-            <section class="section-block daily-block">
-              <div class="block-heading"><div><h2>Sedikit, tapi rutin.</h2></div><button class="plain-action" id="edit-goal" type="button">Ubah target ↗</button></div>
-              <div class="goal-line"><span id="goal-summary">0 dari 10 aktivitas</span><span id="goal-percent">0%</span></div>
-              <div class="progress-track"><span id="goal-bar"></span></div>
-              <p class="small-muted" id="goal-note">Target adalah pengingat, bukan syarat untuk menguasai kata.</p>
-              <div class="today-tasks">
-                <button class="task-link" type="button" data-view-target="vocabulary"><span class="task-symbol task-sage">Aa</span><span><strong>Pelajari kosakata</strong><small>Coba ingat arti dan pakai dalam kalimat.</small></span><span class="task-arrow">↗</span></button>
-                <button class="task-link" type="button" data-view-target="grammar"><span class="task-symbol task-lilac">¶</span><span><strong>Pelajari grammar</strong><small>Pilih topik dan kerjakan soal khususnya.</small></span><span class="task-arrow">↗</span></button>
-                <button class="task-link" type="button" data-view-target="matching"><span class="task-symbol task-peach">↔</span><span><strong>Pasangkan kosakata</strong><small>Cocokkan kata Inggris dengan artinya.</small></span><span class="task-arrow">↗</span></button>
-                <button class="task-link" type="button" data-view-target="reading"><span class="task-symbol task-sage">R</span><span><strong>Latihan pemahaman teks</strong><small>Belajar ide pokok, detail, inferensi, dan lainnya.</small></span><span class="task-arrow">↗</span></button>
-                <button class="task-link" type="button" data-view-target="review"><span class="task-symbol task-peach">↻</span><span><strong>Ulangi materi</strong><small id="review-task-note">Jadwal review dihitung dari sesi belajarmu.</small></span><span class="task-arrow">↗</span></button>
-              </div>
-            </section>
+              <section class="rail-card goal-card">
+                <div class="rail-card-heading"><h2>Target harian</h2><button class="plain-action" id="edit-goal" type="button">Ubah ↗</button></div>
+                <p id="goal-note">Target adalah pengingat, bukan syarat untuk menguasai kata.</p>
+                <div class="goal-line"><span id="goal-summary">0 dari 10 aktivitas</span><span id="goal-percent">0%</span></div>
+                <div class="progress-track"><span id="goal-bar"></span></div>
+              </section>
 
-            <section class="section-block level-block">
-              <div class="block-heading"><div><h2>Per level</h2></div><button class="plain-action" data-view-target="progress" type="button">Lihat detail ↗</button></div>
-              <div class="level-progress-list" id="overview-levels"></div>
-                </section>
+              <section class="rail-card level-card">
+                <div class="rail-card-heading"><h2>Per level</h2><button class="plain-action" data-view-target="progress" type="button">Detail ↗</button></div>
+                <div class="level-progress-list" id="overview-levels"></div>
+              </section>
+
+              <section class="rail-quote">
+                <div class="quote-book-stack" aria-hidden="true"><span></span><span></span><span></span></div>
+                <blockquote>“Proses kecil yang konsisten selalu lebih kuat daripada motivasi sesaat.”</blockquote>
+                <span class="quote-sprig" aria-hidden="true">✳</span>
+              </section>
+            </aside>
           </div>
-          <section class="section-block resume-block">
-            <div class="block-heading"><div><h2>Mulai dari sini</h2></div></div>
-            <div class="resume-list" id="resume-list"></div>
-          </section>
         </section>
 
         <section class="view" id="view-vocabulary" data-view="vocabulary">
