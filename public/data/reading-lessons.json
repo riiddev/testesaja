@@ -1,12 +1,15 @@
 {
   "schemaVersion": 1,
   "passage": {
-    "title": "A garden beside the library",
-    "source": "Original practice passage · SinauuEnglish",
+    "title": "The Learning Myth That Will Not Die",
+    "source": "HABIT.pdf — Bibliografi pada dokumen: Pashler, McDaniel, Rohrer, dan Bjork (2008); Association for Psychological Science; Structural Learning.",
     "paragraphs": [
-      "Two years ago, students at Greenhill School turned an unused patch beside the library into a small garden. Every Wednesday, they grow spinach, tomatoes, and herbs with help from two science teachers. The harvest is too small to supply the cafeteria, but the kitchen adds some vegetables to a weekly soup.",
-      "The garden also serves as an outdoor classroom. Students measure plant growth and record rainfall, then compare their results during science lessons. Some families initially worried that gardening would take time away from academic work. After one term, a school survey found that most participating students felt more connected to classmates and were more willing to try vegetables.",
-      "Because the survey did not measure grades, it cannot prove that gardening improves academic performance. Still, the project has been popular enough that the school plans to add two raised beds next year. A garden is not a magical solution to every school problem, but it can turn an overlooked space into a shared place for learning."
+      "Many people are sure they have a personal learning style. Some call themselves visual learners who need pictures, others auditory learners who prefer to listen, and others hands-on learners who must do. It feels obviously true. Yet after decades of research, this popular idea turns out to be a myth, and the story of how it was tested is a lesson in careful thinking.",
+      "First, it helps to state the claim clearly. Nobody denies that people have preferences. Plenty of us honestly prefer a diagram to a lecture. The real claim, known as the matching idea, is stronger. It says a student will learn better when the teaching method matches their personal style. That is the part the science does not support.",
+      "In 2008, a team of psychologists led by Harold Pashler reviewed the huge pile of studies on learning styles. They found that almost none of the research had been designed properly. Most studies simply measured people's preferences, or checked that a matched group did well. Neither of those actually tests the claim. Simply showing that people have a preference, or that one group happened to score well, leaves the crucial question untouched. Feeling that a lesson suited you is not the same as remembering more from it.",
+      "To test it fairly, they explained, you need a very specific comparison. You must sort learners by their style, then randomly teach some in their matching style and some in a mismatching style, and finally give everyone the same test. Only one result would prove the theory: visual learners doing best with visual lessons and, at the same time, auditory learners doing best with auditory lessons. When researchers ran this proper comparison, the effect vanished. The rare studies that claimed success were tiny and never repeated, and a few even measured satisfaction rather than actual learning.",
+      "This is why the learning-styles idea is called a myth. It is not that everyone is identical, or that we should teach in dull, uniform ways. Real differences between learners do exist, such as how much they already know and how motivated they are. Ignoring those real differences while chasing an imaginary one wastes a teacher's limited time. But sorting students into visual or auditory boxes does not help them learn.",
+      "What does help is well proven, and it works for everyone. Testing yourself, spacing your practice over time, and matching the format to the subject rather than to the learner all boost real learning. The lesson of the learning-styles myth is not really about styles at all. It is about demanding the right kind of evidence before believing a comfortable story. An idea can feel true to almost everyone and still fail the test of careful evidence."
     ]
   },
   "groups": [
@@ -49,14 +52,14 @@
         {
           "prompt": "What is the passage mainly about?",
           "options": [
-            "How Greenhill School grows enough food to supply its cafeteria.",
-            "How a school garden supports practical learning and student connection, while its academic effects remain unproven.",
-            "Why families should stop schools from starting gardening projects.",
-            "How to measure rainfall and plant growth in a science class."
+            "Why every student should be taught only through their favourite method.",
+            "Why the popular idea of matching teaching to learning styles lacks strong scientific support, and what evidence-based practices can help instead.",
+            "Why visual materials are always more effective than listening.",
+            "How schools can identify a single learning style for every child."
           ],
           "answer": 1,
-          "explanation": "Pilihan B mencakup fungsi kebun untuk pembelajaran, hubungan antarsiswa, serta batas bukti tentang nilai akademik. Opsi lain hanya mengambil satu detail atau mengubah isi teks.",
-          "evidence": "The garden is an outdoor classroom, students report stronger connections, and the survey did not measure grades."
+          "explanation": "The text explains that preferences exist, but evidence does not support the stronger claim that matching teaching to a personal learning style improves learning. It ends by naming practices with better support.",
+          "evidence": "The passage distinguishes preferences from the matching claim, reviews how it was tested, and names testing yourself, spaced practice, and matching format to subject."
         }
       ]
     },
@@ -76,14 +79,14 @@
         {
           "prompt": "Which option best summarizes the passage?",
           "options": [
-            "Greenhill's small garden is used for science activities and some food, and students report social benefits; the school plans to expand it, although the survey does not establish an effect on grades.",
-            "The school built a garden because test scores were low, and grades improved after one term.",
-            "The garden now produces all the vegetables needed for the cafeteria.",
-            "Families opposed the project, so the school decided to close the garden."
+            "People have different preferences, but research has not supported the claim that matching instruction to a supposed learning style improves learning; better-supported practices include self-testing and spacing practice over time.",
+            "A 2008 study proved that auditory learners cannot learn from diagrams and visual learners cannot learn from lectures.",
+            "Researchers concluded that all students are identical and should receive exactly the same type of lesson.",
+            "The passage recommends choosing lessons based on what feels most comfortable, because satisfaction guarantees memory."
           ],
           "answer": 0,
-          "explanation": "Ringkasan yang tepat merangkum fungsi kebun, hasil survei, rencana perluasan, dan batas penelitian tanpa menambahkan hasil yang tidak ada.",
-          "evidence": "The passage mentions science activities, weekly soup, a survey of student experiences, and a plan to add two raised beds."
+          "explanation": "Option A captures the distinction between preference and effectiveness, the weakness of evidence for matching, and the recommended practices without adding a claim the text rejects.",
+          "evidence": "The passage says preferences are real but the matching claim is unsupported, then recommends testing yourself and spacing practice."
         }
       ]
     },
@@ -95,22 +98,22 @@
       "tag": "MAKSUD TEKS",
       "definition": "Tujuan penulis terlihat dari apa yang ingin dilakukan teks: menjelaskan, meyakinkan, menghibur, mengkritik, atau membandingkan.",
       "strategy": [
-        "Bedakan topik dari tujuan: topik adalah kebun sekolah; tujuan adalah alasan teks membahasnya.",
-        "Perhatikan cara penulis menyampaikan manfaat sekaligus keterbatasan.",
-        "Hindari opsi yang menuduh penulis ingin membuktikan klaim yang tidak diukur."
+        "Separate the topic from the author's purpose: the topic is learning styles; the purpose is to evaluate whether the matching claim is supported.",
+        "Notice how the author acknowledges preferences while questioning the stronger claim.",
+        "Avoid answer options that add absolute conclusions not supported by the passage."
       ],
       "questions": [
         {
           "prompt": "Why did the author most likely write this passage?",
           "options": [
-            "To give a balanced explanation of the garden's educational and social value, while noting what the survey cannot prove.",
-            "To persuade every school to replace its science laboratory with a garden.",
-            "To prove that gardening always improves students' grades.",
-            "To provide step-by-step instructions for building raised garden beds."
+            "To advertise a test that assigns every student a permanent learning style.",
+            "To argue that teachers should stop using diagrams, discussion, and practical activities.",
+            "To explain why a popular learning claim is not supported by strong evidence and encourage careful thinking about learning.",
+            "To prove that learners' preferences do not exist."
           ],
-          "answer": 0,
-          "explanation": "Penulis menjelaskan kegiatan, manfaat yang terlihat, lalu memberi batas pada kesimpulan tentang nilai akademik. Tidak ada petunjuk bahwa teks berupa instruksi atau klaim mutlak.",
-          "evidence": "The final paragraph is positive about the project but explicitly says the survey cannot prove academic improvement."
+          "answer": 2,
+          "explanation": "The author challenges the evidence for matching instruction to personal styles without denying that preferences exist. The goal is to explain the evidence and encourage careful evaluation of claims.",
+          "evidence": "The text acknowledges genuine preferences, explains problems with earlier research, and ends by asking readers to demand the right kind of evidence."
         }
       ]
     },
@@ -128,16 +131,16 @@
       ],
       "questions": [
         {
-          "prompt": "What do students grow with the help of two science teachers?",
+          "prompt": "What did the psychologists led by Harold Pashler do in 2008?",
           "options": [
-            "Rice, corn, and potatoes.",
-            "Spinach, tomatoes, and herbs.",
-            "Apples, oranges, and bananas.",
-            "Flowers only."
+            "They tested every possible teaching method on every child in the world.",
+            "They reviewed studies about learning styles and found that almost none had been designed properly to test the matching claim.",
+            "They showed that students remembered more when lessons felt comfortable.",
+            "They concluded that motivation has no relationship to learning."
           ],
           "answer": 1,
-          "explanation": "Daftar tanaman disebut langsung pada paragraf pertama.",
-          "evidence": "“Every Wednesday, they grow spinach, tomatoes, and herbs with help from two science teachers.”"
+          "explanation": "The passage describes a 2008 review of learning-styles research and says most studies were not properly designed to test the matching claim.",
+          "evidence": "In 2008, a team of psychologists led by Harold Pashler reviewed studies on learning styles."
         }
       ]
     },
@@ -155,28 +158,16 @@
       ],
       "questions": [
         {
-          "prompt": "In the last paragraph, the word “overlooked” is closest in meaning to…",
+          "prompt": "In the sentence “When researchers ran this proper comparison, the effect vanished,” what does “vanished” mean?",
           "options": [
-            "unused or not given attention",
-            "carefully protected",
-            "recently purchased",
-            "full of people"
-          ],
-          "answer": 0,
-          "explanation": "Lahan itu sebelumnya tidak digunakan, lalu diubah menjadi kebun. Jadi, “overlooked” berarti tidak diperhatikan atau terabaikan.",
-          "evidence": "The text says the garden turns an “overlooked space” into a shared place for learning."
-        },
-        {
-          "prompt": "Which word is the best antonym of “popular” in the sentence “the project has been popular enough…”?",
-          "options": [
-            "welcomed",
-            "common",
-            "unpopular",
-            "successful"
+            "Became stronger.",
+            "Was measured for the first time.",
+            "Disappeared or was no longer observed.",
+            "Was repeated many times."
           ],
           "answer": 2,
-          "explanation": "Antonym adalah lawan makna. “Unpopular” berlawanan dengan “popular”; “welcomed” justru memiliki nuansa makna yang dekat.",
-          "evidence": "The word describes that many people like or support the project."
+          "explanation": "The expected effect did not appear in the proper comparison, so “vanished” means disappeared or was no longer observed.",
+          "evidence": "When researchers ran this proper comparison, the effect vanished."
         }
       ]
     },
@@ -194,16 +185,16 @@
       ],
       "questions": [
         {
-          "prompt": "In the sentence “Because the survey did not measure grades, it cannot prove that gardening improves academic performance,” what does “it” refer to?",
+          "prompt": "In “That is the part the science does not support,” what does “That” refer to?",
           "options": [
-            "The school garden",
-            "Academic performance",
-            "The survey",
-            "The cafeteria"
+            "The fact that people may prefer diagrams or lectures.",
+            "The claim that a student learns better when teaching matches their personal style.",
+            "The idea that students should take the same test.",
+            "The observation that motivation differs between learners."
           ],
-          "answer": 2,
-          "explanation": "Subjek yang tepat adalah “the survey”: survei itulah yang tidak mengukur nilai sehingga tidak dapat membuktikan dampak akademik.",
-          "evidence": "The sentence begins with “Because the survey did not measure grades…”"
+          "answer": 1,
+          "explanation": "“That” points to the immediately preceding claim that students learn better when instruction matches their personal learning style.",
+          "evidence": "The real claim, known as the matching idea, is that a student will learn better when the teaching method matches their personal style."
         }
       ]
     },
@@ -221,16 +212,16 @@
       ],
       "questions": [
         {
-          "prompt": "Which sentence best paraphrases “The harvest is too small to supply the cafeteria, but the kitchen adds some vegetables to a weekly soup”?",
+          "prompt": "Which sentence best paraphrases “Feeling that a lesson suited you is not the same as remembering more from it”?",
           "options": [
-            "The garden produces every vegetable the cafeteria needs.",
-            "Although the garden cannot provide all cafeteria vegetables, some of its produce is used in soup each week.",
-            "The kitchen stopped using vegetables because the harvest was small.",
-            "The cafeteria buys soup from another school every week."
+            "Enjoying or preferring a lesson does not necessarily mean that you learned or remembered more.",
+            "A lesson is effective only when it is enjoyable.",
+            "Students always remember lessons that match their preferences.",
+            "Memory cannot be measured through tests."
           ],
-          "answer": 1,
-          "explanation": "Opsi B mempertahankan dua informasi utama: hasil kebun tidak mencukupi seluruh kebutuhan, tetapi sebagian hasilnya tetap digunakan dalam sup mingguan.",
-          "evidence": "“Too small to supply the cafeteria” and “adds some vegetables to a weekly soup.”"
+          "answer": 0,
+          "explanation": "Option A preserves the meaning: feeling comfortable with a lesson is different from evidence that learning or memory improved.",
+          "evidence": "The passage contrasts feeling that a lesson suited you with actually remembering more from it."
         }
       ]
     },
@@ -248,16 +239,16 @@
       ],
       "questions": [
         {
-          "prompt": "Which statement is an opinion rather than a directly verifiable fact?",
+          "prompt": "Which statement is presented as a research-supported recommendation in the passage?",
           "options": [
-            "Students measure plant growth and record rainfall.",
-            "The school plans to add two raised beds next year.",
-            "The garden is not a magical solution to every school problem.",
-            "The garden began two years ago."
+            "Every learner should be placed permanently in a visual, auditory, or hands-on category.",
+            "A comfortable lesson always produces better long-term memory.",
+            "Testing yourself and spacing practice over time can support real learning.",
+            "All learner preferences should be ignored by teachers."
           ],
           "answer": 2,
-          "explanation": "“Not a magical solution” adalah penilaian/metafora penulis. Pernyataan lain merujuk pada tindakan, rencana, atau waktu yang bisa diverifikasi.",
-          "evidence": "The wording “magical solution” expresses an evaluation rather than a measurable result."
+          "explanation": "The final paragraph explicitly names self-testing and spaced practice as practices that support learning. The other statements are not supported by the text.",
+          "evidence": "Testing yourself and spacing your practice over time are named as practices that boost real learning."
         }
       ]
     },
@@ -275,16 +266,16 @@
       ],
       "questions": [
         {
-          "prompt": "What can reasonably be inferred about the garden's role for students?",
+          "prompt": "What can reasonably be inferred about preference and effectiveness?",
           "options": [
-            "It offers a chance to learn by doing and may help students feel part of a group.",
-            "It has already raised every student's science grade.",
-            "It has replaced all classroom science lessons.",
-            "It guarantees that students will eat vegetables every day."
+            "If a learner likes a method, it must produce the best results for them.",
+            "A learner's comfort with a method is not enough to establish that the method improves learning.",
+            "Preferences never affect how students feel during a lesson.",
+            "Teachers can determine effectiveness without comparing learning results."
           ],
-          "answer": 0,
-          "explanation": "Siswa mengukur pertumbuhan tanaman dan mencatat hujan, sementara survei menyebut mereka merasa lebih terhubung. Itu mendukung manfaat praktis dan sosial, bukan jaminan nilai atau kebiasaan makan.",
-          "evidence": "Students collect science data and most participating students reported stronger connections with classmates."
+          "answer": 1,
+          "explanation": "The passage says preference and satisfaction do not answer whether students remember more. Effectiveness therefore needs suitable evidence rather than assumptions based on comfort.",
+          "evidence": "The author says that measuring preferences or satisfaction does not answer whether students remember more from a lesson."
         }
       ]
     },
@@ -302,16 +293,16 @@
       ],
       "questions": [
         {
-          "prompt": "What assumption most likely supports the school's decision to add two raised beds?",
+          "prompt": "What must a fair test of the matching idea include, according to the passage?",
           "options": [
-            "The garden will certainly improve exam scores.",
-            "There is enough interest or perceived value to justify expanding the project.",
-            "The cafeteria no longer needs food supplies.",
-            "Every family supported the garden from the beginning."
+            "Letting each learner choose the most enjoyable lesson and asking whether they liked it.",
+            "Testing only students who already agree with the learning-styles idea.",
+            "Comparing learners assigned to matching and mismatching methods, then giving everyone the same test.",
+            "Measuring preferences without checking learning outcomes."
           ],
-          "answer": 1,
-          "explanation": "Rencana memperluas kebun paling masuk akal berangkat dari anggapan bahwa proyek cukup diminati atau bermanfaat untuk dilanjutkan. Teks tidak menyatakan bahwa nilai pasti naik atau semua keluarga mendukung.",
-          "evidence": "The project has been popular enough that the school plans to expand it."
+          "answer": 2,
+          "explanation": "The passage sets out a specific comparison: assign matching and mismatching methods randomly and give everyone the same test. Preference surveys alone do not test the claim.",
+          "evidence": "Learners should be randomly taught in matching or mismatching styles and then given the same test."
         }
       ]
     },
@@ -329,16 +320,16 @@
       ],
       "questions": [
         {
-          "prompt": "Which phrase best describes the author's tone toward the garden project?",
+          "prompt": "Which phrase best describes the author's tone toward the learning-styles claim?",
           "options": [
-            "Cautiously positive: the author notes benefits but acknowledges limits.",
-            "Sarcastic and dismissive: the author makes fun of the students.",
-            "Completely neutral: the author gives no evaluation at all.",
-            "Strongly negative: the author argues that the garden should be closed."
+            "Unquestioningly enthusiastic.",
+            "Cautious and evidence-focused.",
+            "Angry at students who have preferences.",
+            "Entirely humorous and unserious."
           ],
-          "answer": 0,
-          "explanation": "Sikapnya positif tetapi berhati-hati. Penulis menyebut manfaat praktis dan sosial, lalu menegaskan bahwa survei tidak membuktikan peningkatan akademik.",
-          "evidence": "The final sentence appreciates the garden as a learning space, while the preceding sentence limits the academic claim."
+          "answer": 1,
+          "explanation": "The author questions the evidence for the matching claim while acknowledging that real preferences and learner differences exist.",
+          "evidence": "The author acknowledges preferences and differences while challenging the unsupported matching claim."
         }
       ]
     },
@@ -350,34 +341,22 @@
       "tag": "HUBUNGAN GAGASAN",
       "definition": "Coherence menilai bagaimana gagasan saling terhubung. Analogi menjelaskan suatu hal lewat perbandingan dengan hal lain yang punya fungsi atau pola serupa.",
       "strategy": [
-        "Cari fungsi tiap paragraf: pengenalan, contoh, hasil, batasan, atau simpulan.",
-        "Lihat kata penghubung seperti however, because, still, dan but.",
-        "Untuk analogi, bandingkan fungsi yang sama, bukan ciri yang kebetulan mirip."
+        "Track each paragraph's role: introduce the claim, examine evidence, describe a fair test, and draw a conclusion.",
+        "Notice linking words such as yet, however, and but to understand relationships between ideas.",
+        "Choose the option that explains how the parts connect, not one that repeats a single detail."
       ],
       "questions": [
         {
-          "prompt": "Which analogy best explains why the garden is called an “outdoor classroom”?",
+          "prompt": "How does the final paragraph develop the passage's argument?",
           "options": [
-            "Like a science lab, it lets students observe, measure, and compare real results.",
-            "Like a cafeteria, it serves a complete meal to every student.",
-            "Like a library, it stores every book used in the school.",
-            "Like an exam, it gives students a final grade every Wednesday."
+            "It changes the subject to an unrelated theory.",
+            "It repeats the claim that comfort is the best measure of learning.",
+            "It offers better-supported learning practices and draws a broader lesson about requiring sound evidence.",
+            "It argues that researchers should stop studying learning."
           ],
-          "answer": 0,
-          "explanation": "Kebun menjalankan fungsi pembelajaran langsung: siswa mengamati pertumbuhan, mengukur, mencatat, lalu membandingkan hasil—serupa dengan kegiatan eksperimen di laboratorium.",
-          "evidence": "Students measure plant growth and record rainfall, then compare their results during science lessons."
-        },
-        {
-          "prompt": "How do the second and third paragraphs relate to each other?",
-          "options": [
-            "The second describes learning activities and survey findings; the third qualifies what can be concluded and explains the school's next plan.",
-            "The second explains why the garden failed, and the third lists the steps to close it.",
-            "The second gives instructions for building the beds, and the third compares their costs.",
-            "The second focuses on cafeteria supplies, while the third says the school will stop growing food."
-          ],
-          "answer": 0,
-          "explanation": "Paragraf kedua menjelaskan kegiatan belajar dan temuan survei. Paragraf ketiga memberi batas pada kesimpulan tentang nilai akademik, kemudian menyebut rencana memperluas kebun. Hubungannya bergerak dari manfaat yang diamati ke batas bukti dan tindak lanjut.",
-          "evidence": "The second paragraph presents student activities and survey results; the third says the survey did not measure grades and mentions two new raised beds."
+          "answer": 2,
+          "explanation": "The final paragraph first provides better-supported practices, then draws a wider lesson: a claim that feels true still needs good evidence.",
+          "evidence": "The final paragraph recommends testing, spaced practice, and matching format to subject, then calls for the right kind of evidence."
         }
       ]
     }
