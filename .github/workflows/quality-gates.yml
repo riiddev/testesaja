@@ -1,0 +1,65 @@
+name: Content and browser quality gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  content-and-build:
+    name: Content audit and production build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install project dependencies
+        run: npm install
+      - name: Audit learning content and public mirrors
+        run: npm run test:content
+      - name: Type-check and build production assets
+        run: npm run build
+
+  browser-smoke:
+    name: Browser smoke tests
+    runs-on: ubuntu-latest
+    needs: content-and-build
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install project dependencies
+        run: npm install
+      - name: Build production assets
+        run: npm run build
+      - name: Install pinned Playwright runner
+        run: npm install --no-save --package-lock=false playwright@1.55.0
+      - name: Install Chromium and operating-system dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Start production preview server
+        shell: bash
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/sinauu-preview.log 2>&1 &
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/sinauu-preview.log
+          exit 1
+      - name: Test essential browser journeys
+        run: npm run test:browser
+        env:
+          BASE_URL: http://127.0.0.1:4173

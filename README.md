@@ -78,6 +78,13 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 **Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
 
 
+## Quality checks
+
+- `npm run test:content` validates vocabulary fields and uniqueness, all reading-question answer keys, HABIT passage integrity and word-count metadata, and byte-for-byte synchronization between root and `public/data` JSON copies.
+- `npm run build` runs TypeScript checks and builds all production entry points.
+- `npm run test:browser` runs Playwright smoke tests for the landing page, navigation, vocabulary lookup, HABIT reading questions, feedback, and answer persistence. Install Playwright and Chromium before running it locally; the `.github/workflows/quality-gates.yml` workflow does that in CI.
+- Automated checks catch structural and regression problems, not every linguistic nuance. The 965 imported A–E entries remain marked as editorial drafts until an independent human review confirms their meanings, examples, and Indonesian translations.
+
 ## HABIT reading library
 
 - `public/data/habit-reading-library.json` contains **156 unique reading passages** extracted from the user-provided `HABIT.pdf` (175 physical PDF pages, including a final blank page; 174 numbered content pages. Blank/reference-only pages and exact duplicate text are not treated as separate passages). The extracted collection contains approximately **63,309 words**. Reference lists and raw source-link fragments are excluded from passage bodies.
