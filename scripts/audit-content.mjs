@@ -76,7 +76,7 @@ for (const passage of habit.passages) {
   assert.ok(Number.isInteger(passage.estimatedMinutes) && passage.estimatedMinutes > 0, `${passage.title}: invalid reading-time estimate`);
 
   // Tokenizers differ on apostrophes and hyphenated compounds; allow a small boundary-count variance.
-  const countedWords = (body.match(/[\\p{L}\\p{N}]+(?:['’][\\p{L}\\p{N}]+)*(?:-[\\p{L}\\p{N}]+)*/gu) || []).length;
+  const countedWords = (body.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*(?:-[\p{L}\p{N}]+)*/gu) || []).length;
   assert.ok(Math.abs(countedWords - passage.wordCount) <= 20, `${passage.title}: stored word count differs materially (${passage.wordCount} vs ${countedWords})`);
   storedWordCount += passage.wordCount;
 }
