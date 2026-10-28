@@ -213,6 +213,32 @@
             <h1>Baca lebih teliti, <em>bukan lebih cepat saja.</em></h1>
             <p class="page-lede">Kenali jenis pertanyaannya, temukan petunjuk di teks, lalu pilih jawaban yang paling didukung bacaan. Mulai dari satu teks, lalu latih dua belas keterampilan membaca.</p>
           </div>
+          <section class="habit-library-section" aria-labelledby="habit-library-title">
+            <div class="habit-library-header">
+              <div>
+                <span class="eyebrow">KOLEKSI BACAAN · HABIT.PDF</span>
+                <h2 id="habit-library-title">Baca sesuatu yang baru.</h2>
+                <p class="page-lede">Seluruh bacaan dari dokumenmu, dilengkapi latihan pemahaman berbasis kalimat yang benar-benar ada di teks.</p>
+              </div>
+              <div class="habit-library-stats"><strong id="habit-library-count">Memuat bacaan…</strong><span id="habit-library-completed">0 bacaan selesai</span></div>
+            </div>
+            <div class="habit-library-controls">
+              <label class="habit-library-search" for="habit-library-search"><span aria-hidden="true">⌕</span><input id="habit-library-search" type="search" placeholder="Cari judul, topik, atau isi bacaan…" autocomplete="off"></label>
+              <label class="habit-library-filter" for="habit-library-category"><span>KATEGORI</span><select id="habit-library-category">
+                <option value="all">Semua kategori</option>
+                <option value="Sains & alam">Sains & alam</option>
+                <option value="Teknologi & rekayasa">Teknologi & rekayasa</option>
+                <option value="Masyarakat & ekonomi">Masyarakat & ekonomi</option>
+                <option value="Tubuh & kesehatan">Tubuh & kesehatan</option>
+                <option value="Bahasa, sejarah & budaya">Bahasa, sejarah & budaya</option>
+                <option value="Psikologi & pembelajaran">Psikologi & pembelajaran</option>
+              </select></label>
+            </div>
+            <p class="habit-library-note" id="habit-library-status" role="status">Koleksi dimuat saat kamu membuka halaman Reading Comprehension.</p>
+            <div class="habit-library-grid" id="habit-library-list"></div>
+            <button class="secondary-action habit-library-more" id="habit-library-more" type="button" hidden>Muat bacaan lainnya ↓</button>
+            <article class="habit-library-detail" id="habit-library-detail" hidden aria-live="polite"></article>
+          </section>
           <div class="reading-progress-strip">
             <div><span class="metric-label">KETERAMPILAN DILATIH</span><strong id="reading-skills-done">0/12</strong></div>
             <div><span class="metric-label">SOAL DIJAWAB</span><strong id="reading-question-count">0</strong></div>

@@ -768,3 +768,96 @@ p{color:var(--body)}
 .dashboard-date .date-day{font-size:2.15rem}
 .dashboard-date .date-month{font-size:.52rem;letter-spacing:.06em}
 @media(max-width:760px){.dashboard-hero-top{align-items:flex-start}.dashboard-date{min-width:50px;padding-left:9px}.dashboard-date .date-day{font-size:1.7rem}.dashboard-date .date-month{font-size:.45rem}}
+
+
+/* --- HABIT PDF reading library --- */
+.habit-library-section{margin:0 0 42px;padding:clamp(18px,2.4vw,30px);border:1px solid var(--line);border-radius:18px;background:var(--sheet);box-shadow:var(--shadow-card)}
+.habit-library-header{display:flex;align-items:flex-start;justify-content:space-between;gap:22px;margin-bottom:21px}
+.habit-library-header .eyebrow{margin-bottom:9px}
+.habit-library-header h2{margin:0 0 8px;font-size:clamp(1.8rem,2.8vw,2.45rem)}
+.habit-library-header .page-lede{max-width:610px;font-size:.78rem;line-height:1.7}
+.habit-library-stats{flex:0 0 auto;display:grid;gap:5px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--paper);text-align:right}
+.habit-library-stats strong{font:600 .83rem "Plus Jakarta Sans",sans-serif;color:var(--ink)}
+.habit-library-stats span{font-size:.64rem;color:var(--muted)}
+.habit-library-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,240px);gap:11px;margin-bottom:12px}
+.habit-library-search{height:44px;display:flex;align-items:center;gap:10px;min-width:0;padding:0 13px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.habit-library-search>span{color:var(--muted);font-size:1.5rem;line-height:1}
+.habit-library-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font:400 .75rem "Plus Jakarta Sans",sans-serif}
+.habit-library-search input::placeholder{color:var(--muted)}
+.habit-library-filter{display:flex;align-items:center;gap:9px;min-width:0;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.habit-library-filter>span{flex:0 0 auto;color:var(--muted);font:600 .54rem "Plus Jakarta Sans",sans-serif;letter-spacing:.08em}
+.habit-library-filter select{width:100%;min-width:0;height:42px;border:0;outline:0;background:transparent;color:var(--ink);font:500 .68rem "Plus Jakarta Sans",sans-serif}
+.habit-library-note{margin:0 0 15px;color:var(--muted);font-size:.66rem;line-height:1.65}
+.habit-library-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.habit-reading-card{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.habit-reading-card:hover,.habit-reading-card.is-active{transform:translateY(-2px);border-color:color-mix(in srgb,var(--sage-deep) 52%,var(--line));box-shadow:0 8px 20px rgba(48,59,44,.07)}
+.habit-reading-card.is-active{background:color-mix(in srgb,var(--sage) 22%,var(--sheet))}
+.habit-reading-card-top,.habit-reading-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.habit-reading-card-top{color:var(--sage-deep);font:600 .52rem "Plus Jakarta Sans",sans-serif;letter-spacing:.035em;text-transform:uppercase}
+.habit-reading-card-top span:last-child{color:var(--muted);text-align:right}
+.habit-reading-card>strong{font:500 1.06rem/1.2 "Lora",Georgia,serif;letter-spacing:-.025em}
+.habit-reading-excerpt{display:block;min-height:60px;color:var(--body);font-size:.67rem;line-height:1.65}
+.habit-reading-card-bottom{margin-top:auto;padding-top:9px;border-top:1px solid var(--line);color:var(--muted);font-size:.56rem}
+.habit-reading-card-bottom span:last-child{color:var(--sage-deep);font-weight:700;text-align:right}
+.habit-library-more{display:flex;margin:17px auto 0}
+.habit-library-empty{grid-column:1/-1;margin:0;padding:18px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:.76rem;text-align:center}
+.habit-library-detail{margin-top:24px;padding-top:22px;border-top:1px solid var(--line);scroll-margin-top:85px}
+.habit-detail-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
+.habit-detail-heading .eyebrow{margin-bottom:9px}
+.habit-detail-heading h2{max-width:760px;margin:0 0 7px;font-size:clamp(1.85rem,3.4vw,2.75rem);line-height:1.05}
+.habit-detail-heading p{margin:0;color:var(--muted);font-size:.67rem}
+.habit-detail-close{flex:0 0 38px;width:38px;height:38px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);font-size:1.55rem;line-height:1;cursor:pointer}
+.habit-detail-close:hover{background:var(--paper-deep);color:var(--ink)}
+.habit-reading-progress{display:flex;justify-content:space-between;gap:12px;margin:0 0 17px;padding:10px 12px;border-radius:9px;background:color-mix(in srgb,var(--sage) 30%,var(--sheet));color:var(--sage-deep);font-size:.66rem;font-weight:600}
+.habit-full-passage{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.habit-full-passage>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;color:var(--ink);font-size:.76rem;font-weight:700;cursor:pointer;list-style:none}
+.habit-full-passage>summary::-webkit-details-marker{display:none}
+.habit-full-passage>summary span:last-child{color:var(--muted);font-size:1rem}
+.habit-full-passage:not([open])>summary span:last-child{transform:rotate(45deg)}
+.habit-passage-body{padding:3px 18px 18px;border-top:1px solid var(--line)}
+.habit-passage-body p{display:grid;grid-template-columns:29px minmax(0,1fr);gap:11px;margin:14px 0 0;color:var(--ink);font-size:.79rem;line-height:1.9}
+.habit-paragraph-number{padding-top:3px;color:var(--sage-deep);font:600 .57rem "Plus Jakarta Sans",sans-serif}
+.habit-quiz-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:23px 0 14px}
+.habit-quiz-heading .eyebrow{margin-bottom:7px}
+.habit-quiz-heading h3{margin:0 0 5px;font:500 1.65rem/1.15 "Lora",Georgia,serif}
+.habit-quiz-heading p{max-width:680px;margin:0;color:var(--muted);font-size:.69rem;line-height:1.7}
+.habit-quiz-grid{display:grid;grid-template-columns:1fr;gap:12px}
+.habit-question-card{min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--sheet)}
+.habit-question-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px;color:var(--muted);font:600 .52rem "Plus Jakarta Sans",sans-serif;letter-spacing:.07em}
+.habit-question-card h3{margin:0 0 12px;color:var(--ink);font-size:.82rem;line-height:1.65;letter-spacing:0}
+.habit-quiz-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.habit-quiz-option{min-width:0;display:grid;grid-template-columns:22px 20px minmax(0,1fr);align-items:start;gap:8px;padding:11px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--body);font-size:.68rem;line-height:1.65;cursor:pointer}
+.habit-quiz-option input{margin:4px 0 0;accent-color:var(--sage-deep)}
+.habit-quiz-letter{width:20px;height:20px;display:grid;place-items:center;border-radius:6px;background:var(--paper-deep);color:var(--muted);font:700 .57rem "Plus Jakarta Sans",sans-serif}
+.habit-quiz-option:has(input:checked){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 22%,var(--sheet));color:var(--ink)}
+.habit-quiz-option.is-correct{border-color:#8aa77f;background:color-mix(in srgb,#dce9d4 52%,var(--sheet));color:var(--ink)}
+.habit-quiz-option.is-wrong{border-color:#c38e7c;background:color-mix(in srgb,var(--peach) 40%,var(--sheet));color:var(--ink)}
+:root[data-theme="dark"] .habit-quiz-option.is-correct{background:color-mix(in srgb,#4e694c 40%,var(--sheet))}
+:root[data-theme="dark"] .habit-quiz-option.is-wrong{background:color-mix(in srgb,#795044 40%,var(--sheet))}
+.habit-quiz-submit{margin-top:12px}
+.habit-quiz-submit:disabled{opacity:.7;cursor:default}
+.habit-quiz-feedback{margin-top:12px;padding:11px 12px;border-left:2px solid #8aa77f;border-radius:0 7px 7px 0;background:color-mix(in srgb,var(--sage) 24%,var(--sheet));color:var(--body);font-size:.68rem;line-height:1.75}
+.habit-quiz-feedback.is-wrong{border-color:#c38e7c;background:color-mix(in srgb,var(--peach) 25%,var(--sheet))}
+.habit-quiz-feedback p{margin:7px 0 0;color:var(--ink)}
+.habit-retry{margin-top:15px}
+@media(max-width:1000px){
+  .habit-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .habit-library-header{align-items:flex-start}
+}
+@media(max-width:650px){
+  .habit-library-section{padding:16px;border-radius:14px}
+  .habit-library-header{display:block}
+  .habit-library-stats{margin:8px 0 0;text-align:left;display:inline-flex;flex-wrap:wrap;align-items:center;gap:9px}
+  .habit-library-controls{grid-template-columns:1fr}
+  .habit-library-grid{grid-template-columns:1fr}
+  .habit-reading-card{padding:13px}
+  .habit-reading-excerpt{min-height:0}
+  .habit-quiz-options{grid-template-columns:1fr}
+  .habit-detail-heading h2{font-size:1.8rem}
+  .habit-passage-body{padding-inline:12px}
+  .habit-passage-body p{grid-template-columns:23px minmax(0,1fr);gap:8px;font-size:.75rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .habit-reading-card{transition:none}
+  .habit-reading-card:hover,.habit-reading-card.is-active{transform:none}
+}
