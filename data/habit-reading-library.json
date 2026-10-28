@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "sourceDocument": "HABIT.pdf",
-  "sourcePageCount": 174,
+  "sourcePageCount": 175,
+  "contentPages": 174,
   "extractionSummary": {
     "extractedPassages": 156,
     "wordCount": 63309,
