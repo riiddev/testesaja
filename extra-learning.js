@@ -405,7 +405,7 @@
 
   // Searchable full-text library extracted from the user-provided HABIT PDF.
   const HABIT_PROGRESS_KEY = "sinauu-habit-library-v1";
-  let habitLibrary = null, habitLibraryPromise = null, habitSentenceBank = [];
+  let habitLibrary = null, habitLibraryPromise = null, habitSentenceBank = [], habitPassageById = new Map();
   let habitVisibleCount = 9, activeHabitPassageId = null;
   const habitQuestionCache = new Map();
   let habitProgress = loadHabitLibraryProgress();
@@ -448,6 +448,7 @@
     return intersection / Math.max(1, a.size + b.size - intersection);
   }
   function buildHabitSentenceBank() {
+    habitPassageById = new Map(habitLibrary.passages.map(function (passage) { return [passage.id, passage]; }));
     habitSentenceBank = [];
     habitLibrary.passages.forEach(function (passage) {
       (passage.paragraphs || []).forEach(function (paragraph, paragraphIndex) {
@@ -477,8 +478,17 @@
       const ranked = habitSentenceBank.filter(function (item) {
         return item.passageId !== passage.id && !body.includes(item.sentence.toLowerCase()) && item.sentence !== fact.sentence;
       }).map(function (item) {
-        return { item: item, overlap: habitJaccard(targetSet, habitTokenSet(item.sentence)) };
-      }).sort(function (a, b) { return a.overlap - b.overlap; });
+        const sourcePassage = habitPassageById.get(item.passageId);
+        return {
+          item: item,
+          overlap: habitJaccard(targetSet, habitTokenSet(item.sentence)),
+          sameCategory: Boolean(sourcePassage && sourcePassage.category === passage.category)
+        };
+      }).sort(function (a, b) {
+        // Prefer plausible alternatives from the same broad topic before falling back to other topics.
+        if (a.sameCategory !== b.sameCategory) return a.sameCategory ? -1 : 1;
+        return Math.abs(a.overlap - 0.16) - Math.abs(b.overlap - 0.16);
+      });
       const distractors = [], sourceIds = new Set();
       for (const candidate of ranked) {
         if (sourceIds.has(candidate.item.passageId)) continue;
