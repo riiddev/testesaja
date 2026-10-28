@@ -47,6 +47,7 @@ test("vocabulary search returns a matching word and reading practice saves an an
     const counter = document.querySelector("#vocab-result-count");
     return Boolean(counter && counter.textContent.includes("dari"));
   }, null, { timeout: 20000 });
+  await page.locator('#view-overview [data-view-target="vocabulary"]').click();
   await page.locator("#vocab-search").fill("hello");
   await page.waitForFunction(() => {
     const row = document.querySelector("#vocab-list [data-select-word]");
