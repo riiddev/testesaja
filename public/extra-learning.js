@@ -84,14 +84,14 @@
     $("#match-mistakes").textContent = String(game.mistakes);
     $("#match-rounds").textContent = String(progress.matching.rounds || 0);
     $("#nav-matching-count").textContent = found + "/" + total;
-    $("#matching-deck-note").textContent = vocabulary.length + " kata tersedia · " + total + " pasangan per ronde";
+    
     $("#matching-auto").setAttribute("aria-pressed", String(autoMatch));
     $("#matching-auto").textContent = autoMatch ? "OTOMATIS · ON" : "OTOMATIS · OFF";
     $("#matching-instruction").textContent = autoMatch
       ? "Pilih satu kata bahasa Inggris di kiri, lalu pilih artinya di kanan. Pasangan diperiksa otomatis."
       : "Pilih satu kata dan satu arti, lalu tekan “Periksa pasangan”.";
     $("#matching-board").innerHTML =
-      '<div class="matching-column"><div class="matching-column-label"><span>01</span> ENGLISH</div><div class="matching-choices">' +
+      '<div class="matching-column"><div class="matching-column-label">ENGLISH</div><div class="matching-choices">' +
       game.leftOrder.map(function (p, i) {
         const matched = game.matched.includes(p.id), selected = game.selectedWord === p.id, wrong = game.wrongIds.includes(p.id);
         return '<button class="matching-choice' + (matched ? ' is-matched' : '') + (selected ? ' is-selected' : '') + (wrong ? ' is-wrong' : '') +
@@ -99,7 +99,7 @@
           (matched || game.finished ? ' disabled' : '') + '><span class="matching-index">' + String(i + 1).padStart(2,"0") + '</span><span>' + escapeHtml(p.word) + '</span>' +
           (matched ? '<span class="matching-mark" aria-hidden="true">✓</span>' : '') + '</button>';
       }).join("") + '</div></div>' +
-      '<div class="matching-column"><div class="matching-column-label"><span>02</span> INDONESIA</div><div class="matching-choices">' +
+      '<div class="matching-column"><div class="matching-column-label">INDONESIA</div><div class="matching-choices">' +
       game.rightOrder.map(function (p, i) {
         const matched = game.matched.includes(p.id), selected = game.selectedMeaning === p.id, wrong = game.wrongIds.includes(p.id);
         return '<button class="matching-choice matching-meaning' + (matched ? ' is-matched' : '') + (selected ? ' is-selected' : '') + (wrong ? ' is-wrong' : '') +
@@ -114,7 +114,7 @@
     if (game.finished) {
       const score = Math.max(0, 100 - game.mistakes * 10);
       $("#matching-finish").innerHTML =
-        '<p class="eyebrow">RONDE SELESAI</p><h2>' + (game.mistakes === 0 ? "Semua pasangan tepat." : "Semua pasangan ditemukan.") + '</h2>' +
+        '<h2>' + (game.mistakes === 0 ? "Semua pasangan tepat." : "Semua pasangan ditemukan.") + '</h2>' +
         '<p>Kamu mencocokkan ' + total + ' pasangan dengan ' + game.mistakes + ' salah pasang. ' +
         (game.mistakes === 0 ? "Ronde tanpa kesalahan—bagus, lanjutkan ke set kata berikutnya." : "Coba ulang sekali lagi untuk mengurangi salah pasang.") + '</p>' +
         '<button class="primary-action" type="button" data-match-restart>Mulai ronde baru ↻</button>';
@@ -201,13 +201,13 @@
     const run = readingRun && readingRun.skillId === skill.id ? readingRun : (readingRun = {skillId:skill.id,questionIndex:0,selected:null,answered:false,finished:false,sessionCorrect:0});
     const p = progress.reading[skill.id] || {attempts:0,correct:0,completed:false};
     const questionTotal = skill.questions.length;
-    const passage = '<details class="reading-passage" open><summary><span><small>READ THE TEXT</small><strong>' + escapeHtml(lessonData.passage.title) +
+    const passage = '<details class="reading-passage" open><summary><span><strong>' + escapeHtml(lessonData.passage.title) +
       '</strong></span><span class="reading-passage-toggle">−</span></summary><div class="reading-passage-body">' +
       lessonData.passage.paragraphs.map(function (paragraph, i) {return '<p><span class="passage-paragraph-number">0' + (i+1) + '</span>' + escapeHtml(paragraph) + '</p>';}).join("") +
       '<span class="reading-passage-source">' + escapeHtml(lessonData.passage.source) + '</span></div></details>';
     if (run.finished) {
       $("#reading-lesson").innerHTML =
-        '<div class="reading-result"><p class="eyebrow">KETERAMPILAN SELESAI</p><span class="reading-result-number">' + String(run.sessionCorrect).padStart(2,"0") + '/' + String(questionTotal).padStart(2,"0") +
+        '<div class="reading-result"><span class="reading-result-number">' + String(run.sessionCorrect).padStart(2,"0") + '/' + String(questionTotal).padStart(2,"0") +
         '</span><h2>' + escapeHtml(skill.title) + '</h2><p>Kamu menjawab ' + run.sessionCorrect + ' dari ' + questionTotal + ' soal dengan benar pada sesi ini. ' +
         (run.sessionCorrect === questionTotal ? 'Jawabanmu didukung oleh bukti teks.' : 'Baca kembali pembahasan, lalu ulangi latihan untuk menguatkan strategi.') + '</p>' +
         '<div class="reading-result-actions"><button class="secondary-action" type="button" data-reading-retry>Ulangi keterampilan ↻</button><button class="primary-action" type="button" data-reading-next-skill>Lanjut ke keterampilan berikutnya →</button></div></div>';
@@ -226,7 +226,7 @@
       }).join("") + '</div>';
     if (run.answered) {
       question += '<div class="reading-answer-explanation ' + (run.selected === q.answer ? 'is-correct' : 'is-incorrect') + '"><strong>' +
-        (run.selected === q.answer ? 'Jawaban tepat.' : 'Belum tepat—lihat alasannya.') + '</strong><p>' + escapeHtml(q.explanation) + '</p><div class="reading-evidence"><span>BUKTI DALAM TEKS</span><p>“' + escapeHtml(q.evidence) + '”</p></div></div>' +
+        (run.selected === q.answer ? 'Jawaban tepat.' : 'Belum tepat—lihat alasannya.') + '</strong><p>' + escapeHtml(q.explanation) + '</p><div class="reading-evidence"><p>“' + escapeHtml(q.evidence) + '”</p></div></div>' +
         '<button type="button" class="primary-action reading-check-button" data-reading-next>' +
         (run.questionIndex + 1 < questionTotal ? 'Lanjut ke soal berikutnya →' : 'Selesai & lihat catatan latihan →') + '</button>';
     } else {
@@ -234,10 +234,9 @@
     }
     question += '</div>';
     $("#reading-lesson").innerHTML =
-      '<div class="reading-skill-title"><div><p class="eyebrow">' + escapeHtml(skill.tag) + ' · ' + escapeHtml(skill.group === "general" ? "GENERAL INFO" : skill.group === "specific" ? "SPECIFIC INFO" : "IMPLIED INFO / HOTS") +
-      '</p><h2>' + escapeHtml(skill.title) + '</h2><p class="reading-skill-subtitle">' + escapeHtml(skill.indonesian) + '</p></div><span class="reading-done-tag">' +
+      '<div class="reading-skill-title"><div><h2>' + escapeHtml(skill.title) + '</h2><p class="reading-skill-subtitle">' + escapeHtml(skill.indonesian) + '</p></div><span class="reading-done-tag">' +
       (p.completed ? 'PERNAH DILATIH' : 'BELUM DILATIH') + '</span></div>' +
-      '<div class="reading-definition"><p>' + escapeHtml(skill.definition) + '</p><div class="reading-strategy"><span class="eyebrow">CARA MENDEKATI SOAL</span><ol>' +
+      '<div class="reading-definition"><p>' + escapeHtml(skill.definition) + '</p><div class="reading-strategy"><ol>' +
       skill.strategy.map(function (step) {return '<li>' + escapeHtml(step) + '</li>';}).join("") + '</ol></div></div>' +
       passage + question;
     updateReadingStats();
