@@ -543,3 +543,32 @@
   };
   init();
 })();
+
+/* Keep the new dashboard rail in sync with the existing learning state renderer. */
+(() => {
+  const syncDashboardSummary = () => {
+    const copyText = (sourceId, targetId) => {
+      const source = document.getElementById(sourceId);
+      const target = document.getElementById(targetId);
+      if (source && target) target.textContent = source.textContent;
+    };
+    copyText("metric-mastered", "rail-mastered");
+    copyText("metric-due", "rail-due");
+    copyText("metric-today", "rail-today");
+
+    const rawPercent = document.getElementById("goal-percent")?.textContent || "0%";
+    const percent = Math.max(0, Math.min(100, Number.parseInt(rawPercent, 10) || 0));
+    const label = document.getElementById("dashboard-progress-value");
+    const ring = document.getElementById("dashboard-progress-ring");
+    if (label) label.textContent = percent + "%";
+    if (ring) ring.style.background = `conic-gradient(var(--sage-deep) ${percent * 3.6}deg, #dfe3d9 0deg)`;
+  };
+  syncDashboardSummary();
+  const sources = ["metric-mastered", "metric-due", "metric-today", "goal-percent"];
+  const observer = new MutationObserver(syncDashboardSummary);
+  sources.forEach((id) => {
+    const node = document.getElementById(id);
+    if (node) observer.observe(node, { childList: true, characterData: true, subtree: true });
+  });
+  window.addEventListener("pageshow", syncDashboardSummary);
+})();
