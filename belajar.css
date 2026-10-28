@@ -35,7 +35,7 @@ p{color:var(--body)}
 .brand-name{display:flex;align-items:baseline;gap:6px;font-size:.98rem;font-weight:700;letter-spacing:-.05em}
 .brand-name span{color:var(--muted);font:400 .55rem "DM Mono",monospace;letter-spacing:0}
 .sidebar-label{margin:53px 9px 12px;color:var(--muted);font:500 .6rem "DM Mono",monospace;letter-spacing:.1em}
-.side-nav{display:grid;gap:3px}
+.side-nav{display:grid;gap:3px;margin-top:34px}
 .side-link{min-height:43px;display:flex;align-items:center;gap:12px;padding:8px 11px;border:0;border-left:2px solid transparent;background:transparent;text-align:left;color:var(--body);font-size:.8rem;cursor:pointer;transition:background .15s ease,color .15s ease}
 .side-link:hover{background:color-mix(in srgb,var(--sage) 35%,transparent)}
 .side-link.is-active{border-left-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 48%,transparent);color:var(--ink);font-weight:600}
@@ -111,8 +111,7 @@ p{color:var(--body)}
 .dataset-disclaimer{margin:13px 0 0;color:var(--muted);font-size:.65rem;line-height:1.7}
 .resume-block{margin-top:40px}
 .resume-list{border-top:1px solid var(--line)}
-.resume-item{display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
-.resume-type{color:var(--muted);font:500 .57rem "DM Mono",monospace;letter-spacing:.04em}
+.resume-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
 .resume-item h3{margin:0 0 4px;font-size:.86rem}
 .resume-item p{margin:0;color:var(--muted);font-size:.69rem}
 .resume-action{padding:7px 0 7px 12px;border:0;background:transparent;color:var(--sage-deep);font-size:.7rem;font-weight:600;cursor:pointer}
@@ -364,9 +363,8 @@ p{color:var(--body)}
   .metric p{font-size:.57rem}
   .block-heading{align-items:flex-start}
   .plain-action{font-size:.62rem}
-  .resume-item{grid-template-columns:47px minmax(0,1fr) auto;gap:10px}
-  .resume-type{font-size:.49rem}
-  .resume-item p{font-size:.63rem}
+  .resume-item{grid-template-columns:minmax(0,1fr) auto;gap:10px}
+    .resume-item p{font-size:.63rem}
   .vocab-toolbar{gap:7px}
   .search-field{min-width:100%;flex-basis:100%}
   .select-field{flex:1;justify-content:space-between}
@@ -479,7 +477,6 @@ p{color:var(--body)}
 .matching-meta>div+div,.reading-progress-strip>div+div { border-left:1px solid var(--line); padding-left:22px; }
 .matching-meta strong,.reading-progress-strip strong { display:block; margin-top:6px; font:400 1.8rem/1.1 "Newsreader",Georgia,serif; letter-spacing:-.04em; }
 .matching-toolbar { display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:12px; }
-.matching-deck-note { color:var(--muted); font:500 .61rem "DM Mono",monospace; letter-spacing:.035em; }
 .matching-actions { display:flex; align-items:center; gap:8px; }
 .matching-actions .primary-action,.matching-actions .secondary-action { min-height:36px; padding:8px 12px; font-size:.64rem; }
 .matching-instruction { margin:0 0 17px; color:var(--body); font-size:.75rem; }
@@ -629,28 +626,3 @@ p{color:var(--body)}
   .matching-choice,.reading-option,.reading-skill-button { transition:none; }
 }
 
-/* Remove decorative AI-style microcopy: eyebrow/kicker labels, specimen metadata,
-   demo-style footnotes, and tiny ornamental descriptors. Keep real lesson content. */
-.eyebrow,
-.hero-aside,
-.hero-footnote,
-.visual-topline,
-.sheet-meta,
-.specimen-part,
-.pronunciation span:last-child,
-.meaning-label,
-.example-label,
-.margin-note,
-.sheet-bottom,
-.selector-label,
-.visual-caption,
-.brand-name span,
-.footer-bottom span:last-child,
-.breadcrumbs,
-.sidebar-label,
-.workspace-footer,
-.dataset-disclaimer,
-.matching-footnote,
-.reading-footnote {
-  display: none !important;
-}
