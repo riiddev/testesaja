@@ -7,6 +7,7 @@ const read = (path) => readFileSync(resolve(root, path), "utf8");
 const json = (path) => JSON.parse(read(path));
 
 const mirrorPairs = [
+  ["belajar.js", "public/belajar.js"],
   ["data/vocabulary.json", "public/data/vocabulary.json"],
   ["data/habit-reading-library.json", "public/data/habit-reading-library.json"],
   ["data/reading-lessons.json", "public/data/reading-lessons.json"],
