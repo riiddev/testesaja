@@ -402,5 +402,260 @@
     if (matchGame) renderMatching();
     if (lessonData) renderReading();
   };
+
+  // Searchable full-text library extracted from the user-provided HABIT PDF.
+  const HABIT_PROGRESS_KEY = "sinauu-habit-library-v1";
+  let habitLibrary = null, habitLibraryPromise = null, habitSentenceBank = [];
+  let habitVisibleCount = 9, activeHabitPassageId = null;
+  const habitQuestionCache = new Map();
+  let habitProgress = loadHabitLibraryProgress();
+
+  function loadHabitLibraryProgress() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(HABIT_PROGRESS_KEY) || "{}");
+      return saved && typeof saved === "object" ? saved : {};
+    } catch (_) {
+      return {};
+    }
+  }
+  function persistHabitLibraryProgress() {
+    try {
+      localStorage.setItem(HABIT_PROGRESS_KEY, JSON.stringify(habitProgress));
+      return true;
+    } catch (_) {
+      const status = $("#habit-library-status");
+      if (status) status.textContent = "Progres bacaan tidak bisa disimpan oleh browser ini, tetapi bacaan tetap bisa digunakan.";
+      return false;
+    }
+  }
+  function habitWordTokens(value) {
+    return (String(value || "").toLowerCase().match(/[a-z0-9]+(?:['’][a-z]+)?/g) || []);
+  }
+  const habitStopWords = new Set(("a an the and or of to in on at for from by with without between into over under after before about as is are do does did can could will would why how what when where who which that your our their its we you they some much more less than not really all both one many each every most other very now still ever again only so up down out off back around own it these those them have has had was were be been being while although because such too however yet if then").split(/\s+/));
+  function habitSentences(paragraph) {
+    const matches = String(paragraph || "").match(/[^.!?]+[.!?](?:[”’"')\]]+)?(?=\s|$)/g) || [];
+    return matches.map(function (s) { return s.replace(/\s+/g, " ").trim(); }).filter(function (s) {
+      const count = habitWordTokens(s).length;
+      return /[.!?]$/.test(s) && count >= 8 && count <= 30 && s.length >= 48 && s.length <= 185;
+    });
+  }
+  function habitTokenSet(value) {
+    return new Set(habitWordTokens(value).filter(function (w) { return !habitStopWords.has(w) && w.length > 2; }));
+  }
+  function habitJaccard(a, b) {
+    let intersection = 0;
+    a.forEach(function (word) { if (b.has(word)) intersection += 1; });
+    return intersection / Math.max(1, a.size + b.size - intersection);
+  }
+  function buildHabitSentenceBank() {
+    habitSentenceBank = [];
+    habitLibrary.passages.forEach(function (passage) {
+      (passage.paragraphs || []).forEach(function (paragraph, paragraphIndex) {
+        habitSentences(paragraph).forEach(function (sentence) {
+          habitSentenceBank.push({ passageId: passage.id, paragraphIndex: paragraphIndex, sentence: sentence });
+        });
+      });
+    });
+  }
+  function getHabitQuestions(passage) {
+    if (habitQuestionCache.has(passage.id)) return habitQuestionCache.get(passage.id);
+    const own = habitSentenceBank.filter(function (item) { return item.passageId === passage.id; });
+    const body = (passage.paragraphs || []).join(" ").toLowerCase();
+    const chosen = [];
+    const paragraphTargets = [0, Math.floor(((passage.paragraphs || []).length - 1) / 2), (passage.paragraphs || []).length - 1];
+    paragraphTargets.forEach(function (paragraphIndex) {
+      const candidates = own.filter(function (item) { return item.paragraphIndex === paragraphIndex; });
+      let fact = candidates[Math.floor(candidates.length / 2)];
+      if (!fact || chosen.some(function (item) { return item.sentence === fact.sentence; })) fact = own.find(function (item) { return !chosen.some(function (chosenItem) { return chosenItem.sentence === item.sentence; }); });
+      if (fact) chosen.push(fact);
+    });
+    own.forEach(function (fact) {
+      if (chosen.length < 3 && !chosen.some(function (item) { return item.sentence === fact.sentence; })) chosen.push(fact);
+    });
+    const questions = chosen.slice(0, 3).map(function (fact, questionIndex) {
+      const targetSet = habitTokenSet(passage.title + " " + fact.sentence);
+      const ranked = habitSentenceBank.filter(function (item) {
+        return item.passageId !== passage.id && !body.includes(item.sentence.toLowerCase()) && item.sentence !== fact.sentence;
+      }).map(function (item) {
+        return { item: item, overlap: habitJaccard(targetSet, habitTokenSet(item.sentence)) };
+      }).sort(function (a, b) { return a.overlap - b.overlap; });
+      const distractors = [], sourceIds = new Set();
+      for (const candidate of ranked) {
+        if (sourceIds.has(candidate.item.passageId)) continue;
+        sourceIds.add(candidate.item.passageId);
+        distractors.push(candidate.item.sentence);
+        if (distractors.length === 3) break;
+      }
+      const options = [fact.sentence].concat(distractors);
+      let seed = Array.from(passage.id).reduce(function (sum, ch) { return sum + ch.charCodeAt(0); }, 0) + questionIndex * 97 + 19;
+      for (let i = options.length - 1; i > 0; i--) {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        const j = seed % (i + 1);
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      return {
+        id: passage.id + "-detail-" + (questionIndex + 1),
+        prompt: "Which statement is explicitly supported by this passage?",
+        options: options,
+        answer: options.indexOf(fact.sentence),
+        explanation: "Pernyataan ini tercantum dalam paragraf " + (fact.paragraphIndex + 1) + " bacaan.",
+        evidence: fact.sentence,
+        evidenceParagraph: fact.paragraphIndex + 1
+      };
+    });
+    habitQuestionCache.set(passage.id, questions);
+    return questions;
+  }
+  function habitQuestionAnswer(passageId, questionId) {
+    return habitProgress[passageId] && habitProgress[passageId].answers && habitProgress[passageId].answers[questionId] || null;
+  }
+  function habitPassageComplete(passage) {
+    const questions = getHabitQuestions(passage);
+    return questions.length === 3 && questions.every(function (q) { return !!habitQuestionAnswer(passage.id, q.id); });
+  }
+  function renderHabitLibraryList() {
+    if (!habitLibrary) return;
+    const list = $("#habit-library-list");
+    if (!list) return;
+    const query = ($("#habit-library-search")?.value || "").trim().toLowerCase();
+    const category = $("#habit-library-category")?.value || "all";
+    const filtered = habitLibrary.passages.filter(function (passage) {
+      if (category !== "all" && passage.category !== category) return false;
+      if (!query) return true;
+      return passage.title.toLowerCase().includes(query) ||
+        String(passage.category || "").toLowerCase().includes(query) ||
+        (passage.paragraphs || []).some(function (paragraph) { return paragraph.toLowerCase().includes(query); });
+    });
+    const finished = habitLibrary.passages.filter(habitPassageComplete).length;
+    const count = $("#habit-library-count");
+    const completed = $("#habit-library-completed");
+    const status = $("#habit-library-status");
+    if (count) count.textContent = filtered.length + " dari " + habitLibrary.passages.length + " bacaan";
+    if (completed) completed.textContent = finished + " bacaan selesai · progres tersimpan di perangkat";
+    if (status) status.textContent = "Semua teks dari HABIT.pdf sudah dimasukkan. Pilih bacaan untuk membuka teks lengkap dan 3 soal pemahaman berbasis bukti.";
+    const visible = filtered.slice(0, habitVisibleCount);
+    list.innerHTML = visible.length ? visible.map(function (passage) {
+      const finishedPassage = habitPassageComplete(passage);
+      const answers = habitProgress[passage.id] && habitProgress[passage.id].answers || {};
+      const correctCount = Object.values(answers).filter(function (item) { return item && item.correct; }).length;
+      const excerpt = (passage.paragraphs && passage.paragraphs[0] || "").slice(0, 150);
+      const active = activeHabitPassageId === passage.id;
+      return '<button class="habit-reading-card' + (active ? ' is-active' : '') + '" type="button" data-habit-open="' + escapeHtml(passage.id) + '" aria-expanded="' + String(active) + '">' +
+        '<span class="habit-reading-card-top"><span>' + escapeHtml(passage.category || "Bacaan") + '</span><span>' + (finishedPassage ? '✓ SELESAI' : escapeHtml(String(passage.estimatedMinutes || 2) + ' MENIT')) + '</span></span>' +
+        '<strong>' + escapeHtml(passage.title) + '</strong><span class="habit-reading-excerpt">' + escapeHtml(excerpt) + (excerpt.length >= 150 ? '…' : '') + '</span>' +
+        '<span class="habit-reading-card-bottom"><span>' + escapeHtml(String(passage.wordCount || 0) + ' kata · PDF hlm. ' + (passage.page || passage.sourcePageStart || '—')) + '</span><span>' + (finishedPassage ? correctCount + '/3 benar' : 'Buka bacaan ↗') + '</span></span></button>';
+    }).join("") : '<p class="habit-library-empty">Tidak ada bacaan yang cocok. Coba kata kunci atau kategori lain.</p>';
+    const more = $("#habit-library-more");
+    if (more) {
+      more.hidden = filtered.length <= visible.length;
+      more.textContent = "Muat " + Math.min(9, filtered.length - visible.length) + " bacaan lainnya ↓";
+    }
+  }
+  function renderHabitPassageDetail() {
+    const detail = $("#habit-library-detail");
+    const passage = habitLibrary && habitLibrary.passages.find(function (item) { return item.id === activeHabitPassageId; });
+    if (!detail) return;
+    if (!passage) { detail.hidden = true; detail.innerHTML = ""; return; }
+    detail.hidden = false;
+    const questions = getHabitQuestions(passage);
+    const answers = habitProgress[passage.id] && habitProgress[passage.id].answers || {};
+    const completed = questions.filter(function (q) { return !!answers[q.id]; }).length;
+    const correctCount = questions.filter(function (q) { return answers[q.id] && answers[q.id].correct; }).length;
+    const paragraphHtml = (passage.paragraphs || []).map(function (paragraph, index) {
+      return '<p><span class="habit-paragraph-number">' + String(index + 1).padStart(2, "0") + '</span><span>' + escapeHtml(paragraph) + '</span></p>';
+    }).join("");
+    const questionHtml = questions.map(function (q, index) {
+      const answer = answers[q.id];
+      const optionHtml = q.options.map(function (option, optionIndex) {
+        const selected = answer && answer.selected === optionIndex;
+        const correctOption = answer && optionIndex === q.answer;
+        const cls = answer ? (correctOption ? " is-correct" : (selected ? " is-wrong" : "")) : "";
+        return '<label class="habit-quiz-option' + cls + '"><input type="radio" name="habit-answer-' + escapeHtml(q.id) + '" value="' + optionIndex + '"' + (selected ? ' checked' : '') + (answer ? ' disabled' : '') + '><span class="habit-quiz-letter">' + String.fromCharCode(65 + optionIndex) + '</span><span>' + escapeHtml(option) + '</span></label>';
+      }).join("");
+      let feedback = "";
+      if (answer) {
+        feedback = '<div class="habit-quiz-feedback ' + (answer.correct ? 'is-correct' : 'is-wrong') + '"><strong>' + (answer.correct ? 'Benar.' : 'Belum tepat.') + '</strong> ' + escapeHtml(q.explanation) +
+          (!answer.correct ? '<p>Jawaban yang didukung teks: <em>' + escapeHtml(q.options[q.answer]) + '</em></p>' : '') + '</div>';
+      }
+      return '<section class="habit-question-card"><div class="habit-question-top"><span>DETAIL ' + String(index + 1).padStart(2, "0") + '</span><span>BUKTI · PARAGRAF ' + q.evidenceParagraph + '</span></div><h3>' + escapeHtml(q.prompt) + '</h3><div class="habit-quiz-options">' + optionHtml + '</div><button class="primary-action habit-quiz-submit" type="button" data-habit-check="' + escapeHtml(q.id) + '"' + (answer ? ' disabled' : '') + '>' + (answer ? 'Jawaban tercatat ✓' : 'Periksa jawaban →') + '</button>' + feedback + '</section>';
+    }).join("");
+    detail.innerHTML = '<div class="habit-detail-heading"><div><span class="eyebrow">' + escapeHtml(passage.category || "HABIT.PDF") + ' · BACAAN ' + String(passage.page || passage.sourcePageStart || "—") + '</span><h2>' + escapeHtml(passage.title) + '</h2><p>' + escapeHtml(String(passage.wordCount || 0) + ' kata · sekitar ' + String(passage.estimatedMinutes || 2) + ' menit') + '</p></div><button type="button" class="habit-detail-close" data-habit-close aria-label="Tutup bacaan">×</button></div>' +
+      '<div class="habit-reading-progress"><span>' + (completed === 3 ? 'Latihan selesai' : completed + ' dari 3 soal dijawab') + '</span><span>' + correctCount + '/3 benar</span></div>' +
+      '<details class="habit-full-passage" open><summary><span>Bacaan lengkap</span><span>−</span></summary><div class="habit-passage-body">' + paragraphHtml + '</div></details>' +
+      '<div class="habit-quiz-heading"><div><span class="eyebrow">CEK PEMAHAMAN</span><h3>Temukan buktinya di teks.</h3><p>Pilih pernyataan yang memang tercantum dalam bacaan. Setiap jawaban memiliki bukti dan penjelasan.</p></div></div>' +
+      '<div class="habit-quiz-grid">' + questionHtml + '</div>' +
+      (completed === 3 ? '<button class="secondary-action habit-retry" type="button" data-habit-retry>Ulangi 3 soal ↻</button>' : '');
+  }
+  async function loadHabitLibrary() {
+    if (habitLibrary) { renderHabitLibraryList(); return; }
+    if (habitLibraryPromise) return habitLibraryPromise;
+    const status = $("#habit-library-status");
+    if (status) status.textContent = "Memuat semua bacaan dari PDF…";
+    habitLibraryPromise = (async function () {
+      try {
+        const response = await fetch("/data/habit-reading-library.json", {cache:"no-cache"});
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const library = await response.json();
+        if (!Array.isArray(library.passages) || !library.passages.length) throw new Error("Paket bacaan kosong.");
+        habitLibrary = library;
+        buildHabitSentenceBank();
+        renderHabitLibraryList();
+        if (status) status.textContent = library.passages.length + " bacaan dimuat · " + Number(library.extractionSummary && library.extractionSummary.wordCount || 0).toLocaleString("id-ID") + " kata dari HABIT.pdf.";
+      } catch (error) {
+        if (status) status.textContent = "Koleksi PDF gagal dimuat. Periksa koneksi lalu buka ulang tab Reading Comprehension.";
+        console.error("Sinauu HABIT reading library:", error);
+      } finally {
+        habitLibraryPromise = null;
+      }
+    })();
+    return habitLibraryPromise;
+  }
+  document.addEventListener("click", function (event) {
+    if (event.target.closest('[data-view-target="reading"]')) { void loadHabitLibrary(); return; }
+    const open = event.target.closest("[data-habit-open]");
+    if (open) {
+      activeHabitPassageId = open.dataset.habitOpen;
+      renderHabitLibraryList();
+      renderHabitPassageDetail();
+      $("#habit-library-detail")?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+      return;
+    }
+    if (event.target.closest("#habit-library-more")) {
+      habitVisibleCount += 9; renderHabitLibraryList(); return;
+    }
+    if (event.target.closest("[data-habit-close]")) {
+      activeHabitPassageId = null; renderHabitLibraryList(); renderHabitPassageDetail(); return;
+    }
+    const check = event.target.closest("[data-habit-check]");
+    if (check && activeHabitPassageId && habitLibrary) {
+      const questionId = check.dataset.habitCheck;
+      const question = getHabitQuestions(habitLibrary.passages.find(function (p) { return p.id === activeHabitPassageId; })).find(function (q) { return q.id === questionId; });
+      if (!question || habitQuestionAnswer(activeHabitPassageId, questionId)) return;
+      const selected = $('#habit-library-detail input[name="habit-answer-' + questionId + '"]:checked');
+      if (!selected) {
+        const status = $("#habit-library-status");
+        if (status) status.textContent = "Pilih satu pernyataan terlebih dahulu, lalu periksa jawabanmu.";
+        return;
+      }
+      const selectedIndex = Number(selected.value);
+      const correct = selectedIndex === question.answer;
+      if (!habitProgress[activeHabitPassageId]) habitProgress[activeHabitPassageId] = {answers:{}};
+      habitProgress[activeHabitPassageId].answers ||= {};
+      habitProgress[activeHabitPassageId].answers[questionId] = {selected:selectedIndex,correct:correct,answeredAt:new Date().toISOString()};
+      persistHabitLibraryProgress();
+      const passage = habitLibrary.passages.find(function (p) { return p.id === activeHabitPassageId; });
+      if (typeof window.sinauuTrackExtraActivity === "function") {
+        window.sinauuTrackExtraActivity({type:"reading",title:passage.title,detail:"HABIT PDF · soal detail " + (question.evidenceParagraph || ""),correct:correct});
+      }
+      renderHabitPassageDetail();
+      renderHabitLibraryList();
+      return;
+    }
+    if (event.target.closest("[data-habit-retry]") && activeHabitPassageId) {
+      delete habitProgress[activeHabitPassageId]; persistHabitLibraryProgress(); renderHabitPassageDetail(); renderHabitLibraryList(); return;
+    }
+  });
+  $("#habit-library-search")?.addEventListener("input", function () { habitVisibleCount = 9; renderHabitLibraryList(); });
+  $("#habit-library-category")?.addEventListener("change", function () { habitVisibleCount = 9; renderHabitLibraryList(); });
   init();
 })();
