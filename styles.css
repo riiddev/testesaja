@@ -1282,3 +1282,29 @@ h1 em, h2 em { color: var(--lilac-ink); font-weight: 400; }
   .brand-name { font-size: 1.02rem; }
   .brand-name span { margin-top: 3px; font-size: .44rem; letter-spacing: .09em; }
 }
+
+/* Remove decorative AI-style microcopy: eyebrow/kicker labels, specimen metadata,
+   demo-style footnotes, and tiny ornamental descriptors. Keep real lesson content. */
+.eyebrow,
+.hero-aside,
+.hero-footnote,
+.visual-topline,
+.sheet-meta,
+.specimen-part,
+.pronunciation span:last-child,
+.meaning-label,
+.example-label,
+.margin-note,
+.sheet-bottom,
+.selector-label,
+.visual-caption,
+.brand-name span,
+.footer-bottom span:last-child,
+.breadcrumbs,
+.sidebar-label,
+.workspace-footer,
+.dataset-disclaimer,
+.matching-footnote,
+.reading-footnote {
+  display: none !important;
+}
