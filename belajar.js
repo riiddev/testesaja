@@ -180,8 +180,6 @@
     view = next;
     $$(".view").forEach(el => el.classList.toggle("is-visible",el.dataset.view === next));
     $$(".side-link").forEach(el => el.classList.toggle("is-active",el.dataset.viewTarget === next));
-    const label = {overview:"RINGKASAN",vocabulary:"KOSAKATA",grammar:"GRAMMAR",review:"REVIEW",progress:"PROGRES",study:"LATIHAN KATA"};
-    $("#breadcrumb-current").textContent = label[next] || next.toUpperCase();
     if (next === "overview") renderOverview();
     if (next === "vocabulary") renderVocabulary();
     if (next === "grammar") renderGrammar();
@@ -204,7 +202,6 @@
     const now = new Date();
     $("#date-day").textContent = String(now.getDate()).padStart(2,"0");
     $("#date-month").textContent = fmtDate(now,{month:"short",year:"numeric"}).toUpperCase();
-    $("#today-label").textContent = new Intl.DateTimeFormat("id-ID",{weekday:"long",day:"numeric",month:"long"}).format(now).toUpperCase();
   }
   function levelStats() {
     const result = {};
@@ -228,12 +225,11 @@
     $("#review-task-note").textContent=due?due+" kata menunggu review.":"Belum ada kata yang jatuh tempo.";
     $("#nav-word-count").textContent=words.length; $("#nav-grammar-count").textContent=topics.length; $("#nav-review-count").textContent=due;
     $("#overview-levels").innerHTML=LEVELS.map(l=>levelRow(l,stats[l],false)).join("");
-    $("#dataset-disclaimer").textContent=words.filter(w=>w.isOxford3000).length.toLocaleString("id-ID")+" headword Oxford 3000 + "+words.filter(w=>!w.isOxford3000).length+" kata starter tambahan. Entri tanpa arti dan contoh tidak dihitung sebagai materi siap-latih.";
     const suggestions=[];
     dueWords().slice(0,2).forEach(w=>suggestions.push({type:"REVIEW",title:w.word,description:w.meaning,wordId:w.id}));
     topics.filter(t=>!(state.grammarProgress[t.id]&&state.grammarProgress[t.id].attempts)).slice(0,2).forEach(t=>suggestions.push({type:"GRAMMAR",title:t.title,description:t.summary,topicId:t.id}));
     words.filter(w=>canStudyWord(w)&&statusOf(w)==="new").slice(0,3).forEach(w=>suggestions.push({type:"WORD",title:w.word,description:w.meaning,wordId:w.id}));
-    $("#resume-list").innerHTML=suggestions.slice(0,4).map(x=>'<div class="resume-item"><span class="resume-type">'+esc(x.type)+'</span><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.description)+'</p></div><button class="resume-action" type="button" '+(x.wordId?'data-study-word="'+esc(x.wordId)+'"':'data-open-topic="'+esc(x.topicId)+'"')+'>Mulai ↗</button></div>').join("") || '<div class="empty-state">Materi yang tersedia sudah pernah dicoba. Pilih topik lain.</div>';
+    $("#resume-list").innerHTML=suggestions.slice(0,4).map(x=>'<div class="resume-item"><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.description)+'</p></div><button class="resume-action" type="button" '+(x.wordId?'data-study-word="'+esc(x.wordId)+'"':'data-open-topic="'+esc(x.topicId)+'"')+'>Mulai ↗</button></div>').join("") || '<div class="empty-state">Materi yang tersedia sudah pernah dicoba. Pilih topik lain.</div>';
   }
   function renderVocabulary(resetList=true) {
     if(resetList)listLimit=100;
@@ -241,8 +237,6 @@
     const topicOptions=Array.from(new Set(words.flatMap(w=>w.topics||[]))).sort();
     topicSelect.innerHTML='<option value="all">Semua topik</option>'+topicOptions.map(t=>'<option value="'+esc(t)+'">'+esc(t.replace(/-/g," "))+'</option>').join("");
     if(topicOptions.includes(old))topicSelect.value=old;
-    const oxfordCount=words.filter(w=>w.isOxford3000).length,readyCount=words.filter(canStudyWord).length,extraCount=words.length-oxfordCount;
-    $("#source-note").innerHTML='<span aria-hidden="true">i</span> <span><strong>'+oxfordCount.toLocaleString("id-ID")+' headword Oxford 3000</strong> tersedia, plus '+extraCount+' kata starter. '+readyCount.toLocaleString("id-ID")+' kata sudah punya arti dan contoh untuk dilatih; entri lain tetap bisa dicari, tetapi belum membuka sesi belajar.</span>';
     const q=norm($("#vocab-search").value),level=$("#level-filter").value,topic=topicSelect.value,fav=$("#favorites-only").checked;
     const filtered=words.filter(w=>{
       const searchable=norm([w.word,w.meaning,w.example,w.translation,w.definitionEn,w.partOfSpeech,...(w.acceptedMeanings||[]),...(w.topics||[])].join(" "));
@@ -292,7 +286,7 @@
     if(!canStudyWord(w)){toast("Materi kata ini belum lengkap; sesi latihan belum dibuka.");return;}
     ensureProgress(id);selectedWord=id;
     activeStudy={wordId:id,mode:mode||"learn",stage:0,result:null,stepResults:[],sessionId:uid(),currentContext:null};
-    $("#study-session-tag").textContent=activeStudy.mode==="review"?"SCHEDULED SPACED REVIEW":"VOCABULARY PRACTICE";
+    
     setView("study");renderStudy();
   }
   function contextQuestion(w,p) {
@@ -330,7 +324,7 @@
       body='<p class="study-prompt">Buat kalimat bahasa Inggris sendiri menggunakan <strong>'+esc(w.word)+'</strong> atau bentuk katanya yang sesuai.</p><form id="production-form"><label class="study-select-label" for="production-answer">KALIMATMU</label><textarea class="study-input production-input" id="production-answer" rows="3" placeholder="Write your own sentence…" required></textarea>'+confidenceMarkup()+'<div class="production-rubric"><label><input type="checkbox" id="production-self-check" required><span>Sudah kuperiksa: kalimat memiliki subjek dan kata kerja, memakai kata target dengan tepat, serta sesuai dengan makna yang ingin kusampaikan.</span></label></div><p class="study-small-note">Pemeriksaan otomatis hanya mengecek panjang kalimat dan keberadaan kata target. Ketepatan makna dan grammar tetap perlu kamu refleksikan sendiri.</p><button class="primary-action study-submit" type="submit">Catat latihan →</button></form>';
     }
     const pct=((i+(activeStudy.result?1:0))/3)*100;
-    $("#study-container").innerHTML='<div class="study-step-meta"><span>'+esc(w.level)+' / '+stages[i].toUpperCase()+'</span><span>LANGKAH '+(i+1)+' DARI 3</span></div><div class="study-step-track"><span style="width:'+pct+'%"></span></div><article class="study-card"><p class="study-level">'+esc(w.partOfSpeech.toUpperCase())+' · '+esc((w.topics||[]).join(" / ").toUpperCase())+'</p><h1>'+esc(w.word)+'<em>.</em></h1><p class="study-ipa">'+esc(w.ipa||"Pronunciation not provided")+'</p>'+body+'</article>';
+    $("#study-container").innerHTML='<div class="study-step-meta"><span>'+esc(w.level)+' / '+stages[i].toUpperCase()+'</span><span>LANGKAH '+(i+1)+' DARI 3</span></div><div class="study-step-track"><span style="width:'+pct+'%"></span></div><article class="study-card"><h1>'+esc(w.word)+'<em>.</em></h1><p class="study-ipa">'+esc(w.ipa||"Pronunciation not provided")+'</p>'+body+'</article>';
     bindStudy(w,i);
   }
   function bindStudy(w,i) {
@@ -390,7 +384,7 @@
     await save();renderOverview();
     activeStudy.stage=3;
     const si=statusInfo[statusOf(w)];
-    $("#study-container").innerHTML='<article class="study-card study-complete"><span class="study-complete-mark">'+(passed?"✓":"↻")+'</span><p class="eyebrow">SESI SELESAI · '+activeStudy.stepResults.filter(Boolean).length+'/3 LANGKAH LOLOS</p><h1>'+(passed?"Sesi selesai.":"Masih ada yang perlu dilatih.")+'</h1><p>'+esc(message)+'</p><div class="study-evidence-summary"><span class="'+(p.skillEvidence.recall?"done":"")+'">'+(p.skillEvidence.recall?"✓":"○")+' Recall arti</span><span class="'+(p.skillEvidence.context?"done":"")+'">'+(p.skillEvidence.context?"✓":"○")+' Konteks berbeda</span><span class="'+(p.skillEvidence.production?"done":"")+'">'+(p.skillEvidence.production?"✓":"○")+' Produksi + self-check</span><span>'+(p.reviewSuccesses||0)+'/3 review berjeda</span></div><p class="study-small-note">Status sekarang: <strong>'+si.label+'</strong>. Jawaban benar dalam satu sesi tidak langsung memberi mastery.</p><div class="study-complete-actions"><button class="primary-action" id="study-another" type="button">Pilih kata lain ↗</button><button class="secondary-action" id="study-review" type="button">Lihat jadwal review</button></div></article>';
+    $("#study-container").innerHTML='<article class="study-card study-complete"><span class="study-complete-mark">'+(passed?"✓":"↻")+'</span><h1>'+(passed?"Sesi selesai.":"Masih ada yang perlu dilatih.")+'</h1><p>'+esc(message)+'</p><div class="study-evidence-summary"><span class="'+(p.skillEvidence.recall?"done":"")+'">'+(p.skillEvidence.recall?"✓":"○")+' Recall arti</span><span class="'+(p.skillEvidence.context?"done":"")+'">'+(p.skillEvidence.context?"✓":"○")+' Konteks berbeda</span><span class="'+(p.skillEvidence.production?"done":"")+'">'+(p.skillEvidence.production?"✓":"○")+' Produksi + self-check</span><span>'+(p.reviewSuccesses||0)+'/3 review berjeda</span></div><p class="study-small-note">Status sekarang: <strong>'+si.label+'</strong>. Jawaban benar dalam satu sesi tidak langsung memberi mastery.</p><div class="study-complete-actions"><button class="primary-action" id="study-another" type="button">Pilih kata lain ↗</button><button class="secondary-action" id="study-review" type="button">Lihat jadwal review</button></div></article>';
     $("#study-another").addEventListener("click",()=>setView("vocabulary"));$("#study-review").addEventListener("click",()=>setView("review"));
   }
   function renderGrammar() {
@@ -414,7 +408,7 @@
     bindGrammar(t);
   }
   function lessonQuestion(t,ui) {
-    if(ui.index>=t.questions.length)return '<div class="quiz-end"><p class="eyebrow">SESI TOPIK SELESAI</p><h3>'+ui.sessionCorrect+'/'+t.questions.length+' benar pada sesi ini.</h3><p>Jawaban tersimpan. Kamu bisa mengulang topik; percobaan sebelumnya tetap ada.</p><button type="button" class="secondary-action" id="restart-topic">Ulangi topik ↻</button></div>';
+    if(ui.index>=t.questions.length)return '<div class="quiz-end"><h3>'+ui.sessionCorrect+'/'+t.questions.length+' benar pada sesi ini.</h3><p>Jawaban tersimpan. Kamu bisa mengulang topik; percobaan sebelumnya tetap ada.</p><button type="button" class="secondary-action" id="restart-topic">Ulangi topik ↻</button></div>';
     const q=t.questions[ui.index],input=q.type==="typed"
       ?'<form id="grammar-answer-form"><label class="study-select-label" for="grammar-typed-answer">JAWABAN SINGKAT</label><input class="study-input" id="grammar-typed-answer" required autocomplete="off" placeholder="Ketik jawaban…"><button class="primary-action study-submit" type="submit">Periksa jawaban →</button></form>'
       :'<div class="lesson-answers">'+q.options.map((o,n)=>'<button type="button" class="lesson-answer" data-grammar-choice="'+n+'"><span>'+String.fromCharCode(65+n)+'</span><span>'+esc(o)+'</span></button>').join("")+'</div>';
