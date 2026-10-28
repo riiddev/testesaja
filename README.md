@@ -81,7 +81,7 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 ## HABIT reading library
 
 - `public/data/habit-reading-library.json` contains **156 unique reading passages** extracted from the user-provided `HABIT.pdf` (174 PDF pages; blank pages and duplicated text are not treated as separate passages). The extracted collection contains approximately **63,309 words**. Reference lists and raw source-link fragments are excluded from passage bodies.
-- The Reading Comprehension page provides search by title/body, category filtering, progressive loading, a full passage reader, and three evidence-based detail questions per passage. The correct option is an exact sentence from the selected passage; distractors are exact sentences from other passages. Each answer shows the supporting sentence and paragraph number.
+- The Reading Comprehension page provides search by title/body, category filtering, progressive loading, a full passage reader, and three evidence-based detail questions per passage. The correct option is an exact sentence from the selected passage; distractors are exact sentences from other passages. Each answer shows the supporting sentence and paragraph number. Distractors are prioritized from other passages in the same broad category, with similar wording, before falling back to other categories.
 - Reading selections and answers are saved in local storage and contribute to the existing local activity history. Nothing is sent to an external backend.
 - `data/reading-lessons.json` / `public/data/reading-lessons.json` retains the original 12 reading-skill lessons, now aligned to “The Learning Myth That Will Not Die” from the PDF.
 
