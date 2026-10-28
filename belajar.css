@@ -628,3 +628,29 @@ p{color:var(--body)}
 @media(prefers-reduced-motion:reduce) {
   .matching-choice,.reading-option,.reading-skill-button { transition:none; }
 }
+
+/* Remove decorative AI-style microcopy: eyebrow/kicker labels, specimen metadata,
+   demo-style footnotes, and tiny ornamental descriptors. Keep real lesson content. */
+.eyebrow,
+.hero-aside,
+.hero-footnote,
+.visual-topline,
+.sheet-meta,
+.specimen-part,
+.pronunciation span:last-child,
+.meaning-label,
+.example-label,
+.margin-note,
+.sheet-bottom,
+.selector-label,
+.visual-caption,
+.brand-name span,
+.footer-bottom span:last-child,
+.breadcrumbs,
+.sidebar-label,
+.workspace-footer,
+.dataset-disclaimer,
+.matching-footnote,
+.reading-footnote {
+  display: none !important;
+}
