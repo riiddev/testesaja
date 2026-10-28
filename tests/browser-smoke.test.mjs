@@ -48,15 +48,29 @@ test("vocabulary search returns a matching word and reading practice saves an an
     return Boolean(counter && counter.textContent.includes("dari"));
   }, null, { timeout: 20000 });
   await page.locator('#view-overview [data-view-target="vocabulary"]').click();
-  await page.locator("#vocab-search").fill("hello");
+  await page.locator("#vocab-search").fill("abandon");
   await page.waitForFunction(() => {
     const row = document.querySelector("#vocab-list [data-select-word]");
-    return Boolean(row && row.textContent.toLowerCase().includes("hello"));
+    return Boolean(row && row.textContent.toLowerCase().includes("abandon"));
   }, null, { timeout: 15000 });
   const firstVocabularyRow = page.locator("#vocab-list [data-select-word]").first();
-  assert.match((await firstVocabularyRow.innerText()).toLowerCase(), /hello/);
+  assert.match((await firstVocabularyRow.innerText()).toLowerCase(), /abandon/);
   await firstVocabularyRow.click();
-  assert.match((await page.locator("#word-detail").innerText()).toLowerCase(), /hello/);
+  assert.match((await page.locator("#word-detail").innerText()).toLowerCase(), /abandon/);
+
+  // Exercise the generated context question for an imported entry that has no hand-authored context options.
+  await page.locator("#word-detail [data-start-word]").click();
+  await page.locator("#recall-answer").fill("meninggalkan");
+  await page.locator("#recall-form button[type='submit']").click();
+  await page.locator("#study-next").waitFor({ state: "visible" });
+  await page.locator("#study-next").click();
+  const contextOptions = page.locator("#context-form .study-option-label");
+  assert.equal(await contextOptions.count(), 3, "context practice should render three answer choices");
+  const choiceTexts = await contextOptions.allInnerTexts();
+  assert.equal(new Set(choiceTexts.map((text) => text.trim())).size, 3, "context choices should be distinct");
+  await contextOptions.first().locator("input").check();
+  await page.locator("#context-form button[type='submit']").click();
+  await page.locator("#study-next").waitFor({ state: "visible" });
 
   await page.locator('[data-view-target="reading"]').first().click();
   await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 20000 });
