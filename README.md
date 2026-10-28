@@ -55,7 +55,7 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 
 - `index.html`, `styles.css`, `app.js` — landing page.
 - `belajar.html`, `belajar.css`, `belajar.js` — local-first learning workspace.
-- `data/vocabulary.json` — curated starter vocabulary; its entries override the Oxford-derived entry for matching headwords.
+- `data/vocabulary.json` — retained curated starter entries plus 965 unique A–E batch rows imported from `riiddev/SinauuEnglish`; imported rows override the Oxford-derived entry for matching headwords and are marked draft pending human review.
 - `data/grammar.json` — starter grammar curriculum and question bank.
 - `data/oxford3000/*.json.gz.b64` — gzip-compressed, Base64-encoded corpus split by CEFR level for static hosting.
 - `data/oxford3000/editorial-overrides.json.gz.b64` — original bundle for 204 editorial drafts (197 new headwords plus 7 updates to existing curated entries).
@@ -76,3 +76,18 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 5. Continue responsive, accessibility, persistence, backup/restore, and regression checks.
 
 **Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
+
+
+## HABIT reading library
+
+- `public/data/habit-reading-library.json` contains **156 unique reading passages** extracted from the user-provided `HABIT.pdf` (174 PDF pages; blank pages and duplicated text are not treated as separate passages). The extracted collection contains approximately **63,309 words**. Reference lists and raw source-link fragments are excluded from passage bodies.
+- The Reading Comprehension page provides search by title/body, category filtering, progressive loading, a full passage reader, and three evidence-based detail questions per passage. The correct option is an exact sentence from the selected passage; distractors are exact sentences from other passages. Each answer shows the supporting sentence and paragraph number.
+- Reading selections and answers are saved in local storage and contribute to the existing local activity history. Nothing is sent to an external backend.
+- `data/reading-lessons.json` / `public/data/reading-lessons.json` retains the original 12 reading-skill lessons, now aligned to “The Learning Myth That Will Not Die” from the PDF.
+
+## Vocabulary batch import (2026-10-28)
+
+- The static curated vocabulary JSON now contains **999 unique entries**: 34 retained original starter entries and 965 new unique entries from batches A, B, C1, C2, D, and E (978 source rows total; overlapping headwords were not duplicated).
+- Each imported row has a headword, part of speech, CEFR level, topic, Indonesian meaning(s), an English example, and Indonesian example translation. The imported 965 entries remain marked as editorial drafts because the source batches flag them for human language review. The import does not invent IPA or extra word forms.
+- The broader compressed Oxford 3000 corpus and existing editorial overlays remain in place; this batch import supplements and overrides matching headwords rather than replacing the corpus.
+- The app's data and script files are mirrored under `public/` where required by Vite's configured `publicDir`. Keep the root data and public static copies synchronized when making future content changes.
