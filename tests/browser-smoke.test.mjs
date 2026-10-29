@@ -13,7 +13,7 @@ after(async () => {
   await browser?.close();
 });
 
-test("landing page renders and the main call to action opens the learning workspace", async () => {
+test("landing CTA opens login and registration screens without sending credentials", async () => {
   const page = await browser.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -22,16 +22,27 @@ test("landing page renders and the main call to action opens the learning worksp
   assert.equal(response?.status(), 200, "landing page should return HTTP 200");
   assert.match(await page.title(), /SinauuEnglish/i);
   assert.ok(await page.locator("#main").isVisible(), "main content should be visible");
-  assert.ok(await page.locator("a[href='/belajar.html']").count() > 0, "a workspace link should exist");
+  assert.ok(await page.locator("a[href='/login.html']").count() > 0, "landing page should link to login");
 
   const themeToggle = page.locator("#theme-toggle");
   await themeToggle.click();
   assert.equal(await themeToggle.getAttribute("aria-pressed"), "true", "theme toggle should expose its changed state");
 
-  await page.locator("a[href='/belajar.html']").first().click();
-  await page.waitForURL(/\/belajar\.html$/);
-  assert.ok(await page.locator("#app-main").isVisible(), "learning workspace should render");
-  assert.deepEqual(pageErrors, [], "landing/navigation should not throw browser JavaScript errors");
+  await page.locator("a[href='/login.html']").first().click();
+  await page.waitForURL(/\\/login\\.html$/);
+  assert.ok(await page.locator("#auth-card").isVisible(), "login screen should render");
+  assert.ok(await page.locator("#signin-form").isVisible(), "sign-in form should be visible by default");
+
+  await page.locator("[data-mode='signup']").click();
+  assert.equal(await page.locator("#signup-form").isVisible(), true, "registration form should open");
+  await page.locator("#signup-email").fill("test@example.com");
+  await page.locator("#signup-password").fill("example-password-123");
+  await page.locator("#signup-password-confirm").fill("example-password-123");
+  await page.locator("#signup-form button[type='submit']").click();
+  assert.match(await page.locator("#auth-notice").innerText(), /belum aktif|tidak dikirim|tidak disimpan/i);
+  assert.equal(await page.url().endsWith("/login.html"), true, "form should not fake a successful login or redirect");
+
+  assert.deepEqual(pageErrors, [], "landing/login interactions should not throw browser JavaScript errors");
   await page.close();
 });
 

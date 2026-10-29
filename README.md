@@ -46,7 +46,8 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 
 ## Technical constraints
 
-- Static HTML, CSS, JavaScript, and JSON; no backend, API server, login, or required paid service.
+- Static HTML, CSS, JavaScript, and JSON; no required paid service.
+- The login and registration screens are currently presentation-only. They do not send or store credentials; account authentication and cross-device sync are not active until the server-side Google Sheets integration is implemented.
 - The source repository is the source of truth. Content updates go through GitHub and redeploy through the connected Vercel project.
 - Study progress remains local to the browser/device. There is no automatic cross-device sync.
 - Back up progress before clearing browser storage or switching devices.

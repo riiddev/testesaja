@@ -16,6 +16,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: { input: {
       home: resolve(rootDir, "index.html"),
+      login: resolve(rootDir, "login.html"),
       belajar: resolve(rootDir, "belajar.html"),
       liquidNavbar: resolve(rootDir, "liquid-navbar.html"),
     }},
