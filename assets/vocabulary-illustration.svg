@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" role="img" aria-labelledby="title">
+<title id="title">Kartu kosakata dan catatan belajar</title>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#d9e8e8"/><stop offset="1" stop-color="#f3eadb"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#526d70" flood-opacity=".15"/></filter></defs>
+<rect width="600" height="300" fill="url(#bg)"/>
+<path d="M0 254Q130 221 270 256T600 235V300H0Z" fill="#c9dfd8" opacity=".7"/>
+<g fill="none" stroke="#668d84" stroke-width="4" stroke-linecap="round"><path d="M76 266Q84 213 61 183M78 242Q110 216 118 185M520 268Q506 216 535 175M517 239Q483 220 476 196"/></g>
+<g fill="#78a294"><ellipse cx="61" cy="183" rx="11" ry="23" transform="rotate(-25 61 183)"/><ellipse cx="118" cy="185" rx="11" ry="23" transform="rotate(36 118 185)"/><ellipse cx="535" cy="175" rx="11" ry="23" transform="rotate(24 535 175)"/><ellipse cx="476" cy="196" rx="11" ry="23" transform="rotate(-33 476 196)"/></g>
+<g filter="url(#s)" transform="translate(128 38) rotate(-3 170 115)">
+ <rect x="22" y="22" width="335" height="210" rx="10" fill="#faf7ed" stroke="#9db4b3" stroke-width="3"/>
+ <rect x="38" y="38" width="303" height="38" rx="5" fill="#dce8e0"/>
+ <circle cx="58" cy="57" r="7" fill="#72988a"/>
+ <path d="M77 57H216" stroke="#9ab2a9" stroke-width="4" stroke-linecap="round"/>
+ <g font-family="Arial,sans-serif" font-size="20" fill="#384f50">
+  <circle cx="59" cy="107" r="9" fill="#72988a"/><path d="m54 107 4 4 7-9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="83" y="114">improve</text>
+  <circle cx="59" cy="151" r="9" fill="#72988a"/><path d="m54 151 4 4 7-9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="83" y="158">increase</text>
+  <circle cx="59" cy="195" r="9" fill="#72988a"/><path d="m54 195 4 4 7-9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="83" y="202">achieve</text>
+ </g>
+</g>
+</svg>
