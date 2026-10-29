@@ -723,3 +723,5 @@ pollingTimer = window.setInterval(() => {
   if (session && document.visibilityState === "visible") void syncNow();
 }, 45_000);
 window.addEventListener("pagehide", () => { window.clearTimeout(syncTimer); window.clearInterval(pollingTimer); });
+
+export {};
