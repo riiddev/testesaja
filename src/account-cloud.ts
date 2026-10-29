@@ -26,7 +26,7 @@ const $ = <T extends Element>(selector: string, root: ParentNode = document) => 
 
 let session: AuthSession | null = null;
 let syncTimer: number | undefined, pollingTimer: number | undefined;
-let syncing = false, applyingCloud = false;
+let syncing = false, applyingCloud = false, signingOut = false;
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let currentMode: "signin" | "signup" = "signin";
 let recoveryMode = false;
@@ -345,8 +345,8 @@ async function prepareLocalForAccount(): Promise<void> {
   await applyLocalBundle(next);
 }
 
-async function syncNow(): Promise<void> {
-  if (!CLOUD_READY || !session || syncing || !navigator.onLine) return;
+async function syncNow(allowWhileSigningOut = false): Promise<void> {
+  if (!CLOUD_READY || !session || syncing || !navigator.onLine || (signingOut && !allowWhileSigningOut)) return;
   const syncUserId = session.user.id;
   const syncEpoch = sessionEpoch;
   const stillSameAccount = () => Boolean(session && session.user.id === syncUserId && sessionEpoch === syncEpoch);
@@ -377,7 +377,7 @@ async function syncNow(): Promise<void> {
 }
 
 function scheduleSync(): void {
-  if (!session || !CLOUD_READY || applyingCloud) return;
+  if (!session || !CLOUD_READY || applyingCloud || signingOut) return;
   setSyncBadge(navigator.onLine ? "Ada perubahan" : "Menunggu internet", navigator.onLine ? "syncing" : "error");
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(() => void syncNow(), 900);
@@ -592,22 +592,36 @@ async function sendPasswordReset(): Promise<void> {
 
 async function signOut(): Promise<void> {
   const signedInUserId = session?.user?.id;
-  if (signedInUserId) {
-    await syncNow();
-    try {
-      const current = await readLocalBundle();
-      localStorage.setItem(ACCOUNT_CACHE_PREFIX + signedInUserId, JSON.stringify(current));
-    } catch { /* Cloud state remains the primary saved copy. */ }
-    await applyLocalBundle({ schemaVersion: 1, core: freshCore(), extras: { extraLearning: {}, habitProgress: {} } });
-    try { localStorage.removeItem(OWNER_KEY); } catch { /* no-op */ }
+  if (!signedInUserId) {
+    setSession(null);
+    return;
   }
+  signingOut = true;
+  window.clearTimeout(syncTimer);
+  // Let an in-flight save finish before taking the final snapshot. A bounded wait
+  // prevents the UI from hanging if the network drops mid-request.
+  let waitCount = 0;
+  while (syncing && waitCount < 200) {
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
+    waitCount += 1;
+  }
+  // Invalidate older sync work so it cannot restore this account after local cleanup.
+  sessionEpoch += 1;
+  await syncNow(true);
   try {
-    if (session) {
+    const current = await readLocalBundle();
+    localStorage.setItem(ACCOUNT_CACHE_PREFIX + signedInUserId, JSON.stringify(current));
+  } catch { /* Cloud state remains the primary saved copy. */ }
+  await applyLocalBundle({ schemaVersion: 1, core: freshCore(), extras: { extraLearning: {}, habitProgress: {} } });
+  try { localStorage.removeItem(OWNER_KEY); } catch { /* no-op */ }
+  try {
+    if (session && session.user.id === signedInUserId) {
       const active = await currentSession();
-      if (active) await authRequest("/logout", { method: "POST" }, active.access_token);
+      if (active && active.user.id === signedInUserId) await authRequest("/logout", { method: "POST" }, active.access_token);
     }
   } catch { /* A local sign-out still works if the network is unavailable. */ }
   setSession(null);
+  signingOut = false;
   setSyncBadge("Tersimpan di perangkat", "idle");
   setMessage("Kamu sudah keluar. Progres akunmu tetap tersimpan di cloud; masuk kembali untuk memuatnya. Sesi lokal dibersihkan agar tidak bercampur dengan akun lain.", "info");
 }
