@@ -180,8 +180,8 @@
     view = next;
     $$(".view").forEach(el => el.classList.toggle("is-visible",el.dataset.view === next));
     const activeTopView = ["grammar","matching","study"].includes(next) ? "vocabulary" : next;
-    $(".side-link").forEach(el => el.classList.toggle("is-active",el.dataset.viewTarget === activeTopView));
-    $(".learning-tab").forEach(el => {
+    $$(".side-link").forEach(el => el.classList.toggle("is-active",el.dataset.viewTarget === activeTopView));
+    $$(".learning-tab").forEach(el => {
       const active = el.dataset.viewTarget === next;
       el.classList.toggle("is-active", active);
       el.setAttribute("aria-selected", String(active));
@@ -506,7 +506,7 @@
       const readingModeBtn=e.target.closest("[data-reading-mode]");
       if(readingModeBtn){
         const mode=readingModeBtn.dataset.readingMode==="skills"?"skills":"habit";
-        $(".reading-mode-button").forEach(button=>{
+        $$(".reading-mode-button").forEach(button=>{
           const active=button.dataset.readingMode===mode;
           button.classList.toggle("is-active",active);
           button.setAttribute("aria-selected",String(active));
