@@ -47,7 +47,7 @@ test("vocabulary search returns a matching word and reading practice saves an an
     const counter = document.querySelector("#vocab-result-count");
     return Boolean(counter && counter.textContent.includes("dari"));
   }, null, { timeout: 20000 });
-  await page.locator('#view-overview [data-view-target="vocabulary"]').click();
+  await page.locator('#view-overview .home-primary-action[data-view-target="vocabulary"]').click();
   await page.locator("#vocab-search").fill("abandon");
   await page.waitForFunction(() => {
     const row = document.querySelector("#vocab-list [data-select-word]");
@@ -74,6 +74,12 @@ test("vocabulary search returns a matching word and reading practice saves an an
 
   await page.locator('[data-view-target="reading"]').first().click();
   await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 20000 });
+  await page.locator('[data-reading-mode="skills"]').click();
+  assert.equal(await page.locator("#habit-library-section").isVisible(), false, "HABIT library should be hidden while reading skills are active");
+  assert.equal(await page.locator("#reading-skills-section").isVisible(), true, "reading skills should be the only active reading collection");
+  await page.locator('[data-reading-mode="habit"]').click();
+  assert.equal(await page.locator("#habit-library-section").isVisible(), true, "switching back should reveal the HABIT library");
+  assert.equal(await page.locator("#reading-skills-section").isVisible(), false, "reading skills should be hidden when HABIT is active");
   await page.locator("#habit-library-search").fill("The Tiny Tenants Inside You");
   await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").startsWith("1 dari 156"), null, { timeout: 10000 });
   const passageCard = page.locator('[data-habit-open="the-tiny-tenants-inside-you"]');
