@@ -102,12 +102,15 @@ async function appendValues(range: string, values: any[][]): Promise<void> {
 
 async function ensureHeaders(): Promise<void> {
   if (headersReady) return;
-  // The sheet tabs are created once in the setup guide. Headers are initialized automatically.
   const accountHeader = await getValues("Accounts!A1:E1");
   if (!accountHeader.length || !accountHeader[0]?.[0]) await putValues("Accounts!A1:E1", [ACCOUNT_HEADER]);
   const progressHeader = await getValues("LearningStates!A1:AA1");
   if (!progressHeader.length || !progressHeader[0]?.[0]) await putValues("LearningStates!A1:AA1", [PROGRESS_HEADER]);
   headersReady = true;
+}
+
+export async function ensureSheetsReady(): Promise<void> {
+  await ensureHeaders();
 }
 
 export type AccountRow = {
@@ -119,17 +122,32 @@ export type AccountRow = {
   updatedAt: string;
 };
 
-export async function readAccounts(): Promise<AccountRow[]> {
-  await ensureHeaders();
-  const rows = await getValues("Accounts!A2:E");
-  return rows.map((row, index) => ({
-    rowNumber: index + 2,
-    id: row[0] || "",
-    email: (row[1] || "").toLowerCase(),
+async function readAccountAt(rowNumber: number): Promise<AccountRow | null> {
+  const rows = await getValues("Accounts!A" + rowNumber + ":E" + rowNumber);
+  const row = rows[0];
+  if (!row?.[0] || !row?.[1]) return null;
+  return {
+    rowNumber,
+    id: row[0],
+    email: row[1].toLowerCase(),
     passwordHash: row[2] || "",
     createdAt: row[3] || "",
     updatedAt: row[4] || "",
-  })).filter((row) => row.id && row.email);
+  };
+}
+
+export async function findAccountByEmail(email: string): Promise<AccountRow | null> {
+  await ensureHeaders();
+  const rows = await getValues("Accounts!B2:B");
+  const index = rows.findIndex((row) => (row[0] || "").toLowerCase() === email.toLowerCase());
+  return index < 0 ? null : readAccountAt(index + 2);
+}
+
+export async function findAccountById(id: string): Promise<AccountRow | null> {
+  await ensureHeaders();
+  const rows = await getValues("Accounts!A2:A");
+  const index = rows.findIndex((row) => row[0] === id);
+  return index < 0 ? null : readAccountAt(index + 2);
 }
 
 export async function appendAccount(row: [string, string, string, string, string]): Promise<void> {
@@ -142,12 +160,18 @@ export async function updateAccount(rowNumber: number, row: [string, string, str
   await putValues("Accounts!A" + rowNumber + ":E" + rowNumber, [row]);
 }
 
+async function findProgressRow(userId: string): Promise<number> {
+  const rows = await getValues("LearningStates!A2:A");
+  const index = rows.findIndex((row) => row[0] === userId);
+  return index < 0 ? -1 : index + 2;
+}
+
 export async function readProgress(userId: string): Promise<{ state: any; updatedAt: string } | null> {
   await ensureHeaders();
-  const rows = await getValues("LearningStates!A2:AA");
-  const rowIndex = rows.findIndex((row) => row[0] === userId);
-  if (rowIndex < 0) return null;
-  const row = rows[rowIndex];
+  const rowNumber = await findProgressRow(userId);
+  if (rowNumber < 0) return null;
+  const rows = await getValues("LearningStates!A" + rowNumber + ":AA" + rowNumber);
+  const row = rows[0] || [];
   const partCount = Math.max(0, Math.min(MAX_PARTS, Number(row[2] || 0)));
   if (!partCount) return null;
   try {
@@ -170,11 +194,7 @@ export async function writeProgress(userId: string, state: unknown): Promise<voi
   const parts = Array.from({ length: MAX_PARTS }, (_, index) => packed.slice(index * PART_SIZE, (index + 1) * PART_SIZE));
   const updatedAt = new Date().toISOString();
   const values = [userId, updatedAt, String(partCount), ...parts];
-  const rows = await getValues("LearningStates!A2:AA");
-  const rowIndex = rows.findIndex((row) => row[0] === userId);
-  if (rowIndex < 0) await appendValues("LearningStates!A:AA", [values]);
-  else {
-    const rowNumber = rowIndex + 2;
-    await putValues("LearningStates!A" + rowNumber + ":AA" + rowNumber, [values]);
-  }
+  const rowNumber = await findProgressRow(userId);
+  if (rowNumber < 0) await appendValues("LearningStates!A:AA", [values]);
+  else await putValues("LearningStates!A" + rowNumber + ":AA" + rowNumber, [values]);
 }
