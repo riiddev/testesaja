@@ -179,7 +179,16 @@
     if (!$('#view-' + next)) return;
     view = next;
     $$(".view").forEach(el => el.classList.toggle("is-visible",el.dataset.view === next));
-    $$(".side-link").forEach(el => el.classList.toggle("is-active",el.dataset.viewTarget === next));
+    const activeTopView = ["grammar","matching","study"].includes(next) ? "vocabulary" : next;
+    $(".side-link").forEach(el => el.classList.toggle("is-active",el.dataset.viewTarget === activeTopView));
+    $(".learning-tab").forEach(el => {
+      const active = el.dataset.viewTarget === next;
+      el.classList.toggle("is-active", active);
+      el.setAttribute("aria-selected", String(active));
+    });
+    const topbarLabels = {overview:"Beranda",vocabulary:"Belajar · Kosakata",grammar:"Belajar · Grammar",matching:"Belajar · Matching",study:"Sesi belajar",reading:"Bacaan",review:"Review",progress:"Progres"};
+    const topbarCurrent = $("#topbar-current");
+    if (topbarCurrent) topbarCurrent.textContent = topbarLabels[next] || "Ruang belajar";
     if (next === "overview") renderOverview();
     if (next === "vocabulary") renderVocabulary();
     if (next === "grammar") renderGrammar();
@@ -494,6 +503,19 @@
   }
   function bindEvents() {
     document.addEventListener("click",async e=>{
+      const readingModeBtn=e.target.closest("[data-reading-mode]");
+      if(readingModeBtn){
+        const mode=readingModeBtn.dataset.readingMode==="skills"?"skills":"habit";
+        $(".reading-mode-button").forEach(button=>{
+          const active=button.dataset.readingMode===mode;
+          button.classList.toggle("is-active",active);
+          button.setAttribute("aria-selected",String(active));
+        });
+        const habit=$("#habit-library-section"),skills=$("#reading-skills-section");
+        if(habit)habit.hidden=mode!=="habit";
+        if(skills)skills.hidden=mode!=="skills";
+        return;
+      }
       const viewBtn=e.target.closest("[data-view-target]");
       if(viewBtn){setView(viewBtn.dataset.viewTarget);return;}
       const wordBtn=e.target.closest("[data-select-word]");
