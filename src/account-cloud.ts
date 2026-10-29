@@ -673,7 +673,13 @@ async function restoreSession(): Promise<void> {
     setSession({ ...active, user });
     setMessage("Akun dikenali. Memeriksa progres cloud…", "info");
     await syncNow();
-  } catch { setSession(null); setSyncBadge("Masuk kembali", "idle"); }
+  } catch (error) {
+    setSession(null);
+    setSyncBadge("Masuk kembali", "idle");
+    if (error instanceof Error && /sesi berakhir|masuk kembali/i.test(error.message)) {
+      window.location.replace("/login.html?next=%2Fbelajar.html");
+    }
+  }
 }
 
 async function triggerInstall(): Promise<void> {
