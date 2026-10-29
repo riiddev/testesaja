@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" role="img" aria-labelledby="title desc">
+<title id="title">Sudut belajar SinauuEnglish</title><desc id="desc">Meja belajar dekat jendela senja, dengan buku, tanaman, kartu kosakata, dan kucing.</desc>
+<defs>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d9d6f0"/><stop offset=".55" stop-color="#efd8cb"/><stop offset="1" stop-color="#f1e6d4"/></linearGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b9c8d2"/><stop offset=".48" stop-color="#edc7c0"/><stop offset="1" stop-color="#f5dfb8"/></linearGradient>
+ <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b58b72"/><stop offset="1" stop-color="#8d695c"/></linearGradient>
+ <linearGradient id="curtain" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#9f9bbf"/><stop offset="1" stop-color="#c0b5ce"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"/></filter>
+</defs>
+<ellipse cx="388" cy="518" rx="340" ry="24" fill="#6c677d" opacity=".16" filter="url(#shadow)"/>
+<!-- window -->
+<rect x="115" y="34" width="535" height="330" rx="17" fill="#f5ede0" stroke="#6c667c" stroke-width="10"/>
+<rect x="130" y="49" width="505" height="300" rx="9" fill="url(#sky)"/>
+<circle cx="478" cy="142" r="38" fill="#fff0c9" opacity=".9"/>
+<path d="M130 231 216 151 287 224 375 126 471 223 555 164 635 231V349H130Z" fill="#b6b6d1" opacity=".9"/>
+<path d="M130 259 226 211 293 262 379 188 450 250 537 206 635 255V349H130Z" fill="#8f9caf" opacity=".82"/>
+<path d="M130 291 234 252 298 280 386 235 464 283 553 244 635 275V349H130Z" fill="#727f91" opacity=".74"/>
+<g fill="#666f83" opacity=".72">
+ <rect x="168" y="275" width="22" height="74"/><rect x="194" y="261" width="26" height="88"/><rect x="225" y="286" width="20" height="63"/>
+ <rect x="484" y="270" width="20" height="79"/><rect x="509" y="249" width="31" height="100"/><rect x="545" y="286" width="25" height="63"/><rect x="574" y="264" width="34" height="85"/>
+</g>
+<path d="M130 320 Q250 294 354 316 T635 314V349H130Z" fill="#667b7a" opacity=".65"/>
+<g stroke="#fff1d6" stroke-width="2" opacity=".6"><path d="M151 83 205 69M220 113 270 98M377 81 420 68M517 193 567 179M296 162 332 150"/></g>
+<!-- curtains -->
+<path d="M92 15H157L145 364 103 392 84 347Z" fill="url(#curtain)"/>
+<path d="M628 15H687L706 351 666 390 640 344Z" fill="url(#curtain)"/>
+<path d="M106 25 127 25 123 338M654 26 671 25 679 338" fill="none" stroke="#ded1e0" stroke-width="5" opacity=".7"/>
+<!-- desk -->
+<path d="M35 388Q375 358 728 392L760 498Q390 526 0 496Z" fill="url(#wood)"/>
+<path d="M0 497Q360 523 760 498V537Q380 563 0 538Z" fill="#765b57"/>
+<path d="M83 529 94 560M650 527 637 559" stroke="#765b57" stroke-width="20" stroke-linecap="round"/>
+<!-- open notebook -->
+<path d="M270 393Q333 370 384 394L380 455Q326 433 272 456Z" fill="#fff8e8" stroke="#b7a9ab" stroke-width="2"/>
+<path d="M384 394Q439 370 493 392L490 454Q435 433 380 455Z" fill="#f6efdf" stroke="#b7a9ab" stroke-width="2"/>
+<path d="M381 396 380 455" stroke="#b7a9ab" stroke-width="2"/>
+<g stroke="#a7a5b5" stroke-width="2" stroke-linecap="round" opacity=".8"><path d="M294 409 359 402M294 421 359 414M294 433 353 427M409 407 468 401M409 419 467 413M408 431 460 425"/></g>
+<!-- books stack -->
+<g transform="translate(54 367)">
+ <path d="M8 28 160 19 173 40 18 50Z" fill="#c9bddc" stroke="#827a9a" stroke-width="2"/>
+ <path d="M18 50 173 40 170 59 17 69Z" fill="#a79dbd"/>
+ <path d="M1 5 145 0 161 20 10 29Z" fill="#e9d5be" stroke="#987e6d" stroke-width="2"/>
+ <path d="M10 29 161 20 160 38 18 47Z" fill="#c6a88d"/>
+ <path d="M5 -17 143 -21 156 0 1 5Z" fill="#667f7e" stroke="#526c6c" stroke-width="2"/>
+ <path d="M1 5 156 0 154 17 10 22Z" fill="#4d6768"/>
+ <path d="M34 -7 112 -10" stroke="#f4e8d8" stroke-width="2"/>
+</g>
+<!-- plant pot and leaves -->
+<path d="M625 379 693 377 682 434Q657 447 638 431Z" fill="#c7b1c9" stroke="#9786a7" stroke-width="2"/>
+<path d="M659 380Q642 327 618 320M659 383Q659 321 676 303M657 382Q686 348 701 343M656 377Q641 349 642 334" fill="none" stroke="#54796a" stroke-width="5" stroke-linecap="round"/>
+<ellipse cx="617" cy="318" rx="11" ry="23" transform="rotate(-35 617 318)" fill="#8ca98a"/>
+<ellipse cx="677" cy="302" rx="11" ry="23" transform="rotate(22 677 302)" fill="#799a7d"/>
+<ellipse cx="701" cy="341" rx="11" ry="24" transform="rotate(51 701 341)" fill="#a5bb92"/>
+<ellipse cx="642" cy="331" rx="10" ry="21" transform="rotate(-23 642 331)" fill="#b7c5a1"/>
+<!-- pencil -->
+<g transform="translate(489 465) rotate(-13)"><rect width="112" height="9" rx="4" fill="#d4a76d"/><rect x="91" width="14" height="9" fill="#7a6d91"/><path d="M0 0 0 9-12 4.5Z" fill="#8b7667"/></g>
+<!-- little cat asleep -->
+<g transform="translate(514 354)">
+ <ellipse cx="45" cy="34" rx="45" ry="22" fill="#5b5268"/>
+ <circle cx="17" cy="20" r="22" fill="#6b6079"/>
+ <path d="M2 5-4 -13 11 -3M25 1 38 -10 37 11" fill="#6b6079" stroke="#6b6079" stroke-width="5" stroke-linejoin="round"/>
+ <path d="M8 21q5 4 10 0M24 21q5 4 10 0" fill="none" stroke="#f3ded2" stroke-width="2.5" stroke-linecap="round"/>
+ <path d="M71 37q30 -5 25 -23" fill="none" stroke="#5b5268" stroke-width="9" stroke-linecap="round"/>
+ <path d="M25 48q17 8 30 0" fill="none" stroke="#d6c4d8" stroke-width="3" stroke-linecap="round"/>
+</g>
+<!-- flashcards -->
+<g transform="translate(176 467) rotate(-7)">
+ <rect width="87" height="42" rx="5" fill="#e6ead7" stroke="#a3b095" stroke-width="2"/>
+ <circle cx="17" cy="14" r="5" fill="#819578"/><path d="M28 14H70M14 27H61" stroke="#9aaa91" stroke-width="3" stroke-linecap="round"/>
+</g>
+</svg>
