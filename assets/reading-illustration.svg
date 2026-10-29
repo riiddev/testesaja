@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" role="img" aria-labelledby="title">
+<title id="title">Buku untuk latihan pemahaman teks</title>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#e6def1"/><stop offset="1" stop-color="#f6e9e8"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#655577" flood-opacity=".15"/></filter></defs>
+<rect width="600" height="300" fill="url(#bg)"/>
+<circle cx="500" cy="59" r="35" fill="#fff7df" opacity=".8"/>
+<path d="M0 252Q145 213 285 250T600 237V300H0Z" fill="#d8cbe6" opacity=".65"/>
+<g fill="none" stroke="#8f83a7" stroke-width="3" stroke-linecap="round"><path d="M57 231Q40 200 51 177M57 214Q79 199 87 182M555 188Q533 163 535 141M545 174Q566 171 578 155"/></g>
+<g fill="#a6b8a0"><ellipse cx="51" cy="177" rx="8" ry="19" transform="rotate(-20 51 177)"/><ellipse cx="86" cy="182" rx="8" ry="18" transform="rotate(38 86 182)"/><ellipse cx="535" cy="141" rx="8" ry="18" transform="rotate(-18 535 141)"/><ellipse cx="578" cy="155" rx="8" ry="18" transform="rotate(48 578 155)"/></g>
+<g filter="url(#s)" transform="translate(96 41)">
+ <path d="M0 25Q90 4 203 30V220Q90 194 0 220Z" fill="#fffaf0" stroke="#b8a9cb" stroke-width="3"/>
+ <path d="M203 30Q310 4 405 25V220Q310 194 203 220Z" fill="#f4ecdf" stroke="#b8a9cb" stroke-width="3"/>
+ <path d="M203 30V220" stroke="#cbbdd8" stroke-width="3"/>
+ <path d="M27 62H165M27 81H150M27 100H164M27 119H143M27 138H156M27 157H121" stroke="#b5a6cb" stroke-width="4" stroke-linecap="round"/>
+ <path d="M235 62H378M235 81H361M235 100H379M235 119H342M235 138H365M235 157H328" stroke="#c2b6ca" stroke-width="4" stroke-linecap="round"/>
+ <rect x="226" y="92" width="143" height="15" rx="4" fill="#e7db9e" opacity=".9"/>
+ <path d="M237 186Q277 170 321 185T380 184" fill="none" stroke="#97ad93" stroke-width="5" stroke-linecap="round"/>
+</g>
+<g transform="translate(456 212) rotate(-16)"><rect width="84" height="12" rx="5" fill="#c5a2aa"/><path d="M0 0 0 12 -12 6Z" fill="#977c84"/><rect x="70" width="14" height="12" fill="#7f7197"/></g>
+</svg>
