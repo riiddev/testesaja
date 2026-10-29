@@ -478,12 +478,6 @@ function mountUi(): void {
   $("#account-install-app")?.addEventListener("click", () => void triggerInstall());
   const notice = $("#account-config-notice");
   if (notice) notice.toggleAttribute("hidden", CLOUD_READY);
-  if (!CLOUD_READY) {
-    const form = $("#account-form") as HTMLFormElement | null;
-    if (form) Array.from(form.elements).forEach((element) => (element as HTMLInputElement | HTMLButtonElement).disabled = true);
-    const reset = $("#account-reset") as HTMLButtonElement | null;
-    if (reset) reset.disabled = true;
-  }
   renderAccount();
 }
 
@@ -500,7 +494,7 @@ function setMode(mode: "signin" | "signup"): void {
   const note = $("#account-password-note");
   if (password) password.autocomplete = mode === "signup" ? "new-password" : "current-password";
   if (submit) submit.textContent = mode === "signup" ? "Buat akun ↗" : "Masuk ke akun ↗";
-  if (note) note.textContent = mode === "signup" ? "Minimal 8 karakter. Konfirmasi email mungkin diperlukan sebelum masuk." : "Gunakan kata sandi untuk akun SinauuEnglish.";
+  if (note) note.textContent = mode === "signup" ? "Email belum diverifikasi pada versi ini. Gunakan kata sandi unik dan simpan aman; reset email belum tersedia." : "Gunakan kata sandi untuk akun SinauuEnglish.";
 }
 
 function renderAccount(): void {
@@ -582,7 +576,7 @@ async function submitPasswordRecovery(event: Event): Promise<void> {
 }
 
 async function sendPasswordReset(): Promise<void> {
-  setMessage("Pemulihan kata sandi melalui email belum tersedia. Hubungi admin SinauuEnglish untuk bantuan; jangan membuat akun baru karena progres akun lama tetap tersimpan.", "info");
+  setMessage("Pemulihan kata sandi melalui email belum tersedia. Jika kamu lupa kata sandi, akun belum dapat dipulihkan otomatis. Simpan kata sandi dengan aman.", "info");
 }
 async function signOut(): Promise<void> {
   const signedInUserId = session?.user?.id;
