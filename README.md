@@ -44,13 +44,14 @@ The Oxford source list is available at [Oxford Learner's Dictionaries — Americ
 
 The grammar curriculum currently contains **6 lessons and 18 topic-specific questions**. Broader grammar coverage and human review of the vocabulary corpus remain ongoing work.
 
-## Technical constraints
+## Accounts and cross-device progress
 
-- Static HTML, CSS, JavaScript, and JSON; no required paid service.
-- The login and registration screens are currently presentation-only. They do not send or store credentials; account authentication and cross-device sync are not active until the server-side Google Sheets integration is implemented.
-- The source repository is the source of truth. Content updates go through GitHub and redeploy through the connected Vercel project.
-- Study progress remains local to the browser/device. There is no automatic cross-device sync.
-- Back up progress before clearing browser storage or switching devices.
+- The landing page stays public; opening the learning workspace requires a saved SinauuEnglish session.
+- Email/password signup and login call `/api/account`. Learning snapshots synchronize through `/api/progress` after sign-in.
+- The main site's Vercel rewrites route those API paths to the existing SinauuEnglish API deployment, which uses the existing Google Apps Script Web App and spreadsheet. This does not create a new spreadsheet or database.
+- The Apps Script URL and API key remain server-side. Keep the existing API deployment and its environment variables available; do not copy secrets into browser code or GitHub.
+- Learning remains local-first. When signed in and online, the app synchronizes the user's progress with their account. If synchronization is unavailable, local study state is retained.
+- Password-reset email is not implemented yet. Back up local progress before clearing browser storage or switching devices.
 
 ## Files
 

@@ -13,42 +13,83 @@ after(async () => {
   await browser?.close();
 });
 
-test("landing CTA opens login and registration screens without sending credentials", async () => {
+test("landing CTA opens login and a successful mocked signup opens the workspace", async () => {
   const page = await browser.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  const fakeSession = {
+    access_token: "test-access-token",
+    refresh_token: "test-refresh-token",
+    token_type: "bearer",
+    expires_in: 7200,
+    expires_at: Math.floor(Date.now() / 1000) + 7200,
+    user: { id: "browser-test-user", email: "test@example.com" },
+  };
+  await page.route("**/api/account**", async (route) => {
+    const action = new URL(route.request().url()).searchParams.get("action");
+    if (action === "status") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: true }) });
+    if (action === "signup" || action === "login") return route.fulfill({ status: action === "signup" ? 201 : 200, contentType: "application/json", body: JSON.stringify(fakeSession) });
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  });
+  await page.route("**/api/progress**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: route.request().method() === "GET" ? "[]" : JSON.stringify({ ok: true }) });
+  });
 
   const response = await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   assert.equal(response?.status(), 200, "landing page should return HTTP 200");
   assert.match(await page.title(), /SinauuEnglish/i);
   assert.ok(await page.locator("#main").isVisible(), "main content should be visible");
   assert.ok(await page.locator("a[href='/login.html']").count() > 0, "landing page should link to login");
-
   const themeToggle = page.locator("#theme-toggle");
   await themeToggle.click();
-  assert.equal(await themeToggle.getAttribute("aria-pressed"), "true", "theme toggle should expose its changed state");
-
+  assert.equal(await themeToggle.getAttribute("aria-pressed"), "true");
   await page.locator("a[href='/login.html']").first().click();
   await page.waitForURL((url) => url.pathname === "/login.html");
-  assert.ok(await page.locator("#auth-card").isVisible(), "login screen should render");
-  assert.ok(await page.locator("#signin-form").isVisible(), "sign-in form should be visible by default");
-
+  assert.ok(await page.locator("#signin-form").isVisible());
   await page.locator("[data-mode='signup']").click();
-  assert.equal(await page.locator("#signup-form").isVisible(), true, "registration form should open");
   await page.locator("#signup-email").fill("test@example.com");
   await page.locator("#signup-password").fill("example-password-123");
   await page.locator("#signup-password-confirm").fill("example-password-123");
   await page.locator("#signup-form button[type='submit']").click();
-  assert.match(await page.locator("#auth-notice").innerText(), /belum aktif|tidak dikirim|tidak disimpan/i);
-  assert.equal(await page.url().endsWith("/login.html"), true, "form should not fake a successful login or redirect");
+  await page.waitForURL((url) => url.pathname === "/belajar.html");
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-cloud-session-v1") || "null"));
+  assert.equal(stored?.user?.email, "test@example.com");
+  assert.equal(stored?.user?.id, "browser-test-user");
+  assert.equal(stored?.password, undefined, "the saved session must not contain the password");
+  assert.deepEqual(pageErrors, [], "landing/auth interactions should not throw browser JavaScript errors");
+  await page.close();
+});
 
-  assert.deepEqual(pageErrors, [], "landing/login interactions should not throw browser JavaScript errors");
+test("direct access to the learning workspace redirects unsigned visitors to login", async () => {
+  const page = await browser.newPage();
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  const response = await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  assert.ok(response, "workspace navigation should return a document response");
+  await page.waitForURL((url) => url.pathname === "/login.html");
+  assert.equal(new URL(page.url()).searchParams.get("next"), "/belajar.html");
   await page.close();
 });
 
 test("vocabulary search returns a matching word and reading practice saves an answer", async () => {
   const page = await browser.newPage();
   const pageErrors = [];
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  const homeResponse = await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  assert.equal(homeResponse?.status(), 200);
+  await page.evaluate(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "local-test-token",
+      refresh_token: "local-test-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "workspace-test-user", email: "workspace@example.com" },
+    }));
+  });
+
   page.on("pageerror", (error) => pageErrors.push(error.message));
 
   const response = await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
