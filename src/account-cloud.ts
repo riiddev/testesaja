@@ -151,7 +151,7 @@ function mergeArrays(...arrays: any[][]): any[] {
 
 function stable(value: any): string {
   if (Array.isArray(value)) return "[" + value.map(stable).join(",") + "]";
-  if (!value || typeof value !== "object") return JSON.stringify(value);
+  if (!value || typeof value !== "object") return JSON.stringify(value) ?? "undefined";
   return "{" + Object.keys(value).sort().map((key) => JSON.stringify(key) + ":" + stable(value[key])).join(",") + "}";
 }
 
@@ -559,7 +559,7 @@ async function signOut(): Promise<void> {
 }
 
 async function waitForWorkspaceReady(): Promise<void> {
-  if (!$("#app-main") || (window as AnyRecord).sinauuWorkspaceReady) return;
+  if (!$("#app-main") || (window as unknown as AnyRecord).sinauuWorkspaceReady) return;
   await new Promise<void>((resolve) => window.addEventListener("sinauu:workspace-ready", () => resolve(), { once: true }));
 }
 
