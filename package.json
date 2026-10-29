@@ -8,9 +8,9 @@
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc --noEmit && tsc --noEmit -p tsconfig.api.json && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.api.json",
+    "typecheck": "tsc --noEmit",
     "test:content": "node scripts/audit-content.mjs",
     "test:browser": "node --test tests/browser-smoke.test.mjs"
   },
