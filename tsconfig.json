@@ -32,7 +32,6 @@
   "include": [
     "src",
     "components",
-    "vite.config.ts",
-    "api/**/*.ts"
+    "vite.config.ts"
   ]
 }

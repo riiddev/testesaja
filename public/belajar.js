@@ -9,7 +9,7 @@
   const LABELS = { A1:"Fondasi", A2:"Sehari-hari", B1:"Intermediate", B2:"Upper-intermediate", C1:"Advanced", UNCLASSIFIED:"Belum diklasifikasikan" };
   const INTERVALS = [1, 3, 8, 16, 30];
   let words = [], topics = [], state, db = null, storageMode = "loading";
-  let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100, vocabDetailOpen = false, cloudApplying = false;
+  let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100;
   const grammarUI = {};
 
   function freshState() {
@@ -95,26 +95,15 @@
     }
     root.dataset.theme = state.settings.theme; labelStorage();
   }
-  function readExtraSnapshots() {
-    const read = (key) => { try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch (_) { return {}; } };
-    return { extraLearning:read("sinauu-extra-learning-v1"), habitProgress:read("sinauu-habit-library-v1") };
-  }
-  function notifyCloudState() {
-    if (cloudApplying || !state) return;
-    window.dispatchEvent(new CustomEvent("sinauu:local-state-saved", { detail:{schemaVersion:1,core:state,extras:readExtraSnapshots()} }));
-  }
   async function save() {
     state.updatedAt = new Date().toISOString();
-    let stored = false;
     try {
-      if (storageMode === "indexedDB" && db) { await writeDB(db,state); labelStorage(); stored = true; }
-      else { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); stored = true; }
+      if (storageMode === "indexedDB" && db) { await writeDB(db,state); labelStorage(); return true; }
+      localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); return true;
     } catch (_) {
-      try { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); stored = true; }
-      catch (_) { storageMode = "unavailable"; labelStorage(); toast("Browser tidak dapat menyimpan progres. Coba ekspor backup."); }
+      try { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); return true; }
+      catch (_) { storageMode = "unavailable"; labelStorage(); toast("Browser tidak dapat menyimpan progres. Coba ekspor backup."); return false; }
     }
-    if (stored) notifyCloudState();
-    return stored;
   }
   async function loadGzipBase64(path) {
     const response=await fetch(path,{cache:"no-cache"});
@@ -270,8 +259,6 @@
       return '<button class="vocab-row '+(selectedWord===w.id?"is-selected":"")+'" data-select-word="'+esc(w.id)+'" type="button"><span class="word-level">'+esc(w.level||"—")+'</span><span class="word-row-main"><strong>'+esc(w.word)+(state.favorites.includes(w.id)?" ★":"")+'</strong><small>'+esc(w.meaning||(w.definitionEn?"Arti Indonesia belum tersedia":"Konten sedang dilengkapi"))+'</small></span><span class="word-row-status '+si.cls+'">'+si.label+'</span></button>';
     }).join("");
     const more=$("#vocab-load-more");more.hidden=shown.length>=filtered.length;
-    $("#vocab-layout")?.classList.toggle("is-detail-open",vocabDetailOpen);
-    $("#view-vocabulary")?.classList.toggle("is-detail-view",vocabDetailOpen);
     more.textContent="Tampilkan "+Math.min(100,filtered.length-shown.length)+" kata berikutnya ↓ · "+(filtered.length-shown.length).toLocaleString("id-ID")+" tersisa";
     if(selectedWord&&shown.some(w=>w.id===selectedWord))renderWordDetail(selectedWord);
     else if(shown.length){selectedWord=shown[0].id;renderWordDetail(selectedWord);$$(".vocab-row").forEach(b=>b.classList.toggle("is-selected",b.dataset.selectWord===selectedWord));}
@@ -286,7 +273,7 @@
     const variants=(w.contextVariants||[]).slice(0,3);
     const variantHtml=variants.length?'<p class="detail-section-label">CONTOH TAMBAHAN</p><div class="detail-note">'+variants.map(v=>'<p>'+esc(v.sentence)+(v.translation?'<br><span>'+esc(v.translation)+'</span>':'')+'</p>').join("")+'</div>':"";
     const defHtml=w.definitionEn?'<p class="detail-section-label">ENGLISH DEFINITION · REFERENCE</p><p class="definition-note">'+esc(w.definitionEn)+'</p>':"";
-    $("#word-detail").innerHTML='<button class="mobile-detail-back" type="button" data-vocab-back>← Kembali ke daftar</button><div class="detail-meta"><span>'+esc(w.level||"Belum diklasifikasikan")+' / '+esc((w.partOfSpeech||"unclassified").toUpperCase())+'</span><span class="'+si.cls+'">'+si.label+'</span></div>'+
+    $("#word-detail").innerHTML='<div class="detail-meta"><span>'+esc(w.level||"Belum diklasifikasikan")+' / '+esc((w.partOfSpeech||"unclassified").toUpperCase())+'</span><span class="'+si.cls+'">'+si.label+'</span></div>'+
       '<div class="detail-word-row"><h2>'+esc(w.word)+'<span>.</span></h2><button class="audio-button" id="detail-speak" type="button" aria-label="Dengarkan '+esc(w.word)+'">♪</button></div>'+
       '<p class="detail-pronunciation">'+esc(w.ipa||"IPA belum tersedia")+(w.forms&&w.forms.length?" · "+esc(w.forms.map(x=>x.form||x.label).join(" · ")):"")+'</p>'+
       '<p class="detail-meaning">'+esc(w.meaning||"Arti Bahasa Indonesia belum tersedia.")+'</p>'+defHtml+'<p class="detail-section-label">CONTOH PENGGUNAAN</p>'+exampleHtml+variantHtml+
@@ -529,12 +516,10 @@
         if(skills)skills.hidden=mode!=="skills";
         return;
       }
-      const vocabBack=e.target.closest("[data-vocab-back]");
-      if(vocabBack){vocabDetailOpen=false;renderVocabulary(false);return;}
       const viewBtn=e.target.closest("[data-view-target]");
       if(viewBtn){setView(viewBtn.dataset.viewTarget);return;}
       const wordBtn=e.target.closest("[data-select-word]");
-      if(wordBtn){selectedWord=wordBtn.dataset.selectWord;vocabDetailOpen=true;renderVocabulary(false);return;}
+      if(wordBtn){selectedWord=wordBtn.dataset.selectWord;renderVocabulary(false);return;}
       const studyBtn=e.target.closest("[data-start-word],[data-study-word]");
       if(studyBtn){startStudy(studyBtn.dataset.startWord||studyBtn.dataset.studyWord,"learn");return;}
       const fav=e.target.closest("[data-favorite-word]");
@@ -546,11 +531,11 @@
       const review=e.target.closest("[data-review-word]");
       if(review){startStudy(review.dataset.reviewWord,"review");return;}
     });
-    $("#vocab-search").addEventListener("input",()=>{vocabDetailOpen=false;renderVocabulary();});
+    $("#vocab-search").addEventListener("input",()=>renderVocabulary());
     $("#vocab-load-more").addEventListener("click",()=>{listLimit+=100;renderVocabulary(false);});
-    $("#level-filter").addEventListener("change",()=>{vocabDetailOpen=false;renderVocabulary();});
-    $("#topic-filter").addEventListener("change",()=>{vocabDetailOpen=false;renderVocabulary();});
-    $("#favorites-only").addEventListener("change",()=>{vocabDetailOpen=false;renderVocabulary();});
+    $("#level-filter").addEventListener("change",renderVocabulary);
+    $("#topic-filter").addEventListener("change",renderVocabulary);
+    $("#favorites-only").addEventListener("change",renderVocabulary);
     $("#theme-toggle").addEventListener("click",()=>setTheme(root.dataset.theme==="dark"?"light":"dark"));
     $("#edit-goal").addEventListener("click",()=>{$("#daily-goal-input").value=String(state.settings.dailyGoal||10);$("#goal-dialog").showModal();});
     $("#goal-form").addEventListener("submit",async e=>{e.preventDefault();state.settings.dailyGoal=Number($("#daily-goal-input").value)||10;await save();$("#goal-dialog").close();renderOverview();toast("Target harian diperbarui.");});
@@ -568,25 +553,6 @@
     try {
       await loadDatasets();await loadState();await setTheme(state.settings.theme);
       renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
-      window.sinauuExportLocalBundle = () => ({schemaVersion:1,core:state,extras:readExtraSnapshots()});
-      window.sinauuApplyCloudBundle = async (bundle) => {
-        if (!bundle || !bundle.core || !state) return;
-        cloudApplying = true;
-        try {
-          state = sanitize(bundle.core);
-          const extras = bundle.extras || {};
-          localStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(extras.extraLearning || {}));
-          localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(extras.habitProgress || {}));
-          if (storageMode === "indexedDB" && db) await writeDB(db,state);
-          else localStorage.setItem(FALLBACK,JSON.stringify(state));
-          await setTheme(state.settings.theme);
-          window.sinauuExtraLearningRestore?.(extras.extraLearning || {});
-          window.sinauuHabitLibraryRestore?.(extras.habitProgress || {});
-          renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
-        } finally { cloudApplying = false; }
-      };
-      window.sinauuWorkspaceReady = true;
-      window.dispatchEvent(new CustomEvent("sinauu:workspace-ready"));
       const stale=Object.keys(state.wordProgress).filter(id=>!words.some(w=>w.id===id));
       if(stale.length)toast(stale.length+" catatan kata lama tersimpan tetapi tidak ada dalam korpus versi ini.");
     } catch(e) {

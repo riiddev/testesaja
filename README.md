@@ -44,21 +44,11 @@ The Oxford source list is available at [Oxford Learner's Dictionaries — Americ
 
 The grammar curriculum currently contains **6 lessons and 18 topic-specific questions**. Broader grammar coverage and human review of the vocabulary corpus remain ongoing work.
 
-## Accounts, cross-device progress, and app installation
-
-The workspace includes a progressive web app (PWA) manifest and service worker, with email/password account creation, sign-in, and cross-device progress sync through **Google Sheets**. A small Vercel API layer handles login and only reads or writes the signed-in account's row. Vocabulary evidence/mastery, favorites, grammar, activity history, Matching, and HABIT reading answers are included in the sync bundle.
-
-**Google Sheets accounts remain inactive until configured.** Create a spreadsheet with tabs named `Accounts` and `LearningStates`, enable Google Sheets API for a Google Cloud service account, share the spreadsheet with that service account as Editor, and set the four server-only environment variables in Vercel. Follow [the setup guide](docs/ACCOUNT-SYNC-SETUP.md). Passwords are PBKDF2-hashed; never expose the service-account private key or `SINAUU_SESSION_SECRET` in browser code or GitHub.
-
-Learners can install the website from their browser’s “Install app” / “Add to Home Screen” menu. This is a PWA (installed website), not a native Android APK or App Store/Play Store package. Local-first learning remains available when Google Sheets is offline or not configured.
-
 ## Technical constraints
 
-- Static HTML, CSS, and JSON for the learning experience, plus Vercel API functions for account and sync operations.
-- Google Sheets is the single data store for accounts and learning snapshots; the API does not use Supabase.
+- Static HTML, CSS, JavaScript, and JSON; no backend, API server, login, or required paid service.
 - The source repository is the source of truth. Content updates go through GitHub and redeploy through the connected Vercel project.
-- Progress stays local while learning and syncs after changes when the user is signed in and online. Cross-device sync requires the Google Sheets environment setup.
-- Email verification and automatic password-reset email are not enabled yet. Google Sheets has API quotas and is suitable for an MVP/small cohort rather than large-scale transactional workloads.
+- Study progress remains local to the browser/device. There is no automatic cross-device sync.
 - Back up progress before clearing browser storage or switching devices.
 
 ## Files
