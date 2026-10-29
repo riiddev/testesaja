@@ -1,10 +1,17 @@
 import { createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
 
-const scrypt = promisify(scryptCallback);
-const PASSWORD_BYTES = 64;
 const ACCESS_TTL_SECONDS = 60 * 60 * 2;
 const REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
+const SCRYPT_OPTIONS = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+
+function deriveScrypt(password: string, salt: Buffer, keyLength: number): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scryptCallback(password, salt, keyLength, SCRYPT_OPTIONS, (error, derived) => {
+      if (error) reject(error);
+      else resolve(Buffer.from(derived));
+    });
+  });
+}
 
 function secret(): string {
   const explicit = process.env.SINAI_SESSION_SECRET || process.env.SINAUU_SESSION_SECRET || "";
@@ -24,8 +31,8 @@ export type PasswordRecord = { passwordHash: string; passwordSalt: string };
 
 export async function hashPassword(password: string): Promise<PasswordRecord> {
   const salt = randomBytes(16);
-  const derived = await scrypt(password, salt, PASSWORD_BYTES, { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }) as Buffer;
-  return { passwordHash: Buffer.from(derived).toString("hex"), passwordSalt: salt.toString("hex") };
+  const derived = await deriveScrypt(password, salt, 64);
+  return { passwordHash: derived.toString("hex"), passwordSalt: salt.toString("hex") };
 }
 
 export async function verifyPassword(password: string, storedHash: string, storedSalt: string): Promise<boolean> {
@@ -33,7 +40,7 @@ export async function verifyPassword(password: string, storedHash: string, store
     if (!/^(?:[a-f0-9]{32,128})$/i.test(storedSalt) || !/^(?:[a-f0-9]{64,256})$/i.test(storedHash)) return false;
     const salt = Buffer.from(storedSalt, "hex");
     const expected = Buffer.from(storedHash, "hex");
-    const actual = await scrypt(password, salt, expected.length, { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }) as Buffer;
+    const actual = await deriveScrypt(password, salt, expected.length);
     return expected.length === actual.length && timingSafeEqual(expected, actual);
   } catch {
     return false;
