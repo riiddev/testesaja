@@ -24,23 +24,24 @@
       <a class="brand" href="/index.html" aria-label="SinauuEnglish, kembali ke landing page">
         <span class="brand-mark" aria-hidden="true"><img src="/assets/sinauu-mark.svg" alt=""></span><span class="brand-name">sinauu</span>
       </a>
-      <nav class="side-nav" aria-label="Menu belajar">
-        <button class="side-link is-active" data-view-target="overview" type="button"><span class="nav-icon">⌂</span><span>Ringkasan</span></button>
-        <button class="side-link" data-view-target="vocabulary" type="button"><span class="nav-icon">Aa</span><span>Kosakata</span><span class="nav-count" id="nav-word-count">—</span></button>
-        <button class="side-link" data-view-target="grammar" type="button"><span class="nav-icon">¶</span><span>Grammar</span><span class="nav-count" id="nav-grammar-count">—</span></button>
-        <button class="side-link" data-view-target="matching" type="button"><span class="nav-icon">↔</span><span>Matching</span><span class="nav-count" id="nav-matching-count">0/6</span></button>
-        <button class="side-link" data-view-target="reading" type="button"><span class="nav-icon">¶R</span><span>Pemahaman teks</span><span class="nav-count" id="nav-reading-count">0/12</span></button>
-        <button class="side-link" data-view-target="review" type="button"><span class="nav-icon">↻</span><span>Review</span><span class="nav-count" id="nav-review-count">0</span></button>
-        <button class="side-link" data-view-target="progress" type="button"><span class="nav-icon">↗</span><span>Progres</span></button>
+      <nav class="side-nav" aria-label="Navigasi utama">
+        <button class="side-link is-active" data-view-target="overview" type="button"><span class="nav-icon" aria-hidden="true">⌂</span><span>Beranda</span></button>
+        <button class="side-link" data-view-target="vocabulary" type="button"><span class="nav-icon" aria-hidden="true">Aa</span><span>Belajar</span><span class="nav-count" id="nav-word-count">—</span></button>
+        <button class="side-link" data-view-target="reading" type="button"><span class="nav-icon" aria-hidden="true">▤</span><span>Bacaan</span></button>
+        <button class="side-link" data-view-target="review" type="button"><span class="nav-icon" aria-hidden="true">↻</span><span>Review</span><span class="nav-count" id="nav-review-count">0</span></button>
+        <button class="side-link" data-view-target="progress" type="button"><span class="nav-icon" aria-hidden="true">↗</span><span>Progres</span></button>
       </nav>
-      <div class="sidebar-bottom">
+      <div class="nav-counts-compat" hidden aria-hidden="true">
+        <span id="nav-grammar-count">—</span><span id="nav-matching-count">0/6</span><span id="nav-reading-count">0/12</span>
+      </div>      <div class="sidebar-bottom">
         <div class="local-note"><span class="local-note-dot"></span><div><strong>Belajar di perangkatmu</strong><p>Progres tersimpan lokal. Tidak perlu akun.</p></div></div>
-        <a class="back-link" href="/index.html">← Kembali ke beranda</a>
+        <a class="back-link" href="/index.html">← Tentang SinauuEnglish</a>
       </div>
     </aside>
 
     <main class="app-main" id="app-main">
       <header class="app-topbar">
+        <div class="topbar-context"><span class="topbar-overline">SINAUUENGLISH</span><strong id="topbar-current">Beranda</strong></div>
         <div class="topbar-actions">
           <span class="storage-indicator" id="storage-indicator"><i></i><span>Menyiapkan penyimpanan</span></span>
           <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Aktifkan tema gelap" aria-pressed="false">
@@ -54,89 +55,72 @@
         <div class="load-error" id="load-error" hidden role="alert"></div>
 
         <section class="view is-visible" id="view-overview" data-view="overview">
-          <div class="study-dashboard">
-            <div class="dashboard-main">
-              <section class="dashboard-hero">
-                <div class="dashboard-hero-copy">
-                  <div class="dashboard-hero-top"><span class="dashboard-kicker">SINAUUENGLISH · RUANG BELAJAR</span><div class="dashboard-date"><span class="date-day" id="date-day">—</span><span class="date-month" id="date-month">—</span></div></div>
-                  <h1>Bahasa Inggris bukan sekadar hafal, tapi pahami cara <em>menggunakannya.</em></h1>
-                  <p class="page-lede">Latihan sedikit demi sedikit. Hasilnya akan terasa nanti.</p>
-                </div>
-                <div class="dashboard-hero-art" aria-hidden="true">
-                  <span class="art-sun"></span><span class="art-hill art-hill-back"></span><span class="art-hill art-hill-front"></span>
-                  <span class="art-book art-book-one"></span><span class="art-book art-book-two"></span><span class="art-leaf">✳</span>
-                </div>
-              </section>
-
-              <section class="dashboard-welcome">
-                <span class="welcome-mark" aria-hidden="true"><img src="/assets/sinauu-mark.svg" alt=""></span>
-                <div class="welcome-copy"><h2>Halo, selamat belajar.</h2><p>Hari ini saat yang tepat untuk melangkah lebih jauh.</p></div>
-                <span class="welcome-note">One level<br>at a time.</span>
-              </section>
-
-              <section class="dashboard-modes">
-                <div class="dashboard-section-heading"><div><h2>Pilih mode belajar</h2><p>Fokus pada satu keterampilan, atau eksplor semuanya.</p></div></div>
-                <div class="mode-card-grid">
-                  <button class="mode-card mode-matching" type="button" data-view-target="matching">
-                    <span class="mode-visual mode-visual-matching" aria-hidden="true"><span class="word-chip chip-one">abundant</span><span class="word-chip chip-two">berlimpah</span><span class="visual-spark">✳</span></span>
-                    <span class="mode-card-body"><span class="mode-icon">↔</span><strong>Matching</strong><small>Pasangkan kata dengan artinya. Latihan cepat untuk memperkaya kosakata.</small><span class="mode-arrow">↗</span></span>
-                  </button>
-                  <button class="mode-card mode-reading" type="button" data-view-target="reading">
-                    <span class="mode-visual mode-visual-reading" aria-hidden="true"><span class="paper-line"></span><span class="paper-line"></span><span class="paper-line short"></span><span class="highlight-line"></span><span class="reading-label">inference</span></span>
-                    <span class="mode-card-body"><span class="mode-icon">▤</span><strong>Reading Comprehension</strong><small>Tingkatkan pemahaman teks melalui berbagai jenis soal.</small><span class="mode-arrow">↗</span></span>
-                  </button>
-                  <button class="mode-card mode-vocabulary" type="button" data-view-target="vocabulary">
-                    <span class="mode-visual mode-visual-vocabulary" aria-hidden="true"><span class="check-row">✓ &nbsp; improve</span><span class="check-row">✓ &nbsp; increase</span><span class="check-row">✓ &nbsp; achieve</span><span class="visual-sprig">✳</span></span>
-                    <span class="mode-card-body"><span class="mode-icon">Aa</span><strong>Kosakata</strong><small>Pelajari kata baru, makna, dan penggunaannya dalam konteks.</small><span class="mode-arrow">↗</span></span>
-                  </button>
-                </div>
-              </section>
-
-              <section class="section-block resume-block dashboard-resume">
-                <div class="block-heading"><div><h2>Lanjutkan perjalananmu</h2></div></div>
-                <div class="resume-list" id="resume-list"></div>
-              </section>
+          <div class="home-intro">
+            <div class="home-intro-copy">
+              <span class="eyebrow">SINAUUENGLISH / RUANG BELAJAR</span>
+              <h1>Pelan-pelan,<br>sampai <em>paham.</em></h1>
+              <p class="page-lede">Belajar bukan tentang berapa banyak yang kamu buka hari ini. Yang penting, kamu makin bisa memahami dan menggunakan apa yang sudah dipelajari.</p>
             </div>
+            <div class="dashboard-date" aria-label="Tanggal hari ini"><span class="date-day" id="date-day">—</span><span class="date-month" id="date-month">—</span></div>
+          </div>
 
-            <aside class="dashboard-rail" aria-label="Ringkasan belajar">
-              <section class="rail-card progress-card">
-                <div class="rail-card-heading"><h2>Progres belajar</h2><span aria-hidden="true">✳</span></div>
-                <div class="progress-card-body">
-                  <div class="progress-ring" id="dashboard-progress-ring"><span id="dashboard-progress-value">0%</span></div>
-                  <div class="progress-stats">
-                    <div class="progress-stat"><span class="stat-dot dot-sage"></span><span>Mastered</span><strong id="rail-mastered">0</strong></div>
-                    <div class="progress-stat"><span class="stat-dot dot-lilac"></span><span>Perlu review</span><strong id="rail-due">0</strong></div>
-                    <div class="progress-stat"><span class="stat-dot dot-peach"></span><span>Aktivitas hari ini</span><strong id="rail-today">0</strong></div>
-                  </div>
-                </div>
-                <div class="rail-hidden-metrics" aria-hidden="true">
-                  <span id="metric-mastered">0</span><span id="metric-due">0</span><span id="metric-today">0</span>
-                  <span id="metric-mastered-note">Belum ada kata yang memenuhi kriteria mastery.</span><span id="review-task-note">Jadwal review dihitung dari sesi belajarmu.</span>
-                </div>
-              </section>
+          <section class="home-feature" aria-labelledby="home-feature-title">
+            <div class="home-feature-copy">
+              <span class="home-kicker">SELANGKAH HARI INI</span>
+              <h2 id="home-feature-title">Satu sesi terarah lebih berarti daripada sekadar membuka banyak materi.</h2>
+              <p>Mulai dari satu kata, pahami konteksnya, lalu coba gunakan dengan bahasamu sendiri.</p>
+              <button class="primary-action home-primary-action" type="button" data-view-target="vocabulary">Mulai belajar <span aria-hidden="true">↗</span></button>
+            </div>
+            <div class="home-feature-art" aria-hidden="true">
+              <span class="home-art-sun"></span><span class="home-art-leaf home-art-leaf-one"></span><span class="home-art-leaf home-art-leaf-two"></span>
+              <span class="home-art-book home-art-book-back"></span><span class="home-art-book home-art-book-front"><i></i><i></i><i></i></span>
+              <span class="home-art-note">one level<br>at a time.</span>
+            </div>
+          </section>
 
-              <section class="rail-card goal-card">
-                <div class="rail-card-heading"><h2>Target harian</h2><button class="plain-action" id="edit-goal" type="button">Ubah ↗</button></div>
-                <p id="goal-note">Target adalah pengingat, bukan syarat untuk menguasai kata.</p>
-                <div class="goal-line"><span id="goal-summary">0 dari 10 aktivitas</span><span id="goal-percent">0%</span></div>
-                <div class="progress-track"><span id="goal-bar"></span></div>
-              </section>
+          <section class="home-metrics" aria-label="Ringkasan aktivitas belajar">
+            <article class="home-metric"><span>MENUNGGU REVIEW</span><strong id="rail-due">0</strong><p>Kata yang perlu kamu ingat kembali</p></article>
+            <article class="home-metric"><span>AKTIVITAS HARI INI</span><strong id="rail-today">0</strong><p>Latihan yang tercatat hari ini</p></article>
+            <article class="home-metric"><span>KATA MASTERED</span><strong id="rail-mastered">0</strong><p>Sudah memenuhi kriteria mastery</p></article>
+          </section>
 
-              <section class="rail-card level-card">
-                <div class="rail-card-heading"><h2>Per level</h2><button class="plain-action" data-view-target="progress" type="button">Detail ↗</button></div>
-                <div class="level-progress-list" id="overview-levels"></div>
-              </section>
-
-              <section class="rail-quote">
-                <div class="quote-book-stack" aria-hidden="true"><span></span><span></span><span></span></div>
-                <blockquote>“Proses kecil yang konsisten selalu lebih kuat daripada motivasi sesaat.”</blockquote>
-                <span class="quote-sprig" aria-hidden="true">✳</span>
-              </section>
+          <div class="home-secondary-grid">
+            <section class="home-next-step" aria-labelledby="home-next-title">
+              <div class="home-section-heading"><div><span class="eyebrow">REKOMENDASI</span><h2 id="home-next-title">Langkah berikutnya</h2></div><span class="home-section-note">Sesuai progresmu</span></div>
+              <div class="resume-list" id="resume-list"></div>
+            </section>
+            <aside class="home-daily-goal" aria-labelledby="home-goal-title">
+              <div class="home-section-heading home-goal-heading"><div><span class="eyebrow">RITME BELAJAR</span><h2 id="home-goal-title">Target harian</h2></div><button class="plain-action" id="edit-goal" type="button">Ubah ↗</button></div>
+              <p id="goal-note">Target adalah pengingat, bukan syarat untuk menguasai kata.</p>
+              <div class="goal-line"><span id="goal-summary">0 dari 10 aktivitas</span><span id="goal-percent">0%</span></div>
+              <div class="progress-track"><span id="goal-bar"></span></div>
             </aside>
+          </div>
+
+          <section class="home-practice-choices" aria-labelledby="home-choices-title">
+            <div class="home-section-heading"><div><span class="eyebrow">PILIH SESUAI KEBUTUHAN</span><h2 id="home-choices-title">Mau belajar apa hari ini?</h2></div></div>
+            <div class="home-choice-grid">
+              <button type="button" class="home-choice" data-view-target="vocabulary"><span class="home-choice-icon">Aa</span><span><strong>Kosakata</strong><small>Makna dan penggunaan kata</small></span><span class="home-choice-arrow">↗</span></button>
+              <button type="button" class="home-choice" data-view-target="grammar"><span class="home-choice-icon">¶</span><span><strong>Grammar</strong><small>Memahami pola kalimat</small></span><span class="home-choice-arrow">↗</span></button>
+              <button type="button" class="home-choice" data-view-target="matching"><span class="home-choice-icon">↔</span><span><strong>Matching</strong><small>Menghubungkan kata dan arti</small></span><span class="home-choice-arrow">↗</span></button>
+              <button type="button" class="home-choice" data-view-target="reading"><span class="home-choice-icon">▤</span><span><strong>Bacaan</strong><small>Berlatih memahami teks</small></span><span class="home-choice-arrow">↗</span></button>
+            </div>
+          </section>
+
+          <div class="home-legacy-state" hidden aria-hidden="true">
+            <span id="metric-mastered">0</span><span id="metric-due">0</span><span id="metric-today">0</span>
+            <span id="metric-mastered-note"></span><span id="review-task-note"></span>
+            <div id="overview-levels"></div>
           </div>
         </section>
 
         <section class="view" id="view-vocabulary" data-view="vocabulary">
+          <nav class="learning-subnav" role="tablist" aria-label="Bagian belajar">
+            <button class="learning-tab" type="button" role="tab" data-view-target="vocabulary" aria-selected="false">Kosakata</button>
+            <button class="learning-tab" type="button" role="tab" data-view-target="grammar" aria-selected="false">Grammar</button>
+            <button class="learning-tab" type="button" role="tab" data-view-target="matching" aria-selected="false">Matching</button>
+          </nav>
+
           <div class="page-heading compact-heading">
             
             <h1>Kosakata, <em>dalam konteks.</em></h1>
@@ -162,6 +146,12 @@
         </section>
 
         <section class="view" id="view-grammar" data-view="grammar">
+          <nav class="learning-subnav" role="tablist" aria-label="Bagian belajar">
+            <button class="learning-tab" type="button" role="tab" data-view-target="vocabulary" aria-selected="false">Kosakata</button>
+            <button class="learning-tab" type="button" role="tab" data-view-target="grammar" aria-selected="false">Grammar</button>
+            <button class="learning-tab" type="button" role="tab" data-view-target="matching" aria-selected="false">Matching</button>
+          </nav>
+
           <div class="page-heading compact-heading">
             
             <h1>Aturan yang <em>mulai masuk akal.</em></h1>
@@ -180,6 +170,12 @@
 
 
         <section class="view" id="view-matching" data-view="matching">
+          <nav class="learning-subnav" role="tablist" aria-label="Bagian belajar">
+            <button class="learning-tab" type="button" role="tab" data-view-target="vocabulary" aria-selected="false">Kosakata</button>
+            <button class="learning-tab" type="button" role="tab" data-view-target="grammar" aria-selected="false">Grammar</button>
+            <button class="learning-tab" type="button" role="tab" data-view-target="matching" aria-selected="false">Matching</button>
+          </nav>
+
           <div class="page-heading compact-heading matching-heading">
             <div class="matching-heading-copy">
               
@@ -213,7 +209,11 @@
             <h1>Baca lebih teliti, <em>bukan lebih cepat saja.</em></h1>
             <p class="page-lede">Kenali jenis pertanyaannya, temukan petunjuk di teks, lalu pilih jawaban yang paling didukung bacaan. Mulai dari satu teks, lalu latih dua belas keterampilan membaca.</p>
           </div>
-          <section class="habit-library-section" aria-labelledby="habit-library-title">
+          <div class="reading-mode-switch" id="reading-mode-switch" role="tablist" aria-label="Pilih mode bacaan">
+            <button class="reading-mode-button is-active" type="button" role="tab" data-reading-mode="habit" aria-selected="true"><span>Koleksi HABIT</span><small>156 bacaan</small></button>
+            <button class="reading-mode-button" type="button" role="tab" data-reading-mode="skills" aria-selected="false"><span>Keterampilan membaca</span><small>12 latihan</small></button>
+          </div>
+          <section class="habit-library-section" id="habit-library-section" aria-labelledby="habit-library-title">
             <div class="habit-library-header">
               <div>
                 <span class="eyebrow">KOLEKSI BACAAN · HABIT.PDF</span>
@@ -239,6 +239,7 @@
             <button class="secondary-action habit-library-more" id="habit-library-more" type="button" hidden>Muat bacaan lainnya ↓</button>
             <article class="habit-library-detail" id="habit-library-detail" hidden aria-live="polite"></article>
           </section>
+          <div class="reading-skills-section" id="reading-skills-section" hidden>
           <div class="reading-progress-strip">
             <div><span class="metric-label">KETERAMPILAN DILATIH</span><strong id="reading-skills-done">0/12</strong></div>
             <div><span class="metric-label">SOAL DIJAWAB</span><strong id="reading-question-count">0</strong></div>
@@ -253,6 +254,7 @@
             <article class="reading-lesson-panel" id="reading-lesson">
               <div class="matching-loading">Menyiapkan bacaan dan latihan…</div>
             </article>
+          </div>
           </div>
         </section>
 
