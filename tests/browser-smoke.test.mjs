@@ -13,7 +13,7 @@ after(async () => {
   await browser?.close();
 });
 
-test("landing CTA opens login and a successful mocked signup opens the workspace", async () => {
+test("landing CTA sends new visitors to login and a successful mocked signup opens the workspace", async () => {
   const page = await browser.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -39,11 +39,11 @@ test("landing CTA opens login and a successful mocked signup opens the workspace
   assert.equal(response?.status(), 200, "landing page should return HTTP 200");
   assert.match(await page.title(), /SinauuEnglish/i);
   assert.ok(await page.locator("#main").isVisible(), "main content should be visible");
-  assert.ok(await page.locator("a[href='/login.html']").count() > 0, "landing page should link to login");
+  assert.ok(await page.locator("a[href='/belajar.html']").count() > 0, "landing page should link to the guarded learning workspace");
   const themeToggle = page.locator("#theme-toggle");
   await themeToggle.click();
   assert.equal(await themeToggle.getAttribute("aria-pressed"), "true");
-  await page.locator("a[href='/login.html']").first().click();
+  await page.locator("a[href='/belajar.html']").first().click();
   await page.waitForURL((url) => url.pathname === "/login.html");
   assert.ok(await page.locator("#signin-form").isVisible());
   await page.locator("[data-mode='signup']").click();
@@ -57,6 +57,43 @@ test("landing CTA opens login and a successful mocked signup opens the workspace
   assert.equal(stored?.user?.id, "browser-test-user");
   assert.equal(stored?.password, undefined, "the saved session must not contain the password");
   assert.deepEqual(pageErrors, [], "landing/auth interactions should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("returning visitors with a saved session bypass the login screen", async () => {
+  const page = await browser.newPage();
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "existing-access-token",
+      refresh_token: "existing-refresh-token",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "returning-user", email: "returning@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    const action = new URL(route.request().url()).searchParams.get("action");
+    if (action === "status") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: true }) });
+    if (action === "me") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ id: "returning-user", email: "returning@example.com" }) });
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  });
+  await page.route("**/api/progress**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: route.request().method() === "GET" ? "[]" : JSON.stringify({ ok: true }) });
+  });
+
+  await page.goto(baseUrl + "/login.html", { waitUntil: "domcontentloaded" });
+  await page.waitForURL((url) => url.pathname === "/belajar.html");
+  assert.equal(await page.locator("#signin-form").count(), 0, "returning user must not be shown the login form");
+  await page.close();
+});
+
+test("the installable app manifest permits landscape and portrait orientation", async () => {
+  const page = await browser.newPage();
+  const response = await page.goto(baseUrl + "/manifest.webmanifest", { waitUntil: "domcontentloaded" });
+  assert.equal(response?.status(), 200, "manifest should be served");
+  const manifest = await response.json();
+  assert.equal(manifest.orientation, "any", "the app should not lock tablets to portrait");
+  assert.equal(manifest.start_url, "/belajar.html");
   await page.close();
 });
 
