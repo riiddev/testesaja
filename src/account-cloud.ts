@@ -29,6 +29,8 @@ let syncTimer: number | undefined, pollingTimer: number | undefined;
 let syncing = false, applyingCloud = false;
 let installPrompt: BeforeInstallPromptEvent | null = null;
 let currentMode: "signin" | "signup" = "signin";
+let recoveryMode = false;
+let sessionEpoch = 0;
 let lastSuccessfulSync: string | null = null;
 
 interface BeforeInstallPromptEvent extends Event {
@@ -239,6 +241,9 @@ function setSyncBadge(label: string, state: "idle" | "syncing" | "success" | "er
 }
 
 function setSession(next: AuthSession | null): void {
+  const oldUserId = session?.user?.id || null;
+  const nextUserId = next?.user?.id || null;
+  if (oldUserId !== nextUserId) sessionEpoch += 1;
   session = next;
   try { if (next) localStorage.setItem(SESSION_KEY, JSON.stringify(next)); else localStorage.removeItem(SESSION_KEY); } catch { /* This open tab keeps its in-memory session. */ }
   renderAccount();
@@ -342,15 +347,22 @@ async function prepareLocalForAccount(): Promise<void> {
 
 async function syncNow(): Promise<void> {
   if (!CLOUD_READY || !session || syncing || !navigator.onLine) return;
+  const syncUserId = session.user.id;
+  const syncEpoch = sessionEpoch;
+  const stillSameAccount = () => Boolean(session && session.user.id === syncUserId && sessionEpoch === syncEpoch);
   syncing = true;
   setSyncBadge("Menyinkronkan…", "syncing");
   try {
     await prepareLocalForAccount();
+    if (!stillSameAccount()) return;
     const local = await readLocalBundle();
     const remote = await readCloudBundle();
+    if (!stillSameAccount()) return;
     const merged = remote ? mergeBundles(local, remote) : local;
     if (!remote || stable(merged) !== stable(remote)) await writeCloudBundle(merged);
+    if (!stillSameAccount()) return;
     if (stable(merged) !== stable(local)) await applyLocalBundle(merged);
+    if (!stillSameAccount()) return;
     try {
       localStorage.setItem(OWNER_KEY, session.user.id);
       localStorage.setItem(ACCOUNT_CACHE_PREFIX + session.user.id, JSON.stringify(merged));
@@ -406,6 +418,16 @@ function modalMarkup(): string {
           <div class="account-sync-card"><div><strong id="cloud-sync-badge" data-state="idle">Belum tersinkron</strong><p id="account-sync-copy">Progres akan disinkronkan saat tersambung ke internet.</p></div><button type="button" id="account-sync-now">Sinkronkan sekarang ↻</button></div>
           <button class="account-sign-out" type="button" id="account-sign-out">Keluar dari akun</button>
         </div>
+        <div class="account-recovery-panel" id="account-recovery-panel" hidden>
+          <span class="eyebrow">PEMULIHAN AKUN</span>
+          <h3>Buat kata sandi baru.</h3>
+          <p>Gunakan kata sandi yang kuat dan simpan di tempat aman.</p>
+          <form class="account-form" id="account-recovery-form">
+            <label for="account-new-password">Kata sandi baru</label>
+            <input id="account-new-password" type="password" autocomplete="new-password" minlength="8" placeholder="Minimal 8 karakter" required>
+            <button class="account-submit" id="account-recovery-submit" type="submit">Simpan kata sandi ↗</button>
+          </form>
+        </div>
         <p class="account-status" id="account-status" role="status" aria-live="polite">Progres tersimpan secara lokal saat kamu belajar.</p>
         <div class="account-install-note">
           <span class="eyebrow">PENGALAMAN APLIKASI</span>
@@ -443,6 +465,7 @@ function mountUi(): void {
     if (modeButton) setMode(modeButton.dataset.accountMode === "signup" ? "signup" : "signin");
   });
   $("#account-form")?.addEventListener("submit", (event) => void submitAuth(event));
+  $("#account-recovery-form")?.addEventListener("submit", (event) => void submitPasswordRecovery(event));
   $("#account-reset")?.addEventListener("click", () => void sendPasswordReset());
   $("#account-sign-out")?.addEventListener("click", () => void signOut());
   $("#account-sync-now")?.addEventListener("click", () => void syncNow());
@@ -478,8 +501,9 @@ function renderAccount(): void {
   const trigger = $("#account-open") as HTMLButtonElement | null;
   if (trigger) trigger.textContent = session?.user?.email ? "Akun saya" : "Masuk / Daftar";
   const signedIn = Boolean(session?.user?.id);
-  $("#account-auth-panel")?.toggleAttribute("hidden", signedIn || !CLOUD_READY);
-  $("#account-signed-in")?.toggleAttribute("hidden", !signedIn);
+  $("#account-auth-panel")?.toggleAttribute("hidden", signedIn || !CLOUD_READY || recoveryMode);
+  $("#account-signed-in")?.toggleAttribute("hidden", !signedIn || recoveryMode);
+  $("#account-recovery-panel")?.toggleAttribute("hidden", !recoveryMode || !signedIn);
   const email = $("#account-user-email");
   if (email) email.textContent = session?.user?.email || "Akun SinauuEnglish";
   const installButton = $("#account-install-app") as HTMLButtonElement | null;
@@ -519,6 +543,36 @@ async function submitAuth(event: Event): Promise<void> {
   } catch (error) {
     setMessage(error instanceof Error ? error.message : "Tidak dapat memproses akun. Coba lagi.", "error");
   } finally { if (submit) { submit.disabled = false; setMode(currentMode); } }
+}
+
+async function submitPasswordRecovery(event: Event): Promise<void> {
+  event.preventDefault();
+  if (!CLOUD_READY || !session || !recoveryMode) {
+    setMessage("Tautan pemulihan tidak aktif. Minta tautan baru dari menu lupa kata sandi.", "error");
+    return;
+  }
+  const password = ($("#account-new-password") as HTMLInputElement | null)?.value || "";
+  const submit = $("#account-recovery-submit") as HTMLButtonElement | null;
+  if (password.length < 8) {
+    setMessage("Kata sandi minimal 8 karakter.", "error");
+    return;
+  }
+  if (submit) { submit.disabled = true; submit.textContent = "Menyimpan…"; }
+  try {
+    const active = await currentSession();
+    if (!active) throw new Error("Sesi pemulihan berakhir. Minta tautan baru.");
+    const user = await authRequest("/user", { method: "PUT", body: JSON.stringify({ password }) }, active.access_token);
+    setSession({ ...active, user });
+    recoveryMode = false;
+    renderAccount();
+    setMessage("Kata sandi berhasil diperbarui. Akunmu siap digunakan.", "success");
+    const field = $("#account-new-password") as HTMLInputElement | null;
+    if (field) field.value = "";
+  } catch (error) {
+    setMessage(error instanceof Error ? error.message : "Kata sandi belum dapat diperbarui. Minta tautan pemulihan baru.", "error");
+  } finally {
+    if (submit) { submit.disabled = false; submit.textContent = "Simpan kata sandi ↗"; }
+  }
 }
 
 async function sendPasswordReset(): Promise<void> {
@@ -567,6 +621,35 @@ async function restoreSession(): Promise<void> {
   if (!CLOUD_READY) return;
   await waitForWorkspaceReady();
   try {
+    const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const fragmentAccess = fragment.get("access_token");
+    const fragmentRefresh = fragment.get("refresh_token");
+    const fragmentType = fragment.get("type");
+    if (fragmentAccess && fragmentRefresh) {
+      const fragmentExpires = Number(fragment.get("expires_in") || 3600);
+      const fragmentSession: AuthSession = {
+        access_token: fragmentAccess,
+        refresh_token: fragmentRefresh,
+        expires_in: fragmentExpires,
+        expires_at: Math.floor(Date.now() / 1000) + fragmentExpires,
+        token_type: fragment.get("token_type") || "bearer",
+        user: { id: "pending-auth-user" },
+      };
+      const user = await authRequest("/user", { method: "GET" }, fragmentAccess);
+      setSession({ ...fragmentSession, user });
+      recoveryMode = fragmentType === "recovery";
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+      renderAccount();
+      const modal = $("#account-dialog") as HTMLDialogElement | null;
+      if (modal && recoveryMode && !modal.open) modal.showModal();
+      if (recoveryMode) {
+        setMessage("Tautan pemulihan valid. Buat kata sandi baru untuk melanjutkan.", "success");
+      } else {
+        setMessage("Akun terverifikasi. Memuat progres tersinkron…", "success");
+        await syncNow();
+      }
+      return;
+    }
     const raw = parseStored<AuthSession | null>(SESSION_KEY, null);
     if (!raw?.access_token || !raw?.refresh_token) return;
     session = raw;
