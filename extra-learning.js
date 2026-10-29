@@ -29,6 +29,7 @@
   function persistProgress() {
     try {
       localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+      window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
       return true;
     } catch (_) {
       showFeedback("#matching-feedback", "Browser tidak dapat menyimpan progres tambahan. Coba aktifkan penyimpanan situs.", "error");
@@ -421,6 +422,7 @@
   function persistHabitLibraryProgress() {
     try {
       localStorage.setItem(HABIT_PROGRESS_KEY, JSON.stringify(habitProgress));
+      window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
       return true;
     } catch (_) {
       const status = $("#habit-library-status");
@@ -589,7 +591,7 @@
       }
       return '<section class="habit-question-card"><div class="habit-question-top"><span>DETAIL ' + String(index + 1).padStart(2, "0") + '</span><span>BUKTI · PARAGRAF ' + q.evidenceParagraph + '</span></div><h3>' + escapeHtml(q.prompt) + '</h3><div class="habit-quiz-options">' + optionHtml + '</div><button class="primary-action habit-quiz-submit" type="button" data-habit-check="' + escapeHtml(q.id) + '"' + (answer ? ' disabled' : '') + '>' + (answer ? 'Jawaban tercatat ✓' : 'Periksa jawaban →') + '</button>' + feedback + '</section>';
     }).join("");
-    detail.innerHTML = '<div class="habit-detail-heading"><div><span class="eyebrow">' + escapeHtml(passage.category || "HABIT.PDF") + ' · BACAAN ' + String(passage.page || passage.sourcePageStart || "—") + '</span><h2>' + escapeHtml(passage.title) + '</h2><p>' + escapeHtml(String(passage.wordCount || 0) + ' kata · sekitar ' + String(passage.estimatedMinutes || 2) + ' menit') + '</p></div><button type="button" class="habit-detail-close" data-habit-close aria-label="Tutup bacaan">×</button></div>' +
+    detail.innerHTML = '<button type="button" class="mobile-detail-back" data-habit-back>← Kembali ke koleksi</button><div class="habit-detail-heading"><div><span class="eyebrow">' + escapeHtml(passage.category || "HABIT.PDF") + ' · BACAAN ' + String(passage.page || passage.sourcePageStart || "—") + '</span><h2>' + escapeHtml(passage.title) + '</h2><p>' + escapeHtml(String(passage.wordCount || 0) + ' kata · sekitar ' + String(passage.estimatedMinutes || 2) + ' menit') + '</p></div><button type="button" class="habit-detail-close" data-habit-close aria-label="Tutup bacaan">×</button></div>' +
       '<div class="habit-reading-progress"><span>' + (completed === 3 ? 'Latihan selesai' : completed + ' dari 3 soal dijawab') + '</span><span>' + correctCount + '/3 benar</span></div>' +
       '<details class="habit-full-passage" open><summary><span>Bacaan lengkap</span><span>−</span></summary><div class="habit-passage-body">' + paragraphHtml + '</div></details>' +
       '<div class="habit-quiz-heading"><div><span class="eyebrow">CEK PEMAHAMAN</span><h3>Temukan buktinya di teks.</h3><p>Pilih pernyataan yang memang tercantum dalam bacaan. Setiap jawaban memiliki bukti dan penjelasan.</p></div></div>' +
@@ -625,6 +627,7 @@
     const open = event.target.closest("[data-habit-open]");
     if (open) {
       activeHabitPassageId = open.dataset.habitOpen;
+      $("#habit-library-section")?.classList.add("is-detail-open");
       renderHabitLibraryList();
       renderHabitPassageDetail();
       $("#habit-library-detail")?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
@@ -633,8 +636,10 @@
     if (event.target.closest("#habit-library-more")) {
       habitVisibleCount += 9; renderHabitLibraryList(); return;
     }
-    if (event.target.closest("[data-habit-close]")) {
-      activeHabitPassageId = null; renderHabitLibraryList(); renderHabitPassageDetail(); return;
+    if (event.target.closest("[data-habit-close],[data-habit-back]")) {
+      activeHabitPassageId = null;
+      $("#habit-library-section")?.classList.remove("is-detail-open");
+      renderHabitLibraryList(); renderHabitPassageDetail(); return;
     }
     const check = event.target.closest("[data-habit-check]");
     if (check && activeHabitPassageId && habitLibrary) {
@@ -665,6 +670,14 @@
       delete habitProgress[activeHabitPassageId]; persistHabitLibraryProgress(); renderHabitPassageDetail(); renderHabitLibraryList(); return;
     }
   });
+  window.sinauuHabitLibraryBackup = function () { return habitProgress; };
+  window.sinauuHabitLibraryRestore = function (next) {
+    if (!next || typeof next !== "object" || Array.isArray(next)) return;
+    habitProgress = next;
+    persistHabitLibraryProgress();
+    if (habitLibrary) renderHabitLibraryList();
+    if (activeHabitPassageId) renderHabitPassageDetail();
+  };
   $("#habit-library-search")?.addEventListener("input", function () { habitVisibleCount = 9; renderHabitLibraryList(); });
   $("#habit-library-category")?.addEventListener("change", function () { habitVisibleCount = 9; renderHabitLibraryList(); });
   init();
