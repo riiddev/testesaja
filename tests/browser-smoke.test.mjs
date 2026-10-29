@@ -114,7 +114,9 @@ test("vocabulary search returns a matching word and reading practice saves an an
   assert.equal(await page.locator("#habit-library-detail .habit-quiz-feedback").count(), 1, "reading answers should persist after reloading the page");
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.locator("#habit-library-detail [data-habit-back]").isVisible(), true, "mobile reading detail should have a clear back action");
-  assert.equal(await page.locator("#habit-library-grid").count(), 0, "the reading card grid should not be duplicated as a second detail list");
+  assert.equal(await page.locator("#habit-library-list").isVisible(), false, "the passage list should be hidden while reading a passage on mobile");
+  await page.locator("#habit-library-detail [data-habit-back]").click();
+  assert.equal(await page.locator("#habit-library-list").isVisible(), true, "the passage list should return when tapping back");
 
   assert.deepEqual(pageErrors, [], "workspace interactions should not throw browser JavaScript errors");
   await page.close();
