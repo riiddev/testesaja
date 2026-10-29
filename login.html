@@ -4,8 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f8f2">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <script src="/pwa.js" defer></script>
   <meta name="description" content="Masuk atau buat akun SinauuEnglish untuk ruang belajar bahasa Inggris.">
   <meta name="robots" content="noindex, follow">
+  <script>
+    (() => {
+      try {
+        const raw = localStorage.getItem("sinauu-cloud-session-v1");
+        const session = raw ? JSON.parse(raw) : null;
+        if (!session || !session.access_token || !session.refresh_token || !session.user || !session.user.id) return;
+        const requested = new URLSearchParams(window.location.search).get("next") || "/belajar.html";
+        const safeNext = requested.startsWith("/") && !requested.startsWith("//") && !requested.includes("\\")
+          ? requested
+          : "/belajar.html";
+        window.location.replace(safeNext);
+      } catch {
+        // Invalid or unavailable local storage: keep the login page visible.
+      }
+    })();
+  </script>
   <title>Masuk — SinauuEnglish</title>
   <link rel="icon" type="image/svg+xml" href="/assets/sinauu-mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
