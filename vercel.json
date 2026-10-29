@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/api/account",
-      "destination": "https://sinauuenglishclaudeapp-91kf0x3c4-thoodev.vercel.app/api/account"
+      "destination": "https://sinauuenglishclaudeapp.vercel.app/api/account"
     },
     {
       "source": "/api/progress",
-      "destination": "https://sinauuenglishclaudeapp-91kf0x3c4-thoodev.vercel.app/api/progress"
+      "destination": "https://sinauuenglishclaudeapp.vercel.app/api/progress"
     }
   ]
 }
