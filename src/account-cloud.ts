@@ -729,6 +729,7 @@ window.addEventListener("focus", () => { if (session) void syncNow(); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && session) void syncNow(); });
 
 mountUi();
+setupPwa();
 void checkCloudReady();
 pollingTimer = window.setInterval(() => {
   if (session && document.visibilityState === "visible") void syncNow();
