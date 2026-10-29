@@ -14,7 +14,7 @@ declare global {
   }
 }
 
-const CLOUD_READY = true;
+let CLOUD_READY = false;
 const SESSION_KEY = "sinauu-cloud-session-v1";
 const LOCAL_DB = "sinauu-local-v1", LOCAL_STORE = "state", LOCAL_RECORD = "main";
 const CORE_FALLBACK = "sinauu-learning-state-v1", EXTRA_KEY = "sinauu-extra-learning-v1", HABIT_KEY = "sinauu-habit-library-v1";
@@ -625,6 +625,18 @@ async function waitForWorkspaceReady(): Promise<void> {
   await new Promise<void>((resolve) => window.addEventListener("sinauu:workspace-ready", () => resolve(), { once: true }));
 }
 
+async function checkCloudReady(): Promise<void> {
+  try {
+    const response = await fetch("/api/account?action=status", { cache: "no-store", credentials: "same-origin" });
+    const body = await response.json().catch(() => ({}));
+    CLOUD_READY = Boolean(response.ok && body.ready);
+  } catch {
+    CLOUD_READY = false;
+  }
+  renderAccount();
+  if (CLOUD_READY) await restoreSession();
+}
+
 async function restoreSession(): Promise<void> {
   if (!CLOUD_READY) return;
   await waitForWorkspaceReady();
@@ -718,7 +730,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 
 mountUi();
 setupPwa();
-void restoreSession();
+void checkCloudReady();
 pollingTimer = window.setInterval(() => {
   if (session && document.visibilityState === "visible") void syncNow();
 }, 45_000);
