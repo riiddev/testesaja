@@ -1,61 +1,33 @@
 # SinauuEnglish — akun dan sinkronisasi Google Sheets
 
-SinauuEnglish memakai **Google Sheets sebagai penyimpanan akun dan progres**, dengan API server-side pada Vercel. Tidak ada Supabase. Browser tidak pernah menerima private key service account atau rahasia penandatanganan sesi.
+SinauuEnglish mempertahankan aplikasi belajar yang sudah ada dan menggunakan Google Apps Script sebagai lapisan server untuk Google Sheets. Tidak ada Supabase dan tidak perlu membuat Google Cloud service account untuk konfigurasi ini.
 
-## Arsitektur
+## Environment Variables Vercel
 
-- **Google Sheets** menyimpan akun dan snapshot progres.
-- **Vercel Functions** menangani pendaftaran, login, validasi sesi, dan akses baris progres.
-- **Kata sandi** disimpan sebagai hash PBKDF2 dengan salt unik; kata sandi asli tidak ditulis ke spreadsheet.
-- **Progres lokal tetap utama saat belajar**. Sinkronisasi dilakukan setelah ada perubahan, dan progres akun dibaca saat masuk pada perangkat baru.
-- Snapshot progres dikompresi dan dipecah menjadi beberapa sel untuk menghindari batas ukuran 50.000 karakter per sel Google Sheets.
+Pada proyek Vercel **sinauuenglish** (yang terhubung ke `riiddev/testesaja`), isi variabel berikut untuk Production dan Preview:
 
-Catatan: Google Sheets bukan database transaksional. Sistem ini paling cocok untuk aplikasi belajar skala kecil/awal. Latensi dan kuota Google API tetap berlaku. Akun tidak membutuhkan email verifikasi pada versi ini; pemulihan kata sandi otomatis belum aktif.
+- `SINAI_APPS_SCRIPT_URL`: URL Web App Apps Script yang berakhir dengan `/exec`.
+- `SINAI_API_KEY`: rahasia yang sama dengan yang dikonfigurasi pada Apps Script. Simpan sebagai Secret/Sensitive, jangan pernah menaruhnya pada frontend atau repository.
+- `SINAI_SESSION_SECRET` (opsional): rahasia acak minimal 32 karakter khusus untuk menandatangani sesi. Jika tidak diisi, server menurunkan kunci sesi dari `SINAI_API_KEY`.
 
-## 1. Buat spreadsheet dan tab
+Jangan menggunakan prefix `VITE_` untuk rahasia server. Setelah variabel ditambahkan atau diubah, buat deployment baru agar fungsi API menerima konfigurasi terbaru.
 
-1. Buat Google Spreadsheet baru.
-2. Ubah nama tab pertama menjadi `Accounts`.
-3. Tambahkan tab kedua bernama `LearningStates`.
-4. Jangan isi header secara manual; aplikasi akan membuat header pada permintaan pertama.
+## Cara kerja
 
-Tab `Accounts` menyimpan ID pengguna, email, hash kata sandi, dan timestamp. Tab `LearningStates` menyimpan satu snapshot per ID pengguna; kolom snapshot dipecah ke beberapa bagian.
+- Pendaftaran dan login diproses oleh API server di Vercel.
+- Hash kata sandi dan salt disimpan di penyimpanan akun yang dikelola Apps Script; kata sandi asli tidak dikirim ke spreadsheet.
+- Progres belajar disimpan sebagai snapshot terkompresi per akun, sehingga data bisa dimuat kembali saat pengguna masuk dari perangkat lain.
+- Progres lokal tetap dipakai ketika pengguna belajar. Jika jaringan sedang tidak tersedia, sinkronisasi perlu dicoba lagi ketika online.
+- Snapshot progres menggunakan ID internal dengan prefix `sinau_state_v1_`. Jangan mengedit atau menghapus record berawalan tersebut secara manual.
 
-## 2. Buat service account Google
+## Pemeriksaan setelah deployment
 
-1. Buka [Google Cloud Console](https://console.cloud.google.com/), lalu buat project.
-2. Pada APIs & Services → Library, aktifkan **Google Sheets API**.
-3. Buka IAM & Admin → Service Accounts, lalu buat service account.
-4. Buat JSON key untuk service account dan simpan secara privat. Jangan commit file JSON itu ke GitHub atau mengirimkan private key di chat.
-5. Buka spreadsheet yang dibuat pada langkah pertama, tekan Share, lalu bagikan sebagai **Editor** kepada alamat email service account (field `client_email` pada JSON).
+1. Buka `/api/account?action=status`. Respons yang benar memuat `ready: true`.
+2. Buat akun uji dengan email yang belum terdaftar; pastikan baris akun muncul di spreadsheet.
+3. Lakukan latihan lalu tunggu indikator sinkronisasi berhasil.
+4. Buka situs pada browser/perangkat lain dan masuk menggunakan akun uji yang sama. Pastikan progres muncul.
+5. Sebelum pemakaian luas, uji juga logout/login dan simpan backup progres lokal.
 
-Google Sheets tetap menjadi database. Service account hanya menjadi identitas server untuk membaca dan menulis spreadsheet tersebut.
+## Batasan
 
-## 3. Konfigurasi environment variables Vercel
-
-Di Vercel → project SinauuEnglish → Settings → Environment Variables, tambahkan variabel berikut untuk Production dan Preview:
-
-- `GOOGLE_SERVICE_ACCOUNT_EMAIL`: nilai `client_email` dari JSON service-account.
-- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`: nilai `private_key` dari JSON. Masukkan keseluruhan key, termasuk baris BEGIN/END; bila ditempel sebagai satu baris, pertahankan newline sebagai `\n`.
-- `GOOGLE_SHEETS_SPREADSHEET_ID`: ID spreadsheet dari URL `https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit`.
-- `SINAUU_SESSION_SECRET`: rahasia acak panjang, minimal 32 karakter. Buat sendiri dan simpan hanya di Vercel.
-
-**Jangan** beri awalan `VITE_` pada variabel ini. Variabel server tidak boleh masuk ke bundel browser. Jangan pernah membuat spreadsheet publik atau membagikan akses Editor kepada semua orang.
-
-Setelah semua variabel terisi, jalankan Redeploy agar API membaca konfigurasi terbaru.
-
-## 4. Tes akun dan sinkronisasi
-
-1. Buka [SinauuEnglish](https://sinauuenglish.vercel.app/belajar.html), lalu buat akun.
-2. Pastikan baris akun baru muncul di tab `Accounts`; yang tersimpan adalah hash kata sandi, bukan kata sandi aslinya.
-3. Selesaikan latihan agar progres berubah. Setelah badge menunjukkan sinkron, periksa tab `LearningStates`.
-4. Buka situs di perangkat/browser lain lalu masuk memakai email dan kata sandi yang sama.
-5. Saat logout, data lokal sesi dibersihkan agar progres akun tidak bercampur. Data di spreadsheet tidak dihapus.
-
-## Batasan yang perlu diketahui
-
-- Pemulihan kata sandi lewat email belum aktif karena sistem ini tidak menggunakan penyedia email. Jangan hilangkan atau mengubah baris akun untuk mencoba memulihkan progres.
-- Versi awal ini tidak mengirim email verifikasi; pendaftaran hanya memeriksa format email.
-- Progres disinkronkan saat perangkat online. Belajar tetap dapat dilakukan secara lokal jika jaringan putus, tetapi perubahan baru tersedia di perangkat lain setelah berhasil disinkronkan.
-- Sheets API memiliki kuota dan dapat lebih lambat dari database khusus. Untuk mengurangi request, data disimpan sebagai satu snapshot terkompresi per pengguna dan sync di-debounce.
-- Simpan salinan cadangan spreadsheet secara berkala. Jangan mengedit kolom snapshot secara manual.
+Google Sheets bukan basis data transaksional. Untuk aplikasi belajar skala kecil, arsitektur ini meminimalkan layanan tambahan, tetapi tetap bergantung pada kuota dan waktu eksekusi Apps Script. Pemulihan kata sandi via email belum tersedia pada versi ini. Simpan cadangan spreadsheet dan backup progres secara berkala.
