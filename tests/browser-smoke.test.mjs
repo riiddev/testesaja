@@ -29,7 +29,7 @@ test("landing CTA opens login and registration screens without sending credentia
   assert.equal(await themeToggle.getAttribute("aria-pressed"), "true", "theme toggle should expose its changed state");
 
   await page.locator("a[href='/login.html']").first().click();
-  await page.waitForURL(/\\/login\\.html$/);
+  await page.waitForURL((url) => url.pathname === "/login.html");
   assert.ok(await page.locator("#auth-card").isVisible(), "login screen should render");
   assert.ok(await page.locator("#signin-form").isVisible(), "sign-in form should be visible by default");
 
