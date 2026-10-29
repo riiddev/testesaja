@@ -22,7 +22,7 @@
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="/index.html" aria-label="SinauuEnglish, kembali ke landing page">
-        <span class="brand-mark" aria-hidden="true"><img src="/assets/sinauu-mark.svg" alt=""></span><span class="brand-name">sinauu</span>
+        <span class="brand-mark" aria-hidden="true"><img src="/assets/sinauu-mark.svg" alt=""></span><span class="brand-name">SinauuEnglish</span>
       </a>
       <nav class="side-nav" aria-label="Menu belajar">
         <button class="side-link is-active" data-view-target="overview" type="button"><span class="nav-icon">⌂</span><span>Ringkasan</span></button>
@@ -41,6 +41,11 @@
 
     <main class="app-main" id="app-main">
       <header class="app-topbar">
+        <form class="dashboard-search" id="dashboard-search" role="search">
+          <label for="dashboard-global-search" aria-label="Cari kosakata">⌕</label>
+          <input id="dashboard-global-search" type="search" placeholder="Cari kosakata…" autocomplete="off">
+          <button type="submit" aria-label="Buka pencarian kosakata">↗</button>
+        </form>
         <div class="topbar-actions">
           <span class="storage-indicator" id="storage-indicator"><i></i><span>Menyiapkan penyimpanan</span></span>
           <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Aktifkan tema gelap" aria-pressed="false">
@@ -63,8 +68,7 @@
                   <p class="page-lede">Latihan sedikit demi sedikit. Hasilnya akan terasa nanti.</p>
                 </div>
                 <div class="dashboard-hero-art" aria-hidden="true">
-                  <span class="art-sun"></span><span class="art-hill art-hill-back"></span><span class="art-hill art-hill-front"></span>
-                  <span class="art-book art-book-one"></span><span class="art-book art-book-two"></span><span class="art-leaf">✳</span>
+                  <img src="/assets/study-room-illustration.svg" alt="">
                 </div>
               </section>
 
@@ -78,15 +82,15 @@
                 <div class="dashboard-section-heading"><div><h2>Pilih mode belajar</h2><p>Fokus pada satu keterampilan, atau eksplor semuanya.</p></div></div>
                 <div class="mode-card-grid">
                   <button class="mode-card mode-matching" type="button" data-view-target="matching">
-                    <span class="mode-visual mode-visual-matching" aria-hidden="true"><span class="word-chip chip-one">abundant</span><span class="word-chip chip-two">berlimpah</span><span class="visual-spark">✳</span></span>
+                    <span class="mode-visual mode-visual-matching" aria-hidden="true"><img src="/assets/matching-illustration.svg" alt=""></span>
                     <span class="mode-card-body"><span class="mode-icon">↔</span><strong>Matching</strong><small>Pasangkan kata dengan artinya. Latihan cepat untuk memperkaya kosakata.</small><span class="mode-arrow">↗</span></span>
                   </button>
                   <button class="mode-card mode-reading" type="button" data-view-target="reading">
-                    <span class="mode-visual mode-visual-reading" aria-hidden="true"><span class="paper-line"></span><span class="paper-line"></span><span class="paper-line short"></span><span class="highlight-line"></span><span class="reading-label">inference</span></span>
+                    <span class="mode-visual mode-visual-reading" aria-hidden="true"><img src="/assets/reading-illustration.svg" alt=""></span>
                     <span class="mode-card-body"><span class="mode-icon">▤</span><strong>Reading Comprehension</strong><small>Tingkatkan pemahaman teks melalui berbagai jenis soal.</small><span class="mode-arrow">↗</span></span>
                   </button>
                   <button class="mode-card mode-vocabulary" type="button" data-view-target="vocabulary">
-                    <span class="mode-visual mode-visual-vocabulary" aria-hidden="true"><span class="check-row">✓ &nbsp; improve</span><span class="check-row">✓ &nbsp; increase</span><span class="check-row">✓ &nbsp; achieve</span><span class="visual-sprig">✳</span></span>
+                    <span class="mode-visual mode-visual-vocabulary" aria-hidden="true"><img src="/assets/vocabulary-illustration.svg" alt=""></span>
                     <span class="mode-card-body"><span class="mode-icon">Aa</span><strong>Kosakata</strong><small>Pelajari kata baru, makna, dan penggunaannya dalam konteks.</small><span class="mode-arrow">↗</span></span>
                   </button>
                 </div>
@@ -274,5 +278,25 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog class="goal-dialog" id="goal-dialog"><form method="dialog" id="goal-form"><h2>Target yang realistis.</h2><p>Pilih jumlah aktivitas belajar yang ingin kamu usahakan tiap hari.</p><label for="daily-goal-input">Aktivitas per hari</label><select id="daily-goal-input"><option value="5">5 aktivitas</option><option value="10">10 aktivitas</option><option value="15">15 aktivitas</option><option value="20">20 aktivitas</option></select><div class="dialog-actions"><button class="dialog-cancel" value="cancel">Batal</button><button class="dialog-save" id="save-goal" value="default">Simpan target</button></div></form></dialog>
+
+<script>
+  (() => {
+    const form = document.getElementById("dashboard-search");
+    const globalSearch = document.getElementById("dashboard-global-search");
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const query = globalSearch?.value.trim();
+      if (!query) return;
+      document.querySelector('.side-link[data-view-target="vocabulary"]')?.click();
+      const input = document.getElementById("vocab-search");
+      if (input) {
+        input.value = query;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.focus();
+      }
+    });
+  })();
+</script>
+
 </body>
 </html>
