@@ -1,51 +1,61 @@
-# SinauuEnglish account and cloud-sync setup
+# SinauuEnglish — akun dan sinkronisasi Google Sheets
 
-This feature uses Supabase Auth + a private Postgres row per account. The browser sends only the public anon/publishable key; **never use a Supabase service-role/secret key in the frontend or Vercel VITE variables**. Row Level Security (RLS) enforces that a signed-in user can read or change only the row whose user_id matches their authenticated ID.
+SinauuEnglish memakai **Google Sheets sebagai penyimpanan akun dan progres**, dengan API server-side pada Vercel. Tidak ada Supabase. Browser tidak pernah menerima private key service account atau rahasia penandatanganan sesi.
 
-## 1. Create a free Supabase project
+## Arsitektur
 
-1. Sign in to https://supabase.com/dashboard and create a project on the Free plan.
-2. Open Project Settings → API (or the project Connect panel) and copy the Project URL and public anon/publishable key.
-3. Open SQL Editor and run the complete file supabase/migrations/20261029000000_create_user_learning_states.sql from this repository.
+- **Google Sheets** menyimpan akun dan snapshot progres.
+- **Vercel Functions** menangani pendaftaran, login, validasi sesi, dan akses baris progres.
+- **Kata sandi** disimpan sebagai hash PBKDF2 dengan salt unik; kata sandi asli tidak ditulis ke spreadsheet.
+- **Progres lokal tetap utama saat belajar**. Sinkronisasi dilakukan setelah ada perubahan, dan progres akun dibaca saat masuk pada perangkat baru.
+- Snapshot progres dikompresi dan dipecah menjadi beberapa sel untuk menghindari batas ukuran 50.000 karakter per sel Google Sheets.
 
-Supabase Free is listed at $0/month and currently includes two active projects, 500 MB database, and up to 50,000 monthly active users; free projects may pause after one week of inactivity. Check current limits at https://supabase.com/pricing.
+Catatan: Google Sheets bukan database transaksional. Sistem ini paling cocok untuk aplikasi belajar skala kecil/awal. Latensi dan kuota Google API tetap berlaku. Akun tidak membutuhkan email verifikasi pada versi ini; pemulihan kata sandi otomatis belum aktif.
 
-## 2. Add Vercel environment variables
+## 1. Buat spreadsheet dan tab
 
-In Vercel → project sinauuenglish → Settings → Environment Variables, add these two variables for Production and Preview:
+1. Buat Google Spreadsheet baru.
+2. Ubah nama tab pertama menjadi `Accounts`.
+3. Tambahkan tab kedua bernama `LearningStates`.
+4. Jangan isi header secara manual; aplikasi akan membuat header pada permintaan pertama.
 
-- VITE_SUPABASE_URL = your Supabase Project URL, e.g. https://YOUR_PROJECT_REF.supabase.co
-- VITE_SUPABASE_ANON_KEY = your public anon/publishable key
+Tab `Accounts` menyimpan ID pengguna, email, hash kata sandi, dan timestamp. Tab `LearningStates` menyimpan satu snapshot per ID pengguna; kolom snapshot dipecah ke beberapa bagian.
 
-These are browser-visible public settings, not secrets. The SQL RLS policies are the security boundary. Do not add a service-role/secret key here.
+## 2. Buat service account Google
 
-For local development, copy .env.example to .env.local and fill the same two values. Redeploy after adding variables; Vite embeds VITE variables at build time.
+1. Buka [Google Cloud Console](https://console.cloud.google.com/), lalu buat project.
+2. Pada APIs & Services → Library, aktifkan **Google Sheets API**.
+3. Buka IAM & Admin → Service Accounts, lalu buat service account.
+4. Buat JSON key untuk service account dan simpan secara privat. Jangan commit file JSON itu ke GitHub atau mengirimkan private key di chat.
+5. Buka spreadsheet yang dibuat pada langkah pertama, tekan Share, lalu bagikan sebagai **Editor** kepada alamat email service account (field `client_email` pada JSON).
 
-## 3. Configure email authentication
+Google Sheets tetap menjadi database. Service account hanya menjadi identitas server untuk membaca dan menulis spreadsheet tersebut.
 
-In Supabase Authentication → URL Configuration:
-- Site URL: https://sinauuenglish.vercel.app
-- Add redirect URLs: https://sinauuenglish.vercel.app/belajar.html and the matching Vercel preview URLs you use.
+## 3. Konfigurasi environment variables Vercel
 
-Keep email confirmation enabled for public sign-ups. Check the Auth email provider/SMTP limits: default provider rate limits may be restrictive for public use. Set a production-quality SMTP provider before inviting a large audience; it is optional for initial testing.
+Di Vercel → project SinauuEnglish → Settings → Environment Variables, tambahkan variabel berikut untuk Production dan Preview:
 
-## 4. Test end to end
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`: nilai `client_email` dari JSON service-account.
+- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`: nilai `private_key` dari JSON. Masukkan keseluruhan key, termasuk baris BEGIN/END; bila ditempel sebagai satu baris, pertahankan newline sebagai `\n`.
+- `GOOGLE_SHEETS_SPREADSHEET_ID`: ID spreadsheet dari URL `https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit`.
+- `SINAUU_SESSION_SECRET`: rahasia acak panjang, minimal 32 karakter. Buat sendiri dan simpan hanya di Vercel.
 
-1. Redeploy Vercel.
-2. Open https://sinauuenglish.vercel.app/belajar.html, tap Masuk / Daftar, and create an account with an email you can access.
-3. Confirm the email if required, then sign in. The current device's local vocabulary, grammar, activity, matching, and HABIT progress are merged with the cloud state.
-4. Open the same app on a second device/browser and sign into the same account. It should load the same cloud progress; changes sync after a short delay while online and on foreground/focus.
-5. Use Sinkronkan sekarang to request a sync immediately.
+**Jangan** beri awalan `VITE_` pada variabel ini. Variabel server tidak boleh masuk ke bundel browser. Jangan pernah membuat spreadsheet publik atau membagikan akses Editor kepada semua orang.
 
-If configuration is missing, local learning still works and the account dialog explains what remains to be configured. User data is not uploaded until a user is signed in and cloud sync is configured.
+Setelah semua variabel terisi, jalankan Redeploy agar API membaca konfigurasi terbaru.
 
-## 5. Install the app
+## 4. Tes akun dan sinkronisasi
 
-The site now includes a web app manifest and a service worker for installability and shell caching. On Android/Chrome, use the browser's Install app or Add to Home screen action. On iPhone, open the site in Safari → Share → Add to Home Screen. A PWA is installable from the website; it is not an Android APK or an App Store/Play Store listing.
+1. Buka [SinauuEnglish](https://sinauuenglish.vercel.app/belajar.html), lalu buat akun.
+2. Pastikan baris akun baru muncul di tab `Accounts`; yang tersimpan adalah hash kata sandi, bukan kata sandi aslinya.
+3. Selesaikan latihan agar progres berubah. Setelah badge menunjukkan sinkron, periksa tab `LearningStates`.
+4. Buka situs di perangkat/browser lain lalu masuk memakai email dan kata sandi yang sama.
+5. Saat logout, data lokal sesi dibersihkan agar progres akun tidak bercampur. Data di spreadsheet tidak dihapus.
 
-## Design and data notes
+## Batasan yang perlu diketahui
 
-- The current account UI uses email + password and email verification/reset flows.
-- The learning database remains local-first; cloud sync requires internet, merges timestamps and evidence/history arrays, and retries after reconnect/focus. The SQL table stores a single account snapshot to keep the schema small.
-- Mastery criteria and content-draft labels are unchanged.
-- Supabase free-service limits and Vercel hosting/account constraints are provider limits, not guarantees of indefinite availability.
+- Pemulihan kata sandi lewat email belum aktif karena sistem ini tidak menggunakan penyedia email. Jangan hilangkan atau mengubah baris akun untuk mencoba memulihkan progres.
+- Versi awal ini tidak mengirim email verifikasi; pendaftaran hanya memeriksa format email.
+- Progres disinkronkan saat perangkat online. Belajar tetap dapat dilakukan secara lokal jika jaringan putus, tetapi perubahan baru tersedia di perangkat lain setelah berhasil disinkronkan.
+- Sheets API memiliki kuota dan dapat lebih lambat dari database khusus. Untuk mengurangi request, data disimpan sebagai satu snapshot terkompresi per pengguna dan sync di-debounce.
+- Simpan salinan cadangan spreadsheet secara berkala. Jangan mengedit kolom snapshot secara manual.
