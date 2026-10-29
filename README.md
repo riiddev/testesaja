@@ -44,6 +44,14 @@ The Oxford source list is available at [Oxford Learner's Dictionaries — Americ
 
 The grammar curriculum currently contains **6 lessons and 18 topic-specific questions**. Broader grammar coverage and human review of the vocabulary corpus remain ongoing work.
 
+## Accounts, cross-device progress, and app installation
+
+The workspace now includes a progressive web app (PWA) manifest and service worker, with an account entry point for email/password sign-up, sign-in, and cloud sync. Vocabulary evidence/mastery, favorites, grammar, activity history, Matching, and HABIT reading answers are included in the sync bundle.
+
+**Cloud accounts remain disabled until configured.** Create a Supabase Free project, apply [the SQL migration](supabase/migrations/20261029000000_create_user_learning_states.sql), and add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the Vercel project’s Production and Preview environments. Follow [the step-by-step account and sync setup](docs/ACCOUNT-SYNC-SETUP.md). The SQL uses Row Level Security to restrict each account to its own learning-state row; never add a service-role/secret key to the browser environment.
+
+Learners can install the website from their browser’s “Install app” / “Add to Home Screen” menu. This is a PWA (installed website), not a native Android APK or App Store/Play Store package. The existing local-first learning modes still work if cloud configuration is absent.
+
 ## Technical constraints
 
 - Static HTML, CSS, JavaScript, and JSON; no backend, API server, login, or required paid service.
