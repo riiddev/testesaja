@@ -1,13 +1,11 @@
-import { createSign } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { gzipSync, gunzipSync } from "node:zlib";
 
-const MAX_PARTS = 24;
-const PART_SIZE = 40_000;
-const ACCOUNT_HEADER = ["user_id", "email", "password_hash", "created_at", "updated_at"];
-const PROGRESS_HEADER = ["user_id", "updated_at", "part_count", ...Array.from({ length: MAX_PARTS }, (_, i) => "state_part_" + String(i + 1).padStart(2, "0"))];
-
-let accessTokenCache: { token: string; expiresAt: number } | null = null;
-let headersReady = false;
+const STATE_PREFIX = "sinau_state_v1_";
+const MANIFEST_ID = STATE_PREFIX + "manifest";
+const CHUNK_SIZE = 30_000;
+const MAX_CHUNKS = 250;
+const MAX_STATE_BYTES = 5_000_000;
 
 function requiredEnv(name: string): string {
   const value = String(process.env[name] || "").trim();
@@ -16,185 +14,183 @@ function requiredEnv(name: string): string {
 }
 
 export function assertSheetsConfigured(): void {
-  requiredEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-  requiredEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
-  requiredEnv("GOOGLE_SHEETS_SPREADSHEET_ID");
-  const secret = requiredEnv("SINAUU_SESSION_SECRET");
-  if (secret.length < 32) throw new Error("SINAUU_SESSION_SECRET harus berupa rahasia acak minimal 32 karakter.");
-}
-
-function b64url(value: string | Buffer): string {
-  return Buffer.from(value).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-}
-
-async function googleAccessToken(): Promise<string> {
-  if (accessTokenCache && accessTokenCache.expiresAt > Date.now() + 60_000) return accessTokenCache.token;
-  assertSheetsConfigured();
-  const email = requiredEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-  const key = requiredEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY").replace(/\\n/g, "\n");
-  const now = Math.floor(Date.now() / 1000);
-  const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claim = b64url(JSON.stringify({
-    iss: email,
-    scope: "https://www.googleapis.com/auth/spreadsheets",
-    aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600,
-  }));
-  const input = header + "." + claim;
-  const signer = createSign("RSA-SHA256");
-  signer.update(input);
-  const assertion = input + "." + b64url(signer.sign(key));
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion,
-    }),
-  });
-  const body: any = await response.json().catch(() => ({}));
-  if (!response.ok || !body.access_token) throw new Error("Google Sheets gagal diautentikasi. Periksa service account dan private key di Vercel.");
-  accessTokenCache = { token: body.access_token, expiresAt: Date.now() + Number(body.expires_in || 3600) * 1000 };
-  return body.access_token;
-}
-
-async function sheetsRequest(path: string, init: RequestInit = {}): Promise<any> {
-  const spreadsheetId = requiredEnv("GOOGLE_SHEETS_SPREADSHEET_ID");
-  const token = await googleAccessToken();
-  const response = await fetch("https://sheets.googleapis.com/v4/spreadsheets/" + encodeURIComponent(spreadsheetId) + path, {
-    ...init,
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-    },
-  });
-  const body: any = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = String(body?.error?.message || "");
-    if (/Unable to parse range|not found/i.test(message)) {
-      throw new Error("Google Sheets belum siap. Pastikan spreadsheet memiliki dua tab bernama persis Accounts dan LearningStates, lalu bagikan sebagai Editor kepada email service account.");
-    }
-    throw new Error("Permintaan ke Google Sheets gagal. Periksa ID spreadsheet, akses Editor service account, dan kuota Google Sheets API.");
+  const url = requiredEnv("SINAI_APPS_SCRIPT_URL");
+  if (!url.startsWith("https://script.google.com/macros/s/") || !url.endsWith("/exec")) {
+    throw new Error("URL Google Apps Script belum dikonfigurasi dengan benar.");
   }
-  return body;
+  if (requiredEnv("SINAI_API_KEY").length < 32) {
+    throw new Error("SINAI_API_KEY harus berupa rahasia acak minimal 32 karakter.");
+  }
 }
 
-async function getValues(range: string): Promise<string[][]> {
-  const body = await sheetsRequest("/values/" + encodeURIComponent(range));
-  return Array.isArray(body.values) ? body.values.map((row: any[]) => row.map((value) => String(value ?? ""))) : [];
-}
+async function callSinai(action: string, payload: Record<string, unknown> = {}): Promise<any> {
+  assertSheetsConfigured();
+  const url = requiredEnv("SINAI_APPS_SCRIPT_URL");
+  const apiKey = requiredEnv("SINAI_API_KEY");
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      redirect: "follow",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ ...payload, apiKey, action }),
+      signal: AbortSignal.timeout(8_500),
+    });
+  } catch {
+    throw new Error("Tidak dapat menghubungi Google Sheets. Coba lagi sebentar.");
+  }
 
-async function putValues(range: string, values: any[][]): Promise<void> {
-  await sheetsRequest("/values/" + encodeURIComponent(range) + "?valueInputOption=RAW", {
-    method: "PUT",
-    body: JSON.stringify({ range, majorDimension: "ROWS", values }),
-  });
-}
+  let result: any;
+  try { result = await response.json(); }
+  catch { throw new Error("Respons Google Sheets tidak valid. Pastikan Web App Apps Script sudah di-deploy dan dapat diakses."); }
 
-async function appendValues(range: string, values: any[][]): Promise<void> {
-  await sheetsRequest("/values/" + encodeURIComponent(range) + ":append?valueInputOption=RAW&insertDataOption=INSERT_ROWS", {
-    method: "POST",
-    body: JSON.stringify({ range, majorDimension: "ROWS", values }),
-  });
-}
-
-async function ensureHeaders(): Promise<void> {
-  if (headersReady) return;
-  const accountHeader = await getValues("Accounts!A1:E1");
-  if (!accountHeader.length || !accountHeader[0]?.[0]) await putValues("Accounts!A1:E1", [ACCOUNT_HEADER]);
-  const progressHeader = await getValues("LearningStates!A1:AA1");
-  if (!progressHeader.length || !progressHeader[0]?.[0]) await putValues("LearningStates!A1:AA1", [PROGRESS_HEADER]);
-  headersReady = true;
+  if (!response.ok || result?.ok !== true) {
+    const message = String(result?.error || "");
+    if (/email sudah terdaftar/i.test(message)) throw new Error("Email ini sudah terdaftar. Silakan masuk.");
+    if (/unauthorized/i.test(message)) throw new Error("API key tidak cocok dengan Google Apps Script. Periksa environment variable dan deployment Apps Script.");
+    if (/maksimal .*record/i.test(message)) throw new Error(message);
+    if (/tidak valid|wajib|harus|diizinkan|tidak dikenal/i.test(message)) throw new Error(message);
+    throw new Error("Google Sheets gagal memproses permintaan. Periksa konfigurasi Apps Script.");
+  }
+  return result.data;
 }
 
 export async function ensureSheetsReady(): Promise<void> {
-  await ensureHeaders();
+  assertSheetsConfigured();
 }
 
 export type AccountRow = {
-  rowNumber: number;
   id: string;
   email: string;
   passwordHash: string;
+  passwordSalt: string;
+  displayName: string;
+  status: string;
   createdAt: string;
   updatedAt: string;
+  lastLoginAt: string;
 };
 
-async function readAccountAt(rowNumber: number): Promise<AccountRow | null> {
-  const rows = await getValues("Accounts!A" + rowNumber + ":E" + rowNumber);
-  const row = rows[0];
-  if (!row?.[0] || !row?.[1]) return null;
+function mapAccount(raw: any): AccountRow | null {
+  if (!raw || typeof raw !== "object") return null;
+  const id = String(raw.userId || raw.id || "").trim();
+  const email = String(raw.email || "").trim().toLowerCase();
+  if (!id || !email) return null;
   return {
-    rowNumber,
-    id: row[0],
-    email: row[1].toLowerCase(),
-    passwordHash: row[2] || "",
-    createdAt: row[3] || "",
-    updatedAt: row[4] || "",
+    id,
+    email,
+    passwordHash: String(raw.passwordHash || ""),
+    passwordSalt: String(raw.passwordSalt || ""),
+    displayName: String(raw.displayName || email.split("@")[0]),
+    status: String(raw.status || "active"),
+    createdAt: String(raw.createdAt || ""),
+    updatedAt: String(raw.updatedAt || raw.createdAt || ""),
+    lastLoginAt: String(raw.lastLoginAt || ""),
   };
 }
 
 export async function findAccountByEmail(email: string): Promise<AccountRow | null> {
-  await ensureHeaders();
-  const rows = await getValues("Accounts!B2:B");
-  const index = rows.findIndex((row) => (row[0] || "").toLowerCase() === email.toLowerCase());
-  return index < 0 ? null : readAccountAt(index + 2);
+  const data = await callSinai("users.findByEmail", { email: email.toLowerCase() });
+  return mapAccount(data);
 }
 
-export async function findAccountById(id: string): Promise<AccountRow | null> {
-  await ensureHeaders();
-  const rows = await getValues("Accounts!A2:A");
-  const index = rows.findIndex((row) => row[0] === id);
-  return index < 0 ? null : readAccountAt(index + 2);
+export async function appendAccount(input: {
+  email: string;
+  displayName: string;
+  passwordHash: string;
+  passwordSalt: string;
+}): Promise<AccountRow> {
+  const data = await callSinai("users.create", input);
+  const account = mapAccount(data);
+  if (!account) throw new Error("Google Sheets membuat akun tanpa mengembalikan ID pengguna yang valid.");
+  return account;
 }
 
-export async function appendAccount(row: [string, string, string, string, string]): Promise<void> {
-  await ensureHeaders();
-  await appendValues("Accounts!A:E", [row]);
+type CollectionRecord = { id?: string; data?: Record<string, any>; [key: string]: any };
+
+async function listUserLists(userId: string): Promise<CollectionRecord[]> {
+  const data = await callSinai("collections.list", { collection: "lists", userId });
+  return Array.isArray(data?.records) ? data.records : [];
 }
 
-export async function updateAccount(rowNumber: number, row: [string, string, string, string, string]): Promise<void> {
-  await ensureHeaders();
-  await putValues("Accounts!A" + rowNumber + ":E" + rowNumber, [row]);
-}
-
-async function findProgressRow(userId: string): Promise<number> {
-  const rows = await getValues("LearningStates!A2:A");
-  const index = rows.findIndex((row) => row[0] === userId);
-  return index < 0 ? -1 : index + 2;
+function recordId(record: CollectionRecord): string {
+  return String(record.id || record.listId || "");
 }
 
 export async function readProgress(userId: string): Promise<{ state: any; updatedAt: string } | null> {
-  await ensureHeaders();
-  const rowNumber = await findProgressRow(userId);
-  if (rowNumber < 0) return null;
-  const rows = await getValues("LearningStates!A" + rowNumber + ":AA" + rowNumber);
-  const row = rows[0] || [];
-  const partCount = Math.max(0, Math.min(MAX_PARTS, Number(row[2] || 0)));
-  if (!partCount) return null;
+  const records = await listUserLists(userId);
+  const manifest = records.find((record) => recordId(record) === MANIFEST_ID);
+  const manifestData = manifest?.data;
+  const snapshotId = String(manifestData?.snapshotId || "");
+  const slot = String(manifestData?.slot || "");
+  const partCount = Math.max(0, Math.min(MAX_CHUNKS, Number(manifestData?.partCount || 0)));
+  if (!snapshotId || (slot !== "A" && slot !== "B") || partCount < 1) return null;
+
+  const byIndex = new Map<number, CollectionRecord>();
+  for (const record of records) {
+    const data = record.data || {};
+    if (data.snapshotId !== snapshotId || data.slot !== slot) continue;
+    const index = Number(data.chunkIndex);
+    if (Number.isInteger(index) && index >= 0 && index < partCount) byIndex.set(index, record);
+  }
+
+  const parts: string[] = [];
+  for (let index = 0; index < partCount; index += 1) {
+    const record = byIndex.get(index);
+    const payload = record?.data?.payload;
+    if (typeof payload !== "string") {
+      throw new Error("Snapshot progres di Google Sheets belum lengkap. Jangan menghapus baris dengan ID sinau_state_v1_. Coba sinkronkan lagi dari perangkat yang masih memiliki data.");
+    }
+    parts.push(payload);
+  }
+
   try {
-    const packed = row.slice(3, 3 + partCount).join("");
-    const json = gunzipSync(Buffer.from(packed, "base64")).toString("utf8");
-    return { state: JSON.parse(json), updatedAt: row[1] || "" };
+    const state = JSON.parse(gunzipSync(Buffer.from(parts.join(""), "base64")).toString("utf8"));
+    return { state, updatedAt: String(manifestData.updatedAt || "") };
   } catch {
-    throw new Error("Data progres di spreadsheet tidak dapat dibaca. Jangan menghapus atau mengedit isi kolom state_part secara manual.");
+    throw new Error("Snapshot progres di Google Sheets tidak dapat dibaca. Jangan mengedit data dengan ID sinau_state_v1_ secara manual.");
   }
 }
 
 export async function writeProgress(userId: string, state: unknown): Promise<void> {
-  await ensureHeaders();
   const serialized = JSON.stringify(state);
-  const packed = gzipSync(Buffer.from(serialized, "utf8")).toString("base64");
-  const partCount = Math.ceil(packed.length / PART_SIZE);
-  if (partCount < 1 || partCount > MAX_PARTS) {
-    throw new Error("Progres terlalu besar untuk satu snapshot spreadsheet. Ekspor cadangan belajar dan hubungi admin sebelum mencoba lagi.");
+  if (Buffer.byteLength(serialized, "utf8") > MAX_STATE_BYTES) {
+    throw new Error("Snapshot progres terlalu besar. Ekspor cadangan belajar dan hubungi admin sebelum mencoba lagi.");
   }
-  const parts = Array.from({ length: MAX_PARTS }, (_, index) => packed.slice(index * PART_SIZE, (index + 1) * PART_SIZE));
+  const packed = gzipSync(Buffer.from(serialized, "utf8")).toString("base64");
+  const parts: string[] = [];
+  for (let offset = 0; offset < packed.length; offset += CHUNK_SIZE) parts.push(packed.slice(offset, offset + CHUNK_SIZE));
+  if (parts.length < 1 || parts.length > MAX_CHUNKS) {
+    throw new Error("Snapshot progres terlalu besar untuk disimpan di Google Sheets. Ekspor cadangan belajar sebelum mencoba lagi.");
+  }
+
+  const currentRecords = await listUserLists(userId);
+  const currentManifest = currentRecords.find((record) => recordId(record) === MANIFEST_ID)?.data || {};
+  const slot: "A" | "B" = currentManifest.slot === "A" ? "B" : "A";
+  const snapshotId = randomUUID();
   const updatedAt = new Date().toISOString();
-  const values = [userId, updatedAt, String(partCount), ...parts];
-  const rowNumber = await findProgressRow(userId);
-  if (rowNumber < 0) await appendValues("LearningStates!A:AA", [values]);
-  else await putValues("LearningStates!A" + rowNumber + ":AA" + rowNumber, [values]);
+
+  const chunks = parts.map((payload, chunkIndex) => ({
+    id: STATE_PREFIX + slot + "_" + String(chunkIndex).padStart(4, "0"),
+    data: { snapshotId, slot, chunkIndex, partCount: parts.length, updatedAt, payload },
+  }));
+
+  // Write the inactive slot first; the manifest only points to it after every chunk succeeds.
+  // This prevents an interrupted upload from replacing the last complete snapshot.
+  for (let offset = 0; offset < chunks.length; offset += 80) {
+    await callSinai("collections.upsertBatch", {
+      collection: "lists",
+      userId,
+      records: chunks.slice(offset, offset + 80),
+    });
+  }
+
+  await callSinai("collections.upsertBatch", {
+    collection: "lists",
+    userId,
+    records: [{
+      id: MANIFEST_ID,
+      data: { snapshotId, slot, partCount: parts.length, updatedAt },
+    }],
+  });
 }
