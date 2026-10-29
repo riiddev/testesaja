@@ -29,6 +29,11 @@
 .account-form-extra button{padding:0;border:0;background:transparent;color:var(--sage-deep,#5d7457);font-size:.68rem;font-weight:800;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .account-form-extra span{color:var(--muted,#898d80);font-size:.62rem;line-height:1.65}
 .account-signed-in{padding:16px;border:1px solid var(--line,#dedfd4);border-radius:14px;background:var(--paper,#f7f6f0)}
+.account-recovery-panel{padding:16px;border:1px solid var(--line,#dedfd4);border-radius:14px;background:var(--paper,#f7f6f0)}
+.account-recovery-panel .eyebrow{margin-bottom:9px;font-size:.54rem}
+.account-recovery-panel h3{margin:0 0 8px;font:500 1.55rem/1.15 "Lora",Georgia,serif;letter-spacing:-.035em}
+.account-recovery-panel>p{margin:0 0 15px;color:var(--muted,#898d80);font-size:.68rem;line-height:1.7}
+
 .account-avatar{width:43px;height:43px;display:grid;place-items:center;margin-bottom:10px;border-radius:13px;background:var(--sage,#e2ebd9);color:var(--sage-deep,#5d7457);font:600 1.3rem "Lora",Georgia,serif}
 .account-user-info{display:flex;flex-direction:column;gap:4px;margin-bottom:16px}
 .account-user-info strong{font-size:.83rem;overflow-wrap:anywhere}
