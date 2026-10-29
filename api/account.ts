@@ -36,6 +36,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
   try {
     assertSheetsConfigured();
     if (action === "status") {
+      await readAccounts();
       res.status(200).json({ ready: true, provider: "google-sheets" });
       return;
     }
