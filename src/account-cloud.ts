@@ -14,9 +14,7 @@ declare global {
   }
 }
 
-const SUPABASE_URL = String(import.meta.env.VITE_SUPABASE_URL || "").trim().replace(/\/+$/, "");
-const SUPABASE_ANON_KEY = String(import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim();
-const CLOUD_READY = /^https:\/\/.+/.test(SUPABASE_URL) && Boolean(SUPABASE_ANON_KEY);
+const CLOUD_READY = true;
 const SESSION_KEY = "sinauu-cloud-session-v1";
 const LOCAL_DB = "sinauu-local-v1", LOCAL_STORE = "state", LOCAL_RECORD = "main";
 const CORE_FALLBACK = "sinauu-learning-state-v1", EXTRA_KEY = "sinauu-extra-learning-v1", HABIT_KEY = "sinauu-habit-library-v1";
@@ -250,17 +248,26 @@ function setSession(next: AuthSession | null): void {
 }
 
 async function authRequest(path: string, options: RequestInit = {}, bearer?: string): Promise<any> {
-  if (!CLOUD_READY) throw new Error("Akun cloud belum dikonfigurasi di Vercel.");
-  const headers = new Headers(options.headers || {});
-  headers.set("apikey", SUPABASE_ANON_KEY);
-  headers.set("Content-Type", "application/json");
+  const grantType = new URLSearchParams(path.split("?")[1] || "").get("grant_type");
+  const method = String(options.method || "POST").toUpperCase();
+  let action = "status";
+  if (path.startsWith("/signup")) action = "signup";
+  else if (path.startsWith("/token")) action = grantType === "password" ? "login" : "refresh";
+  else if (path.startsWith("/user")) action = method === "PUT" ? "change-password" : "me";
+  else if (path.startsWith("/logout")) action = "logout";
+  else if (path.startsWith("/recover")) action = "recover";
+  const headers = new Headers({ "Content-Type": "application/json" });
   if (bearer) headers.set("Authorization", "Bearer " + bearer);
-  const response = await fetch(SUPABASE_URL + "/auth/v1" + path, { ...options, headers });
+  const response = await fetch("/api/account?action=" + encodeURIComponent(action), {
+    method: method === "GET" ? "GET" : "POST",
+    headers,
+    ...(options.body ? { body: options.body } : {}),
+    credentials: "same-origin",
+  });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.msg || body.message || body.error_description || "Permintaan akun gagal. Periksa email, kata sandi, dan konfigurasi Auth.");
+  if (!response.ok) throw new Error(body.message || body.msg || "Permintaan akun gagal. Periksa konfigurasi Google Sheets di Vercel.");
   return body;
 }
-
 function toSession(data: any): AuthSession | null {
   if (!data?.access_token || !data?.refresh_token || !data?.user?.id) return null;
   return {
@@ -287,14 +294,14 @@ async function currentSession(): Promise<AuthSession | null> {
 async function cloudRequest(path: string, options: RequestInit = {}): Promise<any> {
   let active = await currentSession();
   if (!active) throw new Error("Masuk terlebih dahulu untuk menyinkronkan progres.");
-  const run = (token: string) => fetch(SUPABASE_URL + "/rest/v1" + path, {
+  const run = (token: string) => fetch("/api/progress", {
     ...options,
     headers: {
-      apikey: SUPABASE_ANON_KEY,
       Authorization: "Bearer " + token,
       "Content-Type": "application/json",
       ...(options.headers || {}),
     },
+    credentials: "same-origin",
   });
   let response = await run(active.access_token);
   if (response.status === 401 && active.refresh_token) {
@@ -306,12 +313,11 @@ async function cloudRequest(path: string, options: RequestInit = {}): Promise<an
   const text = await response.text();
   const body = text ? (() => { try { return JSON.parse(text); } catch { return text; } })() : null;
   if (!response.ok) {
-    const message = body && typeof body === "object" ? (body.message || body.details || body.hint) : "";
-    throw new Error(message || "Sinkronisasi cloud gagal (" + response.status + "). Pastikan migrasi database sudah dijalankan.");
+    const message = body && typeof body === "object" ? body.message : "";
+    throw new Error(message || "Sinkronisasi Google Sheets gagal (" + response.status + "). Progres lokal tetap tersimpan.");
   }
   return body;
 }
-
 async function readCloudBundle(): Promise<CloudBundle | null> {
   if (!session) return null;
   const rows = await cloudRequest("/user_learning_states?select=state,updated_at&user_id=eq." + encodeURIComponent(session.user.id) + "&limit=1", { method: "GET" });
@@ -394,7 +400,7 @@ function modalMarkup(): string {
         <p class="account-dialog-lede">Simpan progres ke akunmu agar kosakata, latihan, dan bacaan tetap nyambung di HP maupun laptop.</p>
         <div class="account-config-notice" id="account-config-notice" hidden>
           <strong>Akun cloud belum diaktifkan.</strong>
-          <p>Fitur ini memakai Supabase Free. Siapkan project, jalankan SQL migration, lalu tambahkan <code>VITE_SUPABASE_URL</code> dan <code>VITE_SUPABASE_ANON_KEY</code> di environment Vercel. Panduan lengkap ada di GitHub.</p>
+          <p>Fitur ini memakai Google Sheets sebagai database akun dan progres. Siapkan spreadsheet dengan tab Accounts dan LearningStates, service account Google Cloud, lalu isi variabel server di Vercel. Panduan lengkap ada di GitHub.</p>
           <a href="https://github.com/riiddev/testesaja/blob/main/docs/ACCOUNT-SYNC-SETUP.md" target="_blank" rel="noreferrer">Buka panduan konfigurasi ↗</a>
         </div>
         <div class="account-auth-panel" id="account-auth-panel">
@@ -576,20 +582,8 @@ async function submitPasswordRecovery(event: Event): Promise<void> {
 }
 
 async function sendPasswordReset(): Promise<void> {
-  if (!CLOUD_READY) return;
-  const email = ($("#account-email") as HTMLInputElement | null)?.value.trim().toLowerCase() || "";
-  if (!email) {
-    setMessage("Isi email akunmu dahulu, lalu tekan Lupa kata sandi.", "error");
-    ($("#account-email") as HTMLInputElement | null)?.focus();
-    return;
-  }
-  try {
-    const redirect = window.location.origin + "/belajar.html";
-    await authRequest("/recover?redirect_to=" + encodeURIComponent(redirect), { method: "POST", body: JSON.stringify({ email }) });
-    setMessage("Jika akun dengan email itu tersedia, instruksi pemulihan akan dikirim ke email tersebut.", "success");
-  } catch (error) { setMessage(error instanceof Error ? error.message : "Email pemulihan belum bisa dikirim.", "error"); }
+  setMessage("Pemulihan kata sandi melalui email belum tersedia. Hubungi admin SinauuEnglish untuk bantuan; jangan membuat akun baru karena progres akun lama tetap tersimpan.", "info");
 }
-
 async function signOut(): Promise<void> {
   const signedInUserId = session?.user?.id;
   if (!signedInUserId) {
