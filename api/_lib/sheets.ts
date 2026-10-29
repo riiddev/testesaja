@@ -120,10 +120,10 @@ function recordId(record: CollectionRecord): string {
 export async function readProgress(userId: string): Promise<{ state: any; updatedAt: string } | null> {
   const records = await listUserLists(userId);
   const manifest = records.find((record) => recordId(record) === MANIFEST_ID);
-  const manifestData = manifest?.data;
-  const snapshotId = String(manifestData?.snapshotId || "");
-  const slot = String(manifestData?.slot || "");
-  const partCount = Math.max(0, Math.min(MAX_CHUNKS, Number(manifestData?.partCount || 0)));
+  const manifestData: Record<string, any> = manifest?.data || {};
+  const snapshotId = String(manifestData.snapshotId || "");
+  const slot = String(manifestData.slot || "");
+  const partCount = Math.max(0, Math.min(MAX_CHUNKS, Number(manifestData.partCount || 0)));
   if (!snapshotId || (slot !== "A" && slot !== "B") || partCount < 1) return null;
 
   const byIndex = new Map<number, CollectionRecord>();
