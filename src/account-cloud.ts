@@ -20,6 +20,8 @@ const CLOUD_READY = /^https:\/\/.+/.test(SUPABASE_URL) && Boolean(SUPABASE_ANON_
 const SESSION_KEY = "sinauu-cloud-session-v1";
 const LOCAL_DB = "sinauu-local-v1", LOCAL_STORE = "state", LOCAL_RECORD = "main";
 const CORE_FALLBACK = "sinauu-learning-state-v1", EXTRA_KEY = "sinauu-extra-learning-v1", HABIT_KEY = "sinauu-habit-library-v1";
+const OWNER_KEY = "sinauu-cloud-owner-v1";
+const ACCOUNT_CACHE_PREFIX = "sinauu-cloud-local-cache-v1:";
 const $ = <T extends Element>(selector: string, root: ParentNode = document) => root.querySelector(selector) as T | null;
 
 let session: AuthSession | null = null;
@@ -210,7 +212,7 @@ function mergeCore(local: AnyRecord, remote: AnyRecord): AnyRecord {
   }
   merged.history = mergeArrays(local.history || [], remote.history || []).slice(-1000);
   merged.events = mergeArrays(local.events || [], remote.events || []).slice(-5000);
-  merged.updatedAt = new Date(Math.max(localTime, remoteTime, Date.now())).toISOString();
+  merged.updatedAt = new Date(Math.max(localTime, remoteTime) || Date.now()).toISOString();
   return merged;
 }
 
@@ -310,7 +312,6 @@ async function readCloudBundle(): Promise<CloudBundle | null> {
   const rows = await cloudRequest("/user_learning_states?select=state,updated_at&user_id=eq." + encodeURIComponent(session.user.id) + "&limit=1", { method: "GET" });
   if (!Array.isArray(rows) || !rows.length) return null;
   const bundle = normalizeBundle(rows[0].state);
-  if (rows[0].updated_at && (!bundle.core.updatedAt || Date.parse(rows[0].updated_at) > (Date.parse(bundle.core.updatedAt) || 0))) bundle.core.updatedAt = rows[0].updated_at;
   return bundle;
 }
 
@@ -323,16 +324,37 @@ async function writeCloudBundle(bundle: CloudBundle): Promise<void> {
   });
 }
 
+async function prepareLocalForAccount(): Promise<void> {
+  if (!session) return;
+  let owner: string | null = null;
+  try { owner = localStorage.getItem(OWNER_KEY); } catch { owner = null; }
+  if (!owner || owner === session.user.id) return;
+  const previous = await readLocalBundle();
+  try { localStorage.setItem(ACCOUNT_CACHE_PREFIX + owner, JSON.stringify(previous)); } catch { /* Keep the cloud copy as the durable backup. */ }
+  const target = parseStored<CloudBundle | null>(ACCOUNT_CACHE_PREFIX + session.user.id, null);
+  const next = target ? normalizeBundle(target) : {
+    schemaVersion: 1 as const,
+    core: freshCore(),
+    extras: { extraLearning: {}, habitProgress: {} },
+  };
+  await applyLocalBundle(next);
+}
+
 async function syncNow(): Promise<void> {
   if (!CLOUD_READY || !session || syncing || !navigator.onLine) return;
   syncing = true;
   setSyncBadge("Menyinkronkan…", "syncing");
   try {
+    await prepareLocalForAccount();
     const local = await readLocalBundle();
     const remote = await readCloudBundle();
     const merged = remote ? mergeBundles(local, remote) : local;
     if (!remote || stable(merged) !== stable(remote)) await writeCloudBundle(merged);
     if (stable(merged) !== stable(local)) await applyLocalBundle(merged);
+    try {
+      localStorage.setItem(OWNER_KEY, session.user.id);
+      localStorage.setItem(ACCOUNT_CACHE_PREFIX + session.user.id, JSON.stringify(merged));
+    } catch { /* Local account cache is a convenience, not the only cloud copy. */ }
     lastSuccessfulSync = new Date().toISOString();
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres tersinkron pada " + new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(new Date(lastSuccessfulSync)) + ". Kamu bisa lanjut di perangkat lain.", "success");
@@ -515,6 +537,16 @@ async function sendPasswordReset(): Promise<void> {
 }
 
 async function signOut(): Promise<void> {
+  const signedInUserId = session?.user?.id;
+  if (signedInUserId) {
+    await syncNow();
+    try {
+      const current = await readLocalBundle();
+      localStorage.setItem(ACCOUNT_CACHE_PREFIX + signedInUserId, JSON.stringify(current));
+    } catch { /* Cloud state remains the primary saved copy. */ }
+    await applyLocalBundle({ schemaVersion: 1, core: freshCore(), extras: { extraLearning: {}, habitProgress: {} } });
+    try { localStorage.removeItem(OWNER_KEY); } catch { /* no-op */ }
+  }
   try {
     if (session) {
       const active = await currentSession();
@@ -523,11 +555,17 @@ async function signOut(): Promise<void> {
   } catch { /* A local sign-out still works if the network is unavailable. */ }
   setSession(null);
   setSyncBadge("Tersimpan di perangkat", "idle");
-  setMessage("Kamu sudah keluar. Progres lokal tetap ada di perangkat ini; sinkronisasi berhenti sampai masuk lagi.", "info");
+  setMessage("Kamu sudah keluar. Progres akunmu tetap tersimpan di cloud; masuk kembali untuk memuatnya. Sesi lokal dibersihkan agar tidak bercampur dengan akun lain.", "info");
+}
+
+async function waitForWorkspaceReady(): Promise<void> {
+  if (!$("#app-main") || (window as AnyRecord).sinauuWorkspaceReady) return;
+  await new Promise<void>((resolve) => window.addEventListener("sinauu:workspace-ready", () => resolve(), { once: true }));
 }
 
 async function restoreSession(): Promise<void> {
   if (!CLOUD_READY) return;
+  await waitForWorkspaceReady();
   try {
     const raw = parseStored<AuthSession | null>(SESSION_KEY, null);
     if (!raw?.access_token || !raw?.refresh_token) return;
