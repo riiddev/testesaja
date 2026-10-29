@@ -1,5 +1,5 @@
 const CACHE_NAME = "sinauu-shell-v1";
-const SHELL = ["/", "/index.html", "/belajar.html", "/account.css", "/styles.css", "/belajar.css", "/motion.css", "/motion.js", "/belajar.js", "/extra-learning.js", "/manifest.webmanifest", "/assets/sinauu-app-icon.svg", "/assets/sinauu-mark.svg"];
+const SHELL = ["/", "/index.html", "/belajar.html", "/account.css", "/manifest.webmanifest", "/assets/sinauu-app-icon.svg", "/assets/sinauu-mark.svg"];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL).catch(() => undefined)).then(() => self.skipWaiting()));
 });
