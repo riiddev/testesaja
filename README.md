@@ -46,17 +46,19 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 
 ## Accounts, cross-device progress, and app installation
 
-The workspace now includes a progressive web app (PWA) manifest and service worker, with an account entry point for email/password sign-up, sign-in, and cloud sync. Vocabulary evidence/mastery, favorites, grammar, activity history, Matching, and HABIT reading answers are included in the sync bundle.
+The workspace includes a progressive web app (PWA) manifest and service worker, with email/password account creation, sign-in, and cross-device progress sync through **Google Sheets**. A small Vercel API layer handles login and only reads or writes the signed-in account's row. Vocabulary evidence/mastery, favorites, grammar, activity history, Matching, and HABIT reading answers are included in the sync bundle.
 
-**Cloud accounts remain disabled until configured.** Create a Supabase Free project, apply [the SQL migration](supabase/migrations/20261029000000_create_user_learning_states.sql), and add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the Vercel project’s Production and Preview environments. Follow [the step-by-step account and sync setup](docs/ACCOUNT-SYNC-SETUP.md). The SQL uses Row Level Security to restrict each account to its own learning-state row; never add a service-role/secret key to the browser environment.
+**Google Sheets accounts remain inactive until configured.** Create a spreadsheet with tabs named `Accounts` and `LearningStates`, enable Google Sheets API for a Google Cloud service account, share the spreadsheet with that service account as Editor, and set the four server-only environment variables in Vercel. Follow [the setup guide](docs/ACCOUNT-SYNC-SETUP.md). Passwords are PBKDF2-hashed; never expose the service-account private key or `SINAUU_SESSION_SECRET` in browser code or GitHub.
 
-Learners can install the website from their browser’s “Install app” / “Add to Home Screen” menu. This is a PWA (installed website), not a native Android APK or App Store/Play Store package. The existing local-first learning modes still work if cloud configuration is absent.
+Learners can install the website from their browser’s “Install app” / “Add to Home Screen” menu. This is a PWA (installed website), not a native Android APK or App Store/Play Store package. Local-first learning remains available when Google Sheets is offline or not configured.
 
 ## Technical constraints
 
-- Static HTML, CSS, JavaScript, and JSON; no backend, API server, login, or required paid service.
+- Static HTML, CSS, and JSON for the learning experience, plus Vercel API functions for account and sync operations.
+- Google Sheets is the single data store for accounts and learning snapshots; the API does not use Supabase.
 - The source repository is the source of truth. Content updates go through GitHub and redeploy through the connected Vercel project.
-- Study progress remains local to the browser/device. There is no automatic cross-device sync.
+- Progress stays local while learning and syncs after changes when the user is signed in and online. Cross-device sync requires the Google Sheets environment setup.
+- Email verification and automatic password-reset email are not enabled yet. Google Sheets has API quotas and is suitable for an MVP/small cohort rather than large-scale transactional workloads.
 - Back up progress before clearing browser storage or switching devices.
 
 ## Files
