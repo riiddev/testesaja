@@ -229,12 +229,12 @@ function mergeBundles(local: CloudBundle, remote: CloudBundle): CloudBundle {
 }
 
 function setMessage(message: string, kind: "info" | "success" | "error" = "info"): void {
-  const status = $("#account-status");
+  const status = $("#account-status") as HTMLElement | null;
   if (status) { status.textContent = message; status.dataset.kind = kind; }
 }
 
 function setSyncBadge(label: string, state: "idle" | "syncing" | "success" | "error" = "idle"): void {
-  const badge = $("#cloud-sync-badge");
+  const badge = $("#cloud-sync-badge") as HTMLElement | null;
   if (badge) { badge.textContent = label; badge.dataset.state = state; }
 }
 
