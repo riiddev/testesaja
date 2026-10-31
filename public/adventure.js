@@ -18,10 +18,10 @@
   ];
   let curriculum = null;
   let progress = normalizeProgress(readStored());
-  let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, initialized = false;
+  let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, initialized = false;
 
   function emptyProgress() {
-    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, achievementIds: [], updatedAt: new Date().toISOString() };
+    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, listeningRate: 0.9, achievementIds: [], updatedAt: new Date().toISOString() };
   }
   function readStored() {
     try {
@@ -37,6 +37,7 @@
     base.xpLedger = raw.xpLedger && typeof raw.xpLedger === "object" && !Array.isArray(raw.xpLedger) ? raw.xpLedger : {};
     base.dailyQuests = raw.dailyQuests && typeof raw.dailyQuests === "object" && !Array.isArray(raw.dailyQuests) ? raw.dailyQuests : {};
     base.mistakeJournal = raw.mistakeJournal && typeof raw.mistakeJournal === "object" && !Array.isArray(raw.mistakeJournal) ? raw.mistakeJournal : {};
+    base.listeningRate = [0.75, 0.9, 1].includes(Number(raw.listeningRate)) ? Number(raw.listeningRate) : 0.9;
     base.achievementIds = Array.isArray(raw.achievementIds) ? Array.from(new Set(raw.achievementIds.filter((item) => typeof item === "string"))).slice(0, 100) : [];
     base.updatedAt = typeof raw.updatedAt === "string" ? raw.updatedAt : base.updatedAt;
     for (const [missionId, entry] of Object.entries(base.missionProgress)) {
@@ -262,8 +263,11 @@
     const isChoice = ["choice", "listen", "read"].includes(step.type);
     const passage = step.passage ? '<div class="adventure-passage">' + escapeHtml(step.passage).replace(/\\n|\n/g, "<br>") + '</div>' : "";
     const listen = step.type === "listen"
-      ? '<div class="adventure-listen-box"><button class="secondary-action" type="button" data-adventure-listen="' + escapeHtml(step.id) + '">▶ Dengarkan dialog</button><span>Suara memakai text-to-speech browser. Audio tidak direkam.</span>' +
-        (listenReady ? '<p class="adventure-audio-transcript">' + escapeHtml(step.audioText) + '</p>' : '') + '</div>' : "";
+      ? '<div class="adventure-listen-lab"><div class="adventure-listen-controls"><button class="secondary-action" type="button" data-adventure-listen="' + escapeHtml(step.id) + '">' + (listenReady ? '↻ Putar ulang' : '▶ Dengarkan dialog') + '</button>' +
+        '<div class="adventure-listen-rates">' + [0.75,0.9,1].map((rate) => '<button type="button" data-adventure-listen-rate="' + rate + '" class="' + (progress.listeningRate === rate ? 'is-active' : '') + '">' + (rate === 1 ? '1×' : rate.toFixed(2).replace(/0$/, '') + '×') + '</button>').join("") + '</div></div>' +
+        '<p class="adventure-listen-hint">' + (listenReady ? 'Audio siap diputar ulang. Pilih kecepatan atau buka transkrip setelah mencoba mendengar.' : 'Dengarkan dialog terlebih dahulu. Transkrip disembunyikan agar kamu bisa berlatih memahami audio.') + '</p>' +
+        (listenReady ? '<button class="text-action adventure-transcript-toggle" type="button" data-adventure-transcript>' + (listenTranscriptVisible ? 'Sembunyikan transkrip' : 'Tampilkan transkrip') + '</button>' : '') +
+        (listenReady && listenTranscriptVisible ? '<p class="adventure-audio-transcript">' + escapeHtml(step.audioText) + '</p>' : '') + '</div>' : "";
     const options = isChoice ? '<div class="adventure-options">' + step.options.map((option, index) =>
       '<button class="adventure-option" type="button" data-adventure-answer="' + index + '"' + (step.type === "listen" && !listenReady ? " disabled" : "") + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>'
     ).join("") + '</div>' : "";
@@ -294,7 +298,7 @@
   function startMission(missionId) {
     const mission = curriculum.missions.find((item) => item.id === missionId);
     if (!mission || !missionUnlocked(mission)) return;
-    selectedMissionId = missionId; currentFeedback = null; currentFeedbackStepId = null; listenReady = false;
+    selectedMissionId = missionId; currentFeedback = null; currentFeedbackStepId = null; listenReady = false; listenTranscriptVisible = false;
     const entry = missionEntry(missionId);
     if (!progress.missionProgress[missionId]) progress.missionProgress[missionId] = entry;
     let attempt = latestIncompleteAttempt(missionId);
@@ -422,27 +426,47 @@
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
     selectedMissionId = missionId; currentFeedback = null; listenReady = false; renderAll();
   }
+  function playText(text) {
+    if (!("speechSynthesis" in window) || typeof window.SpeechSynthesisUtterance !== "function") return false;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text || "");
+    utterance.lang = "en-US";
+    utterance.rate = progress.listeningRate || 0.9;
+    window.speechSynthesis.speak(utterance);
+    return true;
+  }
+
+  function setListeningRate(value) {
+    const rate = Number(value);
+    if (![0.75, 0.9, 1].includes(rate)) return;
+    progress.listeningRate = rate;
+    saveProgress();
+    renderMissionDetail();
+    renderDailyQuest();
+  }
+
   function listenToStep() {
     const mission = curriculum.missions.find((item) => item.id === selectedMissionId);
     const attempt = mission && currentAttempt(mission.id);
     const step = mission && attempt && currentStep(mission, attempt);
     if (!step || step.type !== "listen") return;
     listenReady = true;
-    if ("speechSynthesis" in window && typeof window.SpeechSynthesisUtterance === "function") {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(step.audioText || "");
-      utterance.lang = "en-US"; utterance.rate = 0.88; window.speechSynthesis.speak(utterance);
-    }
+    listenTranscriptVisible = !playText(step.audioText);
+    renderMissionDetail();
+  }
+
+  function toggleMissionTranscript() {
+    listenTranscriptVisible = !listenTranscriptVisible;
     renderMissionDetail();
   }
   function backToMission() {
-    currentFeedback = null; currentFeedbackStepId = null; listenReady = false; renderMissionDetail();
+    currentFeedback = null; currentFeedbackStepId = null; listenReady = false; listenTranscriptVisible = false; renderMissionDetail();
   }
   function advanceStep() {
     const mission = curriculum.missions.find((item) => item.id === selectedMissionId);
     const attempt = mission && currentAttempt(mission.id);
     if (!mission || !attempt || !currentFeedback || currentFeedback.kind !== "success") return;
-    currentFeedback = null; currentFeedbackStepId = null; listenReady = false;
+    currentFeedback = null; currentFeedbackStepId = null; listenReady = false; listenTranscriptVisible = false;
     if (attempt.completedStepIds.length >= mission.steps.length) {
       completeMission(mission, attempt); renderAll(); return;
     }
@@ -556,8 +580,10 @@
     }
     const wrongCount = Number(record.wrongAttempts?.[step.id]) || 0;
     const listenMarkup = step.type === "listen"
-      ? '<div class="adventure-daily-listen"><button type="button" class="secondary-action" data-daily-listen>▶ Dengarkan dialog</button>' +
-        (dailyListenReady ? '<p>' + escapeHtml(step.audioText) + '</p>' : '<small>Dengarkan dulu sebelum menjawab.</small>') + '</div>' : "";
+      ? '<div class="adventure-listen-lab adventure-daily-listen"><div class="adventure-listen-controls"><button type="button" class="secondary-action" data-daily-listen>' + (dailyListenReady ? '↻ Putar ulang' : '▶ Dengarkan dialog') + '</button>' +
+        '<div class="adventure-listen-rates">' + [0.75,0.9,1].map((rate) => '<button type="button" data-daily-listen-rate="' + rate + '" class="' + (progress.listeningRate === rate ? 'is-active' : '') + '">' + (rate === 1 ? '1×' : rate.toFixed(2).replace(/0$/, '') + '×') + '</button>').join("") + '</div></div>' +
+        (dailyListenReady ? '<button type="button" class="text-action adventure-transcript-toggle" data-daily-transcript>' + (dailyTranscriptVisible ? 'Sembunyikan transkrip' : 'Tampilkan transkrip') + '</button>' : '<small>Dengarkan dulu sebelum menjawab. Transkrip tersembunyi.</small>') +
+        (dailyListenReady && dailyTranscriptVisible ? '<p class="adventure-daily-transcript">' + escapeHtml(step.audioText) + '</p>' : '') + '</div>' : "";
     const passage = step.passage ? '<div class="adventure-passage">' + escapeHtml(step.passage).replace(/\\n|\n/g, "<br>") + '</div>' : "";
     const options = step.options.map((option, index) => '<button class="adventure-option" type="button" data-daily-answer="' + index + '"' + (step.type === "listen" && !dailyListenReady ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>').join("");
     const feedback = record.lastFeedback ? '<div class="adventure-feedback ' + record.lastFeedback.kind + '"><strong>' + escapeHtml(record.lastFeedback.title) + '</strong><p>' + escapeHtml(record.lastFeedback.message) + '</p>' +
@@ -591,11 +617,7 @@
     const step = mission?.steps.find((item) => item.id === stepId);
     if (!step || step.type !== "listen") return;
     dailyListenReady = true;
-    if ("speechSynthesis" in window && typeof window.SpeechSynthesisUtterance === "function") {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(step.audioText || "");
-      utterance.lang = "en-US"; utterance.rate = 0.88; window.speechSynthesis.speak(utterance);
-    }
+    dailyTranscriptVisible = !playText(step.audioText);
     renderDailyQuest();
   }
 
@@ -628,6 +650,7 @@
     }
     record.updatedAt = new Date().toISOString();
     dailyListenReady = false;
+    dailyTranscriptVisible = false;
     saveProgress();
     renderDailyQuest(); renderMistakeJournal(); renderSkillProfile();
   }
@@ -639,6 +662,7 @@
     record.lastFeedbackStepId = null;
     record.updatedAt = new Date().toISOString();
     dailyListenReady = false;
+    dailyTranscriptVisible = false;
     if (definition.stepIds.every((id) => record.completedStepIds.includes(id))) {
       record.completedAt = record.completedAt || new Date().toISOString();
       const awardId = "daily-quest:" + definition.dateKey;
@@ -659,6 +683,9 @@
       const answer = event.target.closest("[data-adventure-answer]");
       if (answer) { handleChoiceAnswer(answer.dataset.adventureAnswer); return; }
       if (event.target.closest("[data-adventure-listen]")) { listenToStep(); return; }
+      const missionRate = event.target.closest("[data-adventure-listen-rate]");
+      if (missionRate) { setListeningRate(missionRate.dataset.adventureListenRate); return; }
+      if (event.target.closest("[data-adventure-transcript]")) { toggleMissionTranscript(); return; }
       if (event.target.closest("[data-adventure-complete-production]")) { completeProduction(); return; }
       if (event.target.closest("[data-adventure-next]")) { advanceStep(); return; }
       if (event.target.closest("[data-adventure-back]")) { backToMission(); return; }
@@ -667,6 +694,9 @@
       const dailyAnswer = event.target.closest("[data-daily-answer]");
       if (dailyAnswer) { answerDailyQuest(dailyAnswer.dataset.dailyAnswer); return; }
       if (event.target.closest("[data-daily-listen]")) { listenToDailyStep(); return; }
+      const dailyRate = event.target.closest("[data-daily-listen-rate]");
+      if (dailyRate) { setListeningRate(dailyRate.dataset.dailyListenRate); return; }
+      if (event.target.closest("[data-daily-transcript]")) { dailyTranscriptVisible = !dailyTranscriptVisible; renderDailyQuest(); return; }
       if (event.target.closest("[data-daily-next]")) { advanceDailyQuest(); return; }
       const mistakeReview = event.target.closest("[data-mistake-review]");
       if (mistakeReview) { startMission(mistakeReview.dataset.mistakeReview); return; }
