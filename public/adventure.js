@@ -930,6 +930,7 @@
   window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); renderAll(); };
   window.sinauuRenderAdventure = () => { if (curriculum) renderAll(); else void init(); };
 
-  if (window.sinauuWorkspaceReady) void init();
-  else window.addEventListener("sinauu:workspace-ready", () => void init(), { once: true });
+  // Adventure uses only its own small curriculum and local extras. Do not wait for
+  // the large Oxford corpus before showing Daily Quest, Mistake Journal, or Studios.
+  void init();
 })();
