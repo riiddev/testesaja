@@ -21,7 +21,7 @@
   let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, initialized = false;
 
   function emptyProgress() {
-    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, listeningRate: 0.9, achievementIds: [], updatedAt: new Date().toISOString() };
+    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
   }
   function readStored() {
     try {
@@ -39,6 +39,7 @@
     base.mistakeJournal = raw.mistakeJournal && typeof raw.mistakeJournal === "object" && !Array.isArray(raw.mistakeJournal) ? raw.mistakeJournal : {};
     base.listeningRate = [0.75, 0.9, 1].includes(Number(raw.listeningRate)) ? Number(raw.listeningRate) : 0.9;
     base.achievementIds = Array.isArray(raw.achievementIds) ? Array.from(new Set(raw.achievementIds.filter((item) => typeof item === "string"))).slice(0, 100) : [];
+    base.studioSessions = Array.isArray(raw.studioSessions) ? raw.studioSessions.filter((item) => item && typeof item === "object" && typeof item.sessionId === "string" && ["speaking", "writing"].includes(item.studioType) && typeof item.promptId === "string").map((item) => ({ sessionId: item.sessionId.slice(0, 140), studioType: item.studioType, promptId: item.promptId.slice(0, 80), wordCount: Math.max(0, Math.min(5000, Number(item.wordCount) || 0)), checklistCompleted: Math.max(0, Math.min(5, Number(item.checklistCompleted) || 0)), completedAt: typeof item.completedAt === "string" ? item.completedAt : base.updatedAt, updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : base.updatedAt })).slice(-500) : [];
     base.updatedAt = typeof raw.updatedAt === "string" ? raw.updatedAt : base.updatedAt;
     for (const [missionId, entry] of Object.entries(base.missionProgress)) {
       if (!entry || typeof entry !== "object") { delete base.missionProgress[missionId]; continue; }
@@ -420,7 +421,7 @@
     }
     checkAchievements();
     renderHeaderStats(); renderMap(); renderMissionDetail(); renderSkillProfile(); renderAchievements();
-    renderDailyQuest(); renderMistakeJournal();
+    renderDailyQuest(); renderMistakeJournal(); renderStudios();
   }
   function openMission(missionId) {
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
@@ -675,6 +676,192 @@
     renderAll();
   }
 
+
+  // Standalone studios: raw drafts/checklists are device-local and never enter CloudBundle.
+  const STUDIO_PROMPTS = {
+    speaking: [
+      { id: "first-introduction", title: "Introduce yourself", level: "A1", context: "You meet a new classmate before the lesson starts.", prompt: "Introduce yourself, share one thing you enjoy, and explain why you are learning English.", starters: ["Hi, my name is …", "I enjoy … because …", "I’m learning English to …"], checks: ["Open with a greeting and your name.", "Share at least two relevant details.", "Finish naturally and invite a response."] },
+      { id: "ask-directions", title: "Ask for directions", level: "A1–A2", context: "You are in town and need to find the nearest bus stop.", prompt: "Ask someone for directions. Mention where you want to go and clarify one landmark.", starters: ["Excuse me, could you tell me …?", "Should I turn …?", "Thank you for your help."], checks: ["Explain where you want to go.", "Ask one clear follow-up question.", "Thank the person politely."] },
+      { id: "cafe-order", title: "Order at a café", level: "A1–A2", context: "You are ordering a drink and a snack at a small café.", prompt: "Order something politely, mention one preference, and ask about the price.", starters: ["Could I have …, please?", "Can I get it without …?", "How much is it altogether?"], checks: ["Greet the staff and order clearly.", "Mention a preference or request.", "Check the price and close politely."] }
+    ],
+    writing: [
+      { id: "short-introduction", title: "A short introduction", level: "A1", context: "Write a short profile for a new class discussion board.", prompt: "Introduce yourself, mention an interest, and explain one goal you have for learning English.", target: "50–80 words", starters: ["My name is …", "In my free time, I …", "One of my goals is …"], checks: ["My purpose is clear from the beginning.", "I included specific details, not only general claims.", "I checked spelling, punctuation, and sentence endings."] },
+      { id: "weekend-story", title: "A weekend story", level: "A1–A2", context: "Tell a friend about something you did last weekend.", prompt: "Write about one activity from your weekend. Include where you went, who was there, and how you felt.", target: "60–90 words", starters: ["Last weekend, I …", "I went there with …", "I felt … because …"], checks: ["The events follow a clear order.", "I included a place, person, or concrete detail.", "I checked past-tense verbs and punctuation."] },
+      { id: "helpful-message", title: "Invite a study partner", level: "A2", context: "Send a friendly message to someone you want to study with.", prompt: "Invite a friend to study together. Suggest a time and place, then ask whether they are available.", target: "40–70 words", starters: ["Hi …, are you free …?", "We could meet at …", "Let me know what works for you."], checks: ["The invitation and purpose are easy to understand.", "I included a time and a place.", "The tone is friendly and the message has a clear closing."] }
+    ]
+  };
+  const STUDIO_DRAFTS_KEY = "sinauu-adventure-studio-drafts-v1";
+  let studioDrafts = null;
+
+  function studioStorageKey() {
+    try {
+      const session = JSON.parse(localStorage.getItem("sinauu-cloud-session-v1") || "null");
+      const userId = session && session.user && typeof session.user.id === "string" ? session.user.id : "local";
+      return STUDIO_DRAFTS_KEY + ":" + encodeURIComponent(userId);
+    } catch (_) { return STUDIO_DRAFTS_KEY + ":local"; }
+  }
+  function readStudioDrafts() {
+    const empty = {
+      speaking: { selectedPromptId: "first-introduction", prompts: {} },
+      writing: { selectedPromptId: "short-introduction", prompts: {} }
+    };
+    try {
+      const raw = JSON.parse(localStorage.getItem(studioStorageKey()) || "null");
+      if (!raw || typeof raw !== "object") return empty;
+      for (const kind of ["speaking", "writing"]) {
+        const allowed = STUDIO_PROMPTS[kind];
+        const saved = raw[kind] && typeof raw[kind] === "object" ? raw[kind] : {};
+        empty[kind].selectedPromptId = allowed.some((item) => item.id === saved.selectedPromptId) ? saved.selectedPromptId : empty[kind].selectedPromptId;
+        if (saved.prompts && typeof saved.prompts === "object") {
+          for (const prompt of allowed) {
+            const state = saved.prompts[prompt.id];
+            if (!state || typeof state !== "object") continue;
+            empty[kind].prompts[prompt.id] = {
+              text: kind === "writing" && typeof state.text === "string" ? state.text.slice(0, 12000) : "",
+              checked: Array.isArray(state.checked) ? Array.from(new Set(state.checked.filter((value) => Number.isInteger(value) && value >= 0 && value < 3))) : []
+            };
+          }
+        }
+      }
+    } catch (_) { /* Start with an empty local draft when storage is unavailable or invalid. */ }
+    return empty;
+  }
+  function saveStudioDrafts() {
+    try {
+      localStorage.setItem(studioStorageKey(), JSON.stringify(studioDrafts));
+      const status = $("#adventure-studio-save-state");
+      if (status) status.textContent = "Draft tersimpan lokal di perangkat ini.";
+    } catch (_) {
+      const status = $("#adventure-studio-save-state");
+      if (status) status.textContent = "Penyimpanan lokal penuh; salin draft penting ke tempat aman.";
+    }
+  }
+  function studioState(kind, promptId) {
+    const group = studioDrafts[kind];
+    if (!group.prompts[promptId]) group.prompts[promptId] = { text: "", checked: [] };
+    return group.prompts[promptId];
+  }
+  function studioWordCount(value) {
+    const text = String(value || "").trim();
+    return text ? text.split(/\s+/).filter(Boolean).length : 0;
+  }
+  function renderStudioPromptButtons(kind, selectedId) {
+    return STUDIO_PROMPTS[kind].map((prompt) =>
+      '<button type="button" class="adventure-studio-scenario' + (prompt.id === selectedId ? ' is-active' : '') + '" data-studio-kind="' + kind + '" data-studio-prompt="' + prompt.id + '" aria-pressed="' + (prompt.id === selectedId) + '">' +
+        '<span>' + prompt.level + '</span><strong>' + escapeHtml(prompt.title) + '</strong></button>'
+    ).join("");
+  }
+  function renderStudioChecklist(kind, prompt, state) {
+    return '<div class="adventure-studio-checklist">' + prompt.checks.map((label, index) =>
+      '<label><input type="checkbox" data-studio-kind="' + kind + '" data-studio-prompt-id="' + prompt.id + '" data-studio-check="' + index + '"' + (state.checked.includes(index) ? ' checked' : '') + '><span>' + escapeHtml(label) + '</span></label>'
+    ).join("") + '</div>';
+  }
+  function renderStudios() {
+    if (!studioDrafts) return;
+    const speakingNode = $("#adventure-speaking-studio");
+    if (speakingNode) {
+      const group = studioDrafts.speaking;
+      const prompt = STUDIO_PROMPTS.speaking.find((item) => item.id === group.selectedPromptId) || STUDIO_PROMPTS.speaking[0];
+      const state = studioState("speaking", prompt.id);
+      const done = progress.studioSessions.filter((item) => item.studioType === "speaking").length;
+      speakingNode.innerHTML =
+        '<div class="adventure-studio-heading"><div><span class="eyebrow">SPEAKING / SAY IT YOUR WAY</span><h3>Speaking Studio</h3><p>Latihan bicara dengan suara sendiri. Tidak ada rekaman atau penilaian aksen otomatis.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
+        '<div class="adventure-studio-scenarios">' + renderStudioPromptButtons("speaking", prompt.id) + '</div>' +
+        '<div class="adventure-studio-prompt"><span>' + prompt.level + ' · SITUATION</span><p>' + escapeHtml(prompt.context) + '</p><strong>' + escapeHtml(prompt.prompt) + '</strong><div class="adventure-studio-phrases">' + prompt.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></div>' +
+        '<p class="adventure-studio-instruction">Coba ucapkan jawabanmu dengan suara jelas. Tidak perlu menghafal kalimat contoh.</p>' +
+        renderStudioChecklist("speaking", prompt, state) +
+        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="speaking" data-studio-complete' + (state.checked.length === 3 ? '' : ' disabled') + '>Saya sudah berlatih ↗</button>' +
+        '<small class="adventure-studio-local-note">Yang disimpan ke akun hanya bukti sesi latihan, bukan suara atau transkrip.</small>';
+    }
+    const writingNode = $("#adventure-writing-studio");
+    if (writingNode) {
+      const group = studioDrafts.writing;
+      const prompt = STUDIO_PROMPTS.writing.find((item) => item.id === group.selectedPromptId) || STUDIO_PROMPTS.writing[0];
+      const state = studioState("writing", prompt.id);
+      const words = studioWordCount(state.text);
+      const done = progress.studioSessions.filter((item) => item.studioType === "writing").length;
+      writingNode.innerHTML =
+        '<div class="adventure-studio-heading"><div><span class="eyebrow">WRITING / MAKE IT CLEAR</span><h3>Writing Studio</h3><p>Susun ide, tulis draft, lalu periksa kembali sebelum menandai sesi selesai.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
+        '<div class="adventure-studio-scenarios">' + renderStudioPromptButtons("writing", prompt.id) + '</div>' +
+        '<div class="adventure-studio-prompt"><span>' + prompt.level + ' · ' + prompt.target + '</span><p>' + escapeHtml(prompt.context) + '</p><strong>' + escapeHtml(prompt.prompt) + '</strong><div class="adventure-studio-phrases">' + prompt.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></div>' +
+        '<label class="adventure-studio-field" for="studio-writing-draft">YOUR DRAFT <span id="studio-writing-count">' + words + ' words</span></label>' +
+        '<textarea id="studio-writing-draft" data-studio-kind="writing" data-studio-prompt-id="' + prompt.id + '" rows="6" maxlength="12000" placeholder="Write your first draft here…">' + escapeHtml(state.text) + '</textarea>' +
+        '<div class="adventure-studio-draft-actions"><small>Draft hanya tersimpan di perangkat dan akun browser ini.</small><button type="button" data-studio-kind="writing" data-studio-clear>Hapus draft</button></div>' +
+        renderStudioChecklist("writing", prompt, state) +
+        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="writing" data-studio-complete' + (words >= 25 && state.checked.length === 3 ? '' : ' disabled') + '>Tandai sesi selesai ↗</button>' +
+        '<small class="adventure-studio-local-note">Teks mentah tidak dikirim ke cloud, spreadsheet, atau backup akun.</small>';
+    }
+  }
+  function updateStudioCompleteButton(kind) {
+    const node = kind === "speaking" ? $("#adventure-speaking-studio") : $("#adventure-writing-studio");
+    if (!node || !studioDrafts) return;
+    const promptId = studioDrafts[kind].selectedPromptId;
+    const prompt = STUDIO_PROMPTS[kind].find((item) => item.id === promptId);
+    const state = studioState(kind, promptId);
+    const button = $("[data-studio-complete]", node);
+    if (!button || !prompt) return;
+    const ready = state.checked.length === prompt.checks.length && (kind !== "writing" || studioWordCount(state.text) >= 25);
+    button.disabled = !ready;
+  }
+  function completeStudioPractice(kind) {
+    if (!studioDrafts || !["speaking", "writing"].includes(kind)) return;
+    const promptId = studioDrafts[kind].selectedPromptId;
+    const prompt = STUDIO_PROMPTS[kind].find((item) => item.id === promptId);
+    const state = studioState(kind, promptId);
+    const words = studioWordCount(state.text);
+    if (!prompt || state.checked.length !== prompt.checks.length || (kind === "writing" && words < 25)) return;
+    const dateKey = localDateKey();
+    const sessionId = kind + ":" + promptId + ":" + dateKey;
+    const now = new Date().toISOString();
+    const existing = progress.studioSessions.find((item) => item.sessionId === sessionId);
+    const summary = {
+      sessionId, studioType: kind, promptId,
+      wordCount: kind === "writing" ? words : 0,
+      checklistCompleted: prompt.checks.length,
+      completedAt: existing?.completedAt || now,
+      updatedAt: now
+    };
+    if (existing) Object.assign(existing, summary);
+    else progress.studioSessions.push(summary);
+    progress.studioSessions = progress.studioSessions.slice(-500);
+    const skill = kind === "speaking" ? "speaking" : "writing";
+    const evidenceId = "studio:" + sessionId;
+    const evidence = progress.skillEvidence[skill] || (progress.skillEvidence[skill] = []);
+    if (!evidence.some((item) => item.evidenceId === evidenceId)) evidence.push({
+      evidenceId, missionId: "studio", sourceType: "studio", promptId,
+      recordedAt: now, method: "self-reviewed"
+    });
+    saveProgress();
+    renderAll();
+  }
+  function selectStudioPrompt(kind, promptId) {
+    if (!STUDIO_PROMPTS[kind]?.some((item) => item.id === promptId)) return;
+    studioDrafts[kind].selectedPromptId = promptId;
+    saveStudioDrafts();
+    renderStudios();
+  }
+  function updateStudioChecklist(input) {
+    const kind = input.dataset.studioKind, promptId = input.dataset.studioPromptId;
+    if (!studioDrafts || !["speaking", "writing"].includes(kind) || !promptId) return;
+    const state = studioState(kind, promptId);
+    const card = kind === "speaking" ? $("#adventure-speaking-studio") : $("#adventure-writing-studio");
+    state.checked = $("[data-studio-check]:checked", card).map((item) => Number(item.dataset.studioCheck)).filter((value) => Number.isInteger(value));
+    state.checked = Array.from(new Set(state.checked)).sort();
+    saveStudioDrafts();
+    updateStudioCompleteButton(kind);
+  }
+  function updateStudioDraft(text) {
+    if (!studioDrafts) return;
+    const field = $("#studio-writing-draft");
+    if (!field) return;
+    const state = studioState("writing", field.dataset.studioPromptId);
+    state.text = String(text || "").slice(0, 12000);
+    const count = $("#studio-writing-count");
+    if (count) count.textContent = studioWordCount(state.text) + " words";
+    saveStudioDrafts();
+    updateStudioCompleteButton("writing");
+  }
+
   function initListeners() {
     document.addEventListener("click", (event) => {
       const select = event.target.closest("[data-adventure-select]");
@@ -703,11 +890,19 @@
       if (mistakeReview) { startMission(mistakeReview.dataset.mistakeReview); return; }
       const mistakeFilter = event.target.closest("[data-mistake-filter]");
       if (mistakeFilter) { mistakeFilterValue = mistakeFilter.dataset.mistakeFilter; renderMistakeJournal(); }
+      const studioPrompt = event.target.closest("[data-studio-prompt]");
+      if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
+      const studioComplete = event.target.closest("[data-studio-complete]");
+      if (studioComplete) { completeStudioPractice(studioComplete.dataset.studioKind); return; }
+      const studioClear = event.target.closest("[data-studio-clear]");
+      if (studioClear && studioDrafts) { const state = studioState("writing", studioDrafts.writing.selectedPromptId); state.text = ""; state.checked = []; saveStudioDrafts(); renderStudios(); return; }
     });
     document.addEventListener("change", (event) => {
       if (event.target.matches("[data-adventure-check]")) updateProductionButton();
+      if (event.target.matches("[data-studio-check]")) updateStudioChecklist(event.target);
     });
     document.addEventListener("input", (event) => {
+      if (event.target.matches("#studio-writing-draft")) updateStudioDraft(event.target.value);
       if (event.target.matches("#adventure-writing")) updateProductionButton();
     });
   }
@@ -723,6 +918,7 @@
         throw new Error("Struktur konten petualangan tidak sesuai.");
       }
       selectedMissionId = curriculum.missions.find((mission) => missionUnlocked(mission) && !missionCompleted(mission.id))?.id || curriculum.missions[0].id;
+      studioDrafts = readStudioDrafts();
       initListeners(); renderAll();
     } catch (error) {
       const panel = $("#adventure-mission-panel");
