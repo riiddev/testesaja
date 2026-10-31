@@ -159,3 +159,47 @@ Jangan kirim rekaman suara mentah ke Google Sheets. MVP dapat merekam secara lok
 - Tidak menambah route ke app utama, tidak mengubah navigasi, `belajar.js`, `belajar.css`, `account-cloud.ts`, API, Apps Script, atau spreadsheet.
 - Tombol demo hanya menampilkan pesan bahwa belum ada progres yang disimpan.
 - Produksi tetap tidak berubah sampai desain disetujui.
+
+
+## 7. Phase 1.5 — Daily Quest, Mistake Journal, and reward milestones
+
+The preview now includes three additional systems built on the existing mission curriculum.
+
+### Daily Quest
+
+- One locally dated challenge per day, built deterministically from the authored First Steps Island lessons.
+- Three short tasks: vocabulary, comprehension (reading or listening), and a grammar point.
+- The daily attempt is stored under \`adventureProgress.dailyQuests[YYYY-MM-DD]\`.
+- A single 15 XP award is keyed by \`daily-quest:YYYY-MM-DD\`; reloads and repeated clicks cannot issue another award for the same day.
+- A missed day has no penalty. Daily Quest is a lightweight optional practice loop, not a streak requirement.
+- Challenge progress and completion merge by date across devices; completed step IDs are unioned and wrong-attempt counts use the maximum observed count.
+
+### Mistake Journal
+
+- Incorrect authored multiple-choice responses are stored as compact entries in \`adventureProgress.mistakeJournal\`.
+- Each entry records the mission/step, skill, prompt, selected option, correct option, explanation, and timestamp. It contains no personal writing or audio.
+- A correct retry in the same mission attempt or daily quest marks matching entries as resolved.
+- The user can filter open, resolved, and all entries; an open entry links back to its mission for another practice attempt.
+- When two devices sync the same mistake, the entry is deduplicated by \`mistakeId\`; a resolved record wins over an open copy.
+
+### Achievements and progression
+
+The reward ledger remains authoritative for XP. Additional milestones are:
+- Daily Explorer — first completed Daily Quest.
+- Steady Traveller — Daily Quests completed on seven different dates (not necessarily consecutive).
+- Learning from Mistakes — five mistakes successfully corrected.
+- Six Ways to Grow — at least three evidence entries in each of the six skills.
+- A Polite Customer — complete A Day at the Café.
+
+The interface shows current progress toward the seven-day and five-correction milestones. These achievements are motivational markers, not CEFR certification.
+
+### Compatibility and tests
+
+The existing CloudBundle v2 merge function now performs idempotent merges for \`dailyQuests\` and \`mistakeJournal\`, in addition to mission attempts, evidence, XP, and achievement IDs. Local backup/export includes the complete \`adventureProgress\` object.
+
+Browser tests cover:
+- wrong answer → journal entry → correct retry → resolved entry;
+- three Daily Quest challenges → one 15 XP award → reload persistence;
+- Daily Quest and Mistake Journal restore on a second browser profile and merge new completion/resolution evidence back into the shared cloud snapshot.
+
+The cross-profile browser test uses mocked progress API responses. It verifies client merge behavior but is not a live Google Sheets write/read test.
