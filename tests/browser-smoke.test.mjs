@@ -208,6 +208,8 @@ test("Adventure MVP completes the first quest, records skill evidence, and unloc
       expires_at: Math.floor(Date.now() / 1000) + 7200,
       user: { id: "adventure-local-user", email: "adventure@example.com" },
     }));
+    window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
+    Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { cancel() {}, speak() {} } });
   });
   await page.route("**/api/account**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
@@ -464,6 +466,8 @@ test("Daily Quest completes three rotating challenges and awards XP only once fo
       expires_at: Math.floor(Date.now() / 1000) + 7200,
       user: { id: "adventure-local-user", email: "adventure@example.com" },
     }));
+    window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
+    Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { cancel() {}, speak() {} } });
   });
   await page.route("**/api/account**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
