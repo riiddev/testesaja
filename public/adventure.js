@@ -342,10 +342,12 @@
       recordMistake({
         sourceType: "mission", sourceId: attempt.attemptId, missionId: mission.id, stepId: step.id,
         skill: step.skill, prompt: step.prompt, wrongAnswer: step.options[Number(answerIndex)],
-        correctAnswer: step.options[step.answer], explanation: step.explanation || "Periksa kembali konteks sebelum mencoba lagi."
+        correctAnswer: step.options[step.answer], explanation: step.explanation || "Periksa kembali konteks sebelum mencoba lagi.",
+        wrongCount: attempt.wrongAttempts[step.id]
       });
       currentFeedback = { kind: "try-again", title: "Belum tepat. Coba lagi.", message: "Perhatikan kembali konteksnya. Kesalahanmu dicatat agar bisa kamu pelajari lagi." };
       renderMissionDetail();
+      renderMistakeJournal();
     }
   }
 
@@ -533,7 +535,9 @@
     const completedIds = new Set(record?.completedStepIds || []);
     const completedCount = definition.stepIds.filter((id) => completedIds.has(id)).length;
     const allDone = completedCount >= definition.stepIds.length && Boolean(record?.completedAt);
-    const activeStepId = record && !allDone ? currentDailyStep(definition, record) : null;
+    const activeStepId = record && !allDone
+      ? (record.lastFeedback?.kind === "success" && record.lastFeedbackStepId ? record.lastFeedbackStepId : currentDailyStep(definition, record))
+      : null;
     const mission = curriculum.missions.find((item) => item.id === definition.missionId);
     const step = activeStepId ? mission?.steps.find((item) => item.id === activeStepId) : null;
     const startButton = '<button class="primary-action" type="button" data-daily-start>' + (record?.startedAt ? 'Lanjutkan Daily Quest ↗' : 'Mulai Daily Quest ↗') + '</button>';
@@ -558,7 +562,7 @@
     const feedback = record.lastFeedback ? '<div class="adventure-feedback ' + record.lastFeedback.kind + '"><strong>' + escapeHtml(record.lastFeedback.title) + '</strong><p>' + escapeHtml(record.lastFeedback.message) + '</p>' +
       (record.lastFeedback.kind === "success" ? '<button type="button" class="primary-action" data-daily-next>Lanjutkan ↗</button>' : '') + '</div>' : "";
     node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">A SMALL CHALLENGE FOR TODAY</span><h3>Daily Quest</h3><p>' + escapeHtml(definition.missionTitle) + '</p></div><span class="adventure-daily-reward">+15 XP</span></div>' +
-      tracker + '<div class="adventure-daily-step-count">TANTANGAN ' + (completedCount + 1) + ' DARI ' + definition.stepIds.length + ' · ' + escapeHtml(step.skill.toUpperCase()) + '</div>' +
+      tracker + '<div class="adventure-daily-step-count">TANTANGAN ' + (definition.stepIds.indexOf(step.id) + 1) + ' DARI ' + definition.stepIds.length + ' · ' + escapeHtml(step.skill.toUpperCase()) + '</div>' +
       listenMarkup + passage + '<h4>' + escapeHtml(step.prompt) + '</h4><div class="adventure-options">' + options + '</div>' + feedback +
       '<small class="adventure-daily-note">Kesalahan pada latihan ini akan masuk ke Mistake Journal.</small>';
   }
@@ -572,6 +576,7 @@
       completedStepIds: [], wrongAttempts: {}, startedAt: new Date().toISOString(), completedAt: null, lastFeedback: null
     };
     record.startedAt ||= new Date().toISOString();
+    record.updatedAt = new Date().toISOString();
     progress.dailyQuests[definition.dateKey] = record;
     dailyListenReady = false;
     saveProgress();
@@ -599,10 +604,11 @@
     const stepId = currentDailyStep(definition, record);
     const mission = curriculum.missions.find((item) => item.id === definition.missionId);
     const step = mission?.steps.find((item) => item.id === stepId);
-    if (!step || (step.type === "listen" && !dailyListenReady)) return;
+    if (!step || record.lastFeedback?.kind === "success" || (step.type === "listen" && !dailyListenReady)) return;
     if (Number(answerIndex) === step.answer) {
       record.completedStepIds = Array.from(new Set([...record.completedStepIds, step.id]));
       record.lastFeedback = { kind: "success", title: "Tepat.", message: step.explanation || "Kamu menggunakan petunjuk dengan baik." };
+      record.lastFeedbackStepId = step.id;
       const evidenceId = "daily:" + definition.dateKey + ":" + step.id;
       const list = progress.skillEvidence[step.skill] || (progress.skillEvidence[step.skill] = []);
       if (!list.some((item) => item.evidenceId === evidenceId)) list.push({
@@ -619,6 +625,7 @@
       });
       record.lastFeedback = { kind: "try-again", title: "Belum tepat. Coba lagi.", message: "Baca kembali petunjuknya. Catatan ini akan menunggumu di Mistake Journal." };
     }
+    record.updatedAt = new Date().toISOString();
     dailyListenReady = false;
     saveProgress();
     renderDailyQuest(); renderMistakeJournal(); renderSkillProfile();
@@ -628,6 +635,8 @@
     const definition = dailyDefinition(), record = dailyRecord(definition.dateKey);
     if (!record || record.lastFeedback?.kind !== "success") return;
     record.lastFeedback = null;
+    record.lastFeedbackStepId = null;
+    record.updatedAt = new Date().toISOString();
     dailyListenReady = false;
     if (definition.stepIds.every((id) => record.completedStepIds.includes(id))) {
       record.completedAt = record.completedAt || new Date().toISOString();
