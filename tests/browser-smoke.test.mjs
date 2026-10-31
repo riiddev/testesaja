@@ -226,7 +226,11 @@ test("Adventure MVP completes the first quest, records skill evidence, and unloc
   };
 
   await answerAndContinue(); // Vocabulary
+  await page.locator('[data-adventure-listen-rate="0.75"]').click();
+  assert.match(await page.locator('[data-adventure-listen-rate="0.75"]').getAttribute("class"), /is-active/);
   await page.locator("[data-adventure-listen]").click();
+  assert.equal(await page.locator(".adventure-audio-transcript").count(), 0, "transcript should be hidden until requested");
+  await page.locator("[data-adventure-transcript]").click();
   await page.locator(".adventure-audio-transcript").waitFor({ state: "visible" });
   await answerAndContinue(); // Listening
   await answerAndContinue(); // Reading
@@ -257,6 +261,7 @@ test("Adventure MVP completes the first quest, records skill evidence, and unloc
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
   assert.ok(saved?.missionProgress?.["meet-your-new-neighbors"]?.completedAt, "the first mission completion should persist locally");
   assert.equal(saved?.xpLedger?.["first-completion:meet-your-new-neighbors"]?.amount, 40, "the first completion should award XP once");
+  assert.equal(saved?.listeningRate, 0.75, "Listening Lab playback speed should persist in Adventure progress");
   for (const skill of ["vocabulary", "listening", "reading", "grammar", "speaking", "writing"]) {
     assert.ok(saved?.skillEvidence?.[skill]?.length, "expected evidence for " + skill);
   }
@@ -473,7 +478,9 @@ test("Daily Quest completes three rotating challenges and awards XP only once fo
     const listen = page.locator("[data-daily-listen]");
     if (await listen.count()) {
       await listen.click();
-      await page.locator(".adventure-daily-listen p").waitFor({ state: "visible" });
+      assert.equal(await page.locator(".adventure-daily-transcript").count(), 0, "daily transcript should remain hidden at first");
+      await page.locator("[data-daily-transcript]").click();
+      await page.locator(".adventure-daily-transcript").waitFor({ state: "visible" });
     }
     const answerIndex = await page.evaluate(async () => {
       const current = document.querySelector("[data-daily-step-id]");
