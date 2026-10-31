@@ -584,6 +584,54 @@ test("Speaking and Writing Studios persist local drafts but export only privacy-
   await page.close();
 });
 
+
+test("Adventure side panels render within three seconds while the Oxford corpus is still loading", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    window.__adventureStartupAt = performance.now();
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "adventure-fast-start-access",
+      refresh_token: "adventure-fast-start-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "adventure-fast-start-user", email: "fast-start@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  // Simulate a slow first-time download of the large Oxford corpus. Adventure does not need it.
+  await page.route("**/data/oxford3000/**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 4500));
+    await route.continue();
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => (
+    document.querySelector("#adventure-daily-quest .adventure-extra-heading")
+    && document.querySelector("#adventure-mistake-journal .adventure-extra-heading")
+    && document.querySelector("#adventure-speaking-studio .adventure-studio-heading")
+    && document.querySelector("#adventure-writing-studio .adventure-studio-heading")
+  ), null, { timeout: 3000 });
+  const result = await page.evaluate(() => ({
+    elapsedMs: Math.round(performance.now() - window.__adventureStartupAt),
+    workspaceReady: Boolean(window.sinauuWorkspaceReady),
+    daily: document.querySelector("#adventure-daily-quest h3")?.textContent,
+    journal: document.querySelector("#adventure-mistake-journal h3")?.textContent,
+    speaking: document.querySelector("#adventure-speaking-studio h3")?.textContent,
+    writing: document.querySelector("#adventure-writing-studio h3")?.textContent,
+  }));
+  assert.ok(result.elapsedMs <= 3000, "Adventure side panels should render within 3 seconds: " + JSON.stringify(result));
+  assert.equal(result.workspaceReady, false, "Adventure must not wait for the large Oxford corpus");
+  assert.match(result.daily || "", /Daily Quest/);
+  assert.match(result.journal || "", /Mistake Journal/);
+  assert.match(result.speaking || "", /Speaking Studio/);
+  assert.match(result.writing || "", /Writing Studio/);
+  assert.deepEqual(pageErrors, [], "fast Adventure startup should not throw browser JavaScript errors");
+  await page.close();
+});
+
 test("Adventure workspace stays within mobile, tablet, and desktop viewport widths", async () => {
   for (const width of [390, 768, 1280]) {
     const page = await browser.newPage({ viewport: { width, height: 900 } });
