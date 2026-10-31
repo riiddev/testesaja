@@ -323,6 +323,7 @@
     recordEvidence(mission, attempt, step, method, extra);
     resolveMistakes(mission.id, step.id, attempt.attemptId);
     saveProgress();
+    renderMistakeJournal();
     currentFeedbackStepId = step.id;
     currentFeedback = { kind: "success", title: "Bagian ini selesai.", message: step.explanation || "Bukti latihanmu sudah dicatat. Lanjut ke langkah berikutnya." };
     renderMissionDetail(); renderSkillProfile();
@@ -562,7 +563,7 @@
     const feedback = record.lastFeedback ? '<div class="adventure-feedback ' + record.lastFeedback.kind + '"><strong>' + escapeHtml(record.lastFeedback.title) + '</strong><p>' + escapeHtml(record.lastFeedback.message) + '</p>' +
       (record.lastFeedback.kind === "success" ? '<button type="button" class="primary-action" data-daily-next>Lanjutkan ↗</button>' : '') + '</div>' : "";
     node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">A SMALL CHALLENGE FOR TODAY</span><h3>Daily Quest</h3><p>' + escapeHtml(definition.missionTitle) + '</p></div><span class="adventure-daily-reward">+15 XP</span></div>' +
-      tracker + '<div class="adventure-daily-step-count">TANTANGAN ' + (definition.stepIds.indexOf(step.id) + 1) + ' DARI ' + definition.stepIds.length + ' · ' + escapeHtml(step.skill.toUpperCase()) + '</div>' +
+      tracker + '<div class="adventure-daily-step-count" data-daily-mission-id="' + escapeHtml(mission.id) + '" data-daily-step-id="' + escapeHtml(step.id) + '">TANTANGAN ' + (definition.stepIds.indexOf(step.id) + 1) + ' DARI ' + definition.stepIds.length + ' · ' + escapeHtml(step.skill.toUpperCase()) + '</div>' +
       listenMarkup + passage + '<h4>' + escapeHtml(step.prompt) + '</h4><div class="adventure-options">' + options + '</div>' + feedback +
       '<small class="adventure-daily-note">Kesalahan pada latihan ini akan masuk ke Mistake Journal.</small>';
   }
