@@ -21,7 +21,7 @@
   let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, initialized = false;
 
   function emptyProgress() {
-    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, achievementIds: [], updatedAt: new Date().toISOString() };
+    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, achievementIds: [], updatedAt: new Date().toISOString() };
   }
   function readStored() {
     try {
@@ -35,6 +35,8 @@
     base.missionProgress = raw.missionProgress && typeof raw.missionProgress === "object" && !Array.isArray(raw.missionProgress) ? raw.missionProgress : {};
     base.skillEvidence = raw.skillEvidence && typeof raw.skillEvidence === "object" && !Array.isArray(raw.skillEvidence) ? raw.skillEvidence : {};
     base.xpLedger = raw.xpLedger && typeof raw.xpLedger === "object" && !Array.isArray(raw.xpLedger) ? raw.xpLedger : {};
+    base.dailyQuests = raw.dailyQuests && typeof raw.dailyQuests === "object" && !Array.isArray(raw.dailyQuests) ? raw.dailyQuests : {};
+    base.mistakeJournal = raw.mistakeJournal && typeof raw.mistakeJournal === "object" && !Array.isArray(raw.mistakeJournal) ? raw.mistakeJournal : {};
     base.achievementIds = Array.isArray(raw.achievementIds) ? Array.from(new Set(raw.achievementIds.filter((item) => typeof item === "string"))).slice(0, 100) : [];
     base.updatedAt = typeof raw.updatedAt === "string" ? raw.updatedAt : base.updatedAt;
     for (const [missionId, entry] of Object.entries(base.missionProgress)) {
@@ -50,6 +52,21 @@
       if (!award || typeof award !== "object") delete base.xpLedger[awardId];
       else award.amount = Math.max(0, Math.min(1000, Number(award.amount) || 0));
     }
+    for (const [date, quest] of Object.entries(base.dailyQuests)) {
+      if (!quest || typeof quest !== "object") { delete base.dailyQuests[date]; continue; }
+      quest.stepIds = Array.isArray(quest.stepIds) ? quest.stepIds.filter((id) => typeof id === "string").slice(0, 6) : [];
+      quest.completedStepIds = Array.isArray(quest.completedStepIds) ? Array.from(new Set(quest.completedStepIds.filter((id) => typeof id === "string"))) : [];
+      quest.wrongAttempts = quest.wrongAttempts && typeof quest.wrongAttempts === "object" ? quest.wrongAttempts : {};
+    }
+    for (const [mistakeId, mistake] of Object.entries(base.mistakeJournal)) {
+      if (!mistake || typeof mistake !== "object" || typeof mistake.mistakeId !== "string") delete base.mistakeJournal[mistakeId];
+      else {
+        mistake.status = mistake.resolvedAt ? "resolved" : "open";
+        mistake.recordedAt = typeof mistake.recordedAt === "string" ? mistake.recordedAt : base.updatedAt;
+      }
+    }
+    const dailyDates = Object.keys(base.dailyQuests).sort();
+    for (const oldDate of dailyDates.slice(0, Math.max(0, dailyDates.length - 90))) delete base.dailyQuests[oldDate];
     return base;
   }
   function escapeHtml(value) {
@@ -143,17 +160,48 @@
     }).join("");
   }
 
+  function checkAchievements() {
+    const completedDays = Object.values(progress.dailyQuests).filter((quest) => quest && quest.completedAt).length;
+    const resolvedMistakes = Object.values(progress.mistakeJournal).filter((mistake) => mistake && mistake.resolvedAt).length;
+    const allSkillsPracticed = SKILLS.every(([skill]) => evidenceCount(skill) >= 3);
+    const conditions = [
+      ["first-mission", curriculum.missions.some((mission) => missionCompleted(mission.id))],
+      ["island-clear", curriculum.missions.every((mission) => missionCompleted(mission.id))],
+      ["daily-first", completedDays >= 1],
+      ["daily-seven", completedDays >= 7],
+      ["mistake-five", resolvedMistakes >= 5],
+      ["all-skills", allSkillsPracticed],
+      ["cafe-customer", missionCompleted("a-day-at-the-cafe")]
+    ];
+    let changed = false;
+    for (const [id, unlocked] of conditions) {
+      if (unlocked && !progress.achievementIds.includes(id)) {
+        progress.achievementIds.push(id);
+        changed = true;
+      }
+    }
+    if (changed) saveProgress();
+  }
+
   function renderAchievements() {
     const node = $("#adventure-achievements");
     if (!node) return;
     const all = [
       ["first-mission", "First Footsteps", "Menyelesaikan misi pertamamu."],
-      ["island-clear", "Island Notes", "Menyelesaikan seluruh misi First Steps Island."]
+      ["island-clear", "Island Notes", "Menyelesaikan seluruh misi First Steps Island."],
+      ["daily-first", "Daily Explorer", "Menyelesaikan Daily Quest pertamamu."],
+      ["daily-seven", "Steady Traveller", "Menyelesaikan Daily Quest pada tujuh hari berbeda."],
+      ["mistake-five", "Learning from Mistakes", "Memperbaiki lima jawaban yang pernah keliru."],
+      ["all-skills", "Six Ways to Grow", "Mengumpulkan sedikitnya tiga bukti latihan pada setiap skill."],
+      ["cafe-customer", "A Polite Customer", "Menyelesaikan misi A Day at the Café."]
     ];
     const items = all.filter((item) => progress.achievementIds.includes(item[0]));
     node.innerHTML = items.length ? items.map((item) =>
       '<div class="adventure-achievement"><span>✳</span><div><strong>' + item[1] + '</strong><small>' + item[2] + '</small></div></div>'
-    ).join("") : "<p>Achievement akan muncul setelah ada misi yang selesai.</p>";
+    ).join("") : "<p>Achievement akan muncul setelah kamu menyelesaikan tantangan belajar.</p>";
+    const resolved = Object.values(progress.mistakeJournal).filter((mistake) => mistake && mistake.resolvedAt).length;
+    const days = Object.values(progress.dailyQuests).filter((quest) => quest && quest.completedAt).length;
+    node.insertAdjacentHTML("beforeend", '<p class="adventure-achievement-next">Berikutnya: ' + days + '/7 Daily Quest · ' + resolved + '/5 kesalahan diperbaiki.</p>');
   }
 
   function missionStatus(mission) {
@@ -273,6 +321,7 @@
     const wrong = Number(attempt.wrongAttempts && attempt.wrongAttempts[step.id]) || 0;
     attempt.stepResults[step.id] = { completedAt: new Date().toISOString(), firstTry: wrong === 0, attempts: wrong + 1, method };
     recordEvidence(mission, attempt, step, method, extra);
+    resolveMistakes(mission.id, step.id, attempt.attemptId);
     saveProgress();
     currentFeedbackStepId = step.id;
     currentFeedback = { kind: "success", title: "Bagian ini selesai.", message: step.explanation || "Bukti latihanmu sudah dicatat. Lanjut ke langkah berikutnya." };
@@ -290,7 +339,12 @@
     } else {
       attempt.wrongAttempts = attempt.wrongAttempts || {};
       attempt.wrongAttempts[step.id] = (Number(attempt.wrongAttempts[step.id]) || 0) + 1;
-      currentFeedback = { kind: "try-again", title: "Belum tepat. Coba lagi.", message: "Perhatikan kembali konteksnya. Kamu boleh mencoba lagi tanpa kehilangan progres." };
+      recordMistake({
+        sourceType: "mission", sourceId: attempt.attemptId, missionId: mission.id, stepId: step.id,
+        skill: step.skill, prompt: step.prompt, wrongAnswer: step.options[Number(answerIndex)],
+        correctAnswer: step.options[step.answer], explanation: step.explanation || "Periksa kembali konteks sebelum mencoba lagi."
+      });
+      currentFeedback = { kind: "try-again", title: "Belum tepat. Coba lagi.", message: "Perhatikan kembali konteksnya. Kesalahanmu dicatat agar bisa kamu pelajari lagi." };
       renderMissionDetail();
     }
   }
@@ -357,7 +411,9 @@
     if (!selectedMissionId || !curriculum.missions.some((item) => item.id === selectedMissionId)) {
       selectedMissionId = curriculum.missions.find((mission) => missionUnlocked(mission) && !missionCompleted(mission.id))?.id || curriculum.missions[0]?.id;
     }
+    checkAchievements();
     renderHeaderStats(); renderMap(); renderMissionDetail(); renderSkillProfile(); renderAchievements();
+    renderDailyQuest(); renderMistakeJournal();
   }
   function openMission(missionId) {
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
@@ -390,6 +446,200 @@
     renderMissionDetail();
   }
 
+
+
+  let mistakeFilterValue = "open";
+  let dailyListenReady = false;
+
+  function localDateKey(date = new Date()) {
+    return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+  }
+
+  function dailyDefinition(dateKey = localDateKey()) {
+    const dayNumber = Math.floor(Date.parse(dateKey + "T00:00:00Z") / 86400000);
+    const mission = curriculum.missions[((dayNumber % curriculum.missions.length) + curriculum.missions.length) % curriculum.missions.length];
+    const vocabulary = mission.steps.find((step) => step.skill === "vocabulary");
+    const grammar = mission.steps.find((step) => step.skill === "grammar");
+    const comprehensionSkill = dayNumber % 2 === 0 ? "listening" : "reading";
+    const comprehension = mission.steps.find((step) => step.skill === comprehensionSkill)
+      || mission.steps.find((step) => step.skill === "reading" || step.skill === "listening");
+    return { dateKey, missionId: mission.id, missionTitle: mission.title, stepIds: [vocabulary?.id, comprehension?.id, grammar?.id].filter(Boolean) };
+  }
+
+  function dailyRecord(dateKey = localDateKey()) {
+    return progress.dailyQuests[dateKey] || null;
+  }
+
+  function currentDailyStep(definition, record) {
+    return definition.stepIds.find((stepId) => !record.completedStepIds.includes(stepId)) || null;
+  }
+
+  function recordMistake(input) {
+    const sourceId = input.sourceId;
+    const wrongCount = input.wrongCount || 0;
+    const mistakeId = [sourceId, input.stepId, wrongCount || makeId()].join(":");
+    if (progress.mistakeJournal[mistakeId]) return;
+    progress.mistakeJournal[mistakeId] = {
+      mistakeId, sourceType: input.sourceType, sourceId, missionId: input.missionId,
+      stepId: input.stepId, skill: input.skill, prompt: input.prompt,
+      wrongAnswer: input.wrongAnswer || "Belum memilih jawaban",
+      correctAnswer: input.correctAnswer || "",
+      explanation: input.explanation || "",
+      recordedAt: new Date().toISOString(), resolvedAt: null, status: "open"
+    };
+    saveProgress();
+  }
+
+  function resolveMistakes(missionId, stepId, sourceId) {
+    let changed = false;
+    for (const mistake of Object.values(progress.mistakeJournal)) {
+      if (mistake.missionId === missionId && mistake.stepId === stepId && mistake.sourceId === sourceId && !mistake.resolvedAt) {
+        mistake.resolvedAt = new Date().toISOString();
+        mistake.status = "resolved";
+        changed = true;
+      }
+    }
+    if (changed) saveProgress();
+  }
+
+  function renderMistakeJournal() {
+    const node = $("#adventure-mistake-journal");
+    if (!node) return;
+    const all = Object.values(progress.mistakeJournal).sort((a, b) => String(b.recordedAt || "").localeCompare(String(a.recordedAt || "")));
+    const openCount = all.filter((item) => !item.resolvedAt).length;
+    const visible = all.filter((item) => mistakeFilterValue === "all" || (mistakeFilterValue === "open" ? !item.resolvedAt : Boolean(item.resolvedAt))).slice(0, 8);
+    const filters = '<div class="adventure-journal-filters">' +
+      ['open','resolved','all'].map((value) => '<button type="button" data-mistake-filter="' + value + '" class="' + (mistakeFilterValue === value ? 'is-active' : '') + '">' + (value === "open" ? 'Perlu diulang' : value === "resolved" ? 'Sudah diperbaiki' : 'Semua') + '</button>').join("") +
+      '</div>';
+    const rows = visible.length ? visible.map((item) => {
+      const mission = curriculum.missions.find((entry) => entry.id === item.missionId);
+      return '<article class="adventure-mistake-row ' + (item.resolvedAt ? 'is-resolved' : 'is-open') + '">' +
+        '<div class="adventure-mistake-top"><span>' + escapeHtml(item.skill) + '</span><span>' + (item.resolvedAt ? 'SUDAH DIPERBAIKI' : 'PERLU DIULANG') + '</span></div>' +
+        '<strong>' + escapeHtml(item.prompt) + '</strong>' +
+        '<p class="adventure-mistake-answer"><span>Jawabanmu</span> ' + escapeHtml(item.wrongAnswer) + '</p>' +
+        '<p class="adventure-mistake-answer is-correct"><span>Jawaban tepat</span> ' + escapeHtml(item.correctAnswer) + '</p>' +
+        '<p class="adventure-mistake-explanation">' + escapeHtml(item.explanation) + '</p>' +
+        '<div class="adventure-mistake-bottom"><small>' + escapeHtml(mission?.title || "Daily Quest") + '</small>' +
+        (!item.resolvedAt && mission ? '<button type="button" data-mistake-review="' + escapeHtml(item.missionId) + '">Ulangi misi ↗</button>' : '<span>✓ Tersimpan</span>') + '</div></article>';
+    }).join("") : '<p class="adventure-journal-empty">' + (mistakeFilterValue === "open" ? 'Belum ada kesalahan yang perlu diulang. Bagus, pertahankan kebiasaan memeriksa jawaban.' : 'Belum ada catatan pada filter ini.') + '</p>';
+    node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">LEARN FROM IT</span><h3>Mistake Journal</h3><p>Kesalahan bukan hukuman. Catat, pahami, lalu coba lagi.</p></div><span class="adventure-journal-count">' + openCount + '<small>PERLU DIULANG</small></span></div>' + filters + rows;
+  }
+
+  function renderDailyQuest() {
+    const node = $("#adventure-daily-quest");
+    if (!node || !curriculum) return;
+    const definition = dailyDefinition();
+    const record = dailyRecord(definition.dateKey);
+    const completedIds = new Set(record?.completedStepIds || []);
+    const completedCount = definition.stepIds.filter((id) => completedIds.has(id)).length;
+    const allDone = completedCount >= definition.stepIds.length && Boolean(record?.completedAt);
+    const activeStepId = record && !allDone ? currentDailyStep(definition, record) : null;
+    const mission = curriculum.missions.find((item) => item.id === definition.missionId);
+    const step = activeStepId ? mission?.steps.find((item) => item.id === activeStepId) : null;
+    const startButton = '<button class="primary-action" type="button" data-daily-start>' + (record?.startedAt ? 'Lanjutkan Daily Quest ↗' : 'Mulai Daily Quest ↗') + '</button>';
+    const tracker = '<div class="adventure-daily-tracker">' + definition.stepIds.map((id, index) => '<span class="' + (completedIds.has(id) ? 'is-done' : '') + '">' + (completedIds.has(id) ? '✓' : String(index + 1).padStart(2, "0")) + '</span>').join("") + '</div>';
+    if (!record?.startedAt) {
+      node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">A SMALL CHALLENGE FOR TODAY</span><h3>Daily Quest</h3><p>Tiga tantangan singkat untuk menjaga kemampuan tetap terpakai.</p></div><span class="adventure-daily-reward">+15 XP</span></div>' +
+        '<p class="adventure-daily-context">Hari ini kamu akan berlatih dari <strong>' + escapeHtml(definition.missionTitle) + '</strong>. Misi harian dapat mengambil materi dari seluruh pulau sebagai latihan tambahan.</p>' + tracker + startButton +
+        '<small class="adventure-daily-note">Satu hadiah per hari. Tidak ada penalti jika kamu melewatkan hari.</small>';
+      return;
+    }
+    if (allDone) {
+      node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">TODAY\'S JOURNEY</span><h3>Daily Quest complete.</h3><p>Tiga tantangan selesai. Latihan kecil yang konsisten tetap berarti.</p></div><span class="adventure-daily-reward">+15 XP</span></div>' +
+        tracker + '<div class="adventure-daily-complete">✓ Hadiah hari ini sudah diberikan. Kamu bisa kembali besok untuk tantangan berikutnya.</div>';
+      return;
+    }
+    const wrongCount = Number(record.wrongAttempts?.[step.id]) || 0;
+    const listenMarkup = step.type === "listen"
+      ? '<div class="adventure-daily-listen"><button type="button" class="secondary-action" data-daily-listen>▶ Dengarkan dialog</button>' +
+        (dailyListenReady ? '<p>' + escapeHtml(step.audioText) + '</p>' : '<small>Dengarkan dulu sebelum menjawab.</small>') + '</div>' : "";
+    const passage = step.passage ? '<div class="adventure-passage">' + escapeHtml(step.passage).replace(/\\n|\n/g, "<br>") + '</div>' : "";
+    const options = step.options.map((option, index) => '<button class="adventure-option" type="button" data-daily-answer="' + index + '"' + (step.type === "listen" && !dailyListenReady ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>').join("");
+    const feedback = record.lastFeedback ? '<div class="adventure-feedback ' + record.lastFeedback.kind + '"><strong>' + escapeHtml(record.lastFeedback.title) + '</strong><p>' + escapeHtml(record.lastFeedback.message) + '</p>' +
+      (record.lastFeedback.kind === "success" ? '<button type="button" class="primary-action" data-daily-next>Lanjutkan ↗</button>' : '') + '</div>' : "";
+    node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">A SMALL CHALLENGE FOR TODAY</span><h3>Daily Quest</h3><p>' + escapeHtml(definition.missionTitle) + '</p></div><span class="adventure-daily-reward">+15 XP</span></div>' +
+      tracker + '<div class="adventure-daily-step-count">TANTANGAN ' + (completedCount + 1) + ' DARI ' + definition.stepIds.length + ' · ' + escapeHtml(step.skill.toUpperCase()) + '</div>' +
+      listenMarkup + passage + '<h4>' + escapeHtml(step.prompt) + '</h4><div class="adventure-options">' + options + '</div>' + feedback +
+      '<small class="adventure-daily-note">Kesalahan pada latihan ini akan masuk ke Mistake Journal.</small>';
+  }
+
+  function startDailyQuest() {
+    const definition = dailyDefinition();
+    const existing = progress.dailyQuests[definition.dateKey];
+    if (existing?.completedAt) return;
+    const record = existing || {
+      dateKey: definition.dateKey, missionId: definition.missionId, stepIds: definition.stepIds,
+      completedStepIds: [], wrongAttempts: {}, startedAt: new Date().toISOString(), completedAt: null, lastFeedback: null
+    };
+    record.startedAt ||= new Date().toISOString();
+    progress.dailyQuests[definition.dateKey] = record;
+    dailyListenReady = false;
+    saveProgress();
+    renderDailyQuest();
+  }
+
+  function listenToDailyStep() {
+    const definition = dailyDefinition(), record = dailyRecord(definition.dateKey);
+    const stepId = record && currentDailyStep(definition, record);
+    const mission = curriculum.missions.find((item) => item.id === definition.missionId);
+    const step = mission?.steps.find((item) => item.id === stepId);
+    if (!step || step.type !== "listen") return;
+    dailyListenReady = true;
+    if ("speechSynthesis" in window && typeof window.SpeechSynthesisUtterance === "function") {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(step.audioText || "");
+      utterance.lang = "en-US"; utterance.rate = 0.88; window.speechSynthesis.speak(utterance);
+    }
+    renderDailyQuest();
+  }
+
+  function answerDailyQuest(answerIndex) {
+    const definition = dailyDefinition(), record = dailyRecord(definition.dateKey);
+    if (!record || record.completedAt) return;
+    const stepId = currentDailyStep(definition, record);
+    const mission = curriculum.missions.find((item) => item.id === definition.missionId);
+    const step = mission?.steps.find((item) => item.id === stepId);
+    if (!step || (step.type === "listen" && !dailyListenReady)) return;
+    if (Number(answerIndex) === step.answer) {
+      record.completedStepIds = Array.from(new Set([...record.completedStepIds, step.id]));
+      record.lastFeedback = { kind: "success", title: "Tepat.", message: step.explanation || "Kamu menggunakan petunjuk dengan baik." };
+      const evidenceId = "daily:" + definition.dateKey + ":" + step.id;
+      const list = progress.skillEvidence[step.skill] || (progress.skillEvidence[step.skill] = []);
+      if (!list.some((item) => item.evidenceId === evidenceId)) list.push({
+        evidenceId, missionId: mission.id, sourceType: "daily-quest", recordedAt: new Date().toISOString(), method: "correct-response"
+      });
+      resolveMistakes(mission.id, step.id, "daily:" + definition.dateKey);
+    } else {
+      record.wrongAttempts[step.id] = (Number(record.wrongAttempts[step.id]) || 0) + 1;
+      recordMistake({
+        sourceType: "daily-quest", sourceId: "daily:" + definition.dateKey, missionId: mission.id, stepId: step.id,
+        skill: step.skill, prompt: step.prompt, wrongAnswer: step.options[Number(answerIndex)],
+        correctAnswer: step.options[step.answer], explanation: step.explanation,
+        wrongCount: record.wrongAttempts[step.id]
+      });
+      record.lastFeedback = { kind: "try-again", title: "Belum tepat. Coba lagi.", message: "Baca kembali petunjuknya. Catatan ini akan menunggumu di Mistake Journal." };
+    }
+    dailyListenReady = false;
+    saveProgress();
+    renderDailyQuest(); renderMistakeJournal(); renderSkillProfile();
+  }
+
+  function advanceDailyQuest() {
+    const definition = dailyDefinition(), record = dailyRecord(definition.dateKey);
+    if (!record || record.lastFeedback?.kind !== "success") return;
+    record.lastFeedback = null;
+    dailyListenReady = false;
+    if (definition.stepIds.every((id) => record.completedStepIds.includes(id))) {
+      record.completedAt = record.completedAt || new Date().toISOString();
+      const awardId = "daily-quest:" + definition.dateKey;
+      if (!progress.xpLedger[awardId]) progress.xpLedger[awardId] = {
+        awardId, amount: 15, awardedAt: record.completedAt, source: "daily-quest", dateKey: definition.dateKey
+      };
+    }
+    saveProgress();
+    renderAll();
+  }
+
   function initListeners() {
     document.addEventListener("click", (event) => {
       const select = event.target.closest("[data-adventure-select]");
@@ -401,7 +651,17 @@
       if (event.target.closest("[data-adventure-listen]")) { listenToStep(); return; }
       if (event.target.closest("[data-adventure-complete-production]")) { completeProduction(); return; }
       if (event.target.closest("[data-adventure-next]")) { advanceStep(); return; }
-      if (event.target.closest("[data-adventure-back]")) backToMission();
+      if (event.target.closest("[data-adventure-back]")) { backToMission(); return; }
+      const dailyStart = event.target.closest("[data-daily-start]");
+      if (dailyStart) { startDailyQuest(); return; }
+      const dailyAnswer = event.target.closest("[data-daily-answer]");
+      if (dailyAnswer) { answerDailyQuest(dailyAnswer.dataset.dailyAnswer); return; }
+      if (event.target.closest("[data-daily-listen]")) { listenToDailyStep(); return; }
+      if (event.target.closest("[data-daily-next]")) { advanceDailyQuest(); return; }
+      const mistakeReview = event.target.closest("[data-mistake-review]");
+      if (mistakeReview) { startMission(mistakeReview.dataset.mistakeReview); return; }
+      const mistakeFilter = event.target.closest("[data-mistake-filter]");
+      if (mistakeFilter) { mistakeFilterValue = mistakeFilter.dataset.mistakeFilter; renderMistakeJournal(); }
     });
     document.addEventListener("change", (event) => {
       if (event.target.matches("[data-adventure-check]")) updateProductionButton();
