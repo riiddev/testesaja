@@ -1342,6 +1342,25 @@ h1,h2,h3{overflow-wrap:break-word}
 .adventure-mistake-bottom small,.adventure-mistake-bottom>span{color:var(--muted);font-size:.5rem}
 .adventure-mistake-bottom button{padding:5px 8px;border:1px solid var(--line);background:var(--paper);color:var(--sage-deep);font-size:.53rem;cursor:pointer}
 .adventure-journal-empty{margin:0;padding:17px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.63rem;line-height:1.7}
+
+.adventure-mistake-details{margin-top:8px;color:var(--muted);font-size:.55rem}
+.adventure-mistake-details summary{width:max-content;max-width:100%;cursor:pointer;color:var(--sage-deep);font-weight:700}
+.adventure-mistake-details[open]{padding:8px 10px;background:var(--paper)}
+.adventure-mistake-review{margin:13px 0 12px;padding:14px;border:1px solid color-mix(in srgb,var(--sage-deep) 35%,var(--line));background:var(--paper)}
+.adventure-mistake-review-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.adventure-mistake-review-heading>div{display:grid;gap:4px}
+.adventure-mistake-review-heading small,.adventure-mistake-review-context>small{color:var(--sage-deep);font-size:.46rem;font-weight:800;letter-spacing:.1em}
+.adventure-mistake-review-heading strong{color:var(--ink);font:500 .78rem/1.5 "Lora",Georgia,serif}
+.adventure-mistake-review-heading>button,.adventure-mistake-review-listen button{flex:none;padding:6px 9px;border:1px solid var(--line);background:var(--sheet);color:var(--body);font-size:.54rem;cursor:pointer}
+.adventure-mistake-review h4{margin:8px 0 0;color:var(--ink);font:500 .9rem/1.55 "Lora",Georgia,serif}
+.adventure-mistake-review-context{margin:10px 0;padding:10px 12px;background:var(--paper-deep)}
+.adventure-mistake-review-context p,.adventure-mistake-review-listen p{margin:5px 0 0;color:var(--body);font-size:.6rem;line-height:1.7}
+.adventure-mistake-review-listen{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:10px 0;padding:10px 12px;background:var(--paper-deep)}
+.adventure-mistake-review-listen small{flex-basis:100%;color:var(--muted);font-size:.53rem;line-height:1.6}
+.adventure-mistake-review-listen p{flex-basis:100%}
+.adventure-mistake-review-options{margin-top:10px}
+.adventure-mistake-review-correct{font-weight:700}
+@media(max-width:560px){.adventure-mistake-review{padding:11px}.adventure-mistake-review-heading strong{font-size:.72rem}.adventure-mistake-review-listen button{min-height:36px}}
 .adventure-achievement-next{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:.52rem;line-height:1.6}
 @media(max-width:1000px){.adventure-extras-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.adventure-extra-card{padding:17px 15px}.adventure-extra-heading h3{font-size:1.15rem}}

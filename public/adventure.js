@@ -18,7 +18,7 @@
   ];
   let curriculum = null;
   let progress = normalizeProgress(readStored());
-  let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, initialized = false;
+  let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, selectedMistakeReviewId = null, mistakeReviewFeedback = null, mistakeReviewTranscriptVisible = false, mistakeReviewListenReady = false, initialized = false;
 
   function emptyProgress() {
     return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
@@ -530,27 +530,130 @@
     if (changed) saveProgress();
   }
 
+  function mistakeStep(item) {
+    const mission = curriculum && curriculum.missions.find((entry) => entry.id === item.missionId);
+    const step = mission && mission.steps.find((entry) => entry.id === item.stepId);
+    if (!mission || !step || !Array.isArray(step.options) || !step.options.length) return null;
+    return { mission, step };
+  }
+
+  function renderMistakeReview(item) {
+    const match = mistakeStep(item);
+    if (!match) return "";
+    const step = match.step;
+    const feedback = mistakeReviewFeedback && mistakeReviewFeedback.mistakeId === item.mistakeId ? mistakeReviewFeedback : null;
+    let context = "";
+    if (step.type === "read" && step.passage) {
+      context = '<div class="adventure-mistake-review-context"><small>READ AGAIN · CONTEXT</small><p>' + escapeHtml(step.passage).replace(/\\n|\n/g, "<br>") + '</p></div>';
+    } else if (step.type === "listen" && step.audioText) {
+      context = '<div class="adventure-mistake-review-listen"><button type="button" data-mistake-listen>▶ Dengarkan dialog lagi</button>' +
+        '<button type="button" data-mistake-transcript>' + (mistakeReviewTranscriptVisible ? "Sembunyikan transkrip" : "Tampilkan transkrip") + '</button>' +
+        (mistakeReviewTranscriptVisible ? '<p>' + escapeHtml(step.audioText) + '</p>' : '<small>Dengarkan kembali sebelum memilih jawaban. Transkrip tersedia bila diperlukan.</small>') + '</div>';
+    }
+    const choices = feedback && feedback.kind === "success" ? "" : '<div class="adventure-options adventure-mistake-review-options">' +
+      step.options.map((option, index) => '<button class="adventure-option" type="button" data-mistake-answer="' + index + '" data-mistake-id="' + escapeHtml(item.mistakeId) + '"' +
+        (step.type === "listen" && !mistakeReviewListenReady ? " disabled" : "") + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>').join("") + '</div>';
+    const feedbackHtml = feedback
+      ? (feedback.kind === "success"
+        ? '<div class="adventure-feedback success" role="status"><strong>Kesalahan berhasil diperbaiki.</strong><p>' + escapeHtml(step.explanation || "Kamu berhasil mengingat jawaban yang tepat.") + '</p><p class="adventure-mistake-review-correct">Jawaban tepat: ' + escapeHtml(step.options[step.answer]) + '</p></div>'
+        : '<div class="adventure-feedback try-again" role="status"><strong>Belum tepat. Coba sekali lagi.</strong><p>Perhatikan konteksnya, lalu pilih jawaban yang paling sesuai. Jawaban tepat belum ditampilkan.</p></div>')
+      : "";
+    return '<section class="adventure-mistake-review" aria-label="Latihan ulang kesalahan">' +
+      '<div class="adventure-mistake-review-heading"><div><small>RETRIEVAL PRACTICE</small><strong>Ingat kembali, tanpa melihat jawaban.</strong></div><button type="button" data-mistake-review-close>Tutup</button></div>' +
+      context +
+      '<h4>' + escapeHtml(step.prompt) + '</h4>' +
+      choices + feedbackHtml +
+      '</section>';
+  }
+
   function renderMistakeJournal() {
     const node = $("#adventure-mistake-journal");
     if (!node) return;
     const all = Object.values(progress.mistakeJournal).sort((a, b) => String(b.recordedAt || "").localeCompare(String(a.recordedAt || "")));
     const openCount = all.filter((item) => !item.resolvedAt).length;
     const visible = all.filter((item) => mistakeFilterValue === "all" || (mistakeFilterValue === "open" ? !item.resolvedAt : Boolean(item.resolvedAt))).slice(0, 8);
+    const selected = selectedMistakeReviewId ? all.find((item) => item.mistakeId === selectedMistakeReviewId) : null;
+    const reviewPanel = selected && !selected.resolvedAt || (selected && mistakeReviewFeedback && mistakeReviewFeedback.mistakeId === selected.mistakeId)
+      ? renderMistakeReview(selected) : "";
     const filters = '<div class="adventure-journal-filters">' +
       ['open','resolved','all'].map((value) => '<button type="button" data-mistake-filter="' + value + '" class="' + (mistakeFilterValue === value ? 'is-active' : '') + '">' + (value === "open" ? 'Perlu diulang' : value === "resolved" ? 'Sudah diperbaiki' : 'Semua') + '</button>').join("") +
       '</div>';
     const rows = visible.length ? visible.map((item) => {
       const mission = curriculum.missions.find((entry) => entry.id === item.missionId);
+      const match = mistakeStep(item);
+      const explanation = item.resolvedAt
+        ? '<p class="adventure-mistake-answer is-correct"><span>Jawaban tepat</span> ' + escapeHtml(item.correctAnswer) + '</p><p class="adventure-mistake-explanation">' + escapeHtml(item.explanation) + '</p>'
+        : '<details class="adventure-mistake-details"><summary>Lihat jawaban dan pembahasan</summary><p class="adventure-mistake-answer is-correct"><span>Jawaban tepat</span> ' + escapeHtml(item.correctAnswer) + '</p><p class="adventure-mistake-explanation">' + escapeHtml(item.explanation) + '</p></details>';
+      const action = !item.resolvedAt
+        ? (match
+          ? '<button type="button" data-mistake-review-one="' + escapeHtml(item.mistakeId) + '">Latih lagi ↗</button>'
+          : (mission ? '<button type="button" data-mistake-review="' + escapeHtml(item.missionId) + '">Ulangi misi ↗</button>' : '<span>Catatan tersimpan</span>'))
+        : '<span>✓ Tersimpan</span>';
       return '<article class="adventure-mistake-row ' + (item.resolvedAt ? 'is-resolved' : 'is-open') + '">' +
         '<div class="adventure-mistake-top"><span>' + escapeHtml(item.skill) + '</span><span>' + (item.resolvedAt ? 'SUDAH DIPERBAIKI' : 'PERLU DIULANG') + '</span></div>' +
         '<strong>' + escapeHtml(item.prompt) + '</strong>' +
         '<p class="adventure-mistake-answer"><span>Jawabanmu</span> ' + escapeHtml(item.wrongAnswer) + '</p>' +
-        '<p class="adventure-mistake-answer is-correct"><span>Jawaban tepat</span> ' + escapeHtml(item.correctAnswer) + '</p>' +
-        '<p class="adventure-mistake-explanation">' + escapeHtml(item.explanation) + '</p>' +
-        '<div class="adventure-mistake-bottom"><small>' + escapeHtml(mission?.title || "Daily Quest") + '</small>' +
-        (!item.resolvedAt && mission ? '<button type="button" data-mistake-review="' + escapeHtml(item.missionId) + '">Ulangi misi ↗</button>' : '<span>✓ Tersimpan</span>') + '</div></article>';
+        explanation +
+        '<div class="adventure-mistake-bottom"><small>' + escapeHtml(mission?.title || "Daily Quest") + '</small>' + action + '</div></article>';
     }).join("") : '<p class="adventure-journal-empty">' + (mistakeFilterValue === "open" ? 'Belum ada kesalahan yang perlu diulang. Bagus, pertahankan kebiasaan memeriksa jawaban.' : 'Belum ada catatan pada filter ini.') + '</p>';
-    node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">LEARN FROM IT</span><h3>Mistake Journal</h3><p>Kesalahan bukan hukuman. Catat, pahami, lalu coba lagi.</p></div><span class="adventure-journal-count">' + openCount + '<small>PERLU DIULANG</small></span></div>' + filters + rows;
+    node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">LEARN FROM IT</span><h3>Mistake Journal</h3><p>Kesalahan bukan hukuman. Catat, pahami, lalu coba lagi tanpa melihat kunci jawaban terlebih dahulu.</p></div><span class="adventure-journal-count">' + openCount + '<small>PERLU DIULANG</small></span></div>' + reviewPanel + filters + rows;
+  }
+
+  function openMistakeReview(mistakeId) {
+    const item = progress.mistakeJournal[mistakeId];
+    if (!item || item.resolvedAt || !mistakeStep(item)) return;
+    selectedMistakeReviewId = mistakeId;
+    mistakeReviewFeedback = null;
+    mistakeReviewTranscriptVisible = false;
+    mistakeReviewListenReady = false;
+    renderMistakeJournal();
+  }
+
+  function closeMistakeReview() {
+    selectedMistakeReviewId = null;
+    mistakeReviewFeedback = null;
+    mistakeReviewTranscriptVisible = false;
+    mistakeReviewListenReady = false;
+    renderMistakeJournal();
+  }
+
+  function listenToMistakeReview() {
+    const item = selectedMistakeReviewId && progress.mistakeJournal[selectedMistakeReviewId];
+    const match = item && mistakeStep(item);
+    if (!match || match.step.type !== "listen") return;
+    mistakeReviewListenReady = true;
+    mistakeReviewTranscriptVisible = !playText(match.step.audioText);
+    renderMistakeJournal();
+  }
+
+  function toggleMistakeReviewTranscript() {
+    const item = selectedMistakeReviewId && progress.mistakeJournal[selectedMistakeReviewId];
+    const match = item && mistakeStep(item);
+    if (!match || match.step.type !== "listen") return;
+    mistakeReviewListenReady = true;
+    mistakeReviewTranscriptVisible = !mistakeReviewTranscriptVisible;
+    renderMistakeJournal();
+  }
+
+  function answerMistakeReview(mistakeId, answerIndex) {
+    const item = progress.mistakeJournal[mistakeId];
+    const match = item && mistakeStep(item);
+    if (!item || item.resolvedAt || !match) return;
+    const step = match.step;
+    if (step.type === "listen" && !mistakeReviewListenReady) return;
+    if (Number(answerIndex) === Number(step.answer)) {
+      item.resolvedAt = new Date().toISOString();
+      item.status = "resolved";
+      mistakeReviewFeedback = { mistakeId, kind: "success" };
+      saveProgress();
+      checkAchievements();
+      renderMistakeJournal();
+      renderSkillProfile();
+      renderAchievements();
+    } else {
+      mistakeReviewFeedback = { mistakeId, kind: "try-again" };
+      renderMistakeJournal();
+    }
   }
 
   function renderDailyQuest() {
@@ -886,6 +989,13 @@
       if (dailyRate) { setListeningRate(dailyRate.dataset.dailyListenRate); return; }
       if (event.target.closest("[data-daily-transcript]")) { dailyTranscriptVisible = !dailyTranscriptVisible; renderDailyQuest(); return; }
       if (event.target.closest("[data-daily-next]")) { advanceDailyQuest(); return; }
+      const focusedReview = event.target.closest("[data-mistake-review-one]");
+      if (focusedReview) { openMistakeReview(focusedReview.dataset.mistakeReviewOne); return; }
+      if (event.target.closest("[data-mistake-review-close]")) { closeMistakeReview(); return; }
+      const focusedAnswer = event.target.closest("[data-mistake-answer]");
+      if (focusedAnswer) { answerMistakeReview(focusedAnswer.dataset.mistakeId, focusedAnswer.dataset.mistakeAnswer); return; }
+      if (event.target.closest("[data-mistake-listen]")) { listenToMistakeReview(); return; }
+      if (event.target.closest("[data-mistake-transcript]")) { toggleMistakeReviewTranscript(); return; }
       const mistakeReview = event.target.closest("[data-mistake-review]");
       if (mistakeReview) { startMission(mistakeReview.dataset.mistakeReview); return; }
       const mistakeFilter = event.target.closest("[data-mistake-filter]");

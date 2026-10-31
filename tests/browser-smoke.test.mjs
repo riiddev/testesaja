@@ -459,6 +459,114 @@ test("Mistake Journal records a wrong answer and marks it fixed after a correct 
   await page.close();
 });
 
+test("Mistake Journal can retry one saved question without restarting the mission", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "mistake-review-access",
+      refresh_token: "mistake-review-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "mistake-review-user", email: "mistake-review@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-adventure-start="meet-your-new-neighbors"]').click();
+  await page.locator('[data-adventure-answer="1"]').click();
+
+  const openRow = page.locator("#adventure-mistake-journal .adventure-mistake-row.is-open").first();
+  await openRow.waitFor({ state: "visible" });
+  assert.equal(await openRow.locator(".adventure-mistake-details .is-correct").isVisible(), false,
+    "the correct answer should stay hidden until the learner tries again");
+  await openRow.locator("[data-mistake-review-one]").click();
+  const review = page.locator("#adventure-mistake-journal .adventure-mistake-review");
+  await review.waitFor({ state: "visible" });
+  assert.match(await review.innerText(), /Ingat kembali/);
+  assert.equal(await review.locator("[data-mistake-answer]").count(), 3);
+
+  await review.locator('[data-mistake-answer="1"]').click();
+  assert.match(await review.innerText(), /Belum tepat/);
+  assert.equal(await page.locator("#adventure-mistake-journal .adventure-mistake-row.is-open").count(), 1,
+    "a second wrong answer must leave the journal entry open");
+
+  await review.locator('[data-mistake-answer="0"]').click();
+  assert.match(await review.innerText(), /Kesalahan berhasil diperbaiki/);
+  assert.match(await review.innerText(), /A neighbor/);
+  await page.locator('[data-mistake-filter="resolved"]').click();
+  await page.locator("#adventure-mistake-journal .adventure-mistake-row.is-resolved").waitFor({ state: "visible" });
+
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  const mistakes = Object.values(saved?.mistakeJournal || {});
+  assert.equal(mistakes.length, 1, "focused retry must update the existing mistake rather than create another");
+  assert.ok(mistakes[0].resolvedAt, "a correct focused retry should resolve the entry");
+  assert.equal(saved?.missionProgress?.["meet-your-new-neighbors"]?.attempts?.length, 1,
+    "focused retry must not create a duplicate mission attempt");
+  assert.deepEqual(saved?.missionProgress?.["meet-your-new-neighbors"]?.attempts?.[0]?.completedStepIds || [], [],
+    "focused retry must not silently complete the original mission step");
+  assert.deepEqual(pageErrors, [], "focused mistake review should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Mistake Review restores listening context and transcript for existing journal entries", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "mistake-listen-access",
+      refresh_token: "mistake-listen-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "mistake-listen-user", email: "mistake-listen@example.com" },
+    }));
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify({
+      schemaVersion: 1,
+      mistakeJournal: {
+        "legacy-listening-mistake": {
+          mistakeId: "legacy-listening-mistake",
+          sourceType: "mission",
+          sourceId: "old-attempt",
+          missionId: "meet-your-new-neighbors",
+          stepId: "listen-greeting",
+          skill: "listening",
+          prompt: "Who is Maya in this conversation?",
+          wrongAnswer: "A café owner",
+          correctAnswer: "A new neighbor",
+          explanation: "Maya says that she lives next door, so she is a neighbor.",
+          recordedAt: new Date().toISOString(),
+          resolvedAt: null,
+          status: "open",
+        },
+      },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-mistake-review-one="legacy-listening-mistake"]').click();
+  const review = page.locator("#adventure-mistake-journal .adventure-mistake-review");
+  await review.waitFor({ state: "visible" });
+  assert.equal(await review.locator("[data-mistake-listen]").count(), 1);
+  assert.equal(await review.locator("[data-mistake-answer]:disabled").count(), 3,
+    "listening answers should remain locked until the audio or transcript is reviewed");
+  await review.locator("[data-mistake-transcript]").click();
+  assert.match(await review.innerText(), /Hello! I'm Maya/);
+  assert.equal(await review.locator("[data-mistake-answer]:disabled").count(), 0);
+  assert.deepEqual(pageErrors, [], "listening context review should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
 test("Daily Quest completes three rotating challenges and awards XP only once for the local day", async () => {
   const page = await browser.newPage();
   const pageErrors = [];
