@@ -368,6 +368,7 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
           recordedAt: "2026-10-31T09:52:00.000Z", resolvedAt: null, status: "open",
         },
       },
+      studioSessions: [{ sessionId: "speaking:ask-directions:2026-10-31", studioType: "speaking", promptId: "ask-directions", wordCount: 0, checklistCompleted: 3, completedAt: "2026-10-31T09:58:00.000Z", updatedAt: "2026-10-31T09:58:00.000Z" }],
       achievementIds: ["first-mission"],
       updatedAt: "2026-10-31T10:00:00.000Z",
     };
@@ -377,6 +378,7 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   await new Promise((resolve) => setTimeout(resolve, 1400));
   assert.equal(remoteState?.schemaVersion, 2, "the cloud envelope should be upgraded to v2");
   assert.ok(remoteState?.extras?.adventureProgress?.missionProgress?.["meet-your-new-neighbors"]?.completedAt, "the mission should be present in the mocked cloud snapshot");
+  assert.equal(remoteState?.extras?.adventureProgress?.studioSessions?.[0]?.promptId, "ask-directions", "only Studio session metadata should be present in the cloud bundle");
 
   const secondContext = await browser.newContext();
   const second = await secondContext.newPage();
@@ -386,6 +388,7 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   await second.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
   await second.waitForFunction(() => document.querySelector("#cloud-sync-badge")?.textContent.includes("Tersinkron"), null, { timeout: 15000 });
   await second.locator('[data-view-target="adventure"]').click();
+  await second.waitForFunction(() => window.sinauuAdventureBackup?.().studioSessions?.some((item) => item.promptId === "ask-directions"));
   await second.locator('[data-adventure-select="a-day-around-town"]').waitFor({ state: "visible" });
   assert.match(await second.locator('[data-adventure-select="a-day-around-town"]').getAttribute("class"), /is-available/);
   const restored = await second.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
@@ -525,6 +528,61 @@ test("Daily Quest completes three rotating challenges and awards XP only once fo
   await page.close();
 });
 
+
+
+test("Speaking and Writing Studios persist local drafts but export only privacy-safe session summaries", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "studio-local-access",
+      refresh_token: "studio-local-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "studio-test-user", email: "studio@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-speaking-studio").waitFor({ state: "visible" });
+  await page.locator('#adventure-speaking-studio [data-studio-prompt="ask-directions"]').click();
+  await page.locator('#adventure-speaking-studio [data-studio-check="0"]').check();
+  await page.locator('#adventure-speaking-studio [data-studio-check="1"]').check();
+  await page.locator('#adventure-speaking-studio [data-studio-check="2"]').check();
+  await page.locator('#adventure-speaking-studio [data-studio-complete]').click();
+  await page.locator("#adventure-writing-studio").waitFor({ state: "visible" });
+  await page.locator('#adventure-writing-studio [data-studio-prompt="weekend-story"]').click();
+  const privateDraft = "Last weekend I visited my cousin in town. We walked around the old market and bought some fresh fruit. After that, we had lunch together at a small café. The weather was warm, and I felt happy because we had time to talk.";
+  await page.locator("#studio-writing-draft").fill(privateDraft);
+  assert.match(await page.locator("#studio-writing-count").innerText(), /\d+ words/);
+  for (const index of [0, 1, 2]) {
+    await page.locator('#adventure-writing-studio [data-studio-check="' + index + '"]').check();
+  }
+  await page.locator('#adventure-writing-studio [data-studio-complete]').click();
+
+  const savedDraftKeys = await page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith("sinauu-adventure-studio-drafts-v1:")));
+  assert.equal(savedDraftKeys.length, 1, "drafts should be stored in an account-scoped local key");
+  const localBackup = await page.evaluate(() => window.sinauuAdventureBackup());
+  assert.equal(localBackup.studioSessions.length, 2, "both studio sessions should be recorded");
+  assert.ok(localBackup.studioSessions.some((item) => item.studioType === "writing" && item.wordCount >= 25));
+  assert.ok(!JSON.stringify(localBackup).includes(privateDraft), "raw writing must not be included in Adventure progress");
+  const cloudBundle = await page.evaluate(() => window.sinauuExportLocalBundle());
+  assert.ok(!JSON.stringify(cloudBundle.extras.adventureProgress).includes(privateDraft), "raw writing must not enter CloudBundle");
+  assert.ok(cloudBundle.extras.adventureProgress.studioSessions.length === 2, "session summaries should be included in CloudBundle");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#studio-writing-draft").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#studio-writing-draft").inputValue(), privateDraft, "the writing draft should survive reload locally");
+  assert.deepEqual(pageErrors, [], "Studio interactions should not throw browser JavaScript errors");
+  await page.close();
+});
 
 test("Adventure workspace stays within mobile, tablet, and desktop viewport widths", async () => {
   for (const width of [390, 768, 1280]) {
