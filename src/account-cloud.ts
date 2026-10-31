@@ -23,6 +23,11 @@ const LOCAL_DB = "sinauu-local-v1", LOCAL_STORE = "state", LOCAL_RECORD = "main"
 const CORE_FALLBACK = "sinauu-learning-state-v1", EXTRA_KEY = "sinauu-extra-learning-v1", HABIT_KEY = "sinauu-habit-library-v1", ADVENTURE_KEY = "sinauu-adventure-progress-v1";
 const OWNER_KEY = "sinauu-cloud-owner-v1";
 const ACCOUNT_CACHE_PREFIX = "sinauu-cloud-local-cache-v1:";
+const PREVIEW_DISABLED_CLOUD_HOSTS = new Set([
+  "sinauuenglish.vercel.app",
+  "sinauuenglish-thoodev.vercel.app",
+  "sinauuenglish-git-main-thoodev.vercel.app",
+]);
 const $ = <T extends Element>(selector: string, root: ParentNode = document) => root.querySelector(selector) as T | null;
 
 let session: AuthSession | null = null;
@@ -343,6 +348,11 @@ function mergeBundles(local: CloudBundle, remote: CloudBundle): CloudBundle {
   return { schemaVersion: 2, core: mergeCore(local.core, remote.core), extras };
 }
 
+function isVercelPreviewDeployment(): boolean {
+  const host = window.location.hostname.toLowerCase();
+  return host.endsWith(".vercel.app") && !PREVIEW_DISABLED_CLOUD_HOSTS.has(host);
+}
+
 function setMessage(message: string, kind: "info" | "success" | "error" = "info"): void {
   const status = $("#account-status") as HTMLElement | null;
   if (status) { status.textContent = message; status.dataset.kind = kind; }
@@ -467,6 +477,11 @@ async function prepareLocalForAccount(): Promise<void> {
 }
 
 async function syncNow(allowWhileSigningOut = false): Promise<void> {
+  if (isVercelPreviewDeployment()) {
+    setSyncBadge("Preview · lokal", "idle");
+    setMessage("Mode preview: progres hanya disimpan di browser ini dan tidak ditulis ke Google Sheets.", "info");
+    return;
+  }
   if (!CLOUD_READY || !session || syncing || !navigator.onLine || (signingOut && !allowWhileSigningOut)) return;
   const syncUserId = session.user.id;
   const syncEpoch = sessionEpoch;
@@ -498,7 +513,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<void> {
 }
 
 function scheduleSync(): void {
-  if (!session || !CLOUD_READY || applyingCloud || signingOut) return;
+  if (isVercelPreviewDeployment() || !session || !CLOUD_READY || applyingCloud || signingOut) return;
   setSyncBadge(navigator.onLine ? "Ada perubahan" : "Menunggu internet", navigator.onLine ? "syncing" : "error");
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(() => void syncNow(), 900);
