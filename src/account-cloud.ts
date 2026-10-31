@@ -390,8 +390,8 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
       sessionId: candidate.sessionId.slice(0, 140),
       studioType: candidate.studioType,
       promptId: candidate.promptId.slice(0, 80),
-      wordCount: Math.max(0, Math.min(5000, Number(previous?.wordCount) || 0, Number(candidate.wordCount) || 0)),
-      checklistCompleted: Math.max(0, Math.min(5, Number(previous?.checklistCompleted) || 0, Number(candidate.checklistCompleted) || 0)),
+      wordCount: Math.max(0, Math.min(5000, Math.max(Number(previous?.wordCount) || 0, Number(candidate.wordCount) || 0))),
+      checklistCompleted: Math.max(0, Math.min(5, Math.max(Number(previous?.checklistCompleted) || 0, Number(candidate.checklistCompleted) || 0))),
       completedAt: earliestIso(previous?.completedAt, candidate.completedAt) || newer?.completedAt || null,
       updatedAt: (newer || older)?.updatedAt || (newer || older)?.completedAt || null,
     });
