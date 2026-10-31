@@ -1297,3 +1297,6 @@ h1,h2,h3{overflow-wrap:break-word}
 @media(prefers-reduced-motion:reduce){
   .adventure-xp-track i,.adventure-session-progress i,.adventure-stop-pin,.adventure-option{transition:none}
 }
+
+
+@media(max-width:760px){.side-nav{grid-template-columns:repeat(6,minmax(0,1fr))}}
