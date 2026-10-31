@@ -492,6 +492,9 @@ test("Daily Quest completes three rotating challenges and awards XP only once fo
 
   await page.locator("#adventure-daily-quest").getByText("Daily Quest complete.", { exact: true }).waitFor({ state: "visible" });
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  const exportedBundle = await page.evaluate(() => window.sinauuExportLocalBundle());
+  assert.equal(exportedBundle.schemaVersion, 2, "the local backup/export bundle should use envelope v2");
+  assert.ok(exportedBundle.extras.adventureProgress.dailyQuests, "Daily Quest progress should be included in CloudBundle v2");
   const questDates = Object.keys(saved?.dailyQuests || {});
   assert.equal(questDates.length, 1, "the current day should have one quest record");
   assert.ok(saved.dailyQuests[questDates[0]].completedAt, "the daily quest should be marked complete");
