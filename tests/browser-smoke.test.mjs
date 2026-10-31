@@ -367,3 +367,83 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   await firstContext.close();
   await secondContext.close();
 });
+
+
+test("Mistake Journal records a wrong answer and marks it fixed after a correct retry", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-mistake-journal").waitFor({ state: "visible" });
+  await page.locator('[data-adventure-start="meet-your-new-neighbors"]').click();
+
+  await page.locator('[data-adventure-answer="1"]').click();
+  await page.locator("#adventure-mistake-journal .adventure-mistake-row.is-open").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#adventure-mistake-journal .adventure-mistake-row.is-open").count(), 1);
+  assert.match(await page.locator("#adventure-mistake-journal").innerText(), /Jawabanmu/);
+
+  await page.locator('[data-adventure-answer="0"]').click();
+  await page.locator('[data-adventure-next]').waitFor({ state: "visible" });
+  await page.locator('[data-mistake-filter="resolved"]').click();
+  await page.locator("#adventure-mistake-journal .adventure-mistake-row.is-resolved").waitFor({ state: "visible" });
+  assert.match(await page.locator("#adventure-mistake-journal").innerText(), /SUDAH DIPERBAIKI/);
+
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  const mistakes = Object.values(saved?.mistakeJournal || {});
+  assert.equal(mistakes.length, 1, "a wrong answer should create one journal entry");
+  assert.ok(mistakes[0].resolvedAt, "a correct retry should resolve the journal entry");
+  assert.deepEqual(pageErrors, [], "mistake review should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Daily Quest completes three rotating challenges and awards XP only once for the local day", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-daily-quest").waitFor({ state: "visible" });
+  await page.locator("[data-daily-start]").click();
+
+  for (let index = 0; index < 3; index += 1) {
+    const listen = page.locator("[data-daily-listen]");
+    if (await listen.count()) {
+      await listen.click();
+      await page.locator(".adventure-daily-listen p").waitFor({ state: "visible" });
+    }
+    const answerIndex = await page.evaluate(async () => {
+      const current = document.querySelector("[data-daily-step-id]");
+      const missionId = current?.getAttribute("data-daily-mission-id");
+      const stepId = current?.getAttribute("data-daily-step-id");
+      const data = await fetch("/data/adventure/missions.json").then((response) => response.json());
+      const mission = data.missions.find((item) => item.id === missionId);
+      const step = mission?.steps.find((item) => item.id === stepId);
+      return step?.answer;
+    });
+    assert.ok(Number.isInteger(answerIndex), "the current daily challenge should map to a valid authored answer");
+    await page.locator('[data-daily-answer="' + answerIndex + '"]').click();
+    await page.locator("[data-daily-next]").waitFor({ state: "visible" });
+    await page.locator("[data-daily-next]").click();
+  }
+
+  await page.locator("#adventure-daily-quest").getByText("Daily Quest complete.", { exact: true }).waitFor({ state: "visible" });
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  const questDates = Object.keys(saved?.dailyQuests || {});
+  assert.equal(questDates.length, 1, "the current day should have one quest record");
+  assert.ok(saved.dailyQuests[questDates[0]].completedAt, "the daily quest should be marked complete");
+  const dailyAwards = Object.entries(saved.xpLedger || {}).filter(([id]) => id.startsWith("daily-quest:"));
+  assert.equal(dailyAwards.length, 1, "a completed daily quest should create one unique daily award");
+  assert.equal(dailyAwards[0][1].amount, 15, "the daily quest should award 15 XP");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-daily-quest").getByText("Daily Quest complete.", { exact: true }).waitFor({ state: "visible" });
+  const afterReload = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.equal(Object.keys(afterReload.xpLedger).filter((id) => id.startsWith("daily-quest:")).length, 1);
+  assert.deepEqual(pageErrors, [], "daily quest interactions should not throw browser JavaScript errors");
+  await page.close();
+});
