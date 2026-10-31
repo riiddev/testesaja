@@ -334,7 +334,7 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
 function mergeBundles(local: CloudBundle, remote: CloudBundle): CloudBundle {
   const localTime = Date.parse(local.core.updatedAt || "") || 0, remoteTime = Date.parse(remote.core.updatedAt || "") || 0;
   const preferRemote = remoteTime >= localTime;
-  const extras: AnyRecord = {};
+  const extras: CloudBundle["extras"] = { extraLearning: {}, habitProgress: {}, adventureProgress: {} };
   for (const key of new Set([...Object.keys(local.extras || {}), ...Object.keys(remote.extras || {})])) {
     if (key === "adventureProgress") {
       extras[key] = mergeAdventureProgress(local.extras?.[key] || {}, remote.extras?.[key] || {});
@@ -342,9 +342,6 @@ function mergeBundles(local: CloudBundle, remote: CloudBundle): CloudBundle {
       extras[key] = mergeDeep(local.extras?.[key] || {}, remote.extras?.[key] || {}, preferRemote);
     }
   }
-  extras.extraLearning ||= {};
-  extras.habitProgress ||= {};
-  extras.adventureProgress ||= {};
   return { schemaVersion: 2, core: mergeCore(local.core, remote.core), extras };
 }
 
