@@ -18,7 +18,7 @@
   ];
   let curriculum = null;
   let progress = normalizeProgress(readStored());
-  let selectedMissionId = null, currentFeedback = null, listenReady = false, initialized = false;
+  let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, initialized = false;
 
   function emptyProgress() {
     return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, achievementIds: [], updatedAt: new Date().toISOString() };
@@ -205,7 +205,9 @@
   }
 
   function renderStep(mission, attempt, node) {
-    const step = currentStep(mission, attempt);
+    const step = currentFeedback && currentFeedback.kind === "success" && currentFeedbackStepId
+      ? mission.steps.find((item) => item.id === currentFeedbackStepId)
+      : currentStep(mission, attempt);
     if (!step) { completeMission(mission, attempt); renderAll(); return; }
     const stepIndex = mission.steps.findIndex((item) => item.id === step.id);
     const progressWidth = Math.round((attempt.completedStepIds.length / mission.steps.length) * 100);
@@ -244,7 +246,7 @@
   function startMission(missionId) {
     const mission = curriculum.missions.find((item) => item.id === missionId);
     if (!mission || !missionUnlocked(mission)) return;
-    selectedMissionId = missionId; currentFeedback = null; listenReady = false;
+    selectedMissionId = missionId; currentFeedback = null; currentFeedbackStepId = null; listenReady = false;
     const entry = missionEntry(missionId);
     if (!progress.missionProgress[missionId]) progress.missionProgress[missionId] = entry;
     let attempt = latestIncompleteAttempt(missionId);
@@ -374,13 +376,13 @@
     renderMissionDetail();
   }
   function backToMission() {
-    currentFeedback = null; listenReady = false; renderMissionDetail();
+    currentFeedback = null; currentFeedbackStepId = null; listenReady = false; renderMissionDetail();
   }
   function advanceStep() {
     const mission = curriculum.missions.find((item) => item.id === selectedMissionId);
     const attempt = mission && currentAttempt(mission.id);
     if (!mission || !attempt || !currentFeedback || currentFeedback.kind !== "success") return;
-    currentFeedback = null; listenReady = false;
+    currentFeedback = null; currentFeedbackStepId = null; listenReady = false;
     if (attempt.completedStepIds.length >= mission.steps.length) {
       completeMission(mission, attempt); renderAll(); return;
     }
