@@ -414,6 +414,18 @@ test("Daily Quest completes three rotating challenges and awards XP only once fo
   const page = await browser.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "adventure-local-access",
+      refresh_token: "adventure-local-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "adventure-local-user", email: "adventure@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
   await page.locator('[data-view-target="adventure"]').click();
