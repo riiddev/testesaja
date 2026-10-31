@@ -1300,3 +1300,48 @@ h1,h2,h3{overflow-wrap:break-word}
 
 
 @media(max-width:760px){.side-nav{grid-template-columns:repeat(6,minmax(0,1fr))}}
+
+
+
+/* Daily Quest and Mistake Journal */
+.adventure-extras-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.adventure-extra-card{min-width:0;padding:21px 22px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-extra-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.adventure-extra-heading .eyebrow{margin-bottom:6px}
+.adventure-extra-heading h3{margin:0;font:500 1.28rem "Lora",Georgia,serif}
+.adventure-extra-heading p{margin:5px 0 0;color:var(--muted);font-size:.62rem;line-height:1.65}
+.adventure-daily-reward{flex:none;padding:7px 9px;background:var(--yellow);color:#776b46;font:500 .68rem "Lora",Georgia,serif}
+.adventure-daily-context{margin:17px 0 13px;color:var(--body);font-size:.67rem;line-height:1.75}
+.adventure-daily-context strong{color:var(--ink);font-weight:700}
+.adventure-daily-tracker{display:flex;align-items:center;gap:7px;margin:16px 0}
+.adventure-daily-tracker span{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--muted);font:500 .65rem "Lora",Georgia,serif}
+.adventure-daily-tracker span.is-done{border-color:var(--sage-deep);background:var(--sage);color:var(--sage-deep)}
+.adventure-extra-card>.primary-action{min-height:40px}
+.adventure-daily-note{display:block;margin-top:12px;color:var(--muted);font-size:.53rem;line-height:1.65}
+.adventure-daily-step-count{margin:15px 0 6px;color:var(--sage-deep);font-size:.48rem;font-weight:700;letter-spacing:.1em}
+.adventure-extra-card h4{margin:14px 0 10px;font:500 1.05rem/1.5 "Lora",Georgia,serif}
+.adventure-daily-listen{display:grid;gap:7px;margin:13px 0}
+.adventure-daily-listen>small,.adventure-daily-listen p{margin:0;color:var(--muted);font-size:.58rem;line-height:1.6}
+.adventure-daily-listen p{padding:9px 11px;background:var(--paper-deep);color:var(--body)}
+.adventure-daily-complete{margin-top:15px;padding:13px 14px;background:color-mix(in srgb,var(--sage) 42%,var(--sheet));color:var(--sage-deep);font-size:.65rem;line-height:1.7}
+.adventure-journal-count{min-width:43px;padding-left:12px;border-left:1px solid var(--line);color:var(--ink);font:400 1.65rem/1 "Lora",Georgia,serif;text-align:right}
+.adventure-journal-count small{display:block;margin-top:5px;color:var(--muted);font:700 .42rem "Plus Jakarta Sans",sans-serif;letter-spacing:.07em;white-space:nowrap}
+.adventure-journal-filters{display:flex;flex-wrap:wrap;gap:5px;margin:15px 0 10px}
+.adventure-journal-filters button{padding:6px 9px;border:1px solid var(--line);background:transparent;color:var(--body);font-size:.54rem;cursor:pointer}
+.adventure-journal-filters button.is-active{border-color:var(--sage-deep);background:var(--sage);color:var(--sage-deep);font-weight:700}
+.adventure-mistake-row{padding:12px 0;border-top:1px solid var(--line)}
+.adventure-mistake-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--muted);font-size:.45rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.adventure-mistake-top span:last-child{color:var(--peach-ink)}
+.adventure-mistake-row.is-resolved .adventure-mistake-top span:last-child{color:var(--sage-deep)}
+.adventure-mistake-row>strong{display:block;color:var(--ink);font:500 .78rem/1.55 "Lora",Georgia,serif}
+.adventure-mistake-answer{margin:5px 0 0;color:var(--body);font-size:.58rem;line-height:1.55}
+.adventure-mistake-answer span{display:inline-block;min-width:75px;color:var(--muted);font-size:.51rem}
+.adventure-mistake-answer.is-correct{color:var(--sage-deep)}
+.adventure-mistake-explanation{margin:7px 0 0;color:var(--muted);font-size:.56rem;line-height:1.65}
+.adventure-mistake-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px}
+.adventure-mistake-bottom small,.adventure-mistake-bottom>span{color:var(--muted);font-size:.5rem}
+.adventure-mistake-bottom button{padding:5px 8px;border:1px solid var(--line);background:var(--paper);color:var(--sage-deep);font-size:.53rem;cursor:pointer}
+.adventure-journal-empty{margin:0;padding:17px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.63rem;line-height:1.7}
+.adventure-achievement-next{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:.52rem;line-height:1.6}
+@media(max-width:1000px){.adventure-extras-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.adventure-extra-card{padding:17px 15px}.adventure-extra-heading h3{font-size:1.15rem}}
