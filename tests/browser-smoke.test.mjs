@@ -194,3 +194,176 @@ test("vocabulary search returns a matching word and reading practice saves an an
   assert.deepEqual(pageErrors, [], "workspace interactions should not throw browser JavaScript errors");
   await page.close();
 });
+
+
+test("Adventure MVP completes the first quest, records skill evidence, and unlocks Town Square", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "adventure-local-access",
+      refresh_token: "adventure-local-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "adventure-local-user", email: "adventure@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  const response = await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  assert.equal(response?.status(), 200);
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-world-title").waitFor({ state: "visible" });
+  await page.locator('[data-adventure-start="meet-your-new-neighbors"]').click();
+
+  const answerAndContinue = async () => {
+    await page.locator('[data-adventure-answer="0"]').click();
+    await page.locator('[data-adventure-next]').waitFor({ state: "visible" });
+    await page.locator('[data-adventure-next]').click();
+  };
+
+  await answerAndContinue(); // Vocabulary
+  await page.locator("[data-adventure-listen]").click();
+  await page.locator(".adventure-audio-transcript").waitFor({ state: "visible" });
+  await answerAndContinue(); // Listening
+  await answerAndContinue(); // Reading
+  await answerAndContinue(); // Grammar
+
+  const speakChecks = page.locator('[data-adventure-check]');
+  await speakChecks.nth(0).check();
+  await speakChecks.nth(1).check();
+  await speakChecks.nth(2).check();
+  const speakSubmit = page.locator("[data-adventure-complete-production]");
+  await speakSubmit.waitFor({ state: "visible" });
+  assert.equal(await speakSubmit.isEnabled(), true, "speaking evidence needs the complete self-check");
+  await speakSubmit.click();
+  await page.locator("[data-adventure-next]").click();
+
+  await page.locator("#adventure-writing").fill("Hello, my name is Rina and I live in a small house near the town square.");
+  const writeChecks = page.locator('[data-adventure-check]');
+  await writeChecks.nth(0).check();
+  await writeChecks.nth(1).check();
+  await writeChecks.nth(2).check();
+  const writeSubmit = page.locator("[data-adventure-complete-production]");
+  assert.equal(await writeSubmit.isEnabled(), true, "writing evidence needs enough words and a completed self-check");
+  await writeSubmit.click();
+  await page.locator('[data-adventure-next]').click();
+
+  await page.locator("#adventure-mission-panel").getByText("Misi selesai.", { exact: true }).waitFor({ state: "visible" });
+  assert.match(await page.locator("#adventure-xp-line").innerText(), /40 XP/);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.ok(saved?.missionProgress?.["meet-your-new-neighbors"]?.completedAt, "the first mission completion should persist locally");
+  assert.equal(saved?.xpLedger?.["first-completion:meet-your-new-neighbors"]?.amount, 40, "the first completion should award XP once");
+  for (const skill of ["vocabulary", "listening", "reading", "grammar", "speaking", "writing"]) {
+    assert.ok(saved?.skillEvidence?.[skill]?.length, "expected evidence for " + skill);
+  }
+  assert.equal(saved.skillEvidence.writing[0].wordCount, 14, "only a compact writing summary should be stored");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-adventure-select="a-day-around-town"]').waitFor({ state: "visible" });
+  assert.match(await page.locator('[data-adventure-select="a-day-around-town"]').getAttribute("class"), /is-available/);
+  assert.deepEqual(pageErrors, [], "Adventure interactions should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("CloudBundle v2 Adventure progress merges across two independent browser profiles", async () => {
+  let remoteState = null;
+  const user = { id: "cross-device-user", email: "cross-device@example.com" };
+  const session = {
+    access_token: "cross-device-access",
+    refresh_token: "cross-device-refresh",
+    token_type: "bearer",
+    expires_at: Math.floor(Date.now() / 1000) + 7200,
+    user,
+  };
+
+  async function attachMockCloud(page) {
+    await page.addInitScript((savedSession) => {
+      localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify(savedSession));
+    }, session);
+    await page.route("**/api/account**", async (route) => {
+      const action = new URL(route.request().url()).searchParams.get("action");
+      if (action === "status") {
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: true }) });
+      }
+      if (action === "me") {
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(user) });
+      }
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+    });
+    await page.route("**/api/progress**", async (route) => {
+      if (route.request().method() === "GET") {
+        const rows = remoteState ? [{ user_id: user.id, state: remoteState, updated_at: remoteState.core?.updatedAt || new Date().toISOString() }] : [];
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(rows) });
+      }
+      const body = route.request().postDataJSON();
+      remoteState = Array.isArray(body) ? body[0]?.state : body?.state;
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+    });
+  }
+
+  const firstContext = await browser.newContext();
+  const first = await firstContext.newPage();
+  const pageErrors = [];
+  first.on("pageerror", (error) => pageErrors.push(error.message));
+  await attachMockCloud(first);
+  await first.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await first.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await first.waitForFunction(() => document.querySelector("#cloud-sync-badge")?.textContent.includes("Tersinkron"), null, { timeout: 15000 });
+
+  await first.evaluate(() => {
+    const snapshot = {
+      schemaVersion: 1,
+      missionProgress: {
+        "meet-your-new-neighbors": {
+          completedAt: "2026-10-31T10:00:00.000Z",
+          bestScore: 100,
+          attempts: [{
+            attemptId: "device-a-attempt",
+            missionId: "meet-your-new-neighbors",
+            startedAt: "2026-10-31T09:45:00.000Z",
+            completedAt: "2026-10-31T10:00:00.000Z",
+            completedStepIds: ["word-neighbor", "listen-greeting", "read-introduction", "grammar-article", "speak-introduction", "write-introduction"],
+            stepResults: {},
+            score: 100,
+          }],
+        },
+      },
+      skillEvidence: {
+        vocabulary: [{ evidenceId: "a-vocab-evidence", missionId: "meet-your-new-neighbors", recordedAt: "2026-10-31T09:47:00.000Z" }],
+      },
+      xpLedger: {
+        "first-completion:meet-your-new-neighbors": { awardId: "first-completion:meet-your-new-neighbors", amount: 40, awardedAt: "2026-10-31T10:00:00.000Z" },
+      },
+      achievementIds: ["first-mission"],
+      updatedAt: "2026-10-31T10:00:00.000Z",
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(snapshot));
+    window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
+  });
+  await new Promise((resolve) => setTimeout(resolve, 1400));
+  assert.equal(remoteState?.schemaVersion, 2, "the cloud envelope should be upgraded to v2");
+  assert.ok(remoteState?.extras?.adventureProgress?.missionProgress?.["meet-your-new-neighbors"]?.completedAt, "the mission should be present in the mocked cloud snapshot");
+
+  const secondContext = await browser.newContext();
+  const second = await secondContext.newPage();
+  second.on("pageerror", (error) => pageErrors.push(error.message));
+  await attachMockCloud(second);
+  await second.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await second.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await second.waitForFunction(() => document.querySelector("#cloud-sync-badge")?.textContent.includes("Tersinkron"), null, { timeout: 15000 });
+  await second.locator('[data-view-target="adventure"]').click();
+  await second.locator('[data-adventure-select="a-day-around-town"]').waitFor({ state: "visible" });
+  assert.match(await second.locator('[data-adventure-select="a-day-around-town"]').getAttribute("class"), /is-available/);
+  const restored = await second.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.ok(restored?.missionProgress?.["meet-your-new-neighbors"]?.completedAt, "a second browser profile should restore the mission completion");
+  assert.equal(restored?.xpLedger?.["first-completion:meet-your-new-neighbors"]?.amount, 40);
+  assert.deepEqual(pageErrors, [], "cross-device merge should not throw browser JavaScript errors");
+  await firstContext.close();
+  await secondContext.close();
+});
