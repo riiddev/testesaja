@@ -274,6 +274,7 @@
     attempt.stepResults[step.id] = { completedAt: new Date().toISOString(), firstTry: wrong === 0, attempts: wrong + 1, method };
     recordEvidence(mission, attempt, step, method, extra);
     saveProgress();
+    currentFeedbackStepId = step.id;
     currentFeedback = { kind: "success", title: "Bagian ini selesai.", message: step.explanation || "Bukti latihanmu sudah dicatat. Lanjut ke langkah berikutnya." };
     renderMissionDetail(); renderSkillProfile();
   }
