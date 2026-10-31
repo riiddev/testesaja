@@ -203,3 +203,15 @@ Browser tests cover:
 - Daily Quest and Mistake Journal restore on a second browser profile and merge new completion/resolution evidence back into the shared cloud snapshot.
 
 The cross-profile browser test uses mocked progress API responses. It verifies client merge behavior but is not a live Google Sheets write/read test.
+
+
+### Listening Lab
+
+The listening controls now provide:
+- Browser text-to-speech playback with replay.
+- Three playback speeds: 0.75×, 0.9×, and 1×.
+- Transcript hidden by default and revealed only on request.
+- The selected playback speed is saved in \`adventureProgress.listeningRate\` and merged across devices.
+- No audio is recorded or uploaded. If browser speech synthesis is unavailable, the transcript remains available as a fallback.
+
+The browser smoke tests verify that the transcript stays hidden until requested, the selected speed persists locally, and the preference restores in a second browser profile.
