@@ -606,6 +606,7 @@
     record.updatedAt = new Date().toISOString();
     progress.dailyQuests[definition.dateKey] = record;
     dailyListenReady = false;
+    dailyTranscriptVisible = false;
     saveProgress();
     renderDailyQuest();
   }
