@@ -326,6 +326,49 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
       awardedAt: earliestIso(previous.awardedAt, next.awardedAt),
     } : next;
   }
+  const localDaily = local.dailyQuests || {}, remoteDaily = remote.dailyQuests || {};
+  result.dailyQuests = {};
+  for (const dateKey of new Set([...Object.keys(localDaily), ...Object.keys(remoteDaily)])) {
+    const a = localDaily[dateKey] || {}, b = remoteDaily[dateKey] || {};
+    const aTime = Date.parse(a.updatedAt || a.startedAt || "") || 0;
+    const bTime = Date.parse(b.updatedAt || b.startedAt || "") || 0;
+    const newer = bTime >= aTime ? b : a;
+    const wrongAttempts: AnyRecord = { ...(a.wrongAttempts || {}) };
+    for (const [stepId, count] of Object.entries(b.wrongAttempts || {})) {
+      wrongAttempts[stepId] = Math.max(Number(wrongAttempts[stepId]) || 0, Number(count) || 0);
+    }
+    result.dailyQuests[dateKey] = {
+      ...a,
+      ...b,
+      stepIds: Array.from(new Set([...(a.stepIds || []), ...(b.stepIds || [])])),
+      completedStepIds: Array.from(new Set([...(a.completedStepIds || []), ...(b.completedStepIds || [])])),
+      wrongAttempts,
+      startedAt: earliestIso(a.startedAt, b.startedAt),
+      completedAt: earliestIso(a.completedAt, b.completedAt),
+      lastFeedback: newer.lastFeedback || null,
+      lastFeedbackStepId: newer.lastFeedbackStepId || null,
+      updatedAt: new Date(Math.max(aTime, bTime) || Date.now()).toISOString(),
+    };
+  }
+
+  const localMistakes = local.mistakeJournal || {}, remoteMistakes = remote.mistakeJournal || {};
+  result.mistakeJournal = { ...localMistakes };
+  for (const [mistakeId, mistake] of Object.entries(remoteMistakes)) {
+    const previous = result.mistakeJournal[mistakeId] as AnyRecord | undefined;
+    const next = mistake as AnyRecord;
+    result.mistakeJournal[mistakeId] = previous ? {
+      ...previous,
+      ...next,
+      recordedAt: earliestIso(previous.recordedAt, next.recordedAt),
+      resolvedAt: earliestIso(previous.resolvedAt, next.resolvedAt),
+      status: previous.resolvedAt || next.resolvedAt ? "resolved" : "open",
+    } : next;
+  }
+  for (const [mistakeId, mistake] of Object.entries(result.mistakeJournal)) {
+    const item = mistake as AnyRecord;
+    item.status = item.resolvedAt ? "resolved" : "open";
+  }
+
   result.achievementIds = Array.from(new Set([...(local.achievementIds || []), ...(remote.achievementIds || [])]));
   result.updatedAt = new Date(Math.max(Date.parse(local.updatedAt || "") || 0, Date.parse(remote.updatedAt || "") || 0) || Date.now()).toISOString();
   return result;
