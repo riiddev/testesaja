@@ -36,6 +36,7 @@
   <script src="/data/oxford3000/editorial-overrides-loader.js" defer></script>
   <script src="/belajar.js" defer></script>
   <script src="/extra-learning.js" defer></script>
+  <script src="/adventure.js" defer></script>
   <script type="module" src="/src/account-cloud.ts"></script>
 </head>
 <body>
@@ -49,6 +50,7 @@
         <button class="side-link is-active" data-view-target="overview" type="button"><span class="nav-icon" aria-hidden="true">⌂</span><span>Beranda</span></button>
         <button class="side-link" data-view-target="vocabulary" type="button"><span class="nav-icon" aria-hidden="true">Aa</span><span>Belajar</span><span class="nav-count" id="nav-word-count">—</span></button>
         <button class="side-link" data-view-target="reading" type="button"><span class="nav-icon" aria-hidden="true">▤</span><span>Bacaan</span></button>
+        <button class="side-link" data-view-target="adventure" type="button"><span class="nav-icon" aria-hidden="true">⌁</span><span>Petualangan</span></button>
         <button class="side-link" data-view-target="review" type="button"><span class="nav-icon" aria-hidden="true">↻</span><span>Review</span><span class="nav-count" id="nav-review-count">0</span></button>
         <button class="side-link" data-view-target="progress" type="button"><span class="nav-icon" aria-hidden="true">↗</span><span>Progres</span></button>
       </nav>
@@ -278,6 +280,52 @@
             </article>
           </div>
           </div>
+        </section>
+
+
+        <section class="view adventure-view" id="view-adventure" data-view="adventure">
+          <div class="adventure-heading">
+            <div>
+              <span class="eyebrow">SINAUUENGLISH / ADVENTURE</span>
+              <h1>Belajar lewat <em>perjalanan.</em></h1>
+              <p class="page-lede">Selesaikan misi kecil dalam situasi sehari-hari. Kamu tidak sedang mengejar klik atau koin; kamu sedang belajar memakai bahasa dalam konteks.</p>
+            </div>
+            <div class="adventure-player">
+              <span class="adventure-rank-mark" id="adventure-rank-mark">I</span>
+              <div class="adventure-player-copy">
+                <small>PLAYER RANK</small><strong id="adventure-rank">Seed Explorer</strong>
+                <span id="adventure-xp-line">0 XP · 0 / 100 menuju Trail Scout</span>
+                <span class="adventure-xp-track"><i id="adventure-xp-bar"></i></span>
+              </div>
+            </div>
+          </div>
+
+          <section class="adventure-world-card" aria-labelledby="adventure-world-title">
+            <div class="adventure-world-top">
+              <div><span class="eyebrow">WORLD 01 · A1–A2</span><h2 id="adventure-world-title">First Steps Island</h2><p>Mulai dari lingkungan yang dekat denganmu.</p></div>
+              <div class="adventure-world-count"><strong id="adventure-mission-count">0/3</strong><span>MISI SELESAI</span></div>
+            </div>
+            <div class="adventure-map" id="adventure-map" aria-label="Peta misi First Steps Island"></div>
+            <div class="adventure-world-foot"><span><strong>Jalur awal:</strong> kenalan → mengenali kota → berinteraksi di café</span><span id="adventure-save-state">Progres tersimpan di perangkat ini.</span></div>
+          </section>
+
+          <div class="adventure-content-grid">
+            <section class="adventure-mission-panel" id="adventure-mission-panel" aria-live="polite">
+              <div class="adventure-empty-state">Menyiapkan petualangan…</div>
+            </section>
+            <aside class="adventure-side-panel">
+              <div class="adventure-side-card">
+                <span class="eyebrow">SKILL PROFILE</span><h3>Kemampuan yang kamu latih</h3>
+                <p>Catatan ini menghitung bukti latihan yang terkumpul dari misi, bukan sertifikasi CEFR.</p>
+                <div class="adventure-skill-list" id="adventure-skill-list"></div>
+              </div>
+              <div class="adventure-side-card adventure-achievement-card">
+                <span class="eyebrow">FIELD NOTES</span><h3>Catatan perjalanan</h3>
+                <div id="adventure-achievements"><p>Achievement akan muncul setelah ada misi yang selesai.</p></div>
+              </div>
+            </aside>
+          </div>
+          <p class="adventure-footnote">Rekaman suara tidak dikirim ke akun atau spreadsheet. Latihan speaking dan writing pada MVP dinilai melalui refleksi mandiri, bukan penilaian otomatis.</p>
         </section>
 
         <section class="view" id="view-review" data-view="review">
