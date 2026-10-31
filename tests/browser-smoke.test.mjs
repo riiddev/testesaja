@@ -340,6 +340,26 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
       xpLedger: {
         "first-completion:meet-your-new-neighbors": { awardId: "first-completion:meet-your-new-neighbors", amount: 40, awardedAt: "2026-10-31T10:00:00.000Z" },
       },
+      dailyQuests: {
+        "2026-10-31": {
+          dateKey: "2026-10-31",
+          missionId: "meet-your-new-neighbors",
+          stepIds: ["word-neighbor", "grammar-article", "read-introduction"],
+          completedStepIds: ["word-neighbor"],
+          wrongAttempts: { "grammar-article": 1 },
+          startedAt: "2026-10-31T09:50:00.000Z",
+          completedAt: null,
+          updatedAt: "2026-10-31T09:55:00.000Z",
+        },
+      },
+      mistakeJournal: {
+        "device-a-mistake": {
+          mistakeId: "device-a-mistake", sourceType: "daily-quest", sourceId: "daily:2026-10-31",
+          missionId: "meet-your-new-neighbors", stepId: "grammar-article", skill: "grammar",
+          prompt: "Choose an article.", wrongAnswer: "an", correctAnswer: "a", explanation: "Use a before a consonant sound.",
+          recordedAt: "2026-10-31T09:52:00.000Z", resolvedAt: null, status: "open",
+        },
+      },
       achievementIds: ["first-mission"],
       updatedAt: "2026-10-31T10:00:00.000Z",
     };
@@ -363,6 +383,23 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   const restored = await second.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
   assert.ok(restored?.missionProgress?.["meet-your-new-neighbors"]?.completedAt, "a second browser profile should restore the mission completion");
   assert.equal(restored?.xpLedger?.["first-completion:meet-your-new-neighbors"]?.amount, 40);
+  assert.deepEqual(restored?.dailyQuests?.["2026-10-31"]?.completedStepIds, ["word-neighbor"], "Daily Quest progress should restore on the second profile");
+  assert.equal(restored?.mistakeJournal?.["device-a-mistake"]?.status, "open", "Mistake Journal entries should restore on the second profile");
+
+  await second.evaluate(() => {
+    const snapshot = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
+    const quest = snapshot.dailyQuests["2026-10-31"];
+    quest.completedStepIds.push("grammar-article");
+    quest.updatedAt = new Date(Date.now() + 1000).toISOString();
+    const mistake = snapshot.mistakeJournal["device-a-mistake"];
+    mistake.resolvedAt = new Date(Date.now() + 1000).toISOString();
+    mistake.status = "resolved";
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(snapshot));
+    window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
+  });
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  assert.ok(remoteState?.extras?.adventureProgress?.dailyQuests?.["2026-10-31"]?.completedStepIds?.includes("grammar-article"), "Daily Quest completion from device B should merge into the cloud snapshot");
+  assert.equal(remoteState?.extras?.adventureProgress?.mistakeJournal?.["device-a-mistake"]?.status, "resolved", "a resolved Mistake Journal entry should win during merge");
   assert.deepEqual(pageErrors, [], "cross-device merge should not throw browser JavaScript errors");
   await firstContext.close();
   await secondContext.close();
