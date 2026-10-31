@@ -845,7 +845,7 @@
     if (!studioDrafts || !["speaking", "writing"].includes(kind) || !promptId) return;
     const state = studioState(kind, promptId);
     const card = kind === "speaking" ? $("#adventure-speaking-studio") : $("#adventure-writing-studio");
-    state.checked = $("[data-studio-check]:checked", card).map((item) => Number(item.dataset.studioCheck)).filter((value) => Number.isInteger(value));
+    state.checked = Array.from(card.querySelectorAll("[data-studio-check]:checked"), (item) => Number(item.dataset.studioCheck)).filter((value) => Number.isInteger(value));
     state.checked = Array.from(new Set(state.checked)).sort();
     saveStudioDrafts();
     updateStudioCompleteButton(kind);
