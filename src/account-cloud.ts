@@ -1,5 +1,5 @@
 type AnyRecord = Record<string, any>;
-type CloudBundle = { schemaVersion: 2; core: AnyRecord; extras: { extraLearning: AnyRecord; habitProgress: AnyRecord; adventureProgress: AnyRecord; [key: string]: AnyRecord } };
+type CloudBundle = { schemaVersion: 2; core: AnyRecord; extras: { extraLearning: AnyRecord; habitProgress: AnyRecord; adventureProgress: AnyRecord; [key: string]: any } };
 type AuthUser = { id: string; email?: string };
 type AuthSession = { access_token: string; refresh_token: string; expires_at?: number; expires_in?: number; token_type?: string; user: AuthUser };
 
@@ -11,6 +11,9 @@ declare global {
     sinauuExtraLearningBackup?: () => AnyRecord;
     sinauuHabitLibraryRestore?: (next: AnyRecord) => void;
     sinauuHabitLibraryBackup?: () => AnyRecord;
+    sinauuAdventureRestore?: (next: AnyRecord) => void;
+    sinauuAdventureBackup?: () => AnyRecord;
+    sinauuRenderAdventure?: () => void;
   }
 }
 
@@ -456,9 +459,9 @@ async function prepareLocalForAccount(): Promise<void> {
   try { localStorage.setItem(ACCOUNT_CACHE_PREFIX + owner, JSON.stringify(previous)); } catch { /* Keep the cloud copy as the durable backup. */ }
   const target = parseStored<CloudBundle | null>(ACCOUNT_CACHE_PREFIX + session.user.id, null);
   const next = target ? normalizeBundle(target) : {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     core: freshCore(),
-    extras: { extraLearning: {}, habitProgress: {} },
+    extras: { extraLearning: {}, habitProgress: {}, adventureProgress: {} },
   };
   await applyLocalBundle(next);
 }
