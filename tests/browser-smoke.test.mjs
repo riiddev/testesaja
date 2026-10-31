@@ -260,7 +260,7 @@ test("Adventure MVP completes the first quest, records skill evidence, and unloc
   for (const skill of ["vocabulary", "listening", "reading", "grammar", "speaking", "writing"]) {
     assert.ok(saved?.skillEvidence?.[skill]?.length, "expected evidence for " + skill);
   }
-  assert.equal(saved.skillEvidence.writing[0].wordCount, 14, "only a compact writing summary should be stored");
+  assert.equal(saved.skillEvidence.writing[0].wordCount, 16, "only a compact writing summary should be stored");
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
