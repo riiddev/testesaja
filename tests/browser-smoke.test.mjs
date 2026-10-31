@@ -604,6 +604,7 @@ test("Adventure side panels render within three seconds while the Oxford corpus 
   });
   // Simulate a slow first-time download of the large Oxford corpus. Adventure does not need it.
   await page.route("**/data/oxford3000/**", async (route) => {
+    if (!/\\.json\\.gz\\.b64(?:\\?|$)/.test(route.request().url())) return route.continue();
     await new Promise((resolve) => setTimeout(resolve, 4500));
     await route.continue();
   });
