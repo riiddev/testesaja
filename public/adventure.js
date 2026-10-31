@@ -424,7 +424,7 @@
   }
   function openMission(missionId) {
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
-    selectedMissionId = missionId; currentFeedback = null; listenReady = false; renderAll();
+    selectedMissionId = missionId; currentFeedback = null; listenReady = false; listenTranscriptVisible = false; renderAll();
   }
   function playText(text) {
     if (!("speechSynthesis" in window) || typeof window.SpeechSynthesisUtterance !== "function") return false;
