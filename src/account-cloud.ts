@@ -377,6 +377,29 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
     item.status = item.resolvedAt ? "resolved" : "open";
   }
 
+  const studioById = new Map<string, AnyRecord>();
+  for (const candidate of [...(Array.isArray(local.studioSessions) ? local.studioSessions : []), ...(Array.isArray(remote.studioSessions) ? remote.studioSessions : [])]) {
+    if (!candidate || typeof candidate !== "object" || typeof candidate.sessionId !== "string"
+      || !["speaking", "writing"].includes(candidate.studioType) || typeof candidate.promptId !== "string") continue;
+    const previous = studioById.get(candidate.sessionId);
+    const previousTime = Date.parse(previous?.updatedAt || previous?.completedAt || "") || 0;
+    const candidateTime = Date.parse(candidate.updatedAt || candidate.completedAt || "") || 0;
+    const newer = candidateTime >= previousTime ? candidate : previous;
+    const older = candidateTime >= previousTime ? previous : candidate;
+    studioById.set(candidate.sessionId, {
+      sessionId: candidate.sessionId.slice(0, 140),
+      studioType: candidate.studioType,
+      promptId: candidate.promptId.slice(0, 80),
+      wordCount: Math.max(0, Math.min(5000, Number(previous?.wordCount) || 0, Number(candidate.wordCount) || 0)),
+      checklistCompleted: Math.max(0, Math.min(5, Number(previous?.checklistCompleted) || 0, Number(candidate.checklistCompleted) || 0)),
+      completedAt: earliestIso(previous?.completedAt, candidate.completedAt) || newer?.completedAt || null,
+      updatedAt: (newer || older)?.updatedAt || (newer || older)?.completedAt || null,
+    });
+  }
+  result.studioSessions = Array.from(studioById.values())
+    .sort((a, b) => String(a.completedAt || "").localeCompare(String(b.completedAt || "")))
+    .slice(-500);
+
   result.achievementIds = Array.from(new Set([...(local.achievementIds || []), ...(remote.achievementIds || [])]));
   result.updatedAt = new Date(Math.max(Date.parse(local.updatedAt || "") || 0, Date.parse(remote.updatedAt || "") || 0) || Date.now()).toISOString();
   return result;
