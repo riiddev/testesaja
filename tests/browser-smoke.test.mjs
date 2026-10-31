@@ -511,3 +511,36 @@ test("Daily Quest completes three rotating challenges and awards XP only once fo
   assert.deepEqual(pageErrors, [], "daily quest interactions should not throw browser JavaScript errors");
   await page.close();
 });
+
+
+test("Adventure workspace stays within mobile, tablet, and desktop viewport widths", async () => {
+  for (const width of [390, 768, 1280]) {
+    const page = await browser.newPage({ viewport: { width, height: 900 } });
+    await page.addInitScript(() => {
+      localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+        access_token: "adventure-responsive-access",
+        refresh_token: "adventure-responsive-refresh",
+        token_type: "bearer",
+        expires_at: Math.floor(Date.now() / 1000) + 7200,
+        user: { id: "adventure-responsive-user", email: "responsive@example.com" },
+      }));
+    });
+    await page.route("**/api/account**", async (route) => {
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+    });
+    await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+    await page.locator('[data-view-target="adventure"]').click();
+    await page.locator("#adventure-daily-quest").waitFor({ state: "visible" });
+    const measurements = await page.evaluate(() => ({
+      viewport: window.innerWidth,
+      document: document.documentElement.scrollWidth,
+      daily: document.querySelector("#adventure-daily-quest")?.getBoundingClientRect().width || 0,
+      journal: document.querySelector("#adventure-mistake-journal")?.getBoundingClientRect().width || 0,
+    }));
+    assert.ok(measurements.document <= measurements.viewport + 1, "no horizontal document overflow at width " + width + ": " + JSON.stringify(measurements));
+    assert.ok(measurements.daily > 0 && measurements.journal > 0, "both new panels should remain visible at width " + width);
+    assert.ok(measurements.daily <= measurements.viewport && measurements.journal <= measurements.viewport, "panels should fit the viewport at width " + width);
+    await page.close();
+  }
+});
