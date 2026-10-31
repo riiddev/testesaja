@@ -287,8 +287,12 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
   const result: AnyRecord = { ...local, ...remote, schemaVersion: 1 };
   const localUpdatedAt = Date.parse(local.updatedAt || "") || 0;
   const remoteUpdatedAt = Date.parse(remote.updatedAt || "") || 0;
-  const preferredRate = remoteUpdatedAt >= localUpdatedAt ? remote.listeningRate : local.listeningRate;
-  result.listeningRate = [0.75, 0.9, 1].includes(Number(preferredRate)) ? Number(preferredRate) : 0.9;
+  const preferRemoteRate = remoteUpdatedAt >= localUpdatedAt;
+  const preferredRate = preferRemoteRate ? remote.listeningRate : local.listeningRate;
+  const fallbackRate = preferRemoteRate ? local.listeningRate : remote.listeningRate;
+  result.listeningRate = [0.75, 0.9, 1].includes(Number(preferredRate))
+    ? Number(preferredRate)
+    : [0.75, 0.9, 1].includes(Number(fallbackRate)) ? Number(fallbackRate) : 0.9;
   const localMissions = local.missionProgress || {}, remoteMissions = remote.missionProgress || {};
   result.missionProgress = {};
   for (const missionId of new Set([...Object.keys(localMissions), ...Object.keys(remoteMissions)])) {
