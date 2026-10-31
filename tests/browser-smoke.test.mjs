@@ -326,6 +326,7 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   await first.evaluate(() => {
     const snapshot = {
       schemaVersion: 1,
+      listeningRate: 0.75,
       missionProgress: {
         "meet-your-new-neighbors": {
           completedAt: "2026-10-31T10:00:00.000Z",
@@ -390,6 +391,7 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   const restored = await second.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
   assert.ok(restored?.missionProgress?.["meet-your-new-neighbors"]?.completedAt, "a second browser profile should restore the mission completion");
   assert.equal(restored?.xpLedger?.["first-completion:meet-your-new-neighbors"]?.amount, 40);
+  assert.equal(restored?.listeningRate, 0.75, "Listening Lab speed preference should restore on the second profile");
   assert.deepEqual(restored?.dailyQuests?.["2026-10-31"]?.completedStepIds, ["word-neighbor"], "Daily Quest progress should restore on the second profile");
   assert.equal(restored?.mistakeJournal?.["device-a-mistake"]?.status, "open", "Mistake Journal entries should restore on the second profile");
 
