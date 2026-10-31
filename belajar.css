@@ -1135,3 +1135,263 @@ h1,h2,h3{overflow-wrap:break-word}
   #view-vocabulary .evidence-lines{grid-template-columns:1fr 1fr}
   #view-reading .habit-quiz-heading h3{font-size:1.45rem}
 }
+
+
+
+/* --- Adventure MVP: editorial map and focused mission workspace --- */
+.adventure-view{min-width:0}
+.adventure-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;margin-bottom:27px}
+.adventure-heading h1{margin:0 0 12px;font-size:clamp(2.7rem,4.5vw,4.35rem)}
+.adventure-heading .page-lede{max-width:650px;margin:0}
+.adventure-player{width:min(265px,100%);flex:0 0 auto;display:grid;grid-template-columns:43px minmax(0,1fr);gap:11px;align-items:center;padding:13px 15px;border:1px solid var(--line);background:color-mix(in srgb,var(--sheet) 78%,transparent)}
+.adventure-rank-mark{width:43px;height:43px;display:grid;place-items:center;border-radius:50%;background:var(--sage);color:var(--sage-deep);font:italic 1rem "Lora",Georgia,serif}
+.adventure-player-copy{min-width:0}
+.adventure-player-copy small{display:block;color:var(--muted);font-size:.52rem;font-weight:700;letter-spacing:.1em}
+.adventure-player-copy strong{display:block;margin:2px 0 3px;font:500 .92rem "Lora",Georgia,serif}
+.adventure-player-copy>span:nth-of-type(1){display:block;color:var(--muted);font-size:.53rem}
+.adventure-xp-track{display:block;height:3px;margin-top:6px;background:var(--paper-deep)}
+.adventure-xp-track i{display:block;width:0;height:100%;background:var(--sage-deep);transition:width .25s ease}
+.adventure-world-card{overflow:hidden;border:1px solid var(--line);background:var(--sheet);box-shadow:0 15px 42px rgba(45,52,42,.045)}
+.adventure-world-top{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:19px 22px;border-bottom:1px solid var(--line)}
+.adventure-world-top .eyebrow{margin-bottom:6px}
+.adventure-world-top h2{margin:0;font-size:1.65rem}
+.adventure-world-top p{margin:4px 0 0;color:var(--muted);font-size:.68rem}
+.adventure-world-count{min-width:85px;padding-left:17px;border-left:1px solid var(--line);text-align:right}
+.adventure-world-count strong{display:block;font:400 1.75rem/1 "Lora",Georgia,serif}
+.adventure-world-count span{display:block;margin-top:5px;color:var(--muted);font-size:.48rem;font-weight:700;letter-spacing:.09em}
+.adventure-map{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;min-height:286px;padding:50px 5% 36px;overflow:hidden;background:radial-gradient(ellipse at 18% 72%,color-mix(in srgb,var(--peach) 54%,transparent),transparent 34%),radial-gradient(ellipse at 84% 24%,color-mix(in srgb,var(--lilac) 65%,transparent),transparent 36%),color-mix(in srgb,var(--paper-deep) 58%,var(--sheet))}
+.adventure-map:before,.adventure-map:after{content:"";position:absolute;pointer-events:none;border:1px solid color-mix(in srgb,var(--sage-deep) 19%,transparent);border-radius:48% 52% 43% 57%;transform:rotate(-13deg)}
+.adventure-map:before{width:72%;height:65%;left:14%;top:16%}
+.adventure-map:after{width:57%;height:42%;left:24%;top:27%;transform:rotate(17deg)}
+.adventure-map-route{position:absolute;inset:0;width:100%;height:100%;color:var(--sage-deep);opacity:.7;pointer-events:none}
+.adventure-map-caption{position:absolute;top:15px;left:20px;color:var(--muted);font-size:.48rem;font-weight:700;letter-spacing:.13em}
+.adventure-stop{position:relative;z-index:1;justify-self:center;display:flex;align-items:center;gap:10px;max-width:100%;padding:0;border:0;background:transparent;text-align:left;cursor:pointer}
+.adventure-stop:nth-of-type(1){transform:translateY(52px)}
+.adventure-stop:nth-of-type(2){transform:translateY(-44px)}
+.adventure-stop:nth-of-type(3){transform:translateY(45px)}
+.adventure-stop-pin{width:43px;height:43px;flex:0 0 43px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--sage-deep) 48%,var(--line));border-radius:50%;background:var(--sheet);color:var(--sage-deep);box-shadow:0 0 0 6px color-mix(in srgb,var(--sheet) 68%,transparent);font:italic 1rem "Lora",Georgia,serif;transition:transform .18s ease,background .18s ease}
+.adventure-stop-copy{min-width:112px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--line) 88%,var(--sage-deep));background:color-mix(in srgb,var(--sheet) 94%,transparent);box-shadow:0 6px 18px rgba(45,52,42,.045)}
+.adventure-stop-copy small{display:block;color:var(--muted);font-size:.46rem;font-weight:700;letter-spacing:.07em}
+.adventure-stop-copy strong{display:block;margin-top:2px;font:500 .82rem "Lora",Georgia,serif}
+.adventure-stop.is-selected .adventure-stop-pin,.adventure-stop.is-complete .adventure-stop-pin{background:var(--sage);border-color:var(--sage-deep)}
+.adventure-stop.is-locked .adventure-stop-pin{background:var(--paper-deep);border-color:var(--line);color:var(--muted)}
+.adventure-stop.is-locked .adventure-stop-copy{opacity:.75}
+.adventure-stop:hover .adventure-stop-pin{transform:translateY(-3px)}
+.adventure-world-foot{display:flex;justify-content:space-between;gap:15px;padding:11px 19px;border-top:1px solid var(--line);color:var(--muted);font-size:.56rem}
+.adventure-world-foot strong{color:var(--body);font-weight:600}
+.adventure-content-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(245px,.65fr);gap:16px;align-items:start;margin-top:26px}
+.adventure-mission-panel{min-width:0;padding:23px 24px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-mission-overline,.adventure-session-top{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:.52rem;font-weight:700;letter-spacing:.1em}
+.adventure-status{padding:5px 8px;background:var(--sage);color:var(--sage-deep);font-size:.48rem;letter-spacing:.05em}
+.adventure-status.is-locked{background:var(--paper-deep);color:var(--muted)}
+.adventure-status.is-complete{background:var(--lilac);color:var(--lilac-ink)}
+.adventure-mission-panel h2{margin:17px 0 7px;font-size:clamp(1.8rem,2.6vw,2.35rem)}
+.adventure-mission-summary{max-width:720px;margin:0;color:var(--body);font-size:.75rem;line-height:1.8}
+.adventure-mission-meta{display:flex;flex-wrap:wrap;gap:7px;margin:15px 0 18px}
+.adventure-mission-meta span{padding:5px 9px;border:1px solid var(--line);color:var(--body);font-size:.53rem}
+.adventure-objective{padding:13px 15px;background:color-mix(in srgb,var(--yellow) 53%,var(--sheet))}
+.adventure-objective small,.adventure-words small,.adventure-tool-list small{display:block;margin-bottom:5px;color:var(--muted);font-size:.48rem;font-weight:700;letter-spacing:.1em}
+.adventure-objective p{margin:0;color:var(--ink);font-size:.68rem;line-height:1.75}
+.adventure-stage-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:16px 0}
+.adventure-stage{min-width:0;padding:9px 10px;border-top:2px solid var(--sage);background:color-mix(in srgb,var(--paper) 85%,var(--sheet));color:var(--body);font-size:.54rem}
+.adventure-stage small{display:block;margin-bottom:3px;color:var(--muted);font-size:.48rem}
+.adventure-words{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:14px}
+.adventure-words small{width:100%}
+.adventure-words span{padding:4px 8px;background:var(--lilac);color:var(--lilac-ink);font-size:.54rem}
+.adventure-tool-list{margin-top:13px}
+.adventure-tool-list p{margin:0;color:var(--body);font-size:.64rem}
+.adventure-mission-actions{display:flex;align-items:center;gap:13px;margin-top:20px}
+.adventure-mission-actions .primary-action,.adventure-production .primary-action,.adventure-feedback .primary-action{min-height:42px}
+.adventure-mission-actions>span{color:var(--muted);font-size:.58rem}
+.adventure-locked-note{margin:17px 0 0;padding:11px 13px;background:var(--paper-deep);color:var(--body);font-size:.63rem}
+.adventure-side-panel{display:grid;gap:12px}
+.adventure-side-card{padding:18px 18px;border:1px solid var(--line);background:color-mix(in srgb,var(--paper-deep) 52%,var(--sheet))}
+.adventure-side-card .eyebrow{margin-bottom:7px}
+.adventure-side-card h3{margin:0 0 7px;font:500 1.02rem "Lora",Georgia,serif}
+.adventure-side-card>p{margin:0 0 12px;color:var(--muted);font-size:.59rem;line-height:1.65}
+.adventure-skill-list{display:grid;gap:10px}
+.adventure-skill-row{display:grid;grid-template-columns:24px minmax(0,1fr) 24px;gap:7px;align-items:center}
+.adventure-skill-symbol{color:var(--sage-deep);font:500 .75rem "Lora",serif}
+.adventure-skill-name{font-size:.61rem}
+.adventure-skill-count{color:var(--muted);font-size:.55rem;text-align:right}
+.adventure-skill-track{grid-column:2/4;height:3px;background:var(--sheet)}
+.adventure-skill-track i{display:block;height:100%;background:var(--sage-deep)}
+.adventure-achievement{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.adventure-achievement>span{color:var(--sage-deep);font-size:1rem}
+.adventure-achievement strong,.adventure-achievement small{display:block}
+.adventure-achievement strong{font-size:.62rem}
+.adventure-achievement small{margin-top:2px;color:var(--muted);font-size:.54rem}
+.adventure-achievement-card>div>p{margin:0;color:var(--muted);font-size:.6rem}
+.adventure-footnote{margin:17px 0 0;color:var(--muted);font-size:.56rem;line-height:1.7}
+.adventure-empty-state{padding:24px;background:var(--paper-deep);color:var(--body);font-size:.7rem}
+
+/* Mission session */
+.adventure-session-top .text-action{padding:0;border:0;background:transparent;color:var(--body);font-size:.6rem;cursor:pointer}
+.adventure-session-progress{height:4px;margin:12px 0 22px;background:var(--paper-deep)}
+.adventure-session-progress i{display:block;height:100%;background:var(--sage-deep);transition:width .2s ease}
+.adventure-question{margin:15px 0 12px;font:500 1.14rem/1.45 "Lora",Georgia,serif;letter-spacing:-.02em}
+.adventure-options{display:grid;gap:8px;margin-top:13px}
+.adventure-option{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:9px 12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);text-align:left;font-size:.68rem;cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.adventure-option>span{width:24px;height:24px;flex:0 0 24px;display:grid;place-items:center;background:var(--sheet);color:var(--sage-deep);font:500 .68rem "Lora",serif}
+.adventure-option:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 30%,var(--sheet))}
+.adventure-option:disabled{opacity:.5;cursor:not-allowed}
+.adventure-passage{margin:15px 0;padding:15px 17px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 35%,var(--sheet));color:var(--ink);font:400 .88rem/1.9 "Lora",Georgia,serif}
+.adventure-listen-box{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:15px}
+.adventure-listen-box>span{color:var(--muted);font-size:.56rem}
+.adventure-audio-transcript{width:100%;margin:2px 0 0;padding:10px 12px;background:var(--paper-deep);color:var(--body);font-size:.63rem;line-height:1.7}
+.adventure-production{margin-top:16px;padding:16px;background:var(--paper)}
+.adventure-production-prompt{margin:0 0 9px;color:var(--ink);font-size:.72rem;line-height:1.75}
+.adventure-no-recording{margin:0 0 12px;color:var(--muted);font-size:.57rem}
+.adventure-checklist{display:grid;gap:8px;margin:13px 0}
+.adventure-checklist label{display:flex;align-items:flex-start;gap:8px;color:var(--body);font-size:.61rem;line-height:1.55;cursor:pointer}
+.adventure-checklist input{margin-top:3px;accent-color:var(--sage-deep)}
+.adventure-production textarea{width:100%;min-height:100px;padding:11px 12px;border:1px solid var(--line);border-radius:0;background:var(--sheet);color:var(--ink);font:400 .76rem/1.65 "Plus Jakarta Sans",sans-serif;resize:vertical}
+.adventure-writing-count{margin:5px 0 0;color:var(--muted);font-size:.53rem}
+.adventure-feedback{margin-top:15px;padding:13px 14px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 36%,var(--sheet))}
+.adventure-feedback.try-again{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 42%,var(--sheet))}
+.adventure-feedback strong{display:block;font-size:.7rem}
+.adventure-feedback p{margin:4px 0 10px;color:var(--body);font-size:.64rem;line-height:1.7}
+.adventure-feedback .primary-action{margin-top:2px}
+.adventure-evidence-note{margin:14px 0 0;color:var(--muted);font-size:.53rem;line-height:1.7}
+.adventure-completion{display:flex;align-items:center;gap:12px;margin-top:18px;padding:15px;background:color-mix(in srgb,var(--sage) 43%,var(--sheet))}
+.adventure-completion-mark{width:35px;height:35px;flex:0 0 35px;display:grid;place-items:center;border-radius:50%;background:var(--sage-deep);color:var(--sheet);font-size:1rem}
+.adventure-completion strong{font-size:.74rem}
+.adventure-completion p{margin:3px 0 0;color:var(--body);font-size:.61rem;line-height:1.65}
+@media(max-width:1000px){
+  .adventure-content-grid{grid-template-columns:minmax(0,1fr) 245px}
+  .adventure-map{padding-inline:3%}
+  .adventure-stop{gap:7px}
+  .adventure-stop-copy{min-width:96px;padding:7px 8px}
+}
+@media(max-width:760px){
+  .adventure-heading{align-items:flex-start;flex-direction:column;gap:17px}
+  .adventure-player{width:min(100%,320px)}
+  .adventure-content-grid{grid-template-columns:1fr}
+  .adventure-side-panel{grid-template-columns:1fr 1fr}
+  .adventure-map{min-height:310px}
+}
+@media(max-width:560px){
+  .adventure-heading h1{font-size:2.65rem}
+  .adventure-world-top{padding:15px}
+  .adventure-world-top h2{font-size:1.4rem}
+  .adventure-world-count{min-width:68px;padding-left:10px}
+  .adventure-world-count strong{font-size:1.45rem}
+  .adventure-map{display:grid;grid-template-columns:1fr;gap:7px;min-height:0;padding:31px 14px 14px}
+  .adventure-map:before,.adventure-map:after,.adventure-map-route{display:none}
+  .adventure-map-caption{top:10px;left:15px;font-size:.43rem}
+  .adventure-stop,.adventure-stop:nth-of-type(1),.adventure-stop:nth-of-type(2),.adventure-stop:nth-of-type(3){display:flex;transform:none;justify-self:stretch;gap:11px;padding:8px 3px;border-bottom:1px solid var(--line)}
+  .adventure-stop:last-of-type{border-bottom:0}
+  .adventure-stop-pin{width:37px;height:37px;flex-basis:37px;box-shadow:0 0 0 4px color-mix(in srgb,var(--sheet) 72%,transparent)}
+  .adventure-stop-copy{flex:1;min-width:0;padding:7px 9px;box-shadow:none}
+  .adventure-world-foot{flex-direction:column;gap:4px;padding:10px 14px;font-size:.53rem}
+  .adventure-mission-panel{padding:18px 16px}
+  .adventure-mission-overline,.adventure-session-top{font-size:.46rem}
+  .adventure-mission-panel h2{font-size:1.8rem}
+  .adventure-stage-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adventure-mission-actions{align-items:flex-start;flex-direction:column;gap:8px}
+  .adventure-side-panel{grid-template-columns:1fr}
+  .adventure-session-top{align-items:flex-start}
+  .adventure-listen-box{align-items:flex-start;flex-direction:column}
+  .adventure-listen-box>span{line-height:1.55}
+}
+@media(prefers-reduced-motion:reduce){
+  .adventure-xp-track i,.adventure-session-progress i,.adventure-stop-pin,.adventure-option{transition:none}
+}
+
+
+@media(max-width:760px){.side-nav{grid-template-columns:repeat(6,minmax(0,1fr))}}
+
+
+
+/* Daily Quest and Mistake Journal */
+.adventure-extras-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.adventure-extra-card{min-width:0;padding:21px 22px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-extra-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.adventure-extra-heading .eyebrow{margin-bottom:6px}
+.adventure-extra-heading h3{margin:0;font:500 1.28rem "Lora",Georgia,serif}
+.adventure-extra-heading p{margin:5px 0 0;color:var(--muted);font-size:.62rem;line-height:1.65}
+.adventure-daily-reward{flex:none;padding:7px 9px;background:var(--yellow);color:#776b46;font:500 .68rem "Lora",Georgia,serif}
+.adventure-daily-context{margin:17px 0 13px;color:var(--body);font-size:.67rem;line-height:1.75}
+.adventure-daily-context strong{color:var(--ink);font-weight:700}
+.adventure-daily-tracker{display:flex;align-items:center;gap:7px;margin:16px 0}
+.adventure-daily-tracker span{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--muted);font:500 .65rem "Lora",Georgia,serif}
+.adventure-daily-tracker span.is-done{border-color:var(--sage-deep);background:var(--sage);color:var(--sage-deep)}
+.adventure-extra-card>.primary-action{min-height:40px}
+.adventure-daily-note{display:block;margin-top:12px;color:var(--muted);font-size:.53rem;line-height:1.65}
+.adventure-daily-step-count{margin:15px 0 6px;color:var(--sage-deep);font-size:.48rem;font-weight:700;letter-spacing:.1em}
+.adventure-extra-card h4{margin:14px 0 10px;font:500 1.05rem/1.5 "Lora",Georgia,serif}
+.adventure-daily-listen{display:grid;gap:7px;margin:13px 0}
+.adventure-daily-listen>small,.adventure-daily-listen p{margin:0;color:var(--muted);font-size:.58rem;line-height:1.6}
+.adventure-daily-listen p{padding:9px 11px;background:var(--paper-deep);color:var(--body)}
+.adventure-daily-complete{margin-top:15px;padding:13px 14px;background:color-mix(in srgb,var(--sage) 42%,var(--sheet));color:var(--sage-deep);font-size:.65rem;line-height:1.7}
+.adventure-journal-count{min-width:43px;padding-left:12px;border-left:1px solid var(--line);color:var(--ink);font:400 1.65rem/1 "Lora",Georgia,serif;text-align:right}
+.adventure-journal-count small{display:block;margin-top:5px;color:var(--muted);font:700 .42rem "Plus Jakarta Sans",sans-serif;letter-spacing:.07em;white-space:nowrap}
+.adventure-journal-filters{display:flex;flex-wrap:wrap;gap:5px;margin:15px 0 10px}
+.adventure-journal-filters button{padding:6px 9px;border:1px solid var(--line);background:transparent;color:var(--body);font-size:.54rem;cursor:pointer}
+.adventure-journal-filters button.is-active{border-color:var(--sage-deep);background:var(--sage);color:var(--sage-deep);font-weight:700}
+.adventure-mistake-row{padding:12px 0;border-top:1px solid var(--line)}
+.adventure-mistake-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--muted);font-size:.45rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.adventure-mistake-top span:last-child{color:var(--peach-ink)}
+.adventure-mistake-row.is-resolved .adventure-mistake-top span:last-child{color:var(--sage-deep)}
+.adventure-mistake-row>strong{display:block;color:var(--ink);font:500 .78rem/1.55 "Lora",Georgia,serif}
+.adventure-mistake-answer{margin:5px 0 0;color:var(--body);font-size:.58rem;line-height:1.55}
+.adventure-mistake-answer span{display:inline-block;min-width:75px;color:var(--muted);font-size:.51rem}
+.adventure-mistake-answer.is-correct{color:var(--sage-deep)}
+.adventure-mistake-explanation{margin:7px 0 0;color:var(--muted);font-size:.56rem;line-height:1.65}
+.adventure-mistake-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px}
+.adventure-mistake-bottom small,.adventure-mistake-bottom>span{color:var(--muted);font-size:.5rem}
+.adventure-mistake-bottom button{padding:5px 8px;border:1px solid var(--line);background:var(--paper);color:var(--sage-deep);font-size:.53rem;cursor:pointer}
+.adventure-journal-empty{margin:0;padding:17px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.63rem;line-height:1.7}
+.adventure-achievement-next{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:.52rem;line-height:1.6}
+@media(max-width:1000px){.adventure-extras-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.adventure-extra-card{padding:17px 15px}.adventure-extra-heading h3{font-size:1.15rem}}
+
+
+
+/* Speaking and Writing Studios */
+.adventure-studios-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.adventure-studio-card{min-width:0;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-studio-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.adventure-studio-heading .eyebrow{margin-bottom:6px}
+.adventure-studio-heading h3{margin:0;font:500 1.35rem "Lora",Georgia,serif}
+.adventure-studio-heading p{max-width:390px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.65}
+.adventure-studio-count{flex:none;min-width:43px;padding-left:12px;border-left:1px solid var(--line);color:var(--ink);font:400 1.6rem/1 "Lora",Georgia,serif;text-align:right}
+.adventure-studio-count small{display:block;margin-top:5px;color:var(--muted);font:700 .42rem "Plus Jakarta Sans",sans-serif;letter-spacing:.07em}
+.adventure-studio-scenarios{display:flex;gap:6px;margin:17px 0 13px;overflow-x:auto;padding-bottom:3px}
+.adventure-studio-scenario{flex:1 0 105px;min-width:0;display:grid;gap:4px;padding:9px 10px;border:1px solid var(--line);background:transparent;text-align:left;cursor:pointer}
+.adventure-studio-scenario span{color:var(--muted);font:700 .46rem "Plus Jakarta Sans",monospace;letter-spacing:.06em}
+.adventure-studio-scenario strong{font-size:.58rem;font-weight:600;line-height:1.4}
+.adventure-studio-scenario.is-active{border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 35%,var(--sheet))}
+.adventure-studio-prompt{padding:13px 14px;background:color-mix(in srgb,var(--sage) 19%,var(--sheet))}
+.adventure-studio-prompt>span{color:var(--sage-deep);font:700 .46rem "Plus Jakarta Sans",monospace;letter-spacing:.08em}
+.adventure-studio-prompt p{margin:7px 0;color:var(--body);font-size:.62rem;line-height:1.65}
+.adventure-studio-prompt>strong{display:block;color:var(--ink);font:500 .88rem/1.55 "Lora",Georgia,serif}
+.adventure-studio-phrases{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.adventure-studio-phrases span{padding:5px 7px;background:var(--sheet);color:var(--body);font-size:.52rem}
+.adventure-studio-instruction{margin:11px 0;color:var(--muted);font-size:.58rem;line-height:1.6}
+.adventure-studio-checklist{display:grid;gap:7px;margin:13px 0}
+.adventure-studio-checklist label{display:flex;align-items:flex-start;gap:8px;padding:8px 9px;border:1px solid var(--line);color:var(--body);font-size:.57rem;line-height:1.55;cursor:pointer}
+.adventure-studio-checklist label:has(input:checked){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 24%,transparent)}
+.adventure-studio-checklist input{flex:none;margin:2px 0 0;accent-color:var(--sage-deep)}
+.adventure-studio-submit{min-height:39px}
+.adventure-studio-local-note{display:block;margin-top:10px;color:var(--muted);font-size:.51rem;line-height:1.6}
+.adventure-studio-field{display:flex;justify-content:space-between;gap:12px;margin:14px 0 7px;color:var(--muted);font:700 .48rem "Plus Jakarta Sans",monospace;letter-spacing:.08em}
+.adventure-studio-field span{font-weight:500;letter-spacing:0}
+#studio-writing-draft{width:100%;min-height:142px;padding:12px;border:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--ink);font:.72rem/1.75 "Plus Jakarta Sans",sans-serif;resize:vertical}
+.adventure-studio-draft-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:7px 0;color:var(--muted);font-size:.5rem}
+.adventure-studio-draft-actions button{padding:3px 0;border:0;background:none;color:var(--sage-deep);font-size:.52rem;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.adventure-studio-save-state{margin:9px 0 0;color:var(--muted);font-size:.53rem}
+@media(max-width:1000px){.adventure-studios-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.adventure-studio-card{padding:17px 15px}.adventure-studio-heading h3{font-size:1.2rem}.adventure-studio-scenario{flex-basis:105px}}
+
+/* Listening Lab controls */
+.adventure-listen-lab{display:grid;gap:9px;margin:15px 0;padding:13px 14px;background:color-mix(in srgb,var(--sage) 25%,var(--sheet))}
+.adventure-listen-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.adventure-listen-rates{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-listen-rates button{min-width:38px;padding:5px 7px;border:0;background:transparent;color:var(--body);font-size:.56rem;cursor:pointer}
+.adventure-listen-rates button.is-active{background:var(--sage-deep);color:var(--sheet);font-weight:700}
+.adventure-listen-hint{margin:0;color:var(--muted);font-size:.55rem;line-height:1.6}
+.adventure-transcript-toggle{width:max-content;max-width:100%;padding:4px 0;color:var(--sage-deep);font-size:.58rem;text-decoration:underline;text-underline-offset:3px}
+.adventure-daily-transcript{margin:0;padding:10px 12px;background:var(--sheet);color:var(--body);font:400 .78rem/1.7 "Lora",Georgia,serif}
+.adventure-daily-listen{display:grid;gap:8px}
+@media(max-width:560px){.adventure-listen-controls{align-items:flex-start;flex-direction:column}.adventure-listen-rates button{min-width:42px}}

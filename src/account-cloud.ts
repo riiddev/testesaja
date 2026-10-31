@@ -1,5 +1,5 @@
 type AnyRecord = Record<string, any>;
-type CloudBundle = { schemaVersion: 1; core: AnyRecord; extras: { extraLearning: AnyRecord; habitProgress: AnyRecord } };
+type CloudBundle = { schemaVersion: 2; core: AnyRecord; extras: { extraLearning: AnyRecord; habitProgress: AnyRecord; adventureProgress: AnyRecord; [key: string]: any } };
 type AuthUser = { id: string; email?: string };
 type AuthSession = { access_token: string; refresh_token: string; expires_at?: number; expires_in?: number; token_type?: string; user: AuthUser };
 
@@ -11,15 +11,23 @@ declare global {
     sinauuExtraLearningBackup?: () => AnyRecord;
     sinauuHabitLibraryRestore?: (next: AnyRecord) => void;
     sinauuHabitLibraryBackup?: () => AnyRecord;
+    sinauuAdventureRestore?: (next: AnyRecord) => void;
+    sinauuAdventureBackup?: () => AnyRecord;
+    sinauuRenderAdventure?: () => void;
   }
 }
 
 let CLOUD_READY = false;
 const SESSION_KEY = "sinauu-cloud-session-v1";
 const LOCAL_DB = "sinauu-local-v1", LOCAL_STORE = "state", LOCAL_RECORD = "main";
-const CORE_FALLBACK = "sinauu-learning-state-v1", EXTRA_KEY = "sinauu-extra-learning-v1", HABIT_KEY = "sinauu-habit-library-v1";
+const CORE_FALLBACK = "sinauu-learning-state-v1", EXTRA_KEY = "sinauu-extra-learning-v1", HABIT_KEY = "sinauu-habit-library-v1", ADVENTURE_KEY = "sinauu-adventure-progress-v1";
 const OWNER_KEY = "sinauu-cloud-owner-v1";
 const ACCOUNT_CACHE_PREFIX = "sinauu-cloud-local-cache-v1:";
+const PREVIEW_DISABLED_CLOUD_HOSTS = new Set([
+  "sinauuenglish.vercel.app",
+  "sinauuenglish-thoodev.vercel.app",
+  "sinauuenglish-git-main-thoodev.vercel.app",
+]);
 const $ = <T extends Element>(selector: string, root: ParentNode = document) => root.querySelector(selector) as T | null;
 
 let session: AuthSession | null = null;
@@ -46,21 +54,28 @@ function freshCore(): AnyRecord {
 }
 
 function localExtras(): CloudBundle["extras"] {
-  return { extraLearning: parseStored<AnyRecord>(EXTRA_KEY, {}), habitProgress: parseStored<AnyRecord>(HABIT_KEY, {}) };
+  return {
+    extraLearning: parseStored<AnyRecord>(EXTRA_KEY, {}),
+    habitProgress: parseStored<AnyRecord>(HABIT_KEY, {}),
+    adventureProgress: parseStored<AnyRecord>(ADVENTURE_KEY, {}),
+  };
 }
 
 function normalizeBundle(raw: any): CloudBundle {
   if (raw && raw.core && typeof raw.core === "object") {
+    const incomingExtras = raw.extras && typeof raw.extras === "object" && !Array.isArray(raw.extras) ? raw.extras : {};
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       core: raw.core,
       extras: {
-        extraLearning: raw.extras?.extraLearning && typeof raw.extras.extraLearning === "object" ? raw.extras.extraLearning : {},
-        habitProgress: raw.extras?.habitProgress && typeof raw.extras.habitProgress === "object" ? raw.extras.habitProgress : {},
+        ...incomingExtras,
+        extraLearning: incomingExtras.extraLearning && typeof incomingExtras.extraLearning === "object" ? incomingExtras.extraLearning : {},
+        habitProgress: incomingExtras.habitProgress && typeof incomingExtras.habitProgress === "object" ? incomingExtras.habitProgress : {},
+        adventureProgress: incomingExtras.adventureProgress && typeof incomingExtras.adventureProgress === "object" ? incomingExtras.adventureProgress : {},
       },
     };
   }
-  return { schemaVersion: 1, core: raw && raw.schemaVersion === 1 ? raw : freshCore(), extras: localExtras() };
+  return { schemaVersion: 2, core: raw && raw.schemaVersion === 1 ? raw : freshCore(), extras: localExtras() };
 }
 
 async function readIndexedDbState(): Promise<AnyRecord | null> {
@@ -124,9 +139,11 @@ async function applyLocalBundle(bundle: CloudBundle): Promise<void> {
         localStorage.setItem(CORE_FALLBACK, JSON.stringify(bundle.core));
         localStorage.setItem(EXTRA_KEY, JSON.stringify(bundle.extras.extraLearning || {}));
         localStorage.setItem(HABIT_KEY, JSON.stringify(bundle.extras.habitProgress || {}));
+        localStorage.setItem(ADVENTURE_KEY, JSON.stringify(bundle.extras.adventureProgress || {}));
       } catch { /* The cloud copy remains available if local storage is full. */ }
       window.sinauuExtraLearningRestore?.(bundle.extras.extraLearning || {});
       window.sinauuHabitLibraryRestore?.(bundle.extras.habitProgress || {});
+      window.sinauuAdventureRestore?.(bundle.extras.adventureProgress || {});
     }
   } finally { applyingCloud = false; }
 }
@@ -216,16 +233,195 @@ function mergeCore(local: AnyRecord, remote: AnyRecord): AnyRecord {
   return merged;
 }
 
+
+
+function earliestIso(a: any, b: any): string | null {
+  const validA = typeof a === "string" && Number.isFinite(Date.parse(a)) ? a : null;
+  const validB = typeof b === "string" && Number.isFinite(Date.parse(b)) ? b : null;
+  if (!validA) return validB;
+  if (!validB) return validA;
+  return Date.parse(validA) <= Date.parse(validB) ? validA : validB;
+}
+
+function mergeAdventureAttempts(...groups: any[][]): any[] {
+  const byId = new Map<string, AnyRecord>();
+  for (const attempt of groups.flat()) {
+    if (!attempt || typeof attempt !== "object" || typeof attempt.attemptId !== "string") continue;
+    const previous = byId.get(attempt.attemptId);
+    if (!previous) {
+      byId.set(attempt.attemptId, { ...attempt });
+      continue;
+    }
+    const completedStepIds = Array.from(new Set([...(previous.completedStepIds || []), ...(attempt.completedStepIds || [])]));
+    const stepResults: AnyRecord = { ...(previous.stepResults || {}) };
+    for (const [stepId, result] of Object.entries(attempt.stepResults || {})) {
+      const old = stepResults[stepId] as AnyRecord | undefined;
+      const next = result as AnyRecord;
+      stepResults[stepId] = old ? {
+        ...old,
+        ...next,
+        completedAt: earliestIso(old.completedAt, next.completedAt),
+        firstTry: old.firstTry !== false && next.firstTry !== false,
+        attempts: Math.max(Number(old.attempts) || 0, Number(next.attempts) || 0),
+      } : next;
+    }
+    const wrongAttempts: AnyRecord = { ...(previous.wrongAttempts || {}) };
+    for (const [stepId, count] of Object.entries(attempt.wrongAttempts || {})) {
+      wrongAttempts[stepId] = Math.max(Number(wrongAttempts[stepId]) || 0, Number(count) || 0);
+    }
+    byId.set(attempt.attemptId, {
+      ...previous,
+      ...attempt,
+      startedAt: earliestIso(previous.startedAt, attempt.startedAt) || previous.startedAt || attempt.startedAt,
+      completedAt: earliestIso(previous.completedAt, attempt.completedAt),
+      completedStepIds,
+      stepResults,
+      wrongAttempts,
+      score: previous.score == null ? attempt.score : attempt.score == null ? previous.score : Math.max(previous.score, attempt.score),
+    });
+  }
+  return Array.from(byId.values()).sort((a, b) => String(a.startedAt || "").localeCompare(String(b.startedAt || "")));
+}
+
+function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): AnyRecord {
+  const result: AnyRecord = { ...local, ...remote, schemaVersion: 1 };
+  const localUpdatedAt = Date.parse(local.updatedAt || "") || 0;
+  const remoteUpdatedAt = Date.parse(remote.updatedAt || "") || 0;
+  const preferRemoteRate = remoteUpdatedAt >= localUpdatedAt;
+  const preferredRate = preferRemoteRate ? remote.listeningRate : local.listeningRate;
+  const fallbackRate = preferRemoteRate ? local.listeningRate : remote.listeningRate;
+  result.listeningRate = [0.75, 0.9, 1].includes(Number(preferredRate))
+    ? Number(preferredRate)
+    : [0.75, 0.9, 1].includes(Number(fallbackRate)) ? Number(fallbackRate) : 0.9;
+  const localMissions = local.missionProgress || {}, remoteMissions = remote.missionProgress || {};
+  result.missionProgress = {};
+  for (const missionId of new Set([...Object.keys(localMissions), ...Object.keys(remoteMissions)])) {
+    const a = localMissions[missionId] || {}, b = remoteMissions[missionId] || {};
+    const attempts = mergeAdventureAttempts(a.attempts || [], b.attempts || []);
+    const active = attempts.filter((attempt) => !attempt.completedAt).sort((x, y) => String(y.startedAt || "").localeCompare(String(x.startedAt || "")))[0];
+    const scores = [a.bestScore, b.bestScore].filter((score) => typeof score === "number" && Number.isFinite(score));
+    result.missionProgress[missionId] = {
+      ...a,
+      ...b,
+      attempts,
+      bestScore: scores.length ? Math.max(...scores) : null,
+      completedAt: earliestIso(a.completedAt, b.completedAt),
+      activeAttemptId: active?.attemptId || null,
+    };
+  }
+
+  const localEvidence = local.skillEvidence || {}, remoteEvidence = remote.skillEvidence || {};
+  result.skillEvidence = {};
+  for (const skill of new Set([...Object.keys(localEvidence), ...Object.keys(remoteEvidence)])) {
+    const evidence = new Map<string, AnyRecord>();
+    for (const item of [...(localEvidence[skill] || []), ...(remoteEvidence[skill] || [])]) {
+      if (!item || typeof item.evidenceId !== "string") continue;
+      evidence.set(item.evidenceId, item);
+    }
+    result.skillEvidence[skill] = Array.from(evidence.values())
+      .sort((a, b) => String(a.recordedAt || "").localeCompare(String(b.recordedAt || "")))
+      .slice(-500);
+  }
+
+  result.xpLedger = { ...(local.xpLedger || {}) };
+  for (const [awardId, award] of Object.entries(remote.xpLedger || {})) {
+    const previous = result.xpLedger[awardId] as AnyRecord | undefined;
+    const next = award as AnyRecord;
+    result.xpLedger[awardId] = previous ? {
+      ...previous,
+      ...next,
+      amount: Math.max(Number(previous.amount) || 0, Number(next.amount) || 0),
+      awardedAt: earliestIso(previous.awardedAt, next.awardedAt),
+    } : next;
+  }
+  const localDaily = local.dailyQuests || {}, remoteDaily = remote.dailyQuests || {};
+  result.dailyQuests = {};
+  for (const dateKey of new Set([...Object.keys(localDaily), ...Object.keys(remoteDaily)])) {
+    const a = localDaily[dateKey] || {}, b = remoteDaily[dateKey] || {};
+    const aTime = Date.parse(a.updatedAt || a.startedAt || "") || 0;
+    const bTime = Date.parse(b.updatedAt || b.startedAt || "") || 0;
+    const newer = bTime >= aTime ? b : a;
+    const wrongAttempts: AnyRecord = { ...(a.wrongAttempts || {}) };
+    for (const [stepId, count] of Object.entries(b.wrongAttempts || {})) {
+      wrongAttempts[stepId] = Math.max(Number(wrongAttempts[stepId]) || 0, Number(count) || 0);
+    }
+    result.dailyQuests[dateKey] = {
+      ...a,
+      ...b,
+      stepIds: Array.from(new Set([...(a.stepIds || []), ...(b.stepIds || [])])),
+      completedStepIds: Array.from(new Set([...(a.completedStepIds || []), ...(b.completedStepIds || [])])),
+      wrongAttempts,
+      startedAt: earliestIso(a.startedAt, b.startedAt),
+      completedAt: earliestIso(a.completedAt, b.completedAt),
+      lastFeedback: newer.lastFeedback || null,
+      lastFeedbackStepId: newer.lastFeedbackStepId || null,
+      updatedAt: new Date(Math.max(aTime, bTime) || Date.now()).toISOString(),
+    };
+  }
+
+  const localMistakes = local.mistakeJournal || {}, remoteMistakes = remote.mistakeJournal || {};
+  result.mistakeJournal = { ...localMistakes };
+  for (const [mistakeId, mistake] of Object.entries(remoteMistakes)) {
+    const previous = result.mistakeJournal[mistakeId] as AnyRecord | undefined;
+    const next = mistake as AnyRecord;
+    result.mistakeJournal[mistakeId] = previous ? {
+      ...previous,
+      ...next,
+      recordedAt: earliestIso(previous.recordedAt, next.recordedAt),
+      resolvedAt: earliestIso(previous.resolvedAt, next.resolvedAt),
+      status: previous.resolvedAt || next.resolvedAt ? "resolved" : "open",
+    } : next;
+  }
+  for (const [mistakeId, mistake] of Object.entries(result.mistakeJournal)) {
+    const item = mistake as AnyRecord;
+    item.status = item.resolvedAt ? "resolved" : "open";
+  }
+
+  const studioById = new Map<string, AnyRecord>();
+  for (const candidate of [...(Array.isArray(local.studioSessions) ? local.studioSessions : []), ...(Array.isArray(remote.studioSessions) ? remote.studioSessions : [])]) {
+    if (!candidate || typeof candidate !== "object" || typeof candidate.sessionId !== "string"
+      || !["speaking", "writing"].includes(candidate.studioType) || typeof candidate.promptId !== "string") continue;
+    const previous = studioById.get(candidate.sessionId);
+    const previousTime = Date.parse(previous?.updatedAt || previous?.completedAt || "") || 0;
+    const candidateTime = Date.parse(candidate.updatedAt || candidate.completedAt || "") || 0;
+    const newer = candidateTime >= previousTime ? candidate : previous;
+    const older = candidateTime >= previousTime ? previous : candidate;
+    studioById.set(candidate.sessionId, {
+      sessionId: candidate.sessionId.slice(0, 140),
+      studioType: candidate.studioType,
+      promptId: candidate.promptId.slice(0, 80),
+      wordCount: Math.max(0, Math.min(5000, Math.max(Number(previous?.wordCount) || 0, Number(candidate.wordCount) || 0))),
+      checklistCompleted: Math.max(0, Math.min(5, Math.max(Number(previous?.checklistCompleted) || 0, Number(candidate.checklistCompleted) || 0))),
+      completedAt: earliestIso(previous?.completedAt, candidate.completedAt) || newer?.completedAt || null,
+      updatedAt: (newer || older)?.updatedAt || (newer || older)?.completedAt || null,
+    });
+  }
+  result.studioSessions = Array.from(studioById.values())
+    .sort((a, b) => String(a.completedAt || "").localeCompare(String(b.completedAt || "")))
+    .slice(-500);
+
+  result.achievementIds = Array.from(new Set([...(local.achievementIds || []), ...(remote.achievementIds || [])]));
+  result.updatedAt = new Date(Math.max(Date.parse(local.updatedAt || "") || 0, Date.parse(remote.updatedAt || "") || 0) || Date.now()).toISOString();
+  return result;
+}
+
 function mergeBundles(local: CloudBundle, remote: CloudBundle): CloudBundle {
   const localTime = Date.parse(local.core.updatedAt || "") || 0, remoteTime = Date.parse(remote.core.updatedAt || "") || 0;
-  return {
-    schemaVersion: 1,
-    core: mergeCore(local.core, remote.core),
-    extras: {
-      extraLearning: mergeDeep(local.extras.extraLearning || {}, remote.extras.extraLearning || {}, remoteTime >= localTime),
-      habitProgress: mergeDeep(local.extras.habitProgress || {}, remote.extras.habitProgress || {}, remoteTime >= localTime),
-    },
-  };
+  const preferRemote = remoteTime >= localTime;
+  const extras: CloudBundle["extras"] = { extraLearning: {}, habitProgress: {}, adventureProgress: {} };
+  for (const key of new Set([...Object.keys(local.extras || {}), ...Object.keys(remote.extras || {})])) {
+    if (key === "adventureProgress") {
+      extras[key] = mergeAdventureProgress(local.extras?.[key] || {}, remote.extras?.[key] || {});
+    } else {
+      extras[key] = mergeDeep(local.extras?.[key] || {}, remote.extras?.[key] || {}, preferRemote);
+    }
+  }
+  return { schemaVersion: 2, core: mergeCore(local.core, remote.core), extras };
+}
+
+function isVercelPreviewDeployment(): boolean {
+  const host = window.location.hostname.toLowerCase();
+  return host.endsWith(".vercel.app") && !PREVIEW_DISABLED_CLOUD_HOSTS.has(host);
 }
 
 function setMessage(message: string, kind: "info" | "success" | "error" = "info"): void {
@@ -344,14 +540,19 @@ async function prepareLocalForAccount(): Promise<void> {
   try { localStorage.setItem(ACCOUNT_CACHE_PREFIX + owner, JSON.stringify(previous)); } catch { /* Keep the cloud copy as the durable backup. */ }
   const target = parseStored<CloudBundle | null>(ACCOUNT_CACHE_PREFIX + session.user.id, null);
   const next = target ? normalizeBundle(target) : {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     core: freshCore(),
-    extras: { extraLearning: {}, habitProgress: {} },
+    extras: { extraLearning: {}, habitProgress: {}, adventureProgress: {} },
   };
   await applyLocalBundle(next);
 }
 
 async function syncNow(allowWhileSigningOut = false): Promise<void> {
+  if (isVercelPreviewDeployment()) {
+    setSyncBadge("Preview · lokal", "idle");
+    setMessage("Mode preview: progres hanya disimpan di browser ini dan tidak ditulis ke Google Sheets.", "info");
+    return;
+  }
   if (!CLOUD_READY || !session || syncing || !navigator.onLine || (signingOut && !allowWhileSigningOut)) return;
   const syncUserId = session.user.id;
   const syncEpoch = sessionEpoch;
@@ -383,7 +584,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<void> {
 }
 
 function scheduleSync(): void {
-  if (!session || !CLOUD_READY || applyingCloud || signingOut) return;
+  if (isVercelPreviewDeployment() || !session || !CLOUD_READY || applyingCloud || signingOut) return;
   setSyncBadge(navigator.onLine ? "Ada perubahan" : "Menunggu internet", navigator.onLine ? "syncing" : "error");
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(() => void syncNow(), 900);
@@ -600,7 +801,7 @@ async function signOut(): Promise<void> {
     const current = await readLocalBundle();
     localStorage.setItem(ACCOUNT_CACHE_PREFIX + signedInUserId, JSON.stringify(current));
   } catch { /* Cloud state remains the primary saved copy. */ }
-  await applyLocalBundle({ schemaVersion: 1, core: freshCore(), extras: { extraLearning: {}, habitProgress: {} } });
+  await applyLocalBundle({ schemaVersion: 2, core: freshCore(), extras: { extraLearning: {}, habitProgress: {}, adventureProgress: {} } });
   try { localStorage.removeItem(OWNER_KEY); } catch { /* no-op */ }
   try {
     if (session && session.user.id === signedInUserId) {

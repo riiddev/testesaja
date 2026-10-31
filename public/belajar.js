@@ -97,7 +97,11 @@
   }
   function readExtraSnapshots() {
     const read = (key) => { try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch (_) { return {}; } };
-    return { extraLearning:read("sinauu-extra-learning-v1"), habitProgress:read("sinauu-habit-library-v1") };
+    return {
+      extraLearning:read("sinauu-extra-learning-v1"),
+      habitProgress:read("sinauu-habit-library-v1"),
+      adventureProgress:read("sinauu-adventure-progress-v1")
+    };
   }
   function notifyCloudState() {
     if (cloudApplying || !state) return;
@@ -197,7 +201,7 @@
       el.classList.toggle("is-active", active);
       el.setAttribute("aria-selected", String(active));
     });
-    const topbarLabels = {overview:"Beranda",vocabulary:"Belajar · Kosakata",grammar:"Belajar · Grammar",matching:"Belajar · Matching",study:"Sesi belajar",reading:"Bacaan",review:"Review",progress:"Progres"};
+    const topbarLabels = {overview:"Beranda",vocabulary:"Belajar · Kosakata",grammar:"Belajar · Grammar",matching:"Belajar · Matching",study:"Sesi belajar",reading:"Bacaan",adventure:"Petualangan",review:"Review",progress:"Progres"};
     const topbarCurrent = $("#topbar-current");
     if (topbarCurrent) topbarCurrent.textContent = topbarLabels[next] || "Ruang belajar";
     if (next === "overview") renderOverview();
@@ -205,6 +209,7 @@
     if (next === "grammar") renderGrammar();
     if (next === "review") renderReview();
     if (next === "progress") renderProgress();
+    if (next === "adventure") window.sinauuRenderAdventure?.();
     if (window.sinauMotionScrollToTop) window.sinauMotionScrollToTop();
     else window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   }
@@ -494,11 +499,13 @@
     $("#history-list").innerHTML=history.length?history.map(x=>'<div class="history-row"><time>'+esc(fmtDate(new Date(x.at),{day:"2-digit",month:"short"}))+' · '+esc(new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(new Date(x.at)))+'</time><div><strong>'+esc((x.type==="vocabulary"?"Kosakata: ":x.type==="grammar"?"Grammar: ":x.type==="matching"?"Matching: ":x.type==="reading"?"Reading: ":"Aktivitas: ")+x.title)+'</strong><small>'+esc(x.detail||"")+'</small></div><span class="history-result">'+(x.correct===true?"BENAR":x.correct===false?"PERLU ULANG":"")+'</span></div>').join(""):'<div class="empty-state">Belum ada aktivitas. Latihan pertamamu akan tercatat di sini.</div>';
   }
   function exportBackup() {
-    let extraLearning={};try{extraLearning=JSON.parse(localStorage.getItem("sinauu-extra-learning-v1")||"{}");}catch(_){}
-    const backup=Object.assign({product:"SinauuEnglish",exportedAt:new Date().toISOString(),extraLearning:extraLearning},state);
+    const extras=readExtraSnapshots();
+    const backup=Object.assign({product:"SinauuEnglish",exportedAt:new Date().toISOString()},state,{
+      extraLearning:extras.extraLearning,habitProgress:extras.habitProgress,adventureProgress:extras.adventureProgress
+    });
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
     a.href=url;a.download="sinauuenglish-backup-"+dayKey()+".json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
-    $("#backup-status").textContent="Backup dibuat dari data lokal.";
+    $("#backup-status").textContent="Backup dibuat dari progres inti dan semua latihan tambahan.";
   }
   async function importBackup(file) {
     if(!file)return;
@@ -508,8 +515,20 @@
       if(parsed.product&&parsed.product!=="SinauuEnglish")throw new Error("File bukan backup SinauuEnglish.");
       const safe=sanitize(parsed);
       if(!confirm("Pulihkan backup? Progres lokal saat ini akan diganti."))return;
-      state=safe;if(parsed.extraLearning&&typeof parsed.extraLearning==="object"){try{localStorage.setItem("sinauu-extra-learning-v1",JSON.stringify(parsed.extraLearning));window.sinauuExtraLearningRestore?.(parsed.extraLearning);}catch(_){}}root.dataset.theme=state.settings.theme;await save();
-      renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
+      state=safe;
+      const backupExtras=[
+        ["extraLearning","sinauu-extra-learning-v1",window.sinauuExtraLearningRestore],
+        ["habitProgress","sinauu-habit-library-v1",window.sinauuHabitLibraryRestore],
+        ["adventureProgress","sinauu-adventure-progress-v1",window.sinauuAdventureRestore]
+      ];
+      for(const [field,key,restore] of backupExtras){
+        if(parsed[field]&&typeof parsed[field]==="object"){
+          localStorage.setItem(key,JSON.stringify(parsed[field]));
+          restore?.(parsed[field]);
+        }
+      }
+      root.dataset.theme=state.settings.theme;await save();
+      renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();window.sinauuRenderAdventure?.();
       $("#backup-status").textContent="Backup berhasil dipulihkan.";toast("Progres berhasil dipulihkan.");
     }catch(e){$("#backup-status").textContent=e.message||"JSON tidak valid.";}
     finally{$("#import-backup").value="";}
@@ -568,7 +587,7 @@
     try {
       await loadDatasets();await loadState();await setTheme(state.settings.theme);
       renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
-      window.sinauuExportLocalBundle = () => ({schemaVersion:1,core:state,extras:readExtraSnapshots()});
+      window.sinauuExportLocalBundle = () => ({schemaVersion:2,core:state,extras:readExtraSnapshots()});
       window.sinauuApplyCloudBundle = async (bundle) => {
         if (!bundle || !bundle.core || !state) return;
         cloudApplying = true;
@@ -577,12 +596,14 @@
           const extras = bundle.extras || {};
           localStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(extras.extraLearning || {}));
           localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(extras.habitProgress || {}));
+          localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(extras.adventureProgress || {}));
           if (storageMode === "indexedDB" && db) await writeDB(db,state);
           else localStorage.setItem(FALLBACK,JSON.stringify(state));
           await setTheme(state.settings.theme);
           window.sinauuExtraLearningRestore?.(extras.extraLearning || {});
           window.sinauuHabitLibraryRestore?.(extras.habitProgress || {});
-          renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
+          window.sinauuAdventureRestore?.(extras.adventureProgress || {});
+          renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();window.sinauuRenderAdventure?.();
         } finally { cloudApplying = false; }
       };
       window.sinauuWorkspaceReady = true;
