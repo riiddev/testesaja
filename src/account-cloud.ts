@@ -285,6 +285,10 @@ function mergeAdventureAttempts(...groups: any[][]): any[] {
 
 function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): AnyRecord {
   const result: AnyRecord = { ...local, ...remote, schemaVersion: 1 };
+  const localUpdatedAt = Date.parse(local.updatedAt || "") || 0;
+  const remoteUpdatedAt = Date.parse(remote.updatedAt || "") || 0;
+  const preferredRate = remoteUpdatedAt >= localUpdatedAt ? remote.listeningRate : local.listeningRate;
+  result.listeningRate = [0.75, 0.9, 1].includes(Number(preferredRate)) ? Number(preferredRate) : 0.9;
   const localMissions = local.missionProgress || {}, remoteMissions = remote.missionProgress || {};
   result.missionProgress = {};
   for (const missionId of new Set([...Object.keys(localMissions), ...Object.keys(remoteMissions)])) {
