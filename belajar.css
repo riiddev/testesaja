@@ -1348,6 +1348,42 @@ h1,h2,h3{overflow-wrap:break-word}
 
 
 
+/* Speaking and Writing Studios */
+.adventure-studios-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.adventure-studio-card{min-width:0;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-studio-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.adventure-studio-heading .eyebrow{margin-bottom:6px}
+.adventure-studio-heading h3{margin:0;font:500 1.35rem "Lora",Georgia,serif}
+.adventure-studio-heading p{max-width:390px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.65}
+.adventure-studio-count{flex:none;min-width:43px;padding-left:12px;border-left:1px solid var(--line);color:var(--ink);font:400 1.6rem/1 "Lora",Georgia,serif;text-align:right}
+.adventure-studio-count small{display:block;margin-top:5px;color:var(--muted);font:700 .42rem "Plus Jakarta Sans",sans-serif;letter-spacing:.07em}
+.adventure-studio-scenarios{display:flex;gap:6px;margin:17px 0 13px;overflow-x:auto;padding-bottom:3px}
+.adventure-studio-scenario{flex:1 0 105px;min-width:0;display:grid;gap:4px;padding:9px 10px;border:1px solid var(--line);background:transparent;text-align:left;cursor:pointer}
+.adventure-studio-scenario span{color:var(--muted);font:700 .46rem "Plus Jakarta Sans",monospace;letter-spacing:.06em}
+.adventure-studio-scenario strong{font-size:.58rem;font-weight:600;line-height:1.4}
+.adventure-studio-scenario.is-active{border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 35%,var(--sheet))}
+.adventure-studio-prompt{padding:13px 14px;background:color-mix(in srgb,var(--sage) 19%,var(--sheet))}
+.adventure-studio-prompt>span{color:var(--sage-deep);font:700 .46rem "Plus Jakarta Sans",monospace;letter-spacing:.08em}
+.adventure-studio-prompt p{margin:7px 0;color:var(--body);font-size:.62rem;line-height:1.65}
+.adventure-studio-prompt>strong{display:block;color:var(--ink);font:500 .88rem/1.55 "Lora",Georgia,serif}
+.adventure-studio-phrases{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.adventure-studio-phrases span{padding:5px 7px;background:var(--sheet);color:var(--body);font-size:.52rem}
+.adventure-studio-instruction{margin:11px 0;color:var(--muted);font-size:.58rem;line-height:1.6}
+.adventure-studio-checklist{display:grid;gap:7px;margin:13px 0}
+.adventure-studio-checklist label{display:flex;align-items:flex-start;gap:8px;padding:8px 9px;border:1px solid var(--line);color:var(--body);font-size:.57rem;line-height:1.55;cursor:pointer}
+.adventure-studio-checklist label:has(input:checked){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 24%,transparent)}
+.adventure-studio-checklist input{flex:none;margin:2px 0 0;accent-color:var(--sage-deep)}
+.adventure-studio-submit{min-height:39px}
+.adventure-studio-local-note{display:block;margin-top:10px;color:var(--muted);font-size:.51rem;line-height:1.6}
+.adventure-studio-field{display:flex;justify-content:space-between;gap:12px;margin:14px 0 7px;color:var(--muted);font:700 .48rem "Plus Jakarta Sans",monospace;letter-spacing:.08em}
+.adventure-studio-field span{font-weight:500;letter-spacing:0}
+#studio-writing-draft{width:100%;min-height:142px;padding:12px;border:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--ink);font:.72rem/1.75 "Plus Jakarta Sans",sans-serif;resize:vertical}
+.adventure-studio-draft-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:7px 0;color:var(--muted);font-size:.5rem}
+.adventure-studio-draft-actions button{padding:3px 0;border:0;background:none;color:var(--sage-deep);font-size:.52rem;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.adventure-studio-save-state{margin:9px 0 0;color:var(--muted);font-size:.53rem}
+@media(max-width:1000px){.adventure-studios-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.adventure-studio-card{padding:17px 15px}.adventure-studio-heading h3{font-size:1.2rem}.adventure-studio-scenario{flex-basis:105px}}
+
 /* Listening Lab controls */
 .adventure-listen-lab{display:grid;gap:9px;margin:15px 0;padding:13px 14px;background:color-mix(in srgb,var(--sage) 25%,var(--sheet))}
 .adventure-listen-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
