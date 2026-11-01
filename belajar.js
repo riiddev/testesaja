@@ -852,7 +852,7 @@
       return '<button class="topic-button '+(activeTopic===t.id?"is-active":"")+'" data-topic-id="'+esc(t.id)+'" type="button"><span class="topic-code">'+esc(t.level)+'</span><span><strong>'+esc(t.title)+'</strong><small>'+n+'/'+t.questions.length+' soal dicoba</small></span></button>';
     }).join("");
     if(!activeTopic||!topics.some(t=>t.id===activeTopic))activeTopic=topics[0]?.id;
-    $("#grammar-layout")?.classList.toggle("is-detail-open",grammarDetailOpen);
+    $("#view-grammar .grammar-layout")?.classList.toggle("is-detail-open",grammarDetailOpen);
     $("#view-grammar")?.classList.toggle("is-detail-view",grammarDetailOpen);
     if(activeTopic)renderLesson(activeTopic);
   }
