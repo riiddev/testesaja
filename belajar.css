@@ -1605,3 +1605,79 @@ h1,h2,h3{overflow-wrap:break-word}
   .listening-lab-result-actions button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.listening-lab-library *{scroll-behavior:auto}}
+
+
+/* Pronunciation Studio — browser-local speaking awareness, not automated phoneme scoring */
+.pronunciation-studio-library{min-width:0;margin-top:16px;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.pronunciation-studio-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:17px}
+.pronunciation-studio-heading .eyebrow{margin-bottom:6px}
+.pronunciation-studio-heading h3{margin:0;color:var(--ink);font:500 1.4rem "Lora",Georgia,serif}
+.pronunciation-studio-heading p{max-width:700px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+.pronunciation-studio-privacy{margin:12px 0 16px;padding:10px 12px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 18%,var(--paper));color:var(--muted);font-size:.55rem;line-height:1.7}
+.pronunciation-studio-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.pronunciation-studio-card{min-width:0;display:flex;flex-direction:column;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.pronunciation-studio-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.pronunciation-studio-card h4{margin:0 0 6px;color:var(--ink);font:500 1.02rem/1.35 "Lora",Georgia,serif}
+.pronunciation-studio-card p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.58rem;line-height:1.7}
+.pronunciation-studio-card-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:7px;margin-bottom:11px;color:var(--muted);font-size:.48rem}
+.pronunciation-studio-button{min-height:37px;padding:8px 11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.57rem;font-weight:700;cursor:pointer}
+.pronunciation-studio-button:hover{border-color:var(--sage-deep);background:var(--sage)}
+.pronunciation-studio-button.is-secondary{background:transparent;color:var(--body)}
+.pronunciation-studio-reader{max-width:900px;margin:0 auto}
+.pronunciation-studio-reader-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.pronunciation-studio-title{margin:0;color:var(--ink);font:500 clamp(1.55rem,3vw,2.1rem)/1.2 "Lora",Georgia,serif}
+.pronunciation-studio-meaning{margin:6px 0 17px;color:var(--muted);font-size:.65rem;line-height:1.7}
+.pronunciation-studio-target-label{margin-bottom:7px;color:var(--sage-deep);font-size:.48rem;font-weight:800;letter-spacing:.1em}
+.pronunciation-studio-target{padding:20px 18px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:500 clamp(1.15rem,2.8vw,1.7rem)/1.55 "Lora",Georgia,serif}
+.pronunciation-studio-reference{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:12px 0 17px}
+.pronunciation-studio-reference span{color:var(--muted);font-size:.53rem}
+.pronunciation-studio-guidance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px;border:1px solid var(--line);background:color-mix(in srgb,var(--sage) 14%,var(--paper))}
+.pronunciation-studio-guidance>div{min-width:0}
+.pronunciation-studio-guidance .eyebrow{display:block;margin-bottom:5px;color:var(--sage-deep);font-size:.45rem}
+.pronunciation-studio-guidance strong{display:block;color:var(--ink);font-size:.63rem;line-height:1.5}
+.pronunciation-studio-guidance p{margin:5px 0 0;color:var(--body);font-size:.59rem;line-height:1.7}
+.pronunciation-studio-stress-words{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.pronunciation-studio-stress-words span{padding:5px 7px;border:1px solid var(--sage-deep);background:var(--sheet);color:var(--sage-deep);font-size:.53rem;font-weight:800;letter-spacing:.04em}
+.pronunciation-studio-phrase-groups{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:8px;color:var(--body);font:500 .72rem/1.6 "Lora",Georgia,serif}
+.pronunciation-studio-phrase-group strong{display:inline;color:var(--sage-deep);font-weight:800;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.pronunciation-studio-group-break{color:var(--muted);font-size:.55rem}
+.pronunciation-studio-guidance ul{grid-column:1/-1;margin:0;padding:12px 0 0 17px;border-top:1px solid var(--line);color:var(--body);font-size:.57rem;line-height:1.8}
+.pronunciation-studio-recorder{margin-top:15px;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.pronunciation-studio-recorder-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.pronunciation-studio-recorder-top strong{color:var(--ink);font:500 1rem "Lora",Georgia,serif}
+.pronunciation-studio-recorder-top p{margin:5px 0 0;color:var(--muted);font-size:.57rem;line-height:1.7}
+.pronunciation-studio-recorder-status{padding:5px 8px;border:1px solid var(--line);background:var(--sheet);color:var(--muted);font-size:.45rem;font-weight:800;letter-spacing:.07em}
+.pronunciation-studio-meter{height:7px;overflow:hidden;margin:14px 0;background:var(--line)}
+.pronunciation-studio-meter i{display:block;width:0;height:100%;background:var(--sage-deep);transition:width .12s linear}
+.pronunciation-studio-recorder-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.pronunciation-studio-recorder-actions>span{color:var(--muted);font-size:.54rem;font-variant-numeric:tabular-nums}
+.pronunciation-studio-capture-note{margin:9px 0 0;color:var(--muted);font-size:.55rem;line-height:1.7}
+.pronunciation-studio-result{margin-top:15px;padding:16px;border:1px solid var(--line);background:var(--paper)}
+.pronunciation-studio-result h4{margin:0 0 5px;color:var(--ink);font:500 1.05rem "Lora",Georgia,serif}
+.pronunciation-studio-disclaimer{margin:0 0 13px;color:var(--muted);font-size:.55rem;line-height:1.7}
+.pronunciation-studio-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pronunciation-studio-metrics>div{display:flex;flex-direction:column;gap:4px;padding:10px;border:1px solid var(--line);background:var(--sheet)}
+.pronunciation-studio-metrics strong{color:var(--ink);font-size:1rem;font-variant-numeric:tabular-nums}
+.pronunciation-studio-metrics span{color:var(--muted);font-size:.48rem;line-height:1.5}
+.pronunciation-studio-contour{margin-top:13px;padding:11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep)}
+.pronunciation-studio-contour>strong{display:block;color:var(--ink);font-size:.58rem}
+.pronunciation-studio-pitch-chart{display:block;width:100%;height:75px;margin-top:5px;overflow:visible}
+.pronunciation-studio-contour small,.pronunciation-studio-no-pitch{display:block;margin:4px 0 0;color:var(--muted);font-size:.5rem;line-height:1.6}
+.pronunciation-studio-feedback{margin:13px 0}
+.pronunciation-studio-feedback>strong{display:block;margin-bottom:6px;color:var(--ink);font-size:.62rem}
+.pronunciation-studio-feedback p{margin:0;padding:7px 0;border-top:1px solid var(--line);color:var(--body);font-size:.57rem;line-height:1.7}
+.pronunciation-studio-empty{margin:0;padding:17px 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+@media(max-width:1100px){.pronunciation-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.pronunciation-studio-grid{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .pronunciation-studio-library{padding:17px 15px}
+  .pronunciation-studio-heading h3{font-size:1.2rem}
+  .pronunciation-studio-card{padding:13px}
+  .pronunciation-studio-reader-top{align-items:flex-start}
+  .pronunciation-studio-guidance{grid-template-columns:1fr;padding:13px}
+  .pronunciation-studio-guidance ul{grid-column:auto}
+  .pronunciation-studio-recorder-top{flex-direction:column}
+  .pronunciation-studio-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pronunciation-studio-result{padding:13px}
+}
+@media(prefers-reduced-motion:reduce){.pronunciation-studio-library *{scroll-behavior:auto;transition:none}}
