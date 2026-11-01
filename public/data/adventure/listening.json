@@ -78,7 +78,7 @@
           "id": "bus-inference",
           "kind": "inference",
           "label": "Understand the intention",
-          "audioText": "Leo: We can wait together.",
+          "audioText": "We can wait together.",
           "prompt": "Why does Leo say, “We can wait together”?",
           "options": [
             "He wants Mia to take a different bus.",
