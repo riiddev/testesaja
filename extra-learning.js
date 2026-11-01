@@ -352,7 +352,7 @@
     if (event.target.closest("[data-reading-back]")) {
       $("#reading-skills-section")?.classList.remove("is-detail-open");
       renderReading();
-      $("#reading-skill-list [data-reading-skill]").find(button=>button.dataset.readingSkill===skillId)?.focus();
+      $$("#reading-skill-list [data-reading-skill]").find(button=>button.dataset.readingSkill===skillId)?.focus();
       return;
     }
     const category = event.target.closest("[data-reading-category]");
