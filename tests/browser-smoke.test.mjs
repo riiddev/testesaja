@@ -137,7 +137,7 @@ test("vocabulary search returns a matching word and reading practice saves an an
     const counter = document.querySelector("#vocab-result-count");
     return Boolean(counter && counter.textContent.includes("dari"));
   }, null, { timeout: 20000 });
-  await page.locator('#view-overview .home-primary-action[data-view-target="vocabulary"]').click();
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
   await page.locator("#vocab-search").fill("abandon");
   await page.waitForFunction(() => {
     const row = document.querySelector("#vocab-list [data-select-word]");
@@ -2150,6 +2150,8 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   await page.locator(".side-nav [data-view-target='overview']").click();
   assert.equal(await page.locator("#home-primary-action").getAttribute("data-home-action"), "active-study",
     "an unfinished session should be resumable from the home CTA");
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   await page.locator("#grammar-topic-list [data-topic-id]").first().click();
   assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), true);
   await page.locator("#lesson-panel .lesson-answer").first().click();
