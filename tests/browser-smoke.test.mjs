@@ -2149,7 +2149,9 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   assert.equal(await page.locator("#reading-skills-section").evaluate(el => el.classList.contains("is-detail-open")), false);
 
   await page.locator(".side-nav [data-view-target='progress']").click();
-  assert.equal(await page.locator("#progress-mastered").count(), 1);
+  assert.equal(await page.locator("#progress-words-tried").count(), 1);
+  assert.equal(await page.locator("#progress-grammar-tried").count(), 1);
+  assert.equal(await page.locator("#progress-reading-tried").count(), 1);
   assert.equal(await page.locator(".progress-history-details").evaluate(el => el.open), false);
   assert.equal(await page.locator("#export-backup").isVisible(), true);
 
