@@ -798,7 +798,9 @@
     writing: [
       { id: "short-introduction", title: "A short introduction", level: "A1", context: "Write a short profile for a new class discussion board.", prompt: "Introduce yourself, mention an interest, and explain one goal you have for learning English.", target: "50–80 words", starters: ["My name is …", "In my free time, I …", "One of my goals is …"], checks: ["My purpose is clear from the beginning.", "I included specific details, not only general claims.", "I checked spelling, punctuation, and sentence endings."] },
       { id: "weekend-story", title: "A weekend story", level: "A1–A2", context: "Tell a friend about something you did last weekend.", prompt: "Write about one activity from your weekend. Include where you went, who was there, and how you felt.", target: "60–90 words", starters: ["Last weekend, I …", "I went there with …", "I felt … because …"], checks: ["The events follow a clear order.", "I included a place, person, or concrete detail.", "I checked past-tense verbs and punctuation."] },
-      { id: "helpful-message", title: "Invite a study partner", level: "A2", context: "Send a friendly message to someone you want to study with.", prompt: "Invite a friend to study together. Suggest a time and place, then ask whether they are available.", target: "40–70 words", starters: ["Hi …, are you free …?", "We could meet at …", "Let me know what works for you."], checks: ["The invitation and purpose are easy to understand.", "I included a time and a place.", "The tone is friendly and the message has a clear closing."] }
+      { id: "helpful-message", title: "Invite a study partner", level: "A2", context: "Send a friendly message to someone you want to study with.", prompt: "Invite a friend to study together. Suggest a time and place, then ask whether they are available.", target: "40–70 words", starters: ["Hi …, are you free …?", "We could meet at …", "Let me know what works for you."], checks: ["The invitation and purpose are easy to understand.", "I included a time and a place.", "The tone is friendly and the message has a clear closing."] },
+      { id: "study-reflection", title: "Reflect on a study habit", level: "B1", context: "Write a short reflection for a student learning journal.", prompt: "Describe one study habit you changed, explain why you changed it, and reflect on the result.", target: "100–130 words", starters: ["I used to …, but …", "One reason for this change was …", "As a result, …"], checks: ["I described a clear change and its context.", "I explained the reason and result with relevant detail.", "I used linking words to make the reflection easy to follow."] },
+      { id: "balanced-proposal", title: "A balanced proposal", level: "B2", context: "Write to a student committee about improving a shared study space.", prompt: "Propose one realistic improvement, acknowledge a possible drawback, and explain how the committee could evaluate the result.", target: "140–180 words", starters: ["A practical improvement would be …", "Although this may involve …, …", "Its impact could be evaluated by …"], checks: ["I made a focused proposal and supported it with reasoning.", "I acknowledged a limitation and addressed it fairly.", "I suggested a realistic way to measure the outcome."] }
     ]
   };
   const STUDIO_DRAFTS_KEY = "sinauu-adventure-studio-drafts-v1";
@@ -828,8 +830,15 @@
             const state = saved.prompts[prompt.id];
             if (!state || typeof state !== "object") continue;
             const hasTurnProgress = kind !== "speaking" || Number.isInteger(state.turnIndex);
+            const savedPlan = kind === "writing" && state.plan && typeof state.plan === "object" && !Array.isArray(state.plan) ? state.plan : {};
             empty[kind].prompts[prompt.id] = {
               text: kind === "writing" && typeof state.text === "string" ? state.text.slice(0, 12000) : "",
+              revision: kind === "writing" && typeof state.revision === "string" ? state.revision.slice(0, 12000) : "",
+              plan: kind === "writing" ? {
+                opening: typeof savedPlan.opening === "string" ? savedPlan.opening.slice(0, 1200) : "",
+                detail: typeof savedPlan.detail === "string" ? savedPlan.detail.slice(0, 1200) : "",
+                closing: typeof savedPlan.closing === "string" ? savedPlan.closing.slice(0, 1200) : ""
+              } : { opening: "", detail: "", closing: "" },
               checked: kind === "speaking" && !hasTurnProgress ? [] : Array.isArray(state.checked) ? Array.from(new Set(state.checked.filter((value) => Number.isInteger(value) && value >= 0 && value < 3))) : [],
               turnIndex: kind === "speaking" && hasTurnProgress ? Math.max(0, Math.min(prompt.turns.length, state.turnIndex)) : 0
             };
@@ -851,14 +860,46 @@
   }
   function studioState(kind, promptId) {
     const group = studioDrafts[kind];
-    if (!group.prompts[promptId]) group.prompts[promptId] = { text: "", checked: [], turnIndex: 0 };
+    if (!group.prompts[promptId]) group.prompts[promptId] = { text: "", revision: "", plan: { opening: "", detail: "", closing: "" }, checked: [], turnIndex: 0 };
     if (!Number.isInteger(group.prompts[promptId].turnIndex)) group.prompts[promptId].turnIndex = 0;
+    if (!group.prompts[promptId].plan || typeof group.prompts[promptId].plan !== "object") group.prompts[promptId].plan = { opening: "", detail: "", closing: "" };
+    if (typeof group.prompts[promptId].revision !== "string") group.prompts[promptId].revision = "";
     return group.prompts[promptId];
   }
   function studioWordCount(value) {
     const text = String(value || "").trim();
     return text ? text.split(/\s+/).filter(Boolean).length : 0;
   }
+  function writingSignals(value) {
+    const text = String(value || "").trim();
+    const words = studioWordCount(text);
+    const sentences = text ? text.split(/[.!?]+/).map((part) => part.trim()).filter(Boolean).length : 0;
+    const connectors = ["because", "so", "however", "first", "then", "after", "finally", "also", "although", "therefore", "for example", "as a result", "but"];
+    const found = connectors.filter((word) => new RegExp("\\b" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\  function renderStudioPromptButtons(kind, selectedId) {") + "\\b", "i").test(text));
+    return { words, sentences, connectors: found };
+  }
+  function renderWritingSignals(value) {
+    const signal = writingSignals(value);
+    const rows = [
+      ["Sentence shape", signal.sentences >= 3, signal.sentences + " sentence" + (signal.sentences === 1 ? "" : "s") + " found"],
+      ["Idea connections", signal.connectors.length > 0, signal.connectors.length ? signal.connectors.slice(0, 3).join(", ") : "Try a connector such as because, however, or as a result"],
+      ["Enough material", signal.words >= 25, signal.words + " words · at least 25 needed to finish"]
+    ];
+    return '<div class="writing-studio-signals" aria-live="polite"><span>QUICK STRUCTURE CHECK · NOT A GRAMMAR SCORE</span><ul>' + rows.map(([label, good, detail]) =>
+      '<li class="' + (good ? "is-ready" : "is-pending") + '"><strong>' + (good ? "✓ " : "○ ") + label + '</strong><small>' + escapeHtml(detail) + '</small></li>'
+    ).join("") + '</ul></div>';
+  }
+  function buildWritingOutline() {
+    if (!studioDrafts) return;
+    const promptId = studioDrafts.writing.selectedPromptId;
+    const state = studioState("writing", promptId);
+    const parts = [state.plan.opening, state.plan.detail, state.plan.closing].map((item) => String(item || "").trim()).filter(Boolean);
+    if (!parts.length) return;
+    state.text = parts.join(" ") + (/[.!?]$/.test(parts[parts.length - 1]) ? "" : ".");
+    saveStudioDrafts();
+    renderStudios();
+  }
+
   function renderStudioPromptButtons(kind, selectedId) {
     return STUDIO_PROMPTS[kind].map((prompt) =>
       '<button type="button" class="adventure-studio-scenario' + (prompt.id === selectedId ? ' is-active' : '') + '" data-studio-kind="' + kind + '" data-studio-prompt="' + prompt.id + '" aria-pressed="' + (prompt.id === selectedId) + '">' +
@@ -908,18 +949,36 @@
       const group = studioDrafts.writing;
       const prompt = STUDIO_PROMPTS.writing.find((item) => item.id === group.selectedPromptId) || STUDIO_PROMPTS.writing[0];
       const state = studioState("writing", prompt.id);
-      const words = studioWordCount(state.text);
+      const draftWords = studioWordCount(state.text);
+      const revisionWords = studioWordCount(state.revision);
       const done = progress.studioSessions.filter((item) => item.studioType === "writing").length;
+      const planField = (key, label, placeholder) =>
+        '<label class="writing-studio-plan-field"><span>' + label + '</span><textarea data-writing-plan="' + key + '" rows="2" maxlength="1200" placeholder="' + placeholder + '">' + escapeHtml(state.plan[key]) + '</textarea></label>';
+      const readyForReview = revisionWords >= 25;
       writingNode.innerHTML =
-        '<div class="adventure-studio-heading"><div><span class="eyebrow">WRITING / MAKE IT CLEAR</span><h3>Writing Studio</h3><p>Susun ide, tulis draft, lalu periksa kembali sebelum menandai sesi selesai.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
+        '<div class="adventure-studio-heading"><div><span class="eyebrow">WRITING / PLAN · DRAFT · REVISE</span><h3>Writing Studio</h3><p>Bangun ide, tulis versi pertama, lalu revisi dengan tujuan yang jelas. Tidak ada penilaian AI atau koreksi otomatis.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
         '<div class="adventure-studio-scenarios">' + renderStudioPromptButtons("writing", prompt.id) + '</div>' +
-        '<div class="adventure-studio-prompt"><span>' + prompt.level + ' · ' + prompt.target + '</span><p>' + escapeHtml(prompt.context) + '</p><strong>' + escapeHtml(prompt.prompt) + '</strong><div class="adventure-studio-phrases">' + prompt.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></div>' +
-        '<label class="adventure-studio-field" for="studio-writing-draft">YOUR DRAFT <span id="studio-writing-count">' + words + ' words</span></label>' +
-        '<textarea id="studio-writing-draft" data-studio-kind="writing" data-studio-prompt-id="' + prompt.id + '" rows="6" maxlength="12000" placeholder="Write your first draft here…">' + escapeHtml(state.text) + '</textarea>' +
-        '<div class="adventure-studio-draft-actions"><small>Draft hanya tersimpan di perangkat dan akun browser ini.</small><button type="button" data-studio-kind="writing" data-studio-clear>Hapus draft</button></div>' +
-        renderStudioChecklist("writing", prompt, state) +
-        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="writing" data-studio-complete' + (words >= 25 && state.checked.length === 3 ? '' : ' disabled') + '>Tandai sesi selesai ↗</button>' +
-        '<small class="adventure-studio-local-note">Teks mentah tidak dikirim ke cloud, spreadsheet, atau backup akun.</small>';
+        '<div class="adventure-studio-prompt"><span>' + prompt.level + ' · TARGET ' + escapeHtml(prompt.target) + '</span><p>' + escapeHtml(prompt.context) + '</p><strong>' + escapeHtml(prompt.prompt) + '</strong><div class="adventure-studio-phrases">' + prompt.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></div>' +
+        '<section class="writing-studio-stage"><div class="writing-studio-stage-heading"><span>01 / PLAN</span><strong>Put your ideas in order</strong></div><p>Tidak perlu menulis kalimat sempurna. Catat inti yang ingin kamu sampaikan.</p>' +
+        '<div class="writing-studio-plan-grid">' +
+          planField("opening", "OPENING / MAIN IDEA", "What is the main point or situation?") +
+          planField("detail", "DETAIL / EXAMPLE", "What happened, why, or what evidence supports it?") +
+          planField("closing", "CLOSING / NEXT THOUGHT", "What should the reader remember or do next?") +
+        '</div><button type="button" class="writing-studio-outline-button" data-writing-build-outline>Use my outline in the draft ↗</button></section>' +
+        '<section class="writing-studio-stage"><div class="writing-studio-stage-heading"><span>02 / DRAFT</span><strong>Write without over-editing</strong></div>' +
+        '<label class="adventure-studio-field" for="studio-writing-draft">FIRST DRAFT <span id="studio-writing-count">' + draftWords + ' words</span></label>' +
+        '<textarea id="studio-writing-draft" data-studio-kind="writing" data-studio-prompt-id="' + prompt.id + '" rows="6" maxlength="12000" placeholder="Turn your outline into a complete first draft…">' + escapeHtml(state.text) + '</textarea>' +
+        '<div class="adventure-studio-draft-actions"><small>Draft tersimpan lokal pada perangkat dan akun browser ini.</small><button type="button" data-studio-kind="writing" data-studio-clear>Reset latihan</button></div></section>' +
+        '<section class="writing-studio-stage"><div class="writing-studio-stage-heading"><span>03 / REVISE</span><strong>Make the message clearer</strong></div><p>Periksa urutan ide, tambahkan detail yang membantu, lalu tulis ulang dengan kata-katamu sendiri.</p>' +
+        '<label class="adventure-studio-field" for="studio-writing-revision">REVISED VERSION <span id="studio-writing-revision-count">' + revisionWords + ' words</span></label>' +
+        '<textarea id="studio-writing-revision" data-studio-kind="writing" data-studio-prompt-id="' + prompt.id + '" rows="7" maxlength="12000" placeholder="Write your improved version here…">' + escapeHtml(state.revision) + '</textarea>' +
+        renderWritingSignals(state.revision || state.text) +
+        '</section>' +
+        '<section class="writing-studio-reflection"><span>SELF-REVIEW / FINAL CHECK</span><p>' + (readyForReview ? "Baca ulang versi revisimu, lalu tandai semua hal yang sudah kamu periksa." : "Tulis versi revisi minimal 25 kata untuk membuka checklist refleksi.") + '</p>' +
+        (readyForReview ? renderStudioChecklist("writing", prompt, state) : '<div class="writing-studio-review-locked">Checklist terbuka setelah versi revisimu mencapai minimal 25 kata.</div>') +
+        '</section>' +
+        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="writing" data-studio-complete' + (readyForReview && state.checked.length === prompt.checks.length ? '' : ' disabled') + '>Selesaikan dan simpan sesi ↗</button>' +
+        '<small class="adventure-studio-local-note">Kerangka, draft, dan revisi tidak masuk ke cloud, spreadsheet, atau backup akun. Hanya ringkasan sesi yang disinkronkan.</small>';
     }
   }
   function updateStudioCompleteButton(kind) {
@@ -931,7 +990,7 @@
     const button = $("[data-studio-complete]", node);
     if (!button || !prompt) return;
     const conversationReady = kind !== "speaking" || state.turnIndex >= (prompt.turns?.length || 0);
-    const ready = state.checked.length === prompt.checks.length && conversationReady && (kind !== "writing" || studioWordCount(state.text) >= 25);
+    const ready = state.checked.length === prompt.checks.length && conversationReady && (kind !== "writing" || studioWordCount(state.revision) >= 25);
     button.disabled = !ready;
   }
   function completeStudioPractice(kind) {
@@ -939,7 +998,7 @@
     const promptId = studioDrafts[kind].selectedPromptId;
     const prompt = STUDIO_PROMPTS[kind].find((item) => item.id === promptId);
     const state = studioState(kind, promptId);
-    const words = studioWordCount(state.text);
+    const words = studioWordCount(kind === "writing" ? state.revision : state.text);
     if (!prompt || state.checked.length !== prompt.checks.length || (kind === "speaking" && state.turnIndex < (prompt.turns?.length || 0)) || (kind === "writing" && words < 25)) return;
     const dateKey = localDateKey();
     const sessionId = kind + ":" + promptId + ":" + dateKey;
@@ -981,14 +1040,43 @@
     saveStudioDrafts();
     updateStudioCompleteButton(kind);
   }
-  function updateStudioDraft(text) {
-    if (!studioDrafts) return;
-    const field = $("#studio-writing-draft");
-    if (!field) return;
-    const state = studioState("writing", field.dataset.studioPromptId);
-    state.text = String(text || "").slice(0, 12000);
-    const count = $("#studio-writing-count");
-    if (count) count.textContent = studioWordCount(state.text) + " words";
+  function updateStudioDraft(field) {
+    if (!studioDrafts || !field) return;
+    const promptId = field.dataset.studioPromptId || studioDrafts.writing.selectedPromptId;
+    const state = studioState("writing", promptId);
+    if (field.matches("[data-writing-plan]")) {
+      const key = field.dataset.writingPlan;
+      if (["opening", "detail", "closing"].includes(key)) state.plan[key] = String(field.value || "").slice(0, 1200);
+    } else if (field.id === "studio-writing-draft") {
+      state.text = String(field.value || "").slice(0, 12000);
+      const count = $("#studio-writing-count");
+      if (count) count.textContent = studioWordCount(state.text) + " words";
+    } else if (field.id === "studio-writing-revision") {
+      state.revision = String(field.value || "").slice(0, 12000);
+      const count = $("#studio-writing-revision-count");
+      if (count) count.textContent = studioWordCount(state.revision) + " words";
+      const signals = $(".writing-studio-signals");
+      if (signals) signals.outerHTML = renderWritingSignals(state.revision || state.text);
+      if (studioWordCount(state.revision) >= 25 && !$(".writing-studio-reflection [data-studio-check]")) {
+        const prompt = STUDIO_PROMPTS.writing.find((item) => item.id === promptId);
+        const review = $(".writing-studio-reflection");
+        if (review && prompt) {
+          const intro = review.querySelector("p");
+          if (intro) intro.textContent = "Baca ulang versi revisimu, lalu tandai semua hal yang sudah kamu periksa.";
+          const locked = review.querySelector(".writing-studio-review-locked");
+          if (locked) locked.outerHTML = renderStudioChecklist("writing", prompt, state);
+        }
+      } else if (studioWordCount(state.revision) < 25) {
+        state.checked = [];
+        const review = $(".writing-studio-reflection");
+        if (review) {
+          const intro = review.querySelector("p");
+          if (intro) intro.textContent = "Tulis versi revisi minimal 25 kata untuk membuka checklist refleksi.";
+          const checks = review.querySelector(".adventure-studio-checklist");
+          if (checks) checks.outerHTML = '<div class="writing-studio-review-locked">Checklist terbuka setelah versi revisimu mencapai minimal 25 kata.</div>';
+        }
+      }
+    }
     saveStudioDrafts();
     updateStudioCompleteButton("writing");
   }
@@ -1977,19 +2065,20 @@
       if (event.target.closest("[data-speaking-play-partner]")) { playSpeakingPartner(); return; }
       if (event.target.closest("[data-speaking-next-turn]")) { advanceSpeakingTurn(); return; }
       if (event.target.closest("[data-speaking-restart]")) { restartSpeakingPractice(); return; }
+      if (event.target.closest("[data-writing-build-outline]")) { buildWritingOutline(); return; }
       const studioPrompt = event.target.closest("[data-studio-prompt]");
       if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
       const studioComplete = event.target.closest("[data-studio-complete]");
       if (studioComplete) { completeStudioPractice(studioComplete.dataset.studioKind); return; }
       const studioClear = event.target.closest("[data-studio-clear]");
-      if (studioClear && studioDrafts) { const state = studioState("writing", studioDrafts.writing.selectedPromptId); state.text = ""; state.checked = []; saveStudioDrafts(); renderStudios(); return; }
+      if (studioClear && studioDrafts) { const state = studioState("writing", studioDrafts.writing.selectedPromptId); state.text = ""; state.revision = ""; state.plan = { opening: "", detail: "", closing: "" }; state.checked = []; saveStudioDrafts(); renderStudios(); return; }
     });
     document.addEventListener("change", (event) => {
       if (event.target.matches("[data-adventure-check]")) updateProductionButton();
       if (event.target.matches("[data-studio-check]")) updateStudioChecklist(event.target);
     });
     document.addEventListener("input", (event) => {
-      if (event.target.matches("#studio-writing-draft")) updateStudioDraft(event.target.value);
+      if (event.target.matches("#studio-writing-draft, #studio-writing-revision, [data-writing-plan]")) updateStudioDraft(event.target);
       if (event.target.matches("#adventure-writing")) updateProductionButton();
     });
   }
