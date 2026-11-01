@@ -562,7 +562,10 @@ test("Mistake Journal supports focused recall and spaced review intervals", asyn
 
   await review.locator('[data-mistake-answer="1"]').click();
   assert.match(await review.innerText(), /Belum tepat/);
-  assert.ok(!/A neighbor/.test(await review.innerText()), "wrong retries must not reveal the correct answer");
+  assert.equal(await review.locator(".adventure-mistake-review-correct").count(), 0,
+    "wrong retries must not reveal a correct-answer confirmation");
+  assert.equal(await review.locator(".adventure-mistake-explanation").count(), 0,
+    "the explanation must stay hidden until a correct recall");
   await review.locator('[data-mistake-answer="0"]').click();
   assert.match(await review.innerText(), /Review 1\/4 berhasil/);
   const afterFirstRecall = await page.evaluate(() => {
