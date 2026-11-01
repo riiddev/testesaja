@@ -759,7 +759,7 @@ test("Everyday Stories includes a B2 reading with inference-based comprehension 
   const storyCard = page.locator('[data-story-open="the-library-after-hours"]');
   await storyCard.waitFor({ state: "visible" });
   assert.match(await storyCard.innerText(), /B2/);
-  await storyCard.locator("button").click();
+  await storyCard.click();
 
   const reader = page.locator("#adventure-story-reader");
   await reader.waitFor({ state: "visible" });
