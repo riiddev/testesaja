@@ -2108,6 +2108,8 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   assert.deepEqual(primaryLabels, ["Beranda", "Belajar", "Bacaan", "Review", "Progres"]);
   assert.equal(await page.locator(".side-nav [data-view-target='adventure']").count(), 0);
   assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
+  assert.equal(await page.locator(".side-nav").evaluate(el => getComputedStyle(el).position), "fixed",
+    "the primary navigation should remain thumb-reachable at the bottom on mobile");
 
   await page.locator(".side-nav [data-view-target='vocabulary']").click();
   assert.equal(await page.locator("#view-vocabulary").isVisible(), true);
