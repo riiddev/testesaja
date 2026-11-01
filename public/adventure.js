@@ -22,9 +22,10 @@
   let stories = [], storiesLoaded = false, storyLoadError = "", storyRun = null;
   let dialogues = [], dialoguesLoaded = false, dialogueLoadError = "", dialogueRun = null;
   let listeningExercises = [], listeningLoaded = false, listeningLoadError = "", listeningRun = null;
+  let pronunciationExercises = [], pronunciationLoaded = false, pronunciationLoadError = "", pronunciationRun = null, pronunciationCapture = null;
 
   function emptyProgress() {
-    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, storyProgress: {}, dialogueProgress: {}, listeningProgress: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
+    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, storyProgress: {}, dialogueProgress: {}, listeningProgress: {}, pronunciationProgress: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
   }
   function readStored() {
     try {
@@ -68,6 +69,14 @@
         : [];
       entry.bestScore = entry.attempts.reduce((best, attempt) => Math.max(best, attempt.score), 0);
       entry.completedAt = typeof entry.completedAt === "string" ? entry.completedAt : entry.attempts.find((attempt) => attempt.passed)?.completedAt || null;
+      entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
+    }
+    base.pronunciationProgress = raw.pronunciationProgress && typeof raw.pronunciationProgress === "object" && !Array.isArray(raw.pronunciationProgress) ? raw.pronunciationProgress : {};
+    for (const [phraseId, entry] of Object.entries(base.pronunciationProgress)) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.pronunciationProgress[phraseId]; continue; }
+      entry.attempts = Array.isArray(entry.attempts)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && typeof attempt.completedAt === "string" && Number.isFinite(attempt.durationMs) && Number.isFinite(attempt.voiceShare)).slice(-50)
+        : [];
       entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
     }
     base.listeningRate = [0.75, 0.9, 1].includes(Number(raw.listeningRate)) ? Number(raw.listeningRate) : 0.9;
@@ -454,7 +463,7 @@
     }
     checkAchievements();
     renderHeaderStats(); renderMap(); renderMissionDetail(); renderSkillProfile(); renderAchievements();
-    renderDailyQuest(); renderMistakeJournal(); renderStudios(); renderStoryLibrary(); renderDialogueLibrary(); renderListeningLab();
+    renderDailyQuest(); renderMistakeJournal(); renderStudios(); renderStoryLibrary(); renderDialogueLibrary(); renderListeningLab(); renderPronunciationStudio();
   }
   function openMission(missionId) {
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
@@ -1250,6 +1259,320 @@
     renderListeningLab();
   }
 
+
+  function pronunciationEntry(phraseId) {
+    return progress.pronunciationProgress[phraseId] && typeof progress.pronunciationProgress[phraseId] === "object"
+      ? progress.pronunciationProgress[phraseId]
+      : { attempts: [], updatedAt: null };
+  }
+
+  function renderStressedGroup(group) {
+    return String(group || "").split(/(\s+)/).map((token) => {
+      if (!token.trim()) return token;
+      const clean = token.replace(/[.,?!;:]+$/, "");
+      const stressed = /[A-Z]/.test(clean) && clean === clean.toLocaleUpperCase("en");
+      const punctuation = token.slice(clean.length);
+      return stressed
+        ? "<strong>" + escapeHtml(clean) + "</strong>" + escapeHtml(punctuation)
+        : escapeHtml(token);
+    }).join("");
+  }
+
+  function pronunciationFeedback(exercise, metrics) {
+    const notes = [];
+    if (!metrics || metrics.voicedFrames < 3) return ["Suara belum terdeteksi dengan cukup jelas. Periksa izin mikrofon, jarak ke mikrofon, dan kebisingan sekitar, lalu coba lagi."];
+    if (metrics.durationMs / 1000 < exercise.targetSeconds * 0.62) notes.push("Rekaman lebih singkat dari target latihan. Coba beri ruang pada setiap kelompok kata.");
+    else if (metrics.durationMs / 1000 > exercise.targetSeconds * 1.65) notes.push("Rekaman lebih panjang dari target latihan. Coba jaga aliran kalimat tanpa mempercepat kata penting.");
+    if (metrics.pauseCount >= Math.max(3, exercise.phraseGroups.length + 1)) notes.push("Ada beberapa jeda panjang. Latih pengelompokan frasa agar kata-kata dalam satu kelompok mengalir bersama.");
+    else notes.push("Aliran suara terdeteksi cukup menyambung. Pertahankan batas jeda pada kelompok makna, bukan di setiap kata.");
+    if (metrics.meanRms < 0.012) notes.push("Energi suara yang tertangkap relatif rendah. Coba bicara sedikit lebih jelas atau dekatkan mikrofon.");
+    else if (metrics.meanRms > 0.12) notes.push("Energi suara yang tertangkap cukup tinggi. Jaga jarak mikrofon dan hindari berteriak.");
+    if (Number.isFinite(metrics.pitchRangeSemitones)) {
+      if (metrics.pitchRangeSemitones < 1.3) notes.push("Perubahan tinggi nada pada rekaman cukup sempit. Coba ikuti petunjuk intonasi dan contoh suara sekali lagi.");
+      else if (metrics.pitchRangeSemitones > 9) notes.push("Perubahan tinggi nada cukup lebar. Pastikan penekanan tetap alami dan tidak setiap kata terdengar ditekankan.");
+      else notes.push("Ada variasi tinggi nada yang terukur. Bandingkan kontur ini dengan petunjuk naik-turun pada latihan.");
+    } else {
+      notes.push("Kontur tinggi nada belum cukup jelas untuk dianalisis. Rekam kembali di lingkungan yang lebih tenang.");
+    }
+    notes.push("Ini analisis energi, jeda, tempo, dan kontur nada—bukan pemeriksaan fonem atau penilaian otomatis bahwa setiap kata sudah diucapkan benar.");
+    return notes;
+  }
+
+  function renderPronunciationStudio() {
+    const node = $("#adventure-pronunciation-studio");
+    if (!node) return;
+    if (pronunciationRun) { renderPronunciationRun(node); return; }
+    if (!pronunciationLoaded) {
+      node.innerHTML = '<div class="pronunciation-studio-heading"><div><span class="eyebrow">SPEAK · NOTICE · REFINE</span><h3>Pronunciation Studio</h3><p>Latih tekanan kata dan intonasi dengan contoh suara, lalu amati rekaman mikrofon secara lokal.</p></div></div><p class="pronunciation-studio-empty">Menyiapkan latihan pengucapan…</p>';
+      return;
+    }
+    if (pronunciationLoadError) {
+      node.innerHTML = '<div class="pronunciation-studio-heading"><div><span class="eyebrow">SPEAK · NOTICE · REFINE</span><h3>Pronunciation Studio</h3><p>Latih tekanan kata dan intonasi dengan contoh suara, lalu amati rekaman mikrofon secara lokal.</p></div></div><p class="pronunciation-studio-empty">' + escapeHtml(pronunciationLoadError) + '</p><button class="pronunciation-studio-button" type="button" data-pronunciation-reload>Muat ulang latihan</button>';
+      return;
+    }
+    const completed = pronunciationExercises.filter((exercise) => pronunciationEntry(exercise.id).attempts.length > 0).length;
+    const cards = pronunciationExercises.map((exercise) => {
+      const entry = pronunciationEntry(exercise.id);
+      const latest = entry.attempts[entry.attempts.length - 1];
+      return '<article class="pronunciation-studio-card">' +
+        '<div class="pronunciation-studio-card-top"><span class="adventure-story-level">' + escapeHtml(exercise.level) + '</span><span class="adventure-story-status">' + (latest ? 'PERNAH DILATIH' : 'LATIHAN BARU') + '</span></div>' +
+        '<h4>' + escapeHtml(exercise.title) + '</h4><p>' + escapeHtml(exercise.category) + '</p>' +
+        '<div class="pronunciation-studio-card-meta"><span>' + escapeHtml(exercise.focus) + '</span><span>' + entry.attempts.length + ' rekaman</span></div>' +
+        '<button class="pronunciation-studio-button" type="button" data-pronunciation-open="' + escapeHtml(exercise.id) + '">' + (latest ? 'Lanjut berlatih ↗' : 'Mulai latihan ↗') + '</button>' +
+      '</article>';
+    }).join("");
+    node.innerHTML =
+      '<div class="pronunciation-studio-heading"><div><span class="eyebrow">SPEAK · NOTICE · REFINE / A1–B2</span><h3>Pronunciation Studio</h3><p>Amati suku kata yang perlu ditekankan, kelompok kata, dan arah intonasi. Putar contoh suara, rekam kalimatmu, lalu lihat indikator tempo, jeda, energi, serta kontur nada.</p></div><span class="adventure-story-count">' + completed + '/' + pronunciationExercises.length + '<small>PERNAH DILATIH</small></span></div>' +
+      '<p class="pronunciation-studio-privacy">Mikrofon hanya dianalisis di browser selama kamu menekan rekam. Audio mentah tidak disimpan atau diunggah; hanya ringkasan metrik latihan yang disimpan.</p>' +
+      (cards ? '<div class="pronunciation-studio-grid">' + cards + '</div>' : '<p class="pronunciation-studio-empty">Belum ada latihan tersedia.</p>');
+  }
+
+  function pitchContourSvg(samples) {
+    const points = (samples || []).filter((item) => Number.isFinite(item.pitch)).map((item) => item.pitch);
+    if (points.length < 3) return '<p class="pronunciation-studio-no-pitch">Kontur nada belum cukup terbaca pada rekaman ini.</p>';
+    const sorted = [...points].sort((a, b) => a - b);
+    const min = sorted[Math.floor((sorted.length - 1) * 0.1)];
+    const max = sorted[Math.ceil((sorted.length - 1) * 0.9)];
+    const span = Math.max(1, max - min);
+    const coords = points.map((pitch, index) => {
+      const x = 8 + index / Math.max(1, points.length - 1) * 304;
+      const y = 60 - Math.max(0, Math.min(1, (pitch - min) / span)) * 48;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+    return '<svg class="pronunciation-studio-pitch-chart" viewBox="0 0 320 72" role="img" aria-label="Kontur tinggi nada yang terukur selama rekaman"><polyline points="' + coords + '" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 62H312" stroke="currentColor" opacity=".2" stroke-width="1"/></svg>';
+  }
+
+  function renderPronunciationRun(node) {
+    const exercise = pronunciationExercises.find((item) => item.id === pronunciationRun.exerciseId);
+    if (!exercise) { pronunciationRun = null; renderPronunciationStudio(); return; }
+    const entry = pronunciationEntry(exercise.id);
+    const history = entry.attempts.length;
+    const phraseGroups = exercise.phraseGroups.map((group) => '<span class="pronunciation-studio-phrase-group">' + renderStressedGroup(group) + '</span>').join('<span class="pronunciation-studio-group-break" aria-hidden="true">/</span>');
+    const stressedWords = exercise.stressWords.map((word) => '<span>' + escapeHtml(word) + '</span>').join("");
+    const tips = exercise.coaching.map((tip) => '<li>' + escapeHtml(tip) + '</li>').join("");
+    const capture = pronunciationCapture;
+    let body = "";
+    if (pronunciationRun.metrics) {
+      const metrics = pronunciationRun.metrics;
+      const feedback = pronunciationRun.feedback || [];
+      const seconds = (metrics.durationMs / 1000).toFixed(1);
+      const voicePercent = Math.round(metrics.voiceShare * 100);
+      const pitchText = Number.isFinite(metrics.pitchRangeSemitones) ? metrics.pitchRangeSemitones.toFixed(1) + " semitone" : "—";
+      const feedbackHtml = feedback.map((note) => '<p>' + escapeHtml(note) + '</p>').join("");
+      body =
+        '<section class="pronunciation-studio-result" id="pronunciation-studio-result">' +
+          '<h4>Catatan rekaman terakhir</h4>' +
+          '<p class="pronunciation-studio-disclaimer">Angka di bawah menggambarkan sinyal mikrofon dan tidak menentukan benar-salahnya pelafalan.</p>' +
+          '<div class="pronunciation-studio-metrics">' +
+            '<div><strong>' + seconds + ' dtk</strong><span>Durasi</span></div>' +
+            '<div><strong>' + voicePercent + '%</strong><span>Bagian suara terdeteksi</span></div>' +
+            '<div><strong>' + metrics.pauseCount + '</strong><span>Jeda panjang</span></div>' +
+            '<div><strong>' + pitchText + '</strong><span>Rentang tinggi nada</span></div>' +
+          '</div>' +
+          '<div class="pronunciation-studio-contour"><strong>Kontur tinggi nada</strong>' + pitchContourSvg(pronunciationRun.samples) + '<small>Perubahan nada relatif selama rekaman; bukan pembanding akurasi intonasi.</small></div>' +
+          '<div class="pronunciation-studio-feedback"><strong>Hal yang bisa dicoba</strong>' + feedbackHtml + '</div>' +
+          '<button class="pronunciation-studio-button" type="button" data-pronunciation-record-again>Rekam ulang ↗</button>' +
+        '</section>';
+    } else {
+      body =
+        '<section class="pronunciation-studio-recorder">' +
+          '<div class="pronunciation-studio-recorder-top"><div><strong>Rekam suaramu</strong><p>Tekan mulai, ucapkan frasa dengan nyaman, lalu tekan berhenti. Maksimal 12 detik.</p></div><span class="pronunciation-studio-recorder-status" id="pronunciation-capture-status">' + (capture ? 'SEDANG MEREKAM' : 'SIAP') + '</span></div>' +
+          '<div class="pronunciation-studio-meter"><i id="pronunciation-meter" style="width:' + (capture ? '10%' : '0%') + '"></i></div>' +
+          '<div class="pronunciation-studio-recorder-actions"><button class="pronunciation-studio-button" type="button" data-pronunciation-toggle>' + (capture ? '■ Berhenti merekam' : '● Mulai merekam') + '</button><span id="pronunciation-record-time">' + (capture ? '00:00' : 'Mikrofon belum aktif') + '</span></div>' +
+          '<p class="pronunciation-studio-capture-note" id="pronunciation-capture-note">' + escapeHtml(pronunciationRun.captureError || 'Peramban akan meminta izin mikrofon. Analisis berjalan di perangkat ini dan tidak membuat file rekaman.') + '</p>' +
+        '</section>';
+    }
+    node.innerHTML =
+      '<div class="pronunciation-studio-reader" id="pronunciation-studio-reader">' +
+        '<div class="pronunciation-studio-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(exercise.level) + '</span><span>·</span><span>' + history + ' REKAMAN TERSIMPAN</span></div><button class="pronunciation-studio-button is-secondary" type="button" data-pronunciation-close>← Koleksi</button></div>' +
+        '<h3 class="pronunciation-studio-title">' + escapeHtml(exercise.title) + '</h3><p class="pronunciation-studio-meaning">' + escapeHtml(exercise.meaning) + '</p>' +
+        '<div class="pronunciation-studio-target-label">SAY THIS PHRASE</div><div class="pronunciation-studio-target">' + escapeHtml(exercise.phrase) + '</div>' +
+        '<div class="pronunciation-studio-reference"><button class="pronunciation-studio-button is-reference" type="button" data-pronunciation-reference>▶ Dengarkan contoh</button><span>' + (pronunciationRun.referenceUnavailable ? 'Suara contoh tidak tersedia di browser ini.' : 'Contoh suara dibuat oleh browser.') + '</span></div>' +
+        '<section class="pronunciation-studio-guidance"><div><span class="eyebrow">WORD STRESS</span><strong>Kata yang perlu mendapat tekanan</strong><div class="pronunciation-studio-stress-words">' + stressedWords + '</div></div><div><span class="eyebrow">THOUGHT GROUPS</span><strong>Kelompokkan frasa</strong><div class="pronunciation-studio-phrase-groups">' + phraseGroups + '</div></div><div><span class="eyebrow">INTONATION</span><strong>' + escapeHtml(exercise.intonation.label) + '</strong><p>' + escapeHtml(exercise.intonation.description) + '</p></div><div><span class="eyebrow">CONNECTED SPEECH</span><p>' + escapeHtml(exercise.linking) + '</p></div><ul>' + tips + '</ul></section>' +
+        body +
+        '<p class="pronunciation-studio-privacy">Privasi: mikrofon dianalisis lokal. Tidak ada audio mentah yang disimpan, dikirim, atau diunggah. Browser tidak memeriksa fonem secara otomatis; gunakan panduan tekanan dan intonasi untuk latihan mandiri.</p>' +
+      '</div>';
+  }
+
+  function estimatePronunciationPitch(buffer, sampleRate) {
+    let mean = 0;
+    for (let i = 0; i < buffer.length; i += 1) mean += buffer[i];
+    mean /= buffer.length;
+    let energy = 0;
+    for (let i = 0; i < buffer.length; i += 1) { const value = buffer[i] - mean; energy += value * value; }
+    if (energy / buffer.length < 0.000025) return null;
+    const minLag = Math.max(2, Math.floor(sampleRate / 340));
+    const maxLag = Math.min(Math.floor(sampleRate / 75), Math.floor(buffer.length * 0.45));
+    let bestLag = 0, bestScore = 0;
+    for (let lag = minLag; lag <= maxLag; lag += 1) {
+      let cross = 0, left = 0, right = 0;
+      for (let i = 0; i < buffer.length - lag; i += 4) {
+        const a = buffer[i] - mean, b = buffer[i + lag] - mean;
+        cross += a * b; left += a * a; right += b * b;
+      }
+      const score = cross / Math.sqrt(Math.max(1e-12, left * right));
+      if (score > bestScore) { bestScore = score; bestLag = lag; }
+    }
+    return bestScore >= 0.32 && bestLag ? sampleRate / bestLag : null;
+  }
+
+  function summarizePronunciation(samples, durationMs) {
+    const active = samples.filter((sample) => sample.rms > 0.012);
+    const voiceShare = samples.length ? active.length / samples.length : 0;
+    const meanRms = active.length ? active.reduce((sum, sample) => sum + sample.rms, 0) / active.length : 0;
+    const pitchValues = active.map((sample) => sample.pitch).filter((pitch) => Number.isFinite(pitch));
+    const sortedPitch = [...pitchValues].sort((a, b) => a - b);
+    const percentile = (values, ratio) => values.length ? values[Math.min(values.length - 1, Math.floor((values.length - 1) * ratio))] : null;
+    const lowPitch = percentile(sortedPitch, 0.1), highPitch = percentile(sortedPitch, 0.9);
+    const pitchRangeSemitones = lowPitch && highPitch && highPitch > lowPitch ? 12 * Math.log2(highPitch / lowPitch) : null;
+    let pauseCount = 0, previousTime = null;
+    for (const sample of active) {
+      if (previousTime !== null && sample.t - previousTime >= 520) pauseCount += 1;
+      previousTime = sample.t;
+    }
+    return {
+      durationMs: Math.round(durationMs),
+      voiceShare: Math.max(0, Math.min(1, voiceShare)),
+      voicedFrames: active.length,
+      meanRms: Number(meanRms.toFixed(4)),
+      pauseCount,
+      pitchMedian: percentile(sortedPitch, 0.5),
+      pitchRangeSemitones: Number.isFinite(pitchRangeSemitones) ? Number(pitchRangeSemitones.toFixed(2)) : null,
+    };
+  }
+
+  function stopPronunciationCapture(saveAttempt = true) {
+    const capture = pronunciationCapture;
+    if (!capture) return;
+    pronunciationCapture = null;
+    if (capture.frameId) cancelAnimationFrame(capture.frameId);
+    for (const track of capture.stream.getTracks()) track.stop();
+    try { capture.source.disconnect(); } catch (_) {}
+    try { capture.analyser.disconnect(); } catch (_) {}
+    const durationMs = Math.max(0, performance.now() - capture.startedAt);
+    void capture.context.close().catch(() => {});
+    if (!saveAttempt || !pronunciationRun) {
+      renderPronunciationStudio();
+      return;
+    }
+    const metrics = summarizePronunciation(capture.samples, durationMs);
+    const exercise = pronunciationExercises.find((item) => item.id === pronunciationRun.exerciseId);
+    if (!exercise) return;
+    const completedAt = new Date().toISOString();
+    const attempt = { attemptId: makeId(), completedAt, ...metrics };
+    const entry = pronunciationEntry(exercise.id);
+    entry.attempts = [...(entry.attempts || []), attempt].slice(-50);
+    entry.updatedAt = completedAt;
+    progress.pronunciationProgress[exercise.id] = entry;
+    saveProgress();
+    pronunciationRun.metrics = metrics;
+    pronunciationRun.samples = capture.samples.map((sample) => ({ t: sample.t, pitch: sample.pitch }));
+    pronunciationRun.feedback = pronunciationFeedback(exercise, metrics);
+    pronunciationRun.captureError = "";
+    renderPronunciationStudio();
+  }
+
+  async function startPronunciationCapture() {
+    if (!pronunciationRun || pronunciationCapture) return;
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+      pronunciationRun.captureError = "Browser ini tidak menyediakan akses mikrofon. Kamu tetap bisa memakai contoh suara dan panduan visual.";
+      renderPronunciationStudio();
+      return;
+    }
+    const AudioContextType = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextType) {
+      pronunciationRun.captureError = "Analisis audio lokal tidak didukung browser ini. Contoh suara dan panduan tetap bisa digunakan.";
+      renderPronunciationStudio();
+      return;
+    }
+    let stream = null, context = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      if (!pronunciationRun) { stream.getTracks().forEach((track) => track.stop()); return; }
+      context = new AudioContextType();
+      await context.resume();
+      const source = context.createMediaStreamSource(stream);
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.15;
+      source.connect(analyser);
+      pronunciationCapture = { stream, context, source, analyser, startedAt: performance.now(), lastSampleAt: 0, samples: [], frameId: 0 };
+      pronunciationRun.captureError = "";
+      renderPronunciationStudio();
+      const buffer = new Float32Array(analyser.fftSize);
+      const capture = pronunciationCapture;
+      const frame = (now) => {
+        if (pronunciationCapture !== capture) return;
+        const elapsed = now - capture.startedAt;
+        if (elapsed >= 12000) { stopPronunciationCapture(true); return; }
+        if (now - capture.lastSampleAt >= 90) {
+          capture.lastSampleAt = now;
+          analyser.getFloatTimeDomainData(buffer);
+          let sum = 0;
+          for (let i = 0; i < buffer.length; i += 1) sum += buffer[i] * buffer[i];
+          const rms = Math.sqrt(sum / buffer.length);
+          const pitch = rms > 0.012 ? estimatePronunciationPitch(buffer, context.sampleRate) : null;
+          capture.samples.push({ t: elapsed, rms, pitch });
+          const meter = $("#pronunciation-meter");
+          const recordTime = $("#pronunciation-record-time");
+          const status = $("#pronunciation-capture-status");
+          if (meter) meter.style.width = Math.min(100, rms * 500) + "%";
+          if (recordTime) recordTime.textContent = "00:" + String(Math.floor(elapsed / 1000)).padStart(2, "0");
+          if (status) status.textContent = "SEDANG MEREKAM";
+        }
+        capture.frameId = requestAnimationFrame(frame);
+      };
+      capture.frameId = requestAnimationFrame(frame);
+    } catch (error) {
+      if (stream) stream.getTracks().forEach((track) => track.stop());
+      if (context) void context.close().catch(() => {});
+      const reason = error && error.name === "NotAllowedError" ? "Izin mikrofon ditolak. Izinkan akses mikrofon dari pengaturan situs untuk memakai analisis lokal." :
+        error && error.name === "NotFoundError" ? "Tidak ada mikrofon yang terdeteksi di perangkat ini." :
+        "Mikrofon tidak dapat diakses. Periksa izin browser dan pastikan halaman dibuka melalui HTTPS.";
+      if (pronunciationRun) { pronunciationRun.captureError = reason; renderPronunciationStudio(); }
+    }
+  }
+
+  async function loadPronunciationStudio() {
+    try {
+      const response = await fetch("/data/adventure/pronunciation.json", { cache: "no-cache" });
+      if (!response.ok) throw new Error("Koleksi Pronunciation Studio belum dapat dimuat.");
+      const data = await response.json();
+      if (!data || data.schemaVersion !== 1 || !Array.isArray(data.exercises)) throw new Error("Format Pronunciation Studio tidak sesuai.");
+      const ids = new Set();
+      pronunciationExercises = data.exercises.filter((exercise) => {
+        const valid = exercise && typeof exercise.id === "string" && exercise.id && !ids.has(exercise.id) &&
+          typeof exercise.phrase === "string" && exercise.phrase.trim() && ["A1", "A2", "B1", "B2"].includes(exercise.level) &&
+          Array.isArray(exercise.stressWords) && exercise.stressWords.length >= 1 &&
+          Array.isArray(exercise.phraseGroups) && exercise.phraseGroups.length >= 2 &&
+          exercise.intonation && typeof exercise.intonation.description === "string" &&
+          Array.isArray(exercise.coaching) && exercise.coaching.length >= 2;
+        if (valid) ids.add(exercise.id);
+        return valid;
+      });
+      if (pronunciationExercises.length !== data.exercises.length) throw new Error("Sebagian latihan tidak lolos pemeriksaan struktur.");
+      pronunciationLoaded = true;
+      pronunciationLoadError = "";
+      renderPronunciationStudio();
+    } catch (error) {
+      pronunciationLoaded = true;
+      pronunciationLoadError = error instanceof Error ? error.message : "Pronunciation Studio belum dapat dimuat.";
+      renderPronunciationStudio();
+    }
+  }
+
+  function openPronunciation(exerciseId) {
+    if (!pronunciationExercises.some((item) => item.id === exerciseId)) return;
+    pronunciationRun = { exerciseId, referenceUnavailable: false, captureError: "", metrics: null, samples: [], feedback: [] };
+    renderPronunciationStudio();
+  }
+
+  function closePronunciationStudio() {
+    if (pronunciationCapture) stopPronunciationCapture(false);
+    pronunciationRun = null;
+    renderPronunciationStudio();
+  }
+
   function dialogueEntry(dialogueId) {
     return progress.dialogueProgress[dialogueId] && typeof progress.dialogueProgress[dialogueId] === "object"
       ? progress.dialogueProgress[dialogueId]
@@ -1507,6 +1830,16 @@
       if (event.target.closest("[data-listening-next]")) { advanceListening(); return; }
       const listeningRetry = event.target.closest("[data-listening-retry]");
       if (listeningRetry) { openListening(listeningRetry.dataset.listeningRetry); return; }
+      const pronunciationOpen = event.target.closest("[data-pronunciation-open]");
+      if (pronunciationOpen) { openPronunciation(pronunciationOpen.dataset.pronunciationOpen); return; }
+      if (event.target.closest("[data-pronunciation-close]")) { closePronunciationStudio(); return; }
+      if (event.target.closest("[data-pronunciation-reload]")) { pronunciationLoadError = ""; pronunciationLoaded = false; renderPronunciationStudio(); void loadPronunciationStudio(); return; }
+      if (event.target.closest("[data-pronunciation-reference]")) {
+        if (pronunciationRun) { const exercise = pronunciationExercises.find((item) => item.id === pronunciationRun.exerciseId); if (exercise) pronunciationRun.referenceUnavailable = !playText(exercise.phrase); renderPronunciationStudio(); }
+        return;
+      }
+      if (event.target.closest("[data-pronunciation-toggle]")) { if (pronunciationCapture) stopPronunciationCapture(true); else void startPronunciationCapture(); return; }
+      if (event.target.closest("[data-pronunciation-record-again]")) { pronunciationRun.metrics = null; pronunciationRun.samples = []; pronunciationRun.feedback = []; pronunciationRun.captureError = ""; renderPronunciationStudio(); return; }
       const studioPrompt = event.target.closest("[data-studio-prompt]");
       if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
       const studioComplete = event.target.closest("[data-studio-complete]");
@@ -1540,12 +1873,14 @@
       void loadStories();
       void loadDialogues();
       void loadListeningLab();
+      void loadPronunciationStudio();
     } catch (error) {
       const panel = $("#adventure-mission-panel");
       if (panel) panel.textContent = error.message || "Petualangan belum dapat dimuat.";
     }
   }
 
+  window.addEventListener("pagehide", () => { if (pronunciationCapture) stopPronunciationCapture(false); });
   window.sinauuAdventureBackup = () => cloneProgress(progress);
   window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); renderAll(); };
   window.sinauuRenderAdventure = () => { if (curriculum) renderAll(); else void init(); };
