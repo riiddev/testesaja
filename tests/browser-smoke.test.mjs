@@ -660,7 +660,59 @@ test("Adventure workspace stays within mobile, tablet, and desktop viewport widt
     }));
     assert.ok(measurements.document <= measurements.viewport + 1, "no horizontal document overflow at width " + width + ": " + JSON.stringify(measurements));
     assert.ok(measurements.daily > 0 && measurements.journal > 0, "both new panels should remain visible at width " + width);
+    assert.ok(await page.locator("#adventure-story-library").count(), "the story shelf should mount without delaying Adventure startup");
     assert.ok(measurements.daily <= measurements.viewport && measurements.journal <= measurements.viewport, "panels should fit the viewport at width " + width);
     await page.close();
   }
 });
+
+test("Everyday Stories supports graded reading, comprehension feedback, and saved local progress", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "story-preview-access",
+      refresh_token: "story-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "story-preview-user", email: "story-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-story-library .adventure-story-card").first().waitFor({ state: "visible" });
+  await page.locator('[data-story-open="a-helpful-neighbor"]').click();
+
+  assert.match(await page.locator("#adventure-story-reader").innerText(), /A Helpful Neighbor/);
+  assert.match(await page.locator("#adventure-story-reader").innerText(), /watering can/i);
+  assert.equal(await page.locator("[data-story-answer]").count(), 3);
+
+  for (const answer of [0, 1, 0]) {
+    await page.locator('[data-story-answer="' + answer + '"]').click();
+    await page.locator(".adventure-story-feedback").waitFor({ state: "visible" });
+    await page.locator("[data-story-next]").click();
+  }
+
+  await page.locator("#adventure-story-result").waitFor({ state: "visible" });
+  assert.match(await page.locator("#adventure-story-result").innerText(), /3\\/3/);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.ok(saved?.storyProgress?.["a-helpful-neighbor"]?.completedAt, "a passing story attempt should be saved");
+  assert.equal(saved.storyProgress["a-helpful-neighbor"].attempts.length, 1);
+  const bundle = await page.evaluate(() => window.sinauuExportLocalBundle());
+  assert.ok(bundle.extras.adventureProgress.storyProgress["a-helpful-neighbor"], "story progress should enter the existing CloudBundle v2 snapshot");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const completedCard = page.locator('[data-story-open="a-helpful-neighbor"]');
+  await completedCard.waitFor({ state: "visible" });
+  assert.match(await completedCard.innerText(), /Baca lagi/);
+  assert.deepEqual(pageErrors, [], "Everyday Stories should not throw browser JavaScript errors");
+  await page.close();
+});
+
