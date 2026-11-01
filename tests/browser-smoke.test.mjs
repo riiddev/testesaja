@@ -877,3 +877,48 @@ test("Everyday English supports listening, natural responses, local progress, an
   assert.deepEqual(pageErrors, [], "Everyday English should not throw browser JavaScript errors");
   await page.close();
 });
+
+
+test("Everyday English includes a B2 discussion that evaluates evidence, alternatives, and consequences", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "b2-dialogue-preview-access",
+      refresh_token: "b2-dialogue-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "b2-dialogue-preview-user", email: "b2-dialogue-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const open = page.locator('[data-dialogue-open="revising-a-project-proposal"]');
+  const card = open.locator("xpath=ancestor::article");
+  await open.waitFor({ state: "visible" });
+  assert.match(await card.innerText(), /B2/);
+  await open.click();
+  const reader = page.locator("#adventure-dialogue-reader");
+  await reader.waitFor({ state: "visible" });
+  assert.match(await reader.innerText(), /Revising a Project Proposal/);
+  assert.match(await reader.innerText(), /substantial/);
+  assert.equal(await page.locator("[data-dialogue-answer]").count(), 3);
+  for (const answer of [0, 1, 2]) {
+    await page.locator('[data-dialogue-answer="' + answer + '"]').click();
+    await page.locator(".adventure-dialogue-feedback").waitFor({ state: "visible" });
+    await page.locator("[data-dialogue-next]").click();
+  }
+  const result = page.locator("#adventure-dialogue-result");
+  await result.waitFor({ state: "visible" });
+  assert.match(await result.innerText(), /3\/3/);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.equal(saved?.dialogueProgress?.["revising-a-project-proposal"]?.bestScore, 3);
+  assert.ok(saved?.dialogueProgress?.["revising-a-project-proposal"]?.completedAt);
+  assert.deepEqual(pageErrors, [], "B2 Everyday English should not throw browser JavaScript errors");
+  await page.close();
+});
