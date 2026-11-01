@@ -74,7 +74,7 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 1. Human-review high-frequency meanings, parts of speech, examples, and Indonesian translations, starting with A1/A2.
 2. Replace unreliable or fragmentary examples and improve context variants before expanding the mastery-ready pool.
 3. Expand grammar lessons and validated question banks topic by topic.
-4. Expand the Everyday Stories library beyond the first three A1–B1 stories; continue building contextual listening, speaking, and writing practice, and human-review assessment content.
+4. Expand the Everyday Stories library beyond its first A1–B2 collection; continue building contextual listening, speaking, and writing practice, and human-review assessment content.
 5. Continue responsive, accessibility, persistence, backup/restore, and regression checks.
 
 **Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
@@ -82,9 +82,9 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 
 ## Quality checks
 
-- `npm run test:content` validates vocabulary fields and uniqueness, all reading-question answer keys, HABIT passage integrity and word-count metadata, and byte-for-byte synchronization between root and `public/data` JSON copies.
+- `npm run test:content` validates vocabulary fields and uniqueness, Everyday Stories levels/focus-word links/question keys, all reading-question answer keys, HABIT passage integrity and word-count metadata, and byte-for-byte synchronization between root and `public/data` JSON copies.
 - `npm run build` runs TypeScript checks and builds all production entry points.
-- `npm run test:browser` runs Playwright smoke tests for the landing page, navigation, vocabulary lookup, HABIT reading questions, feedback, and answer persistence. Install Playwright and Chromium before running it locally; the `.github/workflows/quality-gates.yml` workflow does that in CI.
+- `npm run test:browser` runs Playwright smoke tests for the landing page, navigation, vocabulary lookup, HABIT reading questions, Everyday Stories A1/B2 reading and feedback, Adventure progress, and answer persistence. Install Playwright and Chromium before running it locally; the `.github/workflows/quality-gates.yml` workflow does that in CI.
 - Automated checks catch structural and regression problems, not every linguistic nuance. The 965 imported A–E entries remain marked as editorial drafts until an independent human review confirms their meanings, examples, and Indonesian translations.
 
 ## HABIT reading library
