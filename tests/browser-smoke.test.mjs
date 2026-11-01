@@ -664,3 +664,65 @@ test("Adventure workspace stays within mobile, tablet, and desktop viewport widt
     await page.close();
   }
 });
+
+test("Placement Check adapts to a learner's answers and saves a local estimate", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.locator("#placement-teaser-action").click();
+  await page.locator("#view-placement.is-visible").waitFor({ state: "visible" });
+  await page.locator("#placement-start").click();
+
+  const answers = [1, 1, 1, 1, 0];
+  for (let index = 0; index < answers.length; index += 1) {
+    await page.locator('[data-placement-answer="' + answers[index] + '"]').click();
+    await page.locator("#placement-feedback").waitFor({ state: "visible" });
+    if (index === 1) assert.match(await page.locator("#placement-feedback").innerText(), /borrow/i,
+      "a wrong answer should reveal the correct choice after the attempt");
+    await page.locator("#placement-next").click();
+  }
+
+  await page.locator("#placement-result").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#placement-result-level").innerText(), "A1");
+  assert.equal(await page.locator("#placement-score").innerText(), "2/5");
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-placement-check-v1") || "null"));
+  assert.equal(saved?.level, "A1");
+  assert.equal(saved?.total, 5);
+  assert.equal(saved?.correct, 2);
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  assert.match(await page.locator("#placement-teaser-summary").innerText(), /A1/);
+  await page.locator("#placement-teaser-action").click();
+  await page.locator("#placement-result").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#placement-result-level").innerText(), "A1");
+  assert.deepEqual(pageErrors, [], "Placement Check should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Placement Check progresses through all four bands when answers are consistently correct", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.locator("#placement-teaser-action").click();
+  await page.locator("#placement-start").click();
+  const correctAnswers = [1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0];
+  for (const answer of correctAnswers) {
+    await page.locator('[data-placement-answer="' + answer + '"]').click();
+    await page.locator("#placement-next").click();
+  }
+
+  await page.locator("#placement-result").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#placement-result-level").innerText(), "B2");
+  assert.equal(await page.locator("#placement-score").innerText(), "20/20");
+  assert.equal(await page.locator("#placement-level-breakdown .placement-level-row").count(), 4);
+  assert.deepEqual(pageErrors, [], "the full adaptive assessment should not throw browser JavaScript errors");
+  await page.close();
+});
+
