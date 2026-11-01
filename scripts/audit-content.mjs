@@ -101,8 +101,44 @@ for (const skill of reading.skills) {
   }
 }
 
+
+const storyLibrary = json("public/data/adventure/stories.json");
+assert.equal(storyLibrary.schemaVersion, 1, "Everyday Stories schema version changed");
+assert.ok(Array.isArray(storyLibrary.stories) && storyLibrary.stories.length >= 4, "Expected the A1–B2 Everyday Stories collection");
+const storyIds = new Set();
+const storyQuestionIds = new Set();
+const vocabularyById = new Map(vocabulary.entries.map((entry) => [entry.id, entry]));
+const storyLevels = new Set();
+for (const story of storyLibrary.stories) {
+  assert.ok(story.id && story.title && story.subtitle, "Every story needs an id, title, and subtitle");
+  assert.ok(!storyIds.has(story.id), `Duplicate story id: ${story.id}`);
+  storyIds.add(story.id);
+  assert.ok(["A1", "A2", "B1", "B2"].includes(story.level), `${story.title}: invalid CEFR guide level`);
+  storyLevels.add(story.level);
+  assert.ok(Number.isInteger(story.estimatedMinutes) && story.estimatedMinutes > 0, `${story.title}: invalid reading-time estimate`);
+  assert.ok(Array.isArray(story.paragraphs) && story.paragraphs.length >= 2 && story.paragraphs.every((item) => typeof item === "string" && item.trim()), `${story.title}: paragraphs are missing`);
+  assert.ok(Array.isArray(story.focusWords) && story.focusWords.length >= 3, `${story.title}: at least three focus words are required`);
+  for (const focus of story.focusWords) {
+    const entry = vocabularyById.get(focus.id);
+    assert.ok(entry, `${story.title}: unknown vocabulary id ${focus.id}`);
+    assert.equal(String(focus.word).toLocaleLowerCase("en"), entry.word.toLocaleLowerCase("en"), `${story.title}: focus word does not match ${focus.id}`);
+    assert.ok(typeof focus.meaning === "string" && focus.meaning.trim(), `${story.title}: missing Indonesian gloss for ${focus.word}`);
+  }
+  assert.ok(Array.isArray(story.questions) && story.questions.length >= 3, `${story.title}: at least three comprehension questions are required`);
+  for (const question of story.questions) {
+    assert.ok(question.id && question.prompt && question.explanation, `${story.title}: question needs an id, prompt, and explanation`);
+    assert.ok(!storyQuestionIds.has(question.id), `Duplicate story question id: ${question.id}`);
+    storyQuestionIds.add(question.id);
+    assert.ok(Array.isArray(question.options) && question.options.length >= 3, `${story.title}: question needs at least three options`);
+    assert.equal(new Set(question.options).size, question.options.length, `${story.title}: duplicate answer options`);
+    assert.ok(Number.isInteger(question.answer) && question.answer >= 0 && question.answer < question.options.length, `${story.title}: invalid answer key`);
+  }
+}
+assert.ok(storyLevels.has("A1") && storyLevels.has("A2") && storyLevels.has("B1") && storyLevels.has("B2"), "Everyday Stories should cover A1 through B2");
+
 console.log("Content audit passed.");
 console.log(`- Vocabulary: ${vocabulary.entries.length} unique headwords; ${importedDraftCount} imported rows stay explicitly flagged for human review.`);
 console.log(`- HABIT library: ${habit.passages.length} unique passages; ${storedWordCount.toLocaleString("en-US")} words; 175 physical PDF pages / 174 numbered content pages.`);
 console.log(`- Reading skills: ${reading.skills.length} skills and ${questionCount} checked questions.`);
+console.log(`- Everyday Stories: ${storyLibrary.stories.length} stories across A1–B2; focus words link to checked vocabulary IDs and all question keys are valid.`);
 console.log("- Root/public JSON mirrors match byte-for-byte.");
