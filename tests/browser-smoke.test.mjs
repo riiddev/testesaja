@@ -1373,3 +1373,95 @@ test("Speaking Studio includes a B2 discussion with counterarguments and an evid
   assert.deepEqual(pageErrors, [], "B2 Speaking Studio scenario should not throw browser JavaScript errors");
   await page.close();
 });
+
+
+test("Writing Studio guides planning, drafting, revision, reflection, and keeps all raw text local", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "writing-preview-access",
+      refresh_token: "writing-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "writing-preview-user", email: "writing-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+
+  const studio = page.locator("#adventure-writing-studio");
+  await studio.getByText("Writing Studio", { exact: true }).waitFor();
+  await studio.locator('[data-studio-prompt="weekend-story"]').click();
+  await studio.locator('[data-writing-plan="opening"]').fill("Last Saturday, I visited the city library with my cousin.");
+  await studio.locator('[data-writing-plan="detail"]').fill("We chose two novels and studied together because the reading room was quiet.");
+  await studio.locator('[data-writing-plan="closing"]').fill("I felt refreshed and want to go there again.");
+  await studio.locator("[data-writing-build-outline]").click();
+  const draft = "Last Saturday, I visited the city library with my cousin. We chose two novels and studied together because the reading room was quiet. I felt refreshed and want to go there again.";
+  assert.equal(await studio.locator("#studio-writing-draft").inputValue(), draft, "the outline should provide an editable first draft");
+
+  const revised = "Last Saturday, I visited the city library with my cousin. First, we explored the reading room and chose two interesting novels. Then, we studied together because the quiet space helped us focus. As a result, I felt refreshed and more motivated to read. I would like to return next weekend.";
+  await studio.locator("#studio-writing-draft").fill(draft);
+  await studio.locator("#studio-writing-revision").fill(revised);
+  assert.match(await studio.locator("#studio-writing-revision-count").innerText(), /\d+ words/);
+  assert.match(await studio.locator(".writing-studio-signals").innerText(), /Idea connections/);
+  assert.equal(await studio.locator("[data-studio-check]").count(), 3, "the self-review checklist should open after a substantial revision");
+  const complete = studio.locator("[data-studio-complete]");
+  assert.equal(await complete.isDisabled(), true, "all reflection checks are required");
+  for (let index = 0; index < 3; index += 1) await studio.locator('[data-studio-check="' + index + '"]').check();
+  assert.equal(await complete.isDisabled(), false);
+  await complete.click();
+
+  const raw = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-studio-drafts-v1:" + encodeURIComponent("writing-preview-user")) || "null"));
+  assert.equal(raw.writing.prompts["weekend-story"].revision, revised, "the revised draft should remain available locally");
+  assert.equal(raw.writing.prompts["weekend-story"].plan.detail, "We chose two novels and studied together because the reading room was quiet.");
+  const backup = await page.evaluate(() => window.sinauuAdventureBackup());
+  const session = backup.studioSessions.find((item) => item.studioType === "writing" && item.promptId === "weekend-story");
+  assert.ok(session && session.wordCount >= 25, "the completed session should count the revised version");
+  assert.ok(!JSON.stringify(backup).includes(draft) && !JSON.stringify(backup).includes(revised), "raw writing must stay out of Adventure progress");
+  const cloud = await page.evaluate(() => window.sinauuExportLocalBundle());
+  assert.ok(!JSON.stringify(cloud.extras.adventureProgress).includes(draft) && !JSON.stringify(cloud.extras.adventureProgress).includes(revised), "raw writing must stay out of CloudBundle");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#studio-writing-revision").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#studio-writing-draft").inputValue(), draft);
+  assert.equal(await page.locator("#studio-writing-revision").inputValue(), revised);
+  assert.deepEqual(pageErrors, [], "Writing Studio should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("Writing Studio includes B1 and B2 tasks with appropriate targets and reflection", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "writing-b2-preview-access",
+      refresh_token: "writing-b2-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "writing-b2-preview-user", email: "writing-b2-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const studio = page.locator("#adventure-writing-studio");
+  await studio.locator('[data-studio-prompt="study-reflection"]').click();
+  assert.match(await studio.innerText(), /B1/);
+  await studio.locator('[data-studio-prompt="balanced-proposal"]').click();
+  assert.match(await studio.innerText(), /B2/);
+  assert.match(await studio.innerText(), /acknowledge a possible drawback/i);
+  assert.deepEqual(pageErrors, [], "B2 Writing Studio task should not throw browser JavaScript errors");
+  await page.close();
+});
