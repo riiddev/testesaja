@@ -1135,7 +1135,7 @@
         '<section class="adventure-dialogue-quiz" aria-labelledby="adventure-dialogue-question">' +
           '<div class="adventure-dialogue-quiz-meta"><span>YOUR TURN / PILIH RESPONS</span><span>GILIRAN ' + (dialogueRun.turnIndex + 1) + '/' + dialogue.turns.length + '</span></div>' +
           '<div class="adventure-story-progress"><i style="width:' + Math.round((dialogueRun.turnIndex + 1) / dialogue.turns.length * 100) + '%"></i></div>' +
-          '<div class="adventure-dialogue-partner-line"><span>' + escapeHtml(dialogue.transcript.find((line) => line.text === turn.partnerLine)?.speaker || 'PARTNER') + '</span><p>' + escapeHtml(turn.partnerLine) + '</p></div>' +
+          '<div class="adventure-dialogue-partner-line"><span>' + escapeHtml(dialogue.transcript.find((line) => line.text.includes(turn.partnerLine))?.speaker || 'PARTNER') + '</span><p>' + escapeHtml(turn.partnerLine) + '</p></div>' +
           '<h4 id="adventure-dialogue-question">' + escapeHtml(turn.prompt) + '</h4>' +
           '<div class="adventure-dialogue-options">' + choices + '</div>' +
           (answered ? '<div class="adventure-dialogue-feedback' + (dialogueRun.isCorrect ? '' : ' is-wrong') + '" role="status"><strong>' + (dialogueRun.isCorrect ? 'Respons alami.' : 'Belum tepat.') + '</strong>' + escapeHtml(turn.explanation) + (!dialogueRun.isCorrect ? '<br>Respons yang disarankan: ' + escapeHtml(turn.response) : '') + '</div>' : '') +
