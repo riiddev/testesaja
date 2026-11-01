@@ -162,6 +162,16 @@ test("vocabulary search returns a matching word and reading practice saves an an
   await page.locator("#context-form button[type='submit']").click();
   await page.locator("#study-next").waitFor({ state: "visible" });
 
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#vocab-search").fill("hello");
+  await page.waitForFunction(() => Boolean(document.querySelector('#vocab-list [data-select-word]')?.textContent.toLowerCase().includes("hello")));
+  await page.locator('#vocab-list [data-select-word]').first().click();
+  const supplementary = page.locator("#word-detail .detail-supplementary");
+  assert.equal(await supplementary.count(), 1, "collocations should be available without crowding the primary word detail");
+  assert.equal(await supplementary.evaluate(el => el.open), false, "supplementary context should start collapsed");
+  await supplementary.locator("summary").click();
+  assert.equal(await supplementary.evaluate(el => el.open), true, "learners can expand supplementary context when needed");
+
   await page.locator('[data-view-target="reading"]').first().click();
   await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 20000 });
   await page.locator('[data-reading-mode="skills"]').click();
