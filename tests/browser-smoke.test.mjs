@@ -1054,3 +1054,28 @@ test("Listening Lab B2 exercise asks learners to distinguish contrast and infer 
   assert.deepEqual(pageErrors, [], "B2 Listening Lab should not throw browser JavaScript errors");
   await page.close();
 });
+
+
+test("Listening Lab keeps the exercise usable when browser speech synthesis is unavailable", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "speechSynthesis", { configurable: true, value: undefined });
+    window.SpeechSynthesisUtterance = undefined;
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-listening-open="booking-a-study-room"]').click();
+  await page.locator("#listening-lab-reader").waitFor({ state: "visible" });
+  await page.locator("[data-listening-play]").click();
+  await page.locator("#listening-lab-transcript").waitFor({ state: "visible" });
+  assert.match(await page.locator(".listening-lab-player").innerText(), /tidak tersedia/i);
+  assert.match(await page.locator("#listening-lab-transcript").innerText(), /study room/);
+  assert.deepEqual(pageErrors, [], "speech-synthesis fallback should not throw browser JavaScript errors");
+  await page.close();
+});
