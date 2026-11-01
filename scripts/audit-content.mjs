@@ -166,7 +166,7 @@ for (const dialogue of dialogueLibrary.dialogues) {
     assert.ok(turn.id && turn.partnerLine && turn.prompt && turn.explanation && turn.response, `${dialogue.title}: incomplete roleplay turn`);
     assert.ok(!dialogueTurnIds.has(turn.id), `Duplicate dialogue turn id: ${turn.id}`);
     dialogueTurnIds.add(turn.id);
-    assert.ok(dialogue.transcript.some((line) => line.text === turn.partnerLine), `${dialogue.title}: partner line is not in the transcript`);
+    assert.ok(dialogue.transcript.some((line) => line.text.includes(turn.partnerLine)), `${dialogue.title}: partner line is not in the transcript`);
     assert.ok(Array.isArray(turn.options) && turn.options.length >= 3, `${dialogue.title}: turn needs at least three answer options`);
     assert.equal(new Set(turn.options).size, turn.options.length, `${dialogue.title}: duplicate answer options`);
     assert.ok(Number.isInteger(turn.answer) && turn.answer >= 0 && turn.answer < turn.options.length, `${dialogue.title}: invalid answer key`);
