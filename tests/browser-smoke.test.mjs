@@ -2135,6 +2135,16 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   await page.locator(".side-nav [data-view-target='reading']").click();
   assert.equal(await page.locator("#habit-library-section").isVisible(), true);
   assert.equal(await page.locator("#reading-skills-section").isVisible(), false);
+  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"));
+  const firstHabit = page.locator("#habit-library-list [data-habit-open]").first();
+  await firstHabit.click();
+  assert.equal(await page.locator("#habit-library-section").evaluate(el => el.classList.contains("is-detail-open")), true);
+  assert.equal(await page.locator("#habit-library-list").isVisible(), false);
+  assert.equal(await page.locator("#habit-library-detail").isVisible(), true);
+  await page.locator("#habit-library-detail [data-habit-back]").click();
+  assert.equal(await page.locator("#habit-library-section").evaluate(el => el.classList.contains("is-detail-open")), false);
+  assert.equal(await page.locator("#habit-library-list").isVisible(), true);
+  assert.equal(await page.locator("#reading-skills-section").isVisible(), false);
   const skillsTab = page.locator("#reading-mode-skills-tab");
   await skillsTab.press("ArrowLeft");
   assert.equal(await page.locator("#reading-mode-habit-tab").getAttribute("aria-selected"), "true");
