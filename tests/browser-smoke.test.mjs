@@ -2114,6 +2114,11 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   assert.equal(await page.locator("#view-grammar").isVisible(), true);
   assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "vocabulary");
+  assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
+  await page.locator("#grammar-topic-list [data-topic-id]").first().click();
+  assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), true);
+  await page.locator("[data-grammar-back]").click();
+  assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
 
   await page.locator(".side-nav [data-view-target='reading']").click();
   assert.equal(await page.locator("#habit-library-section").isVisible(), true);
@@ -2125,14 +2130,27 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   assert.equal(await page.locator("#habit-library-section").isVisible(), false);
   assert.equal(await page.locator("#reading-skills-section").isVisible(), true);
   assert.equal(await page.locator("#reading-mode-skills-tab").getAttribute("aria-selected"), "true");
+  const firstSkill = page.locator("#reading-skill-list [data-reading-skill]").first();
+  await firstSkill.click();
+  assert.equal(await page.locator("#reading-skills-section").evaluate(el => el.classList.contains("is-detail-open")), true);
+  await page.locator("#reading-lesson [data-reading-back]").click();
+  assert.equal(await page.locator("#reading-skills-section").evaluate(el => el.classList.contains("is-detail-open")), false);
+
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  assert.equal(await page.locator("#progress-mastered").count(), 1);
+  assert.equal(await page.locator(".progress-history-details").evaluate(el => el.open), false);
+  assert.equal(await page.locator("#export-backup").isVisible(), true);
 
   await page.locator(".side-nav [data-view-target='overview']").click();
   await page.locator("#home-adventure-link").click();
   assert.equal(await page.locator("#view-adventure").isVisible(), true);
   assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
 
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  assert.ok(overflow <= 1, "the mobile workspace should not create horizontal page overflow");
+  for (const width of [360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(overflow <= 1, `the workspace should not overflow horizontally at ${width}px`);
+  }
   assert.deepEqual(pageErrors, [], "workspace navigation should not throw browser JavaScript errors");
   await page.close();
 });
