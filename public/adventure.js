@@ -1396,7 +1396,7 @@
     }
     node.innerHTML =
       '<div class="pronunciation-studio-reader" id="pronunciation-studio-reader">' +
-        '<div class="pronunciation-studio-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(exercise.level) + '</span><span>·</span><span>' + history + ' RINGKASAN TERSIMPAN</span></div><button class="pronunciation-studio-button is-secondary" type="button" data-pronunciation-close>← Koleksi</button></div>' +
+        '<div class="pronunciation-studio-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(exercise.level) + '</span><span>·</span><span>' + escapeHtml(exercise.focus) + '</span><span>·</span><span>' + history + ' RINGKASAN TERSIMPAN</span></div><button class="pronunciation-studio-button is-secondary" type="button" data-pronunciation-close>← Koleksi</button></div>' +
         '<h3 class="pronunciation-studio-title">' + escapeHtml(exercise.title) + '</h3><p class="pronunciation-studio-meaning">' + escapeHtml(exercise.meaning) + '</p>' +
         '<div class="pronunciation-studio-target-label">SAY THIS PHRASE</div><div class="pronunciation-studio-target">' + escapeHtml(exercise.phrase) + '</div>' +
         '<div class="pronunciation-studio-reference"><button class="pronunciation-studio-button is-reference" type="button" data-pronunciation-reference>▶ Dengarkan contoh</button><span>' + (pronunciationRun.referenceUnavailable ? 'Suara contoh tidak tersedia di browser ini.' : 'Contoh suara dibuat oleh browser.') + '</span></div>' +
