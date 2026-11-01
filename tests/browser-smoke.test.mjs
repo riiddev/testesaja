@@ -712,7 +712,7 @@ test("Placement Check progresses through all four bands when answers are consist
 
   await page.locator("#placement-teaser-action").click();
   await page.locator("#placement-start").click();
-  const correctAnswers = [1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0];
+  const correctAnswers = [1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0];
   for (const answer of correctAnswers) {
     await page.locator('[data-placement-answer="' + answer + '"]').click();
     await page.locator("#placement-next").click();
