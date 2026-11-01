@@ -699,7 +699,7 @@ test("Everyday Stories supports graded reading, comprehension feedback, and save
   }
 
   await page.locator("#adventure-story-result").waitFor({ state: "visible" });
-  assert.match(await page.locator("#adventure-story-result").innerText(), /3\\/3/);
+  assert.ok((await page.locator("#adventure-story-result").innerText()).includes("3/3"));
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
   assert.ok(saved?.storyProgress?.["a-helpful-neighbor"]?.completedAt, "a passing story attempt should be saved");
   assert.equal(saved.storyProgress["a-helpful-neighbor"].attempts.length, 1);
