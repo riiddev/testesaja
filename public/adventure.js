@@ -481,7 +481,7 @@
     selectedMissionId = missionId; currentFeedback = null; listenReady = false; listenTranscriptVisible = false; renderAll();
   }
   function playText(text) {
-    if (!("speechSynthesis" in window) || typeof window.SpeechSynthesisUtterance !== "function") return false;
+    if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return false;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text || "");
     utterance.lang = "en-US";
@@ -1490,13 +1490,15 @@
     targetRun.requesting = true;
     renderPronunciationStudio();
     if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
-      pronunciationRun.captureError = "Browser ini tidak menyediakan akses mikrofon. Kamu tetap bisa memakai contoh suara dan panduan visual.";
+      targetRun.requesting = false;
+      targetRun.captureError = "Browser ini tidak menyediakan akses mikrofon. Kamu tetap bisa memakai contoh suara dan panduan visual.";
       renderPronunciationStudio();
       return;
     }
     const AudioContextType = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextType) {
-      pronunciationRun.captureError = "Analisis audio lokal tidak didukung browser ini. Contoh suara dan panduan tetap bisa digunakan.";
+      targetRun.requesting = false;
+      targetRun.captureError = "Analisis audio lokal tidak didukung browser ini. Contoh suara dan panduan tetap bisa digunakan.";
       renderPronunciationStudio();
       return;
     }
