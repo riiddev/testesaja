@@ -2081,3 +2081,58 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
   assert.deepEqual(pageErrors, [], "backup restoration should not throw browser JavaScript errors");
   await page.close();
 });
+
+
+test("workspace IA keeps five primary destinations, keyboard tabs, and a reachable Adventure route", async () => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "ia-preview-access",
+      refresh_token: "ia-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "ia-preview-user", email: "ia-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  const primaryLabels = await page.locator(".side-nav .side-link").evaluateAll((nodes) =>
+    nodes.map((node) => node.querySelectorAll("span")[1]?.textContent.trim())
+  );
+  assert.deepEqual(primaryLabels, ["Beranda", "Belajar", "Bacaan", "Review", "Progres"]);
+  assert.equal(await page.locator(".side-nav [data-view-target='adventure']").count(), 0);
+  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
+
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  assert.equal(await page.locator("#view-vocabulary").isVisible(), true);
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
+  assert.equal(await page.locator("#view-grammar").isVisible(), true);
+  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "vocabulary");
+
+  await page.locator(".side-nav [data-view-target='reading']").click();
+  assert.equal(await page.locator("#habit-library-section").isVisible(), true);
+  assert.equal(await page.locator("#reading-skills-section").isVisible(), false);
+  const skillsTab = page.locator("#reading-mode-skills-tab");
+  await skillsTab.press("ArrowLeft");
+  assert.equal(await page.locator("#reading-mode-habit-tab").getAttribute("aria-selected"), "true");
+  await skillsTab.click();
+  assert.equal(await page.locator("#habit-library-section").isVisible(), false);
+  assert.equal(await page.locator("#reading-skills-section").isVisible(), true);
+  assert.equal(await page.locator("#reading-mode-skills-tab").getAttribute("aria-selected"), "true");
+
+  await page.locator(".side-nav [data-view-target='overview']").click();
+  await page.locator("#home-adventure-link").click();
+  assert.equal(await page.locator("#view-adventure").isVisible(), true);
+  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  assert.ok(overflow <= 1, "the mobile workspace should not create horizontal page overflow");
+  assert.deepEqual(pageErrors, [], "workspace navigation should not throw browser JavaScript errors");
+  await page.close();
+});
