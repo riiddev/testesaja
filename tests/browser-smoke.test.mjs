@@ -522,8 +522,159 @@ test("Mistake Journal records a wrong answer and marks it fixed after a correct 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
   const mistakes = Object.values(saved?.mistakeJournal || {});
   assert.equal(mistakes.length, 1, "a wrong answer should create one journal entry");
-  assert.ok(mistakes[0].resolvedAt, "a correct retry should resolve the journal entry");
+  assert.ok(mistakes[0].resolvedAt, "a correct retry should start spaced review");
+  assert.equal(mistakes[0].reviewStage, 1, "the first successful recall should count as review 1 of 4");
+  assert.ok(Date.parse(mistakes[0].nextReviewAt) > Date.now(), "the next recall should be scheduled in the future");
   assert.deepEqual(pageErrors, [], "mistake review should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Mistake Journal supports focused recall and spaced review intervals", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "mistake-spaced-access",
+      refresh_token: "mistake-spaced-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "mistake-spaced-user", email: "mistake-spaced@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-adventure-start="meet-your-new-neighbors"]').click();
+  await page.locator('[data-adventure-answer="1"]').click();
+
+  const openRow = page.locator("#adventure-mistake-journal .adventure-mistake-row.is-open").first();
+  await openRow.waitFor({ state: "visible" });
+  assert.equal(await openRow.locator(".adventure-mistake-details .is-correct").isVisible(), false,
+    "the answer should stay collapsed before a focused retry");
+  await openRow.locator("[data-mistake-review-one]").click();
+  const review = page.locator("#adventure-mistake-journal .adventure-mistake-review");
+  await review.waitFor({ state: "visible" });
+  assert.equal(await review.locator("[data-mistake-answer]").count(), 3);
+
+  await review.locator('[data-mistake-answer="1"]').click();
+  assert.match(await review.innerText(), /Belum tepat/);
+  assert.ok(!/A neighbor/.test(await review.innerText()), "wrong retries must not reveal the correct answer");
+  await review.locator('[data-mistake-answer="0"]').click();
+  assert.match(await review.innerText(), /Review 1\/4 berhasil/);
+  const afterFirstRecall = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null");
+    return Object.values(state?.mistakeJournal || {})[0];
+  });
+  assert.equal(afterFirstRecall.reviewStage, 1);
+  assert.ok(afterFirstRecall.resolvedAt);
+  assert.ok(Date.parse(afterFirstRecall.nextReviewAt) - Date.now() >= 23 * 60 * 60 * 1000,
+    "first successful recall should schedule the next one about a day later");
+
+  await page.locator("[data-mistake-review-close]").click();
+  await page.locator('[data-mistake-filter="reviewing"]').click();
+  const scheduledRow = page.locator("#adventure-mistake-journal .adventure-mistake-row.is-reviewing").first();
+  await scheduledRow.waitFor({ state: "visible" });
+  assert.equal(await scheduledRow.locator("button:disabled").count(), 1,
+    "the same mistake should not be repeatable before its due date");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-mistake-filter="reviewing"]').click();
+  assert.equal(await page.locator("#adventure-mistake-journal .adventure-mistake-row.is-reviewing").count(), 1,
+    "review schedule should survive reload");
+  assert.deepEqual(pageErrors, [], "focused spaced review should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Spaced Mistake Review advances 1, 3, and 7-day stages and only then marks mastery", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    const now = Date.now();
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "mistake-interval-access",
+      refresh_token: "mistake-interval-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(now / 1000) + 7200,
+      user: { id: "mistake-interval-user", email: "mistake-interval@example.com" },
+    }));
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify({
+      schemaVersion: 1,
+      mistakeJournal: {
+        "spaced-review-fixture": {
+          mistakeId: "spaced-review-fixture",
+          sourceType: "mission",
+          sourceId: "fixture",
+          missionId: "meet-your-new-neighbors",
+          stepId: "word-neighbor",
+          skill: "vocabulary",
+          prompt: "Which word describes someone who lives next door to you?",
+          wrongAnswer: "A passenger",
+          correctAnswer: "A neighbor",
+          explanation: "A neighbor lives near you.",
+          recordedAt: new Date(now - 10 * 86400000).toISOString(),
+          resolvedAt: new Date(now - 10 * 86400000).toISOString(),
+          reviewStage: 1,
+          nextReviewAt: new Date(now - 86400000).toISOString(),
+          reviewHistory: [{ reviewedAt: new Date(now - 10 * 86400000).toISOString(), correct: true, stage: 1 }]
+        }
+      }
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+
+  async function answerCurrentDueMistake() {
+    await page.locator('[data-mistake-filter="due"]').click();
+    const row = page.locator("#adventure-mistake-journal .adventure-mistake-row.is-reviewing, #adventure-mistake-journal .adventure-mistake-row.is-open").first();
+    await row.waitFor({ state: "visible" });
+    await row.locator("[data-mistake-review-one]").click();
+    const panel = page.locator("#adventure-mistake-journal .adventure-mistake-review");
+    await panel.waitFor({ state: "visible" });
+    await panel.locator('[data-mistake-answer="0"]').click();
+    return page.evaluate(() => Object.values(JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null").mistakeJournal)[0]);
+  }
+
+  const second = await answerCurrentDueMistake();
+  assert.equal(second.reviewStage, 2);
+  assert.ok(Date.parse(second.nextReviewAt) - Date.now() >= 71 * 60 * 60 * 1000,
+    "the second successful review should schedule roughly three days later");
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1"));
+    state.mistakeJournal["spaced-review-fixture"].nextReviewAt = "2000-01-01T00:00:00.000Z";
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(state));
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const third = await answerCurrentDueMistake();
+  assert.equal(third.reviewStage, 3);
+  assert.ok(Date.parse(third.nextReviewAt) - Date.now() >= 6 * 86400000,
+    "the third successful review should schedule roughly seven days later");
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1"));
+    state.mistakeJournal["spaced-review-fixture"].nextReviewAt = "2000-01-01T00:00:00.000Z";
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(state));
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const mastered = await answerCurrentDueMistake();
+  assert.equal(mastered.reviewStage, 4);
+  assert.ok(mastered.masteredAt);
+  assert.equal(mastered.nextReviewAt, null);
+  assert.deepEqual(pageErrors, [], "spaced review scheduling should not throw browser JavaScript errors");
   await page.close();
 });
 
