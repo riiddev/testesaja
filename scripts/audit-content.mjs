@@ -261,3 +261,18 @@ const speakingPromptSection = adventureScript.slice(
 assert.ok(speakingPromptSection.includes('id: "present-study-proposal"'), "Speaking Studio should include a B2 discussion scenario");
 assert.ok((speakingPromptSection.match(/partnerLine:/g) || []).length >= 15, "Speaking Studio should provide at least three partner turns for five scenarios");
 assert.ok(speakingPromptSection.includes("I addressed a different viewpoint fairly before responding."), "Speaking Studio should include reflection on handling a counterargument");
+
+
+
+const writingPromptSection = adventureScript.slice(
+  adventureScript.indexOf("    writing: [", adventureScript.indexOf("  const STUDIO_PROMPTS = {")),
+  adventureScript.indexOf("    ]", adventureScript.indexOf("    writing: [", adventureScript.indexOf("  const STUDIO_PROMPTS = {")))
+);
+for (const id of ["short-introduction", "weekend-story", "helpful-message", "study-reflection", "balanced-proposal"]) {
+  assert.ok(writingPromptSection.includes('id: "' + id + '"'), `Writing Studio is missing ${id}`);
+}
+for (const level of ["A1", "A1–A2", "A2", "B1", "B2"]) {
+  assert.ok(writingPromptSection.includes('level: "' + level + '"'), `Writing Studio is missing level ${level}`);
+}
+assert.ok(writingPromptSection.includes("I acknowledged a limitation and addressed it fairly."), "B2 Writing Studio should encourage balanced argument");
+
