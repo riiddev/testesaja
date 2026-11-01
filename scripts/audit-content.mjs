@@ -175,10 +175,53 @@ for (const dialogue of dialogueLibrary.dialogues) {
 }
 assert.ok(dialogueLevels.has("A1") && dialogueLevels.has("A2") && dialogueLevels.has("B1") && dialogueLevels.has("B2"), "Everyday English should cover A1 through B2");
 
+
+const listeningLibrary = json("public/data/adventure/listening.json");
+assert.equal(listeningLibrary.schemaVersion, 1, "Listening Lab schema version changed");
+assert.ok(Array.isArray(listeningLibrary.exercises) && listeningLibrary.exercises.length >= 4, "Expected at least four Listening Lab exercises");
+const listeningIds = new Set();
+const listeningStageIds = new Set();
+const listeningLevels = new Set();
+const listeningKinds = ["gist", "detail", "inference"];
+for (const exercise of listeningLibrary.exercises) {
+  assert.ok(exercise.id && exercise.title && exercise.subtitle && exercise.setting, "Every Listening Lab exercise needs an id, title, subtitle, and setting");
+  assert.ok(!listeningIds.has(exercise.id), `Duplicate Listening Lab exercise id: ${exercise.id}`);
+  listeningIds.add(exercise.id);
+  assert.ok(["A1", "A2", "B1", "B2"].includes(exercise.level), `${exercise.title}: invalid CEFR guide level`);
+  listeningLevels.add(exercise.level);
+  assert.ok(Number.isInteger(exercise.estimatedMinutes) && exercise.estimatedMinutes > 0, `${exercise.title}: invalid time estimate`);
+  assert.ok(Array.isArray(exercise.transcript) && exercise.transcript.length >= 4, `${exercise.title}: transcript is missing`);
+  const transcriptText = exercise.transcript.map((line) => {
+    assert.ok(line && typeof line.speaker === "string" && line.speaker.trim() && typeof line.text === "string" && line.text.trim(), `${exercise.title}: invalid transcript line`);
+    return line.speaker + ": " + line.text;
+  }).join(" ");
+  assert.ok(Array.isArray(exercise.focusWords) && exercise.focusWords.length >= 3, `${exercise.title}: at least three focus words are required`);
+  for (const focus of exercise.focusWords) {
+    const entry = vocabularyById.get(focus.id);
+    assert.ok(entry, `${exercise.title}: unknown vocabulary id ${focus.id}`);
+    assert.equal(String(focus.word).toLocaleLowerCase("en"), entry.word.toLocaleLowerCase("en"), `${exercise.title}: focus word does not match ${focus.id}`);
+    assert.ok(typeof focus.meaning === "string" && focus.meaning.trim(), `${exercise.title}: missing Indonesian gloss for ${focus.word}`);
+  }
+  assert.ok(Array.isArray(exercise.stages) && exercise.stages.length === 3, `${exercise.title}: expected exactly three listening stages`);
+  for (const [index, stage] of exercise.stages.entries()) {
+    assert.ok(stage && stage.id && stage.label && stage.prompt && stage.explanation, `${exercise.title}: incomplete listening stage`);
+    assert.ok(!listeningStageIds.has(stage.id), `Duplicate Listening Lab stage id: ${stage.id}`);
+    listeningStageIds.add(stage.id);
+    assert.equal(stage.kind, listeningKinds[index], `${exercise.title}: stage order must be gist, detail, then inference`);
+    assert.ok(typeof stage.audioText === "string" && stage.audioText.trim(), `${exercise.title}: missing stage audio text`);
+    assert.ok(transcriptText.includes(stage.audioText), `${exercise.title}: stage audio text must be grounded in its transcript`);
+    assert.ok(Array.isArray(stage.options) && stage.options.length >= 3, `${exercise.title}: stage needs at least three options`);
+    assert.equal(new Set(stage.options).size, stage.options.length, `${exercise.title}: duplicate stage options`);
+    assert.ok(Number.isInteger(stage.answer) && stage.answer >= 0 && stage.answer < stage.options.length, `${exercise.title}: invalid stage answer key`);
+  }
+}
+assert.ok(["A1", "A2", "B1", "B2"].every((level) => listeningLevels.has(level)), "Listening Lab should cover A1 through B2");
+
 console.log("Content audit passed.");
 console.log(`- Vocabulary: ${vocabulary.entries.length} unique headwords; ${importedDraftCount} imported rows stay explicitly flagged for human review.`);
 console.log(`- HABIT library: ${habit.passages.length} unique passages; ${storedWordCount.toLocaleString("en-US")} words; 175 physical PDF pages / 174 numbered content pages.`);
 console.log(`- Reading skills: ${reading.skills.length} skills and ${questionCount} checked questions.`);
 console.log(`- Everyday Stories: ${storyLibrary.stories.length} stories across A1–B2; focus words link to checked vocabulary IDs and all question keys are valid.`);
 console.log(`- Everyday English: ${dialogueLibrary.dialogues.length} situational scenarios across A1–B2; response keys, transcript lines, vocabulary IDs, and Speaking Studio links are valid.`);
+console.log(`- Listening Lab: ${listeningLibrary.exercises.length} staged exercises across A1–B2; audio excerpts align with transcripts, focus words link to vocabulary, and all three answer keys per exercise are valid.`);
 console.log("- Root/public JSON mirrors match byte-for-byte.");
