@@ -2121,6 +2121,11 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   assert.deepEqual(primaryLabels, ["Beranda", "Belajar", "Bacaan", "Review", "Progres"]);
   assert.equal(await page.locator(".side-nav [data-view-target='adventure']").count(), 0);
   assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
+  assert.equal(await page.locator("#home-primary-label").innerText(), "Mulai sesi pertama");
+  await page.locator("#home-primary-action").click();
+  assert.equal(await page.locator("#view-study").isVisible(), true,
+    "a new learner should be taken directly into their first guided session");
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
   assert.equal(await page.locator(".side-nav").evaluate(el => getComputedStyle(el).position), "fixed",
     "the primary navigation should remain thumb-reachable at the bottom on mobile");
 
@@ -2144,8 +2149,13 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
   await page.locator("#grammar-topic-list [data-topic-id]").first().click();
   assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), true);
+  await page.locator("#lesson-panel .lesson-answer").first().click();
+  await page.locator("#lesson-panel .lesson-feedback").waitFor({state:"visible"});
   await page.locator("[data-grammar-back]").click();
   assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
+  await page.locator(".side-nav [data-view-target='overview']").click();
+  assert.equal(await page.locator("#home-primary-label").innerText(), "Lanjutkan belajar",
+    "a learner with saved activity should see the continue-learning CTA");
 
   await page.locator(".side-nav [data-view-target='reading']").click();
   assert.equal(await page.locator("#habit-library-section").isVisible(), true);
