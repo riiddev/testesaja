@@ -2,7 +2,7 @@ name: Content and browser quality gates
 
 on:
   pull_request:
-    branches: [main, preview/everyday-stories, preview/listening-lab, preview/pronunciation-studio, preview/speaking-studio]
+    branches: [main, preview/everyday-stories, preview/listening-lab, preview/pronunciation-studio, preview/speaking-studio, preview/writing-studio]
   push:
     branches: [main]
   workflow_dispatch:
