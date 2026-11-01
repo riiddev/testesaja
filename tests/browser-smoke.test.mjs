@@ -631,6 +631,9 @@ test("Speaking and Writing Studios persist local drafts but export only privacy-
   const privateDraft = "Last weekend I visited my cousin in town. We walked around the old market and bought some fresh fruit. After that, we had lunch together at a small café. The weather was warm, and I felt happy because we had time to talk.";
   await page.locator("#studio-writing-draft").fill(privateDraft);
   assert.match(await page.locator("#studio-writing-count").innerText(), /\d+ words/);
+  const privateRevision = "Last weekend, I visited my cousin in town. First, we walked around the old market and bought some fresh fruit. Then, we had lunch together at a small café. The warm weather made the afternoon relaxing. As a result, I felt happy because we had time to talk and catch up. I would like to repeat this visit next month.";
+  await page.locator("#studio-writing-revision").fill(privateRevision);
+  await page.locator("#studio-writing-revision-count").waitFor();
   for (const index of [0, 1, 2]) {
     await page.locator('#adventure-writing-studio [data-studio-check="' + index + '"]').check();
   }
@@ -641,9 +644,9 @@ test("Speaking and Writing Studios persist local drafts but export only privacy-
   const localBackup = await page.evaluate(() => window.sinauuAdventureBackup());
   assert.equal(localBackup.studioSessions.length, 2, "both studio sessions should be recorded");
   assert.ok(localBackup.studioSessions.some((item) => item.studioType === "writing" && item.wordCount >= 25));
-  assert.ok(!JSON.stringify(localBackup).includes(privateDraft), "raw writing must not be included in Adventure progress");
+  assert.ok(!JSON.stringify(localBackup).includes(privateDraft) && !JSON.stringify(localBackup).includes(privateRevision), "raw writing and revision must not be included in Adventure progress");
   const cloudBundle = await page.evaluate(() => window.sinauuExportLocalBundle());
-  assert.ok(!JSON.stringify(cloudBundle.extras.adventureProgress).includes(privateDraft), "raw writing must not enter CloudBundle");
+  assert.ok(!JSON.stringify(cloudBundle.extras.adventureProgress).includes(privateDraft) && !JSON.stringify(cloudBundle.extras.adventureProgress).includes(privateRevision), "raw writing and revision must not enter CloudBundle");
   assert.ok(cloudBundle.extras.adventureProgress.studioSessions.length === 2, "session summaries should be included in CloudBundle");
 
   await page.reload({ waitUntil: "domcontentloaded" });
