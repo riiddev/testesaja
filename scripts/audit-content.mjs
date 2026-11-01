@@ -251,3 +251,13 @@ console.log(`- Everyday English: ${dialogueLibrary.dialogues.length} situational
 console.log(`- Listening Lab: ${listeningLibrary.exercises.length} staged exercises across A1–B2; audio excerpts align with transcripts, focus words link to vocabulary, and all three answer keys per exercise are valid.`);
 console.log(`- Pronunciation Studio: ${pronunciationLibrary.exercises.length} guided speaking phrases across A1–B2; stress targets, thought groups, intonation notes, and local-analysis disclosure are checked.`);
 console.log("- Root/public JSON mirrors match byte-for-byte.");
+
+
+const adventureScript = readFileSync("public/adventure.js", "utf8");
+const speakingPromptSection = adventureScript.slice(
+  adventureScript.indexOf("  const STUDIO_PROMPTS = {"),
+  adventureScript.indexOf("  const STUDIO_DRAFTS_KEY")
+);
+assert.ok(speakingPromptSection.includes('id: "present-study-proposal"'), "Speaking Studio should include a B2 discussion scenario");
+assert.ok((speakingPromptSection.match(/partnerLine:/g) || []).length >= 15, "Speaking Studio should provide at least three partner turns for five scenarios");
+assert.ok(speakingPromptSection.includes("I addressed a different viewpoint fairly before responding."), "Speaking Studio should include reflection on handling a counterargument");
