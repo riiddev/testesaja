@@ -426,6 +426,33 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
     };
   }
 
+
+  const localListening = local.listeningProgress || {}, remoteListening = remote.listeningProgress || {};
+  result.listeningProgress = {};
+  for (const exerciseId of new Set([...Object.keys(localListening), ...Object.keys(remoteListening)])) {
+    const a = localListening[exerciseId] || {}, b = remoteListening[exerciseId] || {};
+    const attemptsById = new Map<string, AnyRecord>();
+    for (const attempt of [...(Array.isArray(a.attempts) ? a.attempts : []), ...(Array.isArray(b.attempts) ? b.attempts : [])]) {
+      if (!attempt || typeof attempt.attemptId !== "string" || !Number.isInteger(attempt.score) || !Number.isInteger(attempt.total)) continue;
+      const previous = attemptsById.get(attempt.attemptId);
+      const previousTime = Date.parse(previous?.completedAt || "") || 0;
+      const attemptTime = Date.parse(attempt.completedAt || "") || 0;
+      if (!previous || attemptTime >= previousTime) attemptsById.set(attempt.attemptId, attempt);
+    }
+    const attempts = Array.from(attemptsById.values())
+      .sort((x, y) => String(x.completedAt || "").localeCompare(String(y.completedAt || "")))
+      .slice(-100);
+    const completionDates = [a.completedAt, b.completedAt, ...attempts.filter((attempt) => attempt.passed).map((attempt) => attempt.completedAt)]
+      .filter((value) => typeof value === "string").sort();
+    const updateTimes = [Date.parse(a.updatedAt || "") || 0, Date.parse(b.updatedAt || "") || 0];
+    result.listeningProgress[exerciseId] = {
+      attempts,
+      bestScore: Math.max(Number(a.bestScore) || 0, Number(b.bestScore) || 0, ...attempts.map((attempt) => Number(attempt.score) || 0)),
+      completedAt: completionDates[0] || null,
+      updatedAt: new Date(Math.max(...updateTimes) || Date.now()).toISOString(),
+    };
+  }
+
   const localDialogues = local.dialogueProgress || {}, remoteDialogues = remote.dialogueProgress || {};
   result.dialogueProgress = {};
   for (const dialogueId of new Set([...Object.keys(localDialogues), ...Object.keys(remoteDialogues)])) {
