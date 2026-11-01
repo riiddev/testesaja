@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "title": "Everyday Stories",
+  "note": "Cerita pendek orisinal untuk latihan membaca, listening opsional, dan pemahaman konteks. Level adalah panduan editorial, bukan hasil sertifikasi.",
+  "stories": [
+    {
+      "id": "a-helpful-neighbor",
+      "level": "A1",
+      "title": "A Helpful Neighbor",
+      "subtitle": "A small favour can start a friendship.",
+      "estimatedMinutes": 5,
+      "paragraphs": [
+        "On Saturday morning, Rina wants to clean her small garden. She usually works alone, but her new neighbor, Maya, comes outside and offers to help.",
+        "Rina needs a small watering can. Maya smiles and says, “You can borrow mine.” They water the plants together and move a few pots into the sunshine.",
+        "When they finish, Rina thanks Maya and invites her for tea. They talk for a while. Rina is happy because she has made a new friend."
+      ],
+      "focusWords": [
+        {
+          "id": "a1-neighbor",
+          "word": "neighbor",
+          "meaning": "tetangga"
+        },
+        {
+          "id": "a1-usually",
+          "word": "usually",
+          "meaning": "biasanya"
+        },
+        {
+          "id": "a1-borrow",
+          "word": "borrow",
+          "meaning": "meminjam"
+        }
+      ],
+      "questions": [
+        {
+          "id": "hn-q1",
+          "prompt": "Why does Rina want to meet Maya?",
+          "options": [
+            "She needs help in her garden.",
+            "She wants to buy a new house.",
+            "She is looking for a bus stop."
+          ],
+          "answer": 0,
+          "explanation": "Rina is cleaning her garden, and Maya offers to help."
+        },
+        {
+          "id": "hn-q2",
+          "prompt": "What does Rina borrow?",
+          "options": [
+            "A pair of shoes",
+            "A watering can",
+            "A cup of tea"
+          ],
+          "answer": 1,
+          "explanation": "Maya lends Rina a small watering can."
+        },
+        {
+          "id": "hn-q3",
+          "prompt": "What does “usually” tell us about Rina?",
+          "options": [
+            "Something she does regularly",
+            "Something she did only once",
+            "Something she will never do"
+          ],
+          "answer": 0,
+          "explanation": "Usually describes a habit or something that happens on most occasions."
+        }
+      ]
+    },
+    {
+      "id": "the-wrong-turn",
+      "level": "A2",
+      "title": "The Wrong Turn",
+      "subtitle": "Finding a new route through town.",
+      "estimatedMinutes": 6,
+      "paragraphs": [
+        "Arman is walking to a new bookshop near the station. He has never visited it before, so he checks the address on his phone before leaving home.",
+        "At the first corner, he notices a small sign. He decides to follow the road across the park, but the path is closed for repairs. Instead of turning back, he checks the map and chooses another street.",
+        "The second route is a little longer, but it is easy to follow. Arman arrives ten minutes later than planned. He writes down the correct route so he can find the bookshop more quickly next time."
+      ],
+      "focusWords": [
+        {
+          "id": "batch-corner-noun",
+          "word": "corner",
+          "meaning": "sudut atau tikungan"
+        },
+        {
+          "id": "a2-notice",
+          "word": "notice",
+          "meaning": "memperhatikan atau menyadari"
+        },
+        {
+          "id": "batch-decide-verb",
+          "word": "decide",
+          "meaning": "memutuskan"
+        },
+        {
+          "id": "a1-arrive",
+          "word": "arrive",
+          "meaning": "tiba"
+        }
+      ],
+      "questions": [
+        {
+          "id": "wt-q1",
+          "prompt": "Why does Arman check his phone before leaving?",
+          "options": [
+            "He wants to call the bookshop.",
+            "He does not know the address by memory.",
+            "He needs to repair the road."
+          ],
+          "answer": 1,
+          "explanation": "The bookshop is new to Arman, so he checks its address."
+        },
+        {
+          "id": "wt-q2",
+          "prompt": "Why does Arman choose another street?",
+          "options": [
+            "The path through the park is closed.",
+            "The bookshop has moved to another town.",
+            "He wants to visit the station again."
+          ],
+          "answer": 0,
+          "explanation": "The path is closed for repairs, so he uses another route."
+        },
+        {
+          "id": "wt-q3",
+          "prompt": "What does Arman do after arriving?",
+          "options": [
+            "He forgets the route.",
+            "He writes down the route for next time.",
+            "He closes the bookshop."
+          ],
+          "answer": 1,
+          "explanation": "He records the correct route so the next visit will be easier."
+        }
+      ]
+    },
+    {
+      "id": "a-better-place-to-study",
+      "level": "B1",
+      "title": "A Better Place to Study",
+      "subtitle": "A group of students improves a shared space.",
+      "estimatedMinutes": 7,
+      "paragraphs": [
+        "Students at a community center wanted a quiet place to prepare for their exams. The old room was often noisy, and the books they needed were not always available. Some students thought about studying at home instead, but not everyone had a suitable space.",
+        "Rather than simply complaining, they asked the center manager to explain the schedule for the other rooms. They shared ideas, arranged a weekly timetable, and put a noticeboard near the entrance so everyone could see when a room was free.",
+        "The new system did not solve every problem. Students still needed to book a room in advance and keep it tidy. However, more people could plan their study time, and the shared space became a little more useful for the whole community."
+      ],
+      "focusWords": [
+        {
+          "id": "a2-available",
+          "word": "available",
+          "meaning": "tersedia atau dapat digunakan"
+        },
+        {
+          "id": "a2-prepare",
+          "word": "prepare",
+          "meaning": "mempersiapkan"
+        },
+        {
+          "id": "batch-explain-verb",
+          "word": "explain",
+          "meaning": "menjelaskan"
+        },
+        {
+          "id": "a1-improve",
+          "word": "improve",
+          "meaning": "menjadi lebih baik atau memperbaiki"
+        }
+      ],
+      "questions": [
+        {
+          "id": "bs-q1",
+          "prompt": "What was the main problem with the old study room?",
+          "options": [
+            "It was often noisy and resources were not always available.",
+            "It was too far from the community center.",
+            "Students were not allowed to use books."
+          ],
+          "answer": 0,
+          "explanation": "The passage explains that the room was noisy and needed books were not always available."
+        },
+        {
+          "id": "bs-q2",
+          "prompt": "How did the students respond to the problem?",
+          "options": [
+            "They stopped studying for their exams.",
+            "They organized a timetable and shared room availability.",
+            "They asked the center to close all other rooms."
+          ],
+          "answer": 1,
+          "explanation": "They worked with the manager, created a timetable, and added a noticeboard."
+        },
+        {
+          "id": "bs-q3",
+          "prompt": "What is the main idea of the story?",
+          "options": [
+            "A shared problem can improve when people organize and cooperate.",
+            "A study room should never have any rules.",
+            "Studying at home is always better than studying together."
+          ],
+          "answer": 0,
+          "explanation": "The students improved a shared resource by communicating and organizing their time."
+        }
+      ]
+    }
+  ]
+}
