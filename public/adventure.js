@@ -1328,7 +1328,7 @@
       return '<article class="pronunciation-studio-card">' +
         '<div class="pronunciation-studio-card-top"><span class="adventure-story-level">' + escapeHtml(exercise.level) + '</span><span class="adventure-story-status">' + (latest ? 'PERNAH DILATIH' : 'LATIHAN BARU') + '</span></div>' +
         '<h4>' + escapeHtml(exercise.title) + '</h4><p>' + escapeHtml(exercise.category) + '</p>' +
-        '<div class="pronunciation-studio-card-meta"><span>' + escapeHtml(exercise.focus) + '</span><span>' + entry.attempts.length + ' rekaman</span></div>' +
+        '<div class="pronunciation-studio-card-meta"><span>' + escapeHtml(exercise.focus) + '</span><span>' + entry.attempts.length + ' percobaan</span></div>' +
         '<button class="pronunciation-studio-button" type="button" data-pronunciation-open="' + escapeHtml(exercise.id) + '">' + (latest ? 'Lanjut berlatih ↗' : 'Mulai latihan ↗') + '</button>' +
       '</article>';
     }).join("");
@@ -1362,6 +1362,7 @@
     const stressedWords = exercise.stressWords.map((word) => '<span>' + escapeHtml(word) + '</span>').join("");
     const tips = exercise.coaching.map((tip) => '<li>' + escapeHtml(tip) + '</li>').join("");
     const capture = pronunciationCapture;
+    const requesting = Boolean(pronunciationRun.requesting);
     let body = "";
     if (pronunciationRun.metrics) {
       const metrics = pronunciationRun.metrics;
@@ -1387,15 +1388,15 @@
     } else {
       body =
         '<section class="pronunciation-studio-recorder">' +
-          '<div class="pronunciation-studio-recorder-top"><div><strong>Rekam suaramu</strong><p>Tekan mulai, ucapkan frasa dengan nyaman, lalu tekan berhenti. Maksimal 12 detik.</p></div><span class="pronunciation-studio-recorder-status" id="pronunciation-capture-status">' + (capture ? 'SEDANG MEREKAM' : 'SIAP') + '</span></div>' +
+          '<div class="pronunciation-studio-recorder-top"><div><strong>Rekam suaramu</strong><p>Tekan mulai, ucapkan frasa dengan nyaman, lalu tekan berhenti. Maksimal 12 detik.</p></div><span class="pronunciation-studio-recorder-status" id="pronunciation-capture-status">' + (capture ? 'SEDANG MEREKAM' : requesting ? 'MENUNGGU IZIN' : 'SIAP') + '</span></div>' +
           '<div class="pronunciation-studio-meter"><i id="pronunciation-meter" style="width:' + (capture ? '10%' : '0%') + '"></i></div>' +
-          '<div class="pronunciation-studio-recorder-actions"><button class="pronunciation-studio-button" type="button" data-pronunciation-toggle>' + (capture ? '■ Berhenti merekam' : '● Mulai merekam') + '</button><span id="pronunciation-record-time">' + (capture ? '00:00' : 'Mikrofon belum aktif') + '</span></div>' +
+          '<div class="pronunciation-studio-recorder-actions"><button class="pronunciation-studio-button" type="button" data-pronunciation-toggle' + (requesting ? ' disabled' : '') + '>' + (capture ? '■ Berhenti merekam' : requesting ? 'Meminta izin mikrofon…' : '● Mulai merekam') + '</button><span id="pronunciation-record-time">' + (capture ? '00:00' : 'Mikrofon belum aktif') + '</span></div>' +
           '<p class="pronunciation-studio-capture-note" id="pronunciation-capture-note">' + escapeHtml(pronunciationRun.captureError || 'Peramban akan meminta izin mikrofon. Analisis berjalan di perangkat ini dan tidak membuat file rekaman.') + '</p>' +
         '</section>';
     }
     node.innerHTML =
       '<div class="pronunciation-studio-reader" id="pronunciation-studio-reader">' +
-        '<div class="pronunciation-studio-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(exercise.level) + '</span><span>·</span><span>' + history + ' REKAMAN TERSIMPAN</span></div><button class="pronunciation-studio-button is-secondary" type="button" data-pronunciation-close>← Koleksi</button></div>' +
+        '<div class="pronunciation-studio-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(exercise.level) + '</span><span>·</span><span>' + history + ' RINGKASAN TERSIMPAN</span></div><button class="pronunciation-studio-button is-secondary" type="button" data-pronunciation-close>← Koleksi</button></div>' +
         '<h3 class="pronunciation-studio-title">' + escapeHtml(exercise.title) + '</h3><p class="pronunciation-studio-meaning">' + escapeHtml(exercise.meaning) + '</p>' +
         '<div class="pronunciation-studio-target-label">SAY THIS PHRASE</div><div class="pronunciation-studio-target">' + escapeHtml(exercise.phrase) + '</div>' +
         '<div class="pronunciation-studio-reference"><button class="pronunciation-studio-button is-reference" type="button" data-pronunciation-reference>▶ Dengarkan contoh</button><span>' + (pronunciationRun.referenceUnavailable ? 'Suara contoh tidak tersedia di browser ini.' : 'Contoh suara dibuat oleh browser.') + '</span></div>' +
@@ -1484,7 +1485,10 @@
   }
 
   async function startPronunciationCapture() {
-    if (!pronunciationRun || pronunciationCapture) return;
+    if (!pronunciationRun || pronunciationCapture || pronunciationRun.requesting) return;
+    const targetRun = pronunciationRun;
+    targetRun.requesting = true;
+    renderPronunciationStudio();
     if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
       pronunciationRun.captureError = "Browser ini tidak menyediakan akses mikrofon. Kamu tetap bisa memakai contoh suara dan panduan visual.";
       renderPronunciationStudio();
@@ -1499,7 +1503,8 @@
     let stream = null, context = null;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-      if (!pronunciationRun) { stream.getTracks().forEach((track) => track.stop()); return; }
+      if (pronunciationRun !== targetRun) { stream.getTracks().forEach((track) => track.stop()); return; }
+      targetRun.requesting = false;
       context = new AudioContextType();
       await context.resume();
       const source = context.createMediaStreamSource(stream);
@@ -1540,7 +1545,7 @@
       const reason = error && error.name === "NotAllowedError" ? "Izin mikrofon ditolak. Izinkan akses mikrofon dari pengaturan situs untuk memakai analisis lokal." :
         error && error.name === "NotFoundError" ? "Tidak ada mikrofon yang terdeteksi di perangkat ini." :
         "Mikrofon tidak dapat diakses. Periksa izin browser dan pastikan halaman dibuka melalui HTTPS.";
-      if (pronunciationRun) { pronunciationRun.captureError = reason; renderPronunciationStudio(); }
+      if (pronunciationRun === targetRun) { targetRun.requesting = false; targetRun.captureError = reason; renderPronunciationStudio(); }
     }
   }
 
@@ -1779,6 +1784,11 @@
 
   function initListeners() {
     document.addEventListener("click", (event) => {
+      const viewTarget = event.target.closest("[data-view-target]");
+      if (viewTarget && viewTarget.dataset.viewTarget !== "adventure" && pronunciationCapture) {
+        stopPronunciationCapture(false);
+        pronunciationRun = null;
+      }
       const select = event.target.closest("[data-adventure-select]");
       if (select) { openMission(select.dataset.adventureSelect); return; }
       const start = event.target.closest("[data-adventure-start]");
@@ -1891,6 +1901,7 @@
     }
   }
 
+  document.addEventListener("visibilitychange", () => { if (document.hidden && pronunciationCapture) stopPronunciationCapture(false); });
   window.addEventListener("pagehide", () => { if (pronunciationCapture) stopPronunciationCapture(false); });
   window.sinauuAdventureBackup = () => cloneProgress(progress);
   window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); renderAll(); };
