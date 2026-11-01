@@ -1926,3 +1926,64 @@ h1,h2,h3{overflow-wrap:break-word}
   .home-study-plan-steps { grid-template-columns: 1fr; }
   .home-adventure-link { padding-inline: 0; }
 }
+
+
+/* Phase 2 — focused topic and reading-skill details on mobile. */
+.grammar-detail-back,.reading-detail-back { display:none; }
+.progress-summary {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  margin:9px 0 30px;
+  padding:14px 0;
+  border-block:1px solid var(--line);
+}
+.progress-summary > div { min-width:0; padding:2px 18px; border-right:1px solid var(--line); }
+.progress-summary > div:first-child { padding-left:0; }
+.progress-summary > div:last-child { padding-right:0; border-right:0; }
+.progress-summary strong {
+  display:block;
+  margin-top:5px;
+  color:var(--ink);
+  font:400 1.75rem/1.1 "Lora",Georgia,serif;
+}
+.progress-history-details { border-top:1px solid var(--ink); }
+.progress-history-details > summary {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px 0; border-bottom:1px solid var(--line);
+  color:var(--ink); font-size:.78rem; font-weight:650; cursor:pointer; list-style:none;
+}
+.progress-history-details > summary::-webkit-details-marker { display:none; }
+.progress-history-details > summary::after { content:"+"; color:var(--sage-deep); font-size:1rem; }
+.progress-history-details[open] > summary::after { content:"−"; }
+.progress-history-details > summary small { margin-left:auto; color:var(--muted); font-size:.61rem; font-weight:500; }
+.progress-history-details .history-list { border-top:0; }
+.progress-data-block { padding-top:18px; border-top:1px solid var(--line); }
+.progress-data-copy { max-width:620px; margin:5px 0 15px; color:var(--muted); font-size:.69rem; line-height:1.7; }
+.progress-data-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.progress-data-actions #backup-status { flex-basis:100%; }
+
+@media(max-width:760px) {
+  #view-grammar.is-detail-view .page-heading,
+  #view-grammar.is-detail-view .learning-subnav { display:none; }
+  #view-grammar .grammar-layout { grid-template-columns:1fr; }
+  #view-grammar .grammar-layout:not(.is-detail-open) .lesson-panel { display:none; }
+  #view-grammar .grammar-layout.is-detail-open .topic-list-panel { display:none; }
+  #view-grammar .lesson-panel { padding:18px; }
+  #view-grammar .grammar-detail-back { display:inline-flex; min-height:38px; margin-bottom:14px; }
+  #reading-skills-section:not(.is-detail-open) .reading-lesson-panel { display:none; }
+  #reading-skills-section.is-detail-open .reading-progress-strip,
+  #reading-skills-section.is-detail-open .reading-category-tabs,
+  #reading-skills-section.is-detail-open .reading-skill-panel { display:none; }
+  #reading-skills-section.is-detail-open .reading-layout { grid-template-columns:1fr; }
+  #reading-skills-section.is-detail-open .reading-lesson-panel { display:block; min-width:0; padding:15px; }
+  #reading-skills-section .reading-detail-back { display:inline-flex; min-height:38px; margin-bottom:14px; }
+  .progress-summary { gap:0; margin-bottom:24px; }
+  .progress-summary > div { padding-inline:10px; }
+  .progress-summary > div:first-child { padding-left:0; }
+  .progress-summary strong { font-size:1.45rem; }
+}
+@media(max-width:420px) {
+  .progress-summary .metric-label { font-size:.43rem; letter-spacing:0; }
+  .progress-summary strong { font-size:1.28rem; }
+}
