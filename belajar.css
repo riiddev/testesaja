@@ -1464,3 +1464,67 @@ h1,h2,h3{overflow-wrap:break-word}
   .adventure-story-result-actions button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.adventure-story-progress i{transition:none}}
+
+
+/* Everyday English — situational listening and response practice */
+.adventure-dialogue-library{min-width:0;margin-top:16px;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-dialogue-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:17px}
+.adventure-dialogue-heading .eyebrow{margin-bottom:6px}
+.adventure-dialogue-heading h3{margin:0;font:500 1.4rem "Lora",Georgia,serif}
+.adventure-dialogue-heading p{max-width:650px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+.adventure-dialogue-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.adventure-dialogue-card{min-width:0;display:flex;flex-direction:column;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.adventure-dialogue-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.adventure-dialogue-card h4{margin:0 0 6px;color:var(--ink);font:500 1.03rem/1.35 "Lora",Georgia,serif}
+.adventure-dialogue-card p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.58rem;line-height:1.7}
+.adventure-dialogue-card-meta{display:flex;justify-content:space-between;gap:8px;margin-bottom:11px;color:var(--muted);font-size:.48rem}
+.adventure-dialogue-card button,.adventure-dialogue-back,.adventure-dialogue-listen,.adventure-dialogue-transcript-toggle,.adventure-dialogue-next,.adventure-dialogue-retry,.adventure-dialogue-speaking{min-height:36px;padding:8px 11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.56rem;font-weight:700;cursor:pointer}
+.adventure-dialogue-card button:hover,.adventure-dialogue-back:hover,.adventure-dialogue-listen:hover,.adventure-dialogue-transcript-toggle:hover,.adventure-dialogue-next:hover,.adventure-dialogue-retry:hover,.adventure-dialogue-speaking:hover{border-color:var(--sage-deep);background:var(--sage)}
+.adventure-dialogue-reader{max-width:900px;margin:0 auto}
+.adventure-dialogue-reader-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.adventure-dialogue-title{margin:0;color:var(--ink);font:500 clamp(1.6rem,3vw,2.15rem)/1.2 "Lora",Georgia,serif}
+.adventure-dialogue-setting{margin:6px 0 15px;color:var(--muted);font-size:.64rem;line-height:1.7}
+.adventure-dialogue-audio{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 0}
+.adventure-dialogue-audio small{flex:1 1 100%;color:var(--muted);font-size:.53rem;line-height:1.6}
+.adventure-dialogue-transcript{display:grid;gap:0;margin:12px 0;padding:11px 14px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 22%,var(--paper))}
+.adventure-dialogue-transcript p{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;margin:0;padding:7px 0;color:var(--body);font:400 .72rem/1.65 "Lora",Georgia,serif}
+.adventure-dialogue-transcript p+p{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.adventure-dialogue-transcript strong{color:var(--sage-deep);font:700 .49rem "Plus Jakarta Sans",sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.adventure-dialogue-vocabulary{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.adventure-dialogue-word{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);background:var(--paper);color:var(--body);font-size:.54rem}
+.adventure-dialogue-word strong{color:var(--ink)}
+.adventure-dialogue-quiz{margin-top:19px;padding-top:17px;border-top:1px solid var(--line)}
+.adventure-dialogue-quiz-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:.48rem;font-weight:800;letter-spacing:.08em}
+.adventure-dialogue-partner-line{margin:12px 0;padding:12px 14px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 20%,var(--sheet))}
+.adventure-dialogue-partner-line span{color:var(--sage-deep);font-size:.47rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.adventure-dialogue-partner-line p{margin:5px 0 0;color:var(--ink);font:500 .9rem/1.6 "Lora",Georgia,serif}
+.adventure-dialogue-quiz h4{margin:0 0 12px;color:var(--ink);font:500 1.05rem/1.5 "Lora",Georgia,serif}
+.adventure-dialogue-options{display:grid;gap:7px}
+.adventure-dialogue-option{display:flex;align-items:flex-start;gap:9px;width:100%;min-height:43px;padding:10px 12px;border:1px solid var(--line);background:var(--paper);color:var(--body);text-align:left;font-size:.61rem;line-height:1.6;cursor:pointer}
+.adventure-dialogue-option>span{width:21px;height:21px;flex:0 0 21px;display:grid;place-items:center;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.52rem;font-weight:700}
+.adventure-dialogue-option:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 25%,var(--paper))}
+.adventure-dialogue-option.is-correct{border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 35%,var(--paper))}
+.adventure-dialogue-option.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 30%,var(--paper))}
+.adventure-dialogue-option:disabled{opacity:1;cursor:default}
+.adventure-dialogue-feedback{margin-top:12px;padding:11px 13px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 24%,var(--sheet));color:var(--body);font-size:.59rem;line-height:1.7}
+.adventure-dialogue-feedback.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 34%,var(--sheet))}
+.adventure-dialogue-feedback strong{display:block;margin-bottom:3px;color:var(--ink)}
+.adventure-dialogue-actions{display:flex;justify-content:flex-end;margin-top:13px}
+.adventure-dialogue-result{text-align:center;padding:30px 15px}
+.adventure-dialogue-result h4{margin:0 0 7px;color:var(--ink);font:500 1.4rem "Lora",Georgia,serif}
+.adventure-dialogue-result p{max-width:550px;margin:0 auto;color:var(--muted);font-size:.65rem;line-height:1.8}
+.adventure-dialogue-result-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:17px}
+.adventure-dialogue-empty{margin:0;padding:17px 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+@media(max-width:1000px){.adventure-dialogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.adventure-dialogue-grid{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .adventure-dialogue-library{padding:17px 15px}
+  .adventure-dialogue-heading h3{font-size:1.2rem}
+  .adventure-dialogue-card{padding:13px}
+  .adventure-dialogue-reader-top{align-items:flex-start}
+  .adventure-dialogue-transcript{padding:9px 11px}
+  .adventure-dialogue-transcript p{grid-template-columns:62px minmax(0,1fr);font-size:.68rem}
+  .adventure-dialogue-result-actions{display:grid;grid-template-columns:1fr}
+  .adventure-dialogue-result-actions button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.adventure-dialogue-library *{scroll-behavior:auto}}
