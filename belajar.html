@@ -102,6 +102,15 @@
             </div>
           </section>
 
+          <section class="placement-teaser" id="placement-teaser" aria-labelledby="placement-teaser-title">
+            <div>
+              <span class="eyebrow">PLACEMENT CHECK · 8–12 MENIT</span>
+              <h2 id="placement-teaser-title">Belum tahu harus mulai dari mana?</h2>
+              <p id="placement-teaser-summary">Cek perkiraan level awalmu melalui kosakata, grammar, dan pemahaman konteks.</p>
+            </div>
+            <button class="placement-teaser-action" id="placement-teaser-action" type="button" data-view-target="placement">Cek level awal ↗</button>
+          </section>
+
           <section class="home-metrics" aria-label="Ringkasan aktivitas belajar">
             <article class="home-metric"><span>MENUNGGU REVIEW</span><strong id="rail-due">0</strong><p>Kata yang perlu kamu ingat kembali</p></article>
             <article class="home-metric"><span>AKTIVITAS HARI INI</span><strong id="rail-today">0</strong><p>Latihan yang tercatat hari ini</p></article>
@@ -349,6 +358,78 @@
           <div class="page-heading compact-heading"><h1>Kembali saat <em>waktunya.</em></h1><p class="page-lede">Review terjadwal membantu mengecek apakah kata masih bisa kamu ingat setelah jeda. Jawaban benar hari ini saja tidak membuat kata langsung mastered.</p></div>
           <div class="review-summary"><div><span class="metric-label">JATUH TEMPO</span><strong id="review-due-total">0</strong></div><div><span class="metric-label">REVIEW BERHASIL</span><strong id="review-success-total">0</strong></div><p>Review diatur dari tanggal sesi yang tercatat pada perangkat ini. Mengubah tanggal sistem dapat memengaruhi jadwal.</p></div>
           <div class="review-list" id="review-list"></div>
+        </section>
+
+
+        <section class="view" id="view-placement" data-view="placement">
+          <div class="page-heading compact-heading placement-page-heading">
+            <div>
+              <span class="eyebrow">SINAUUENGLISH / PLACEMENT CHECK</span>
+              <h1>Temukan titik <em>awalmu.</em></h1>
+              <p class="page-lede">Tes singkat untuk melihat materi yang kemungkinan sudah kamu kuasai dan bagian yang masih perlu dilatih.</p>
+            </div>
+            <button class="plain-action" type="button" data-view-target="overview">← Beranda</button>
+          </div>
+
+          <div class="placement-shell">
+            <section class="placement-panel placement-intro" id="placement-intro">
+              <span class="placement-overline">A1 → B2 · TANPA BATAS WAKTU</span>
+              <h2>Mulai dari kemampuan yang benar-benar kamu punya.</h2>
+              <p>Jawab soal kosakata, grammar, dan bacaan singkat. Tingkat soal akan naik bertahap; tes berhenti ketika bagian berikutnya masih terlalu sulit.</p>
+              <div class="placement-facts">
+                <span><strong>5 soal</strong> per tingkat</span>
+                <span><strong>4 tingkat</strong> yang diperiksa</span>
+                <span><strong>Tanpa timer</strong></span>
+              </div>
+              <p class="placement-disclaimer">Hasilnya hanya perkiraan untuk membantu memilih materi belajar. Ini bukan tes resmi atau sertifikasi CEFR, dan tidak mengubah status mastery.</p>
+              <button class="placement-primary" id="placement-start" type="button">Mulai tes ↗</button>
+            </section>
+
+            <section class="placement-panel placement-quiz" id="placement-quiz" hidden aria-labelledby="placement-question">
+              <div class="placement-quiz-meta">
+                <div><span class="placement-overline" id="placement-step-label">BAGIAN 1 · A1</span><span class="placement-counter" id="placement-counter">SOAL 1/20</span></div>
+                <span class="placement-kind" id="placement-kind">VOCABULARY</span>
+              </div>
+              <div class="placement-progress-track" role="progressbar" aria-label="Progres tes" aria-valuemin="0" aria-valuemax="20" aria-valuenow="1" id="placement-progress"><i id="placement-progress-bar"></i></div>
+              <h2 id="placement-question"></h2>
+              <p class="placement-context" id="placement-context" hidden></p>
+              <div class="placement-options" id="placement-options"></div>
+              <div class="placement-feedback" id="placement-feedback" role="status" aria-live="polite" hidden></div>
+              <div class="placement-quiz-actions">
+                <span>Jawab sesuai pemahamanmu. Tidak perlu menebak terburu-buru.</span>
+                <button class="placement-primary" id="placement-next" type="button" hidden>Soal berikutnya →</button>
+              </div>
+            </section>
+
+            <section class="placement-panel placement-result" id="placement-result" hidden aria-labelledby="placement-result-title">
+              <span class="placement-overline">HASIL PLACEMENT CHECK</span>
+              <div class="placement-result-top">
+                <div><span class="placement-result-caption">PERKIRAAN LEVEL AWAL</span><strong class="placement-result-level" id="placement-result-level">A1</strong></div>
+                <div class="placement-result-score"><strong id="placement-score">0/5</strong><span>jawaban tepat</span></div>
+              </div>
+              <h2 id="placement-result-title">Mulai dari fondasi.</h2>
+              <p id="placement-result-summary"></p>
+              <div class="placement-result-section">
+                <h3>Hasil per tingkat</h3>
+                <div id="placement-level-breakdown" class="placement-level-breakdown"></div>
+              </div>
+              <div class="placement-result-section">
+                <h3>Area yang bisa diperkuat</h3>
+                <div id="placement-category-breakdown" class="placement-category-breakdown"></div>
+                <p id="placement-focus-note" class="placement-focus-note"></p>
+              </div>
+              <div class="placement-result-actions">
+                <button class="placement-secondary" type="button" data-view-target="vocabulary">Latih kosakata ↗</button>
+                <button class="placement-secondary" type="button" data-view-target="grammar">Pelajari grammar ↗</button>
+                <button class="placement-secondary" type="button" data-view-target="reading">Latih bacaan ↗</button>
+              </div>
+              <div class="placement-result-footer">
+                <small id="placement-result-date"></small>
+                <button class="placement-retake" id="placement-retake" type="button">Ulangi tes</button>
+              </div>
+              <p class="placement-disclaimer">Hasil ini tersimpan di browser pada perangkat ini saja. Hasil tidak dikirim ke akun atau Google Sheets.</p>
+            </section>
+          </div>
         </section>
 
         <section class="view" id="view-progress" data-view="progress">
