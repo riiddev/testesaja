@@ -392,6 +392,12 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
           updatedAt: "2026-10-31T09:56:00.000Z",
         },
       },
+      pronunciationProgress: {
+        "polite-help": {
+          attempts: [{ attemptId: "pronunciation-device-a", completedAt: "2026-10-31T09:55:00.000Z", durationMs: 3500, voiceShare: 0.82, voicedFrames: 29, meanRms: 0.045, pauseCount: 1, pitchMedian: 180, pitchRangeSemitones: 4.2 }],
+          updatedAt: "2026-10-31T09:55:00.000Z",
+        },
+      },
       studioSessions: [{ sessionId: "speaking:ask-directions:2026-10-31", studioType: "speaking", promptId: "ask-directions", wordCount: 0, checklistCompleted: 3, completedAt: "2026-10-31T09:58:00.000Z", updatedAt: "2026-10-31T09:58:00.000Z" }],
       achievementIds: ["first-mission"],
       updatedAt: "2026-10-31T10:00:00.000Z",
@@ -427,6 +433,8 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   assert.equal(restored?.dialogueProgress?.["at-the-cafe"]?.bestScore, 2, "the first dialogue best score should be retained");
   assert.equal(restored?.listeningProgress?.["missed-the-bus"]?.attempts?.length, 1, "the first device's Listening Lab attempt should restore on the second profile");
   assert.equal(restored?.listeningProgress?.["missed-the-bus"]?.bestScore, 2, "the first Listening Lab best score should be retained");
+  assert.equal(restored?.pronunciationProgress?.["polite-help"]?.attempts?.length, 1, "the first device's Pronunciation Studio summary should restore on the second profile");
+  assert.equal(restored?.pronunciationProgress?.["polite-help"]?.attempts?.[0]?.durationMs, 3500, "the first device's local pronunciation metrics should restore");
 
   await second.evaluate(() => {
     const snapshot = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
@@ -448,6 +456,9 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
     listening.attempts.push({ attemptId: "listening-device-b", score: 3, total: 3, passed: true, completedAt: new Date(Date.now() + 1000).toISOString() });
     listening.bestScore = 3;
     listening.updatedAt = new Date(Date.now() + 1000).toISOString();
+    const pronunciation = snapshot.pronunciationProgress["polite-help"];
+    pronunciation.attempts.push({ attemptId: "pronunciation-device-b", completedAt: new Date(Date.now() + 1000).toISOString(), durationMs: 4200, voiceShare: 0.75, voicedFrames: 31, meanRms: 0.052, pauseCount: 2, pitchMedian: 175, pitchRangeSemitones: 5.1 });
+    pronunciation.updatedAt = new Date(Date.now() + 1000).toISOString();
     localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(snapshot));
     window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
   });
@@ -466,6 +477,9 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   assert.equal(mergedListening?.attempts?.length, 2, "Listening Lab attempts from both devices should be merged, not overwritten");
   assert.equal(mergedListening?.bestScore, 3, "the higher Listening Lab score should become the merged best score");
   assert.ok(mergedListening?.completedAt, "the Listening Lab completion should remain recorded after merging");
+  const mergedPronunciation = remoteState?.extras?.adventureProgress?.pronunciationProgress?.["polite-help"];
+  assert.equal(mergedPronunciation?.attempts?.length, 2, "Pronunciation Studio summaries from both devices should merge, not overwrite");
+  assert.ok(mergedPronunciation?.attempts?.every((attempt) => !("audioData" in attempt) && !("samples" in attempt)), "only compact pronunciation metrics may sync; no audio or waveform samples");
   assert.deepEqual(pageErrors, [], "cross-device merge should not throw browser JavaScript errors");
   await firstContext.close();
   await secondContext.close();
@@ -1093,5 +1107,164 @@ test("Listening Lab keeps the exercise usable when browser speech synthesis is u
   assert.match(await page.locator(".listening-lab-player").innerText(), /tidak tersedia/i);
   assert.match(await page.locator("#listening-lab-transcript").innerText(), /study room/);
   assert.deepEqual(pageErrors, [], "speech-synthesis fallback should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("Pronunciation Studio analyses microphone signal locally and stores only compact metrics", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  const writeRequests = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("request", (request) => {
+    if (["POST", "PUT", "PATCH"].includes(request.method())) writeRequests.push(request.url());
+  });
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "pronunciation-preview-access",
+      refresh_token: "pronunciation-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "pronunciation-preview-user", email: "pronunciation-preview@example.com" },
+    }));
+    window.__pronunciationReference = [];
+    window.__micTrackStopped = false;
+    window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: { cancel() {}, speak(utterance) { window.__pronunciationReference.push(utterance.text); } },
+    });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks: () => [{ stop() { window.__micTrackStopped = true; } }],
+        }),
+      },
+    });
+    class FakeAnalyser {
+      constructor() { this.fftSize = 2048; this.smoothingTimeConstant = 0; }
+      connect() {}
+      disconnect() {}
+      getFloatTimeDomainData(target) {
+        for (let index = 0; index < target.length; index += 1) {
+          target[index] = Math.sin(2 * Math.PI * 180 * index / 48000) * 0.08;
+        }
+      }
+    }
+    window.AudioContext = class {
+      constructor() { this.sampleRate = 48000; }
+      createMediaStreamSource() { return { connect() {}, disconnect() {} }; }
+      createAnalyser() { return new FakeAnalyser(); }
+      async resume() {}
+      async close() {}
+    };
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+
+  const open = page.locator('[data-pronunciation-open="polite-help"]');
+  const card = open.locator("xpath=ancestor::article");
+  await open.waitFor({ state: "visible" });
+  assert.match(await card.innerText(), /A1/);
+  await open.click();
+  const reader = page.locator("#pronunciation-studio-reader");
+  await reader.waitFor({ state: "visible" });
+  assert.match(await reader.innerText(), /Could you help me, please/);
+  assert.match(await reader.innerText(), /HELP/);
+  assert.match(await reader.innerText(), /PLEASE/);
+  await page.locator("[data-pronunciation-reference]").click();
+  assert.deepEqual(await page.evaluate(() => window.__pronunciationReference), ["Could you help me, please?"]);
+
+  const writesBeforeRecording = writeRequests.length;
+  await page.locator("[data-pronunciation-toggle]").click();
+  await page.locator("#pronunciation-capture-status").getByText("SEDANG MEREKAM", { exact: true }).waitFor();
+  await page.waitForTimeout(1100);
+  await page.locator("[data-pronunciation-toggle]").click();
+  const result = page.locator("#pronunciation-studio-result");
+  await result.waitFor({ state: "visible" });
+  assert.match(await result.innerText(), /Durasi/);
+  assert.match(await result.innerText(), /Kontur tinggi nada/);
+
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  const attempts = saved?.pronunciationProgress?.["polite-help"]?.attempts || [];
+  assert.equal(attempts.length, 1, "one compact practice attempt should be stored");
+  assert.ok(attempts[0].durationMs >= 900, "recording duration should be measured");
+  assert.ok(attempts[0].voicedFrames > 0, "local signal analysis should detect voice activity");
+  assert.ok(attempts[0].voiceShare > 0, "voice activity ratio should be available");
+  assert.ok(!("samples" in attempts[0]) && !("audioData" in attempts[0]) && !("recording" in attempts[0]), "raw audio and waveform samples must not be persisted");
+  assert.ok(await page.evaluate(() => window.__micTrackStopped), "the microphone track should stop after recording");
+  assert.equal(writeRequests.length, writesBeforeRecording, "recording should not send a POST, PUT, or PATCH request");
+  const bundle = await page.evaluate(() => window.sinauuExportLocalBundle());
+  assert.ok(bundle.extras.adventureProgress.pronunciationProgress["polite-help"], "only the summary should be included in CloudBundle v2");
+  assert.deepEqual(pageErrors, [], "local microphone analysis should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("Pronunciation Studio handles denied microphone access without breaking the phrase guide", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "pronunciation-denied-access",
+      refresh_token: "pronunciation-denied-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "pronunciation-denied-user", email: "pronunciation-denied@example.com" },
+    }));
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: async () => { const error = new Error("Permission denied"); error.name = "NotAllowedError"; throw error; } },
+    });
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-pronunciation-open="weigh-the-benefits"]').click();
+  await page.locator("[data-pronunciation-toggle]").click();
+  await page.locator("#pronunciation-capture-note").getByText(/Izin mikrofon ditolak/i).waitFor();
+  assert.match(await page.locator("#pronunciation-studio-reader").innerText(), /long-term benefits/);
+  assert.deepEqual(pageErrors, [], "denied microphone access should not break the phrase guide");
+  await page.close();
+});
+
+
+test("Pronunciation Studio includes B2 guidance for contrast and long sentence rhythm", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "pronunciation-b2-access",
+      refresh_token: "pronunciation-b2-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "pronunciation-b2-user", email: "pronunciation-b2@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-pronunciation-open="proposal-evidence"]').click();
+  const reader = page.locator("#pronunciation-studio-reader");
+  await reader.waitFor({ state: "visible" });
+  assert.match(await reader.innerText(), /although the evidence remains limited/i);
+  assert.match(await reader.innerText(), /CONTRAST AND THOUGHT GROUPS/i);
+  assert.match(await reader.innerText(), /PROMISING/);
+  assert.match(await reader.innerText(), /EVIDENCE/);
+  assert.match(await reader.innerText(), /LIMITED/);
+  assert.deepEqual(pageErrors, [], "B2 Pronunciation Studio should not throw browser JavaScript errors");
   await page.close();
 });
