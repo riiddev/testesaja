@@ -217,6 +217,31 @@ for (const exercise of listeningLibrary.exercises) {
 }
 assert.ok(["A1", "A2", "B1", "B2"].every((level) => listeningLevels.has(level)), "Listening Lab should cover A1 through B2");
 
+
+const pronunciationLibrary = json("public/data/adventure/pronunciation.json");
+assert.equal(pronunciationLibrary.schemaVersion, 1, "Pronunciation Studio schema version changed");
+assert.ok(Array.isArray(pronunciationLibrary.exercises) && pronunciationLibrary.exercises.length >= 8, "Expected at least eight Pronunciation Studio exercises");
+const pronunciationIds = new Set();
+const pronunciationLevels = new Set();
+for (const exercise of pronunciationLibrary.exercises) {
+  assert.ok(exercise && exercise.id && exercise.title && exercise.phrase && exercise.meaning, "Every pronunciation exercise needs an id, title, phrase, and meaning");
+  assert.ok(!pronunciationIds.has(exercise.id), `Duplicate Pronunciation Studio exercise id: ${exercise.id}`);
+  pronunciationIds.add(exercise.id);
+  assert.ok(["A1", "A2", "B1", "B2"].includes(exercise.level), `${exercise.title}: invalid CEFR guide level`);
+  pronunciationLevels.add(exercise.level);
+  assert.ok(Number.isInteger(exercise.targetSeconds) && exercise.targetSeconds >= 2 && exercise.targetSeconds <= 12, `${exercise.title}: invalid target duration`);
+  assert.ok(["Word stress", "Sentence stress", "Polite intonation", "Question intonation", "Rhythm and linking", "Polite phrasing and emphasis", "Contrastive stress", "Contrast and thought groups", "Long sentence rhythm"].includes(exercise.focus), `${exercise.title}: invalid pronunciation focus`);
+  assert.ok(Array.isArray(exercise.stressWords) && exercise.stressWords.length >= 1, `${exercise.title}: expected stressed words`);
+  for (const word of exercise.stressWords) assert.ok(exercise.phrase.toLocaleLowerCase("en").includes(word.toLocaleLowerCase("en")), `${exercise.title}: stressed expression ${word} is not in the phrase`);
+  assert.ok(Array.isArray(exercise.phraseGroups) && exercise.phraseGroups.length >= 2, `${exercise.title}: expected thought groups`);
+  assert.ok(exercise.intonation && exercise.intonation.label && exercise.intonation.description, `${exercise.title}: intonation guidance is missing`);
+  assert.ok(typeof exercise.linking === "string" && exercise.linking.trim(), `${exercise.title}: connected-speech guidance is missing`);
+  assert.ok(Array.isArray(exercise.coaching) && exercise.coaching.length >= 2, `${exercise.title}: at least two coaching tips are required`);
+  assert.ok(!("audioUrl" in exercise) && !("audioData" in exercise) && !("recording" in exercise), `${exercise.title}: phrase content must not embed audio files`);
+}
+assert.ok(["A1", "A2", "B1", "B2"].every((level) => pronunciationLevels.has(level)), "Pronunciation Studio should cover A1 through B2");
+assert.match(pronunciationLibrary.note, /locally|lokal/i, "Pronunciation Studio must disclose local microphone analysis");
+
 console.log("Content audit passed.");
 console.log(`- Vocabulary: ${vocabulary.entries.length} unique headwords; ${importedDraftCount} imported rows stay explicitly flagged for human review.`);
 console.log(`- HABIT library: ${habit.passages.length} unique passages; ${storedWordCount.toLocaleString("en-US")} words; 175 physical PDF pages / 174 numbered content pages.`);
@@ -224,4 +249,5 @@ console.log(`- Reading skills: ${reading.skills.length} skills and ${questionCou
 console.log(`- Everyday Stories: ${storyLibrary.stories.length} stories across A1–B2; focus words link to checked vocabulary IDs and all question keys are valid.`);
 console.log(`- Everyday English: ${dialogueLibrary.dialogues.length} situational scenarios across A1–B2; response keys, transcript lines, vocabulary IDs, and Speaking Studio links are valid.`);
 console.log(`- Listening Lab: ${listeningLibrary.exercises.length} staged exercises across A1–B2; audio excerpts align with transcripts, focus words link to vocabulary, and all three answer keys per exercise are valid.`);
+console.log(`- Pronunciation Studio: ${pronunciationLibrary.exercises.length} guided speaking phrases across A1–B2; stress targets, thought groups, intonation notes, and local-analysis disclosure are checked.`);
 console.log("- Root/public JSON mirrors match byte-for-byte.");
