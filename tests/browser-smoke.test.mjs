@@ -2073,6 +2073,7 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
     buffer: backupBytes,
   });
   await page.waitForFunction(() => document.querySelector("#backup-status")?.textContent.includes("berhasil dipulihkan"));
+  await page.locator('[data-view-target="grammar"]').first().click();
   assert.match(await topicButtons.first().innerText(), /1\/3 soal dicoba/,
     "progress included in the exported backup should be restored");
   assert.match(await topicButtons.nth(1).innerText(), /0\/3 soal dicoba/,
