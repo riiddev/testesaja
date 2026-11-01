@@ -756,10 +756,11 @@ test("Everyday Stories includes a B2 reading with inference-based comprehension 
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
   await page.locator('[data-view-target="adventure"]').click();
 
-  const storyCard = page.locator('[data-story-open="the-library-after-hours"]');
+  const storyCardButton = page.locator('[data-story-open="the-library-after-hours"]');
+  const storyCard = storyCardButton.locator("xpath=ancestor::article");
   await storyCard.waitFor({ state: "visible" });
   assert.match(await storyCard.innerText(), /B2/);
-  await storyCard.click();
+  await storyCardButton.click();
 
   const reader = page.locator("#adventure-story-reader");
   await reader.waitFor({ state: "visible" });
