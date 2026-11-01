@@ -74,7 +74,7 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 1. Human-review high-frequency meanings, parts of speech, examples, and Indonesian translations, starting with A1/A2.
 2. Replace unreliable or fragmentary examples and improve context variants before expanding the mastery-ready pool.
 3. Expand grammar lessons and validated question banks topic by topic.
-4. Expand the Everyday Stories library beyond its first A1–B2 collection; continue building contextual listening, speaking, and writing practice, and human-review assessment content.
+4. Expand the Everyday Stories library beyond the current four stories across A1–B2; continue building contextual listening, speaking, and writing practice, and human-review assessment content.
 5. Continue responsive, accessibility, persistence, backup/restore, and regression checks.
 
 **Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
