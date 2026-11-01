@@ -19,9 +19,10 @@
   let curriculum = null;
   let progress = normalizeProgress(readStored());
   let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, initialized = false;
+  let stories = [], storiesLoaded = false, storyLoadError = "", storyRun = null;
 
   function emptyProgress() {
-    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
+    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, storyProgress: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
   }
   function readStored() {
     try {
@@ -37,6 +38,16 @@
     base.xpLedger = raw.xpLedger && typeof raw.xpLedger === "object" && !Array.isArray(raw.xpLedger) ? raw.xpLedger : {};
     base.dailyQuests = raw.dailyQuests && typeof raw.dailyQuests === "object" && !Array.isArray(raw.dailyQuests) ? raw.dailyQuests : {};
     base.mistakeJournal = raw.mistakeJournal && typeof raw.mistakeJournal === "object" && !Array.isArray(raw.mistakeJournal) ? raw.mistakeJournal : {};
+    base.storyProgress = raw.storyProgress && typeof raw.storyProgress === "object" && !Array.isArray(raw.storyProgress) ? raw.storyProgress : {};
+    for (const [storyId, entry] of Object.entries(base.storyProgress)) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.storyProgress[storyId]; continue; }
+      entry.attempts = Array.isArray(entry.attempts)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && Number.isInteger(attempt.score) && Number.isInteger(attempt.total) && typeof attempt.completedAt === "string").slice(-100)
+        : [];
+      entry.bestScore = entry.attempts.reduce((best, attempt) => Math.max(best, attempt.score), 0);
+      entry.completedAt = typeof entry.completedAt === "string" ? entry.completedAt : entry.attempts.find((attempt) => attempt.passed)?.completedAt || null;
+      entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
+    }
     base.listeningRate = [0.75, 0.9, 1].includes(Number(raw.listeningRate)) ? Number(raw.listeningRate) : 0.9;
     base.achievementIds = Array.isArray(raw.achievementIds) ? Array.from(new Set(raw.achievementIds.filter((item) => typeof item === "string"))).slice(0, 100) : [];
     base.studioSessions = Array.isArray(raw.studioSessions) ? raw.studioSessions.filter((item) => item && typeof item === "object" && typeof item.sessionId === "string" && ["speaking", "writing"].includes(item.studioType) && typeof item.promptId === "string").map((item) => ({ sessionId: item.sessionId.slice(0, 140), studioType: item.studioType, promptId: item.promptId.slice(0, 80), wordCount: Math.max(0, Math.min(5000, Number(item.wordCount) || 0)), checklistCompleted: Math.max(0, Math.min(5, Number(item.checklistCompleted) || 0)), completedAt: typeof item.completedAt === "string" ? item.completedAt : base.updatedAt, updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : base.updatedAt })).slice(-500) : [];
@@ -421,7 +432,7 @@
     }
     checkAchievements();
     renderHeaderStats(); renderMap(); renderMissionDetail(); renderSkillProfile(); renderAchievements();
-    renderDailyQuest(); renderMistakeJournal(); renderStudios();
+    renderDailyQuest(); renderMistakeJournal(); renderStudios(); renderStoryLibrary();
   }
   function openMission(missionId) {
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
@@ -862,6 +873,176 @@
     updateStudioCompleteButton("writing");
   }
 
+
+  function storyEntry(storyId) {
+    return progress.storyProgress[storyId] && typeof progress.storyProgress[storyId] === "object"
+      ? progress.storyProgress[storyId]
+      : { attempts: [], bestScore: 0, completedAt: null, updatedAt: null };
+  }
+
+  function renderStoryLibrary() {
+    const node = $("#adventure-story-library");
+    if (!node) return;
+    if (storyRun) { renderStoryRun(node); return; }
+    if (!storiesLoaded) {
+      node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">READ · LISTEN · UNDERSTAND</span><h3>Everyday Stories</h3><p>Cerita pendek untuk melihat bahasa bekerja dalam situasi sehari-hari.</p></div></div><p class="adventure-story-empty">Menyiapkan koleksi cerita…</p>';
+      return;
+    }
+    if (storyLoadError) {
+      node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">READ · LISTEN · UNDERSTAND</span><h3>Everyday Stories</h3><p>Cerita pendek untuk melihat bahasa bekerja dalam situasi sehari-hari.</p></div></div><p class="adventure-story-empty">' + escapeHtml(storyLoadError) + '</p><button class="adventure-story-back" type="button" data-story-reload>Muat ulang cerita</button>';
+      return;
+    }
+    const completed = stories.filter((story) => Boolean(storyEntry(story.id).completedAt)).length;
+    const cards = stories.map((story) => {
+      const entry = storyEntry(story.id);
+      const done = Boolean(entry.completedAt);
+      const attempts = Array.isArray(entry.attempts) ? entry.attempts.length : 0;
+      const best = Number(entry.bestScore) || 0;
+      return '<article class="adventure-story-card">' +
+        '<div class="adventure-story-card-top"><span class="adventure-story-level">' + escapeHtml(story.level) + '</span><span class="adventure-story-status">' + (done ? 'SELESAI ✓' : attempts ? 'PERNAH DICOBA' : 'CERITA BARU') + '</span></div>' +
+        '<h4>' + escapeHtml(story.title) + '</h4><p>' + escapeHtml(story.subtitle) + '</p>' +
+        '<div class="adventure-story-card-meta"><span>' + escapeHtml(String(story.estimatedMinutes || 5)) + ' MENIT</span><span>' + attempts + ' percobaan' + (attempts ? ' · terbaik ' + best + '/' + (story.questions?.length || 3) : '') + '</span></div>' +
+        '<button type="button" data-story-open="' + escapeHtml(story.id) + '">' + (done ? 'Baca lagi ↗' : attempts ? 'Lanjut berlatih ↗' : 'Buka cerita ↗') + '</button>' +
+      '</article>';
+    }).join("");
+    node.innerHTML =
+      '<div class="adventure-story-heading"><div><span class="eyebrow">READ · LISTEN · UNDERSTAND</span><h3>Everyday Stories</h3><p>Mulai dari cerita sederhana, amati kosakata dalam konteks, lalu jawab pertanyaan berdasarkan isi bacaan. Audio browser tersedia sebagai latihan tambahan.</p></div><span class="adventure-story-count">' + completed + '/' + stories.length + '<small>SELESAI</small></span></div>' +
+      (cards ? '<div class="adventure-story-grid">' + cards + '</div>' : '<p class="adventure-story-empty">Belum ada cerita tersedia.</p>');
+  }
+
+  function renderStoryRun(node) {
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story) { storyRun = null; renderStoryLibrary(); return; }
+    if (storyRun.stage === "result") {
+      const passed = Boolean(storyRun.result?.passed);
+      node.innerHTML =
+        '<div class="adventure-story-result" id="adventure-story-result">' +
+          '<span class="adventure-story-level">' + escapeHtml(story.level) + '</span>' +
+          '<div class="adventure-story-result-mark">' + (passed ? '✓' : '↻') + '</div>' +
+          '<h4>' + (passed ? 'Cerita selesai dipahami.' : 'Coba baca sekali lagi.') + '</h4>' +
+          '<p>Skormu <strong>' + storyRun.result.score + '/' + storyRun.result.total + '</strong>. ' +
+          (passed ? 'Kamu menjawab setidaknya dua pertanyaan dengan tepat. Cerita ini tercatat sebagai selesai.' : 'Jawaban yang tepat sudah dijelaskan. Ulangi cerita untuk memperkuat pemahaman.') + '</p>' +
+          '<div class="adventure-story-result-actions"><button class="adventure-story-retry" type="button" data-story-retry="' + escapeHtml(story.id) + '">Ulangi cerita ↗</button><button class="adventure-story-back" type="button" data-story-close>Kembali ke koleksi</button></div>' +
+        '</div>';
+      return;
+    }
+    const question = story.questions[storyRun.questionIndex];
+    const answered = storyRun.locked;
+    const choices = question.options.map((option, index) => {
+      const correct = index === question.answer;
+      const chosen = index === storyRun.selectedAnswer;
+      return '<button type="button" class="adventure-story-option' + (answered && correct ? ' is-correct' : '') + (answered && chosen && !correct ? ' is-wrong' : '') + '" data-story-answer="' + index + '"' + (answered ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>';
+    }).join("");
+    const paragraphs = story.paragraphs.map((paragraph) => '<p>' + escapeHtml(paragraph) + '</p>').join("");
+    const vocabulary = story.focusWords.map((word) => '<span class="adventure-story-word"><strong>' + escapeHtml(word.word) + '</strong><span>' + escapeHtml(word.meaning) + '</span></span>').join("");
+    const note = storyRun.audioUnavailable ? '<small>Suara browser tidak tersedia di perangkat ini. Kamu tetap bisa membaca cerita seperti biasa.</small>' : '<small>Suara dibuat oleh browser dan tidak direkam atau diunggah.</small>';
+    node.innerHTML =
+      '<div class="adventure-story-reader" id="adventure-story-reader">' +
+        '<div class="adventure-story-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(story.level) + '</span><span>·</span><span>' + escapeHtml(String(story.estimatedMinutes || 5)) + ' MENIT</span></div><button class="adventure-story-back" type="button" data-story-close>← Koleksi</button></div>' +
+        '<h3 class="adventure-story-title">' + escapeHtml(story.title) + '</h3><p class="adventure-story-subtitle">' + escapeHtml(story.subtitle) + '</p>' +
+        '<div class="adventure-story-text">' + paragraphs + '</div>' +
+        '<div class="adventure-story-audio"><button class="adventure-story-listen" type="button" data-story-listen>▶ Dengarkan cerita</button>' + note + '</div>' +
+        '<div class="adventure-story-vocabulary">' + vocabulary + '</div>' +
+        '<section class="adventure-story-quiz" aria-labelledby="adventure-story-question">' +
+          '<div class="adventure-story-quiz-meta"><span>COMPREHENSION CHECK</span><span>SOAL ' + (storyRun.questionIndex + 1) + '/' + story.questions.length + '</span></div>' +
+          '<div class="adventure-story-progress"><i style="width:' + Math.round((storyRun.questionIndex + 1) / story.questions.length * 100) + '%"></i></div>' +
+          '<h4 id="adventure-story-question">' + escapeHtml(question.prompt) + '</h4>' +
+          '<div class="adventure-story-options">' + choices + '</div>' +
+          (answered ? '<div class="adventure-story-feedback' + (storyRun.isCorrect ? '' : ' is-wrong') + '" role="status"><strong>' + (storyRun.isCorrect ? 'Tepat.' : 'Belum tepat.') + '</strong>' + escapeHtml(question.explanation) + (!storyRun.isCorrect ? '<br>Jawaban: ' + escapeHtml(question.options[question.answer]) : '') + '</div>' : '') +
+          (answered ? '<div class="adventure-story-actions"><button class="adventure-story-next" type="button" data-story-next>' + (storyRun.questionIndex === story.questions.length - 1 ? 'Lihat hasil →' : 'Soal berikutnya →') + '</button></div>' : '') +
+        '</section>' +
+      '</div>';
+  }
+
+  async function loadStories() {
+    try {
+      const response = await fetch("/data/adventure/stories.json", { cache: "no-cache" });
+      if (!response.ok) throw new Error("Koleksi cerita belum dapat dimuat.");
+      const data = await response.json();
+      if (!data || data.schemaVersion !== 1 || !Array.isArray(data.stories)) throw new Error("Format Everyday Stories tidak sesuai.");
+      const ids = new Set();
+      stories = data.stories.filter((story) => {
+        const valid = story && typeof story.id === "string" && story.id && !ids.has(story.id) &&
+          typeof story.title === "string" && ["A1", "A2", "B1", "B2"].includes(story.level) &&
+          Array.isArray(story.paragraphs) && story.paragraphs.length > 0 && story.paragraphs.every((item) => typeof item === "string") &&
+          Array.isArray(story.focusWords) && Array.isArray(story.questions) && story.questions.length >= 3 &&
+          story.questions.every((question) => question && Array.isArray(question.options) && question.options.length >= 2 && Number.isInteger(question.answer) && question.answer >= 0 && question.answer < question.options.length);
+        if (valid) ids.add(story.id);
+        return valid;
+      });
+      if (stories.length !== data.stories.length) throw new Error("Sebagian cerita tidak lolos pemeriksaan struktur.");
+      storiesLoaded = true;
+      storyLoadError = "";
+      renderStoryLibrary();
+    } catch (error) {
+      storiesLoaded = true;
+      storyLoadError = error instanceof Error ? error.message : "Koleksi cerita belum dapat dimuat.";
+      renderStoryLibrary();
+    }
+  }
+
+  function openStory(storyId) {
+    if (!stories.some((item) => item.id === storyId)) return;
+    storyRun = { storyId, stage: "reading", questionIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, audioUnavailable: false };
+    renderStoryLibrary();
+  }
+
+  function answerStory(answerIndex) {
+    if (!storyRun || storyRun.stage !== "reading" || storyRun.locked) return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    const question = story && story.questions[storyRun.questionIndex];
+    if (!question || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= question.options.length) return;
+    storyRun.selectedAnswer = answerIndex;
+    storyRun.isCorrect = answerIndex === question.answer;
+    storyRun.locked = true;
+    storyRun.answers.push({ questionId: question.id, correct: storyRun.isCorrect });
+    renderStoryLibrary();
+  }
+
+  function finishStory() {
+    if (!storyRun || storyRun.stage !== "reading") return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story || storyRun.answers.length !== story.questions.length) return;
+    const score = storyRun.answers.filter((answer) => answer.correct).length;
+    const total = story.questions.length;
+    const passed = score >= Math.ceil(total * 2 / 3);
+    const completedAt = new Date().toISOString();
+    const entry = storyEntry(story.id);
+    const attempt = { attemptId: makeId(), score, total, passed, completedAt };
+    entry.attempts = [...(entry.attempts || []), attempt].slice(-100);
+    entry.bestScore = Math.max(Number(entry.bestScore) || 0, score);
+    if (passed && !entry.completedAt) entry.completedAt = completedAt;
+    entry.updatedAt = completedAt;
+    progress.storyProgress[story.id] = entry;
+    saveProgress();
+    storyRun.stage = "result";
+    storyRun.result = { score, total, passed };
+    renderStoryLibrary();
+  }
+
+  function advanceStory() {
+    if (!storyRun || !storyRun.locked || storyRun.stage !== "reading") return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story) return;
+    if (storyRun.questionIndex >= story.questions.length - 1) {
+      finishStory();
+      return;
+    }
+    storyRun.questionIndex += 1;
+    storyRun.locked = false;
+    storyRun.selectedAnswer = null;
+    storyRun.isCorrect = false;
+    renderStoryLibrary();
+  }
+
+  function listenToStory() {
+    if (!storyRun || storyRun.stage !== "reading") return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story) return;
+    storyRun.audioUnavailable = !playText(story.paragraphs.join(" "));
+    renderStoryLibrary();
+  }
+
   function initListeners() {
     document.addEventListener("click", (event) => {
       const select = event.target.closest("[data-adventure-select]");
@@ -890,6 +1071,16 @@
       if (mistakeReview) { startMission(mistakeReview.dataset.mistakeReview); return; }
       const mistakeFilter = event.target.closest("[data-mistake-filter]");
       if (mistakeFilter) { mistakeFilterValue = mistakeFilter.dataset.mistakeFilter; renderMistakeJournal(); }
+      const storyOpen = event.target.closest("[data-story-open]");
+      if (storyOpen) { openStory(storyOpen.dataset.storyOpen); return; }
+      if (event.target.closest("[data-story-close]")) { storyRun = null; renderStoryLibrary(); return; }
+      if (event.target.closest("[data-story-reload]")) { storyLoadError = ""; storiesLoaded = false; renderStoryLibrary(); void loadStories(); return; }
+      const storyAnswer = event.target.closest("[data-story-answer]");
+      if (storyAnswer) { answerStory(Number(storyAnswer.dataset.storyAnswer)); return; }
+      if (event.target.closest("[data-story-next]")) { advanceStory(); return; }
+      const storyRetry = event.target.closest("[data-story-retry]");
+      if (storyRetry) { openStory(storyRetry.dataset.storyRetry); return; }
+      if (event.target.closest("[data-story-listen]")) { listenToStory(); return; }
       const studioPrompt = event.target.closest("[data-studio-prompt]");
       if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
       const studioComplete = event.target.closest("[data-studio-complete]");
@@ -920,6 +1111,7 @@
       selectedMissionId = curriculum.missions.find((mission) => missionUnlocked(mission) && !missionCompleted(mission.id))?.id || curriculum.missions[0].id;
       studioDrafts = readStudioDrafts();
       initListeners(); renderAll();
+      void loadStories();
     } catch (error) {
       const panel = $("#adventure-mission-panel");
       if (panel) panel.textContent = error.message || "Petualangan belum dapat dimuat.";
