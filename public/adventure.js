@@ -20,9 +20,10 @@
   let progress = normalizeProgress(readStored());
   let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, initialized = false;
   let stories = [], storiesLoaded = false, storyLoadError = "", storyRun = null;
+  let dialogues = [], dialoguesLoaded = false, dialogueLoadError = "", dialogueRun = null;
 
   function emptyProgress() {
-    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, storyProgress: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
+    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, storyProgress: {}, dialogueProgress: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
   }
   function readStored() {
     try {
@@ -41,6 +42,16 @@
     base.storyProgress = raw.storyProgress && typeof raw.storyProgress === "object" && !Array.isArray(raw.storyProgress) ? raw.storyProgress : {};
     for (const [storyId, entry] of Object.entries(base.storyProgress)) {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.storyProgress[storyId]; continue; }
+      entry.attempts = Array.isArray(entry.attempts)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && Number.isInteger(attempt.score) && Number.isInteger(attempt.total) && typeof attempt.completedAt === "string").slice(-100)
+        : [];
+      entry.bestScore = entry.attempts.reduce((best, attempt) => Math.max(best, attempt.score), 0);
+      entry.completedAt = typeof entry.completedAt === "string" ? entry.completedAt : entry.attempts.find((attempt) => attempt.passed)?.completedAt || null;
+      entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
+    }
+    base.dialogueProgress = raw.dialogueProgress && typeof raw.dialogueProgress === "object" && !Array.isArray(raw.dialogueProgress) ? raw.dialogueProgress : {};
+    for (const [dialogueId, entry] of Object.entries(base.dialogueProgress)) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.dialogueProgress[dialogueId]; continue; }
       entry.attempts = Array.isArray(entry.attempts)
         ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && Number.isInteger(attempt.score) && Number.isInteger(attempt.total) && typeof attempt.completedAt === "string").slice(-100)
         : [];
@@ -432,7 +443,7 @@
     }
     checkAchievements();
     renderHeaderStats(); renderMap(); renderMissionDetail(); renderSkillProfile(); renderAchievements();
-    renderDailyQuest(); renderMistakeJournal(); renderStudios(); renderStoryLibrary();
+    renderDailyQuest(); renderMistakeJournal(); renderStudios(); renderStoryLibrary(); renderDialogueLibrary();
   }
   function openMission(missionId) {
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
@@ -693,7 +704,8 @@
     speaking: [
       { id: "first-introduction", title: "Introduce yourself", level: "A1", context: "You meet a new classmate before the lesson starts.", prompt: "Introduce yourself, share one thing you enjoy, and explain why you are learning English.", starters: ["Hi, my name is …", "I enjoy … because …", "I’m learning English to …"], checks: ["Open with a greeting and your name.", "Share at least two relevant details.", "Finish naturally and invite a response."] },
       { id: "ask-directions", title: "Ask for directions", level: "A1–A2", context: "You are in town and need to find the nearest bus stop.", prompt: "Ask someone for directions. Mention where you want to go and clarify one landmark.", starters: ["Excuse me, could you tell me …?", "Should I turn …?", "Thank you for your help."], checks: ["Explain where you want to go.", "Ask one clear follow-up question.", "Thank the person politely."] },
-      { id: "cafe-order", title: "Order at a café", level: "A1–A2", context: "You are ordering a drink and a snack at a small café.", prompt: "Order something politely, mention one preference, and ask about the price.", starters: ["Could I have …, please?", "Can I get it without …?", "How much is it altogether?"], checks: ["Greet the staff and order clearly.", "Mention a preference or request.", "Check the price and close politely."] }
+      { id: "cafe-order", title: "Order at a café", level: "A1–A2", context: "You are ordering a drink and a snack at a small café.", prompt: "Order something politely, mention one preference, and ask about the price.", starters: ["Could I have …, please?", "Can I get it without …?", "How much is it altogether?"], checks: ["Greet the staff and order clearly.", "Mention a preference or request.", "Check the price and close politely."] },
+      { id: "discuss-study-plan", title: "Discuss a study plan", level: "B1", context: "Your group needs to finish a presentation by Friday.", prompt: "Suggest a fair division of tasks, explain one scheduling constraint, and agree on a next step.", starters: ["I suggest that we …", "I am available …, but …", "I can review … before …"], checks: ["Make a clear suggestion and give a reason.", "Explain your availability or a possible delay.", "Confirm one practical next step."] }
     ],
     writing: [
       { id: "short-introduction", title: "A short introduction", level: "A1", context: "Write a short profile for a new class discussion board.", prompt: "Introduce yourself, mention an interest, and explain one goal you have for learning English.", target: "50–80 words", starters: ["My name is …", "In my free time, I …", "One of my goals is …"], checks: ["My purpose is clear from the beginning.", "I included specific details, not only general claims.", "I checked spelling, punctuation, and sentence endings."] },
@@ -1043,6 +1055,199 @@
     renderStoryLibrary();
   }
 
+  function dialogueEntry(dialogueId) {
+    return progress.dialogueProgress[dialogueId] && typeof progress.dialogueProgress[dialogueId] === "object"
+      ? progress.dialogueProgress[dialogueId]
+      : { attempts: [], bestScore: 0, completedAt: null, updatedAt: null };
+  }
+
+  function renderDialogueLibrary() {
+    const node = $("#adventure-everyday-english");
+    if (!node) return;
+    if (dialogueRun) { renderDialogueRun(node); return; }
+    if (!dialoguesLoaded) {
+      node.innerHTML = '<div class="adventure-dialogue-heading"><div><span class="eyebrow">LISTEN · RESPOND · SPEAK</span><h3>Everyday English</h3><p>Latihan percakapan dalam situasi yang sering kamu temui.</p></div></div><p class="adventure-dialogue-empty">Menyiapkan skenario dialog…</p>';
+      return;
+    }
+    if (dialogueLoadError) {
+      node.innerHTML = '<div class="adventure-dialogue-heading"><div><span class="eyebrow">LISTEN · RESPOND · SPEAK</span><h3>Everyday English</h3><p>Latihan percakapan dalam situasi yang sering kamu temui.</p></div></div><p class="adventure-dialogue-empty">' + escapeHtml(dialogueLoadError) + '</p><button class="adventure-dialogue-back" type="button" data-dialogue-reload>Muat ulang dialog</button>';
+      return;
+    }
+    const completed = dialogues.filter((dialogue) => Boolean(dialogueEntry(dialogue.id).completedAt)).length;
+    const cards = dialogues.map((dialogue) => {
+      const entry = dialogueEntry(dialogue.id);
+      const done = Boolean(entry.completedAt);
+      const attempts = Array.isArray(entry.attempts) ? entry.attempts.length : 0;
+      const best = Number(entry.bestScore) || 0;
+      return '<article class="adventure-dialogue-card">' +
+        '<div class="adventure-dialogue-card-top"><span class="adventure-story-level">' + escapeHtml(dialogue.level) + '</span><span class="adventure-story-status">' + (done ? 'SELESAI ✓' : attempts ? 'PERNAH DICOBA' : 'SKENARIO BARU') + '</span></div>' +
+        '<h4>' + escapeHtml(dialogue.title) + '</h4><p>' + escapeHtml(dialogue.subtitle) + '</p>' +
+        '<div class="adventure-dialogue-card-meta"><span>' + escapeHtml(String(dialogue.estimatedMinutes || 5)) + ' MENIT</span><span>' + attempts + ' percobaan' + (attempts ? ' · terbaik ' + best + '/' + dialogue.turns.length : '') + '</span></div>' +
+        '<button type="button" data-dialogue-open="' + escapeHtml(dialogue.id) + '">' + (done ? 'Latih lagi ↗' : attempts ? 'Lanjut berlatih ↗' : 'Mulai dialog ↗') + '</button>' +
+      '</article>';
+    }).join("");
+    node.innerHTML =
+      '<div class="adventure-dialogue-heading"><div><span class="eyebrow">LISTEN · RESPOND · SPEAK</span><h3>Everyday English</h3><p>Dengarkan percakapan, amati pilihan kata, lalu pilih respons yang paling alami. Setelah itu, bawa situasinya ke Speaking Studio dan coba ucapkan dengan caramu sendiri.</p></div><span class="adventure-story-count">' + completed + '/' + dialogues.length + '<small>SELESAI</small></span></div>' +
+      (cards ? '<div class="adventure-dialogue-grid">' + cards + '</div>' : '<p class="adventure-dialogue-empty">Belum ada skenario dialog tersedia.</p>');
+  }
+
+  function renderDialogueRun(node) {
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue) { dialogueRun = null; renderDialogueLibrary(); return; }
+    if (dialogueRun.stage === "result") {
+      const passed = Boolean(dialogueRun.result?.passed);
+      node.innerHTML =
+        '<div class="adventure-dialogue-result" id="adventure-dialogue-result">' +
+          '<span class="adventure-story-level">' + escapeHtml(dialogue.level) + '</span>' +
+          '<div class="adventure-story-result-mark">' + (passed ? '✓' : '↻') + '</div>' +
+          '<h4>' + (passed ? 'Percakapan berhasil.' : 'Ayo coba sekali lagi.') + '</h4>' +
+          '<p>Respons tepat: <strong>' + dialogueRun.result.score + '/' + dialogueRun.result.total + '</strong>. ' +
+          (passed ? 'Kamu sudah memilih respons yang tepat di sebagian besar giliran percakapan.' : 'Baca penjelasan setiap respons, lalu ulangi dialog untuk memperkuat ungkapan yang alami.') + '</p>' +
+          '<div class="adventure-dialogue-result-actions">' +
+            '<button class="adventure-dialogue-retry" type="button" data-dialogue-retry="' + escapeHtml(dialogue.id) + '">Ulangi dialog ↗</button>' +
+            '<button class="adventure-dialogue-speaking" type="button" data-dialogue-speaking="' + escapeHtml(dialogue.id) + '">Lanjut ke Speaking Studio ↗</button>' +
+            '<button class="adventure-dialogue-back" type="button" data-dialogue-close>Kembali ke skenario</button>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
+    const turn = dialogue.turns[dialogueRun.turnIndex];
+    const answered = dialogueRun.locked;
+    const choices = turn.options.map((option, index) => {
+      const correct = index === turn.answer;
+      const chosen = index === dialogueRun.selectedAnswer;
+      return '<button type="button" class="adventure-dialogue-option' + (answered && correct ? ' is-correct' : '') + (answered && chosen && !correct ? ' is-wrong' : '') + '" data-dialogue-answer="' + index + '"' + (answered ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>';
+    }).join("");
+    const transcript = dialogueRun.transcriptVisible
+      ? '<div class="adventure-dialogue-transcript" id="adventure-dialogue-transcript">' + dialogue.transcript.map((line) => '<p><strong>' + escapeHtml(line.speaker) + '</strong><span>' + escapeHtml(line.text) + '</span></p>').join("") + '</div>'
+      : '';
+    const audioNote = dialogueRun.audioUnavailable
+      ? '<small>Audio browser tidak tersedia di perangkat ini. Kamu tetap bisa membaca transkripnya.</small>'
+      : '<small>Audio dibuat oleh browser dengan kecepatan ' + (progress.listeningRate || 0.9) + '×. Suara tidak direkam atau diunggah.</small>';
+    const vocabulary = dialogue.focusWords.map((word) => '<span class="adventure-dialogue-word"><strong>' + escapeHtml(word.word) + '</strong><span>' + escapeHtml(word.meaning) + '</span></span>').join("");
+    node.innerHTML =
+      '<div class="adventure-dialogue-reader" id="adventure-dialogue-reader">' +
+        '<div class="adventure-dialogue-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(dialogue.level) + '</span><span>·</span><span>' + escapeHtml(String(dialogue.estimatedMinutes || 5)) + ' MENIT</span></div><button class="adventure-dialogue-back" type="button" data-dialogue-close>← Skenario</button></div>' +
+        '<h3 class="adventure-dialogue-title">' + escapeHtml(dialogue.title) + '</h3><p class="adventure-dialogue-setting">' + escapeHtml(dialogue.setting) + '</p>' +
+        '<div class="adventure-dialogue-audio"><button class="adventure-dialogue-listen" type="button" data-dialogue-listen>▶ Dengarkan percakapan</button><button class="adventure-dialogue-transcript-toggle" type="button" data-dialogue-transcript>' + (dialogueRun.transcriptVisible ? 'Sembunyikan transkrip' : 'Lihat transkrip') + '</button>' + audioNote + '</div>' +
+        transcript +
+        '<div class="adventure-dialogue-vocabulary">' + vocabulary + '</div>' +
+        '<section class="adventure-dialogue-quiz" aria-labelledby="adventure-dialogue-question">' +
+          '<div class="adventure-dialogue-quiz-meta"><span>YOUR TURN / PILIH RESPONS</span><span>GILIRAN ' + (dialogueRun.turnIndex + 1) + '/' + dialogue.turns.length + '</span></div>' +
+          '<div class="adventure-story-progress"><i style="width:' + Math.round((dialogueRun.turnIndex + 1) / dialogue.turns.length * 100) + '%"></i></div>' +
+          '<div class="adventure-dialogue-partner-line"><span>' + escapeHtml(dialogue.transcript.find((line) => line.text === turn.partnerLine)?.speaker || 'PARTNER') + '</span><p>' + escapeHtml(turn.partnerLine) + '</p></div>' +
+          '<h4 id="adventure-dialogue-question">' + escapeHtml(turn.prompt) + '</h4>' +
+          '<div class="adventure-dialogue-options">' + choices + '</div>' +
+          (answered ? '<div class="adventure-dialogue-feedback' + (dialogueRun.isCorrect ? '' : ' is-wrong') + '" role="status"><strong>' + (dialogueRun.isCorrect ? 'Respons alami.' : 'Belum tepat.') + '</strong>' + escapeHtml(turn.explanation) + (!dialogueRun.isCorrect ? '<br>Respons yang disarankan: ' + escapeHtml(turn.response) : '') + '</div>' : '') +
+          (answered ? '<div class="adventure-dialogue-actions"><button class="adventure-dialogue-next" type="button" data-dialogue-next>' + (dialogueRun.turnIndex === dialogue.turns.length - 1 ? 'Lihat hasil →' : 'Giliran berikutnya →') + '</button></div>' : '') +
+        '</section>' +
+      '</div>';
+  }
+
+  async function loadDialogues() {
+    try {
+      const response = await fetch("/data/adventure/dialogues.json", { cache: "no-cache" });
+      if (!response.ok) throw new Error("Skenario Everyday English belum dapat dimuat.");
+      const data = await response.json();
+      if (!data || data.schemaVersion !== 1 || !Array.isArray(data.dialogues)) throw new Error("Format Everyday English tidak sesuai.");
+      const ids = new Set();
+      dialogues = data.dialogues.filter((dialogue) => {
+        const valid = dialogue && typeof dialogue.id === "string" && dialogue.id && !ids.has(dialogue.id) &&
+          typeof dialogue.title === "string" && ["A1", "A2", "B1", "B2"].includes(dialogue.level) &&
+          Array.isArray(dialogue.transcript) && dialogue.transcript.length >= 4 &&
+          dialogue.transcript.every((line) => line && typeof line.speaker === "string" && typeof line.text === "string") &&
+          Array.isArray(dialogue.focusWords) && Array.isArray(dialogue.turns) && dialogue.turns.length >= 3 &&
+          typeof dialogue.speakingPromptId === "string" &&
+          dialogue.turns.every((turn) => turn && typeof turn.id === "string" && typeof turn.prompt === "string" &&
+            typeof turn.partnerLine === "string" && Array.isArray(turn.options) && turn.options.length >= 2 &&
+            Number.isInteger(turn.answer) && turn.answer >= 0 && turn.answer < turn.options.length);
+        if (valid) ids.add(dialogue.id);
+        return valid;
+      });
+      if (dialogues.length !== data.dialogues.length) throw new Error("Sebagian skenario tidak lolos pemeriksaan struktur.");
+      dialoguesLoaded = true;
+      dialogueLoadError = "";
+      renderDialogueLibrary();
+    } catch (error) {
+      dialoguesLoaded = true;
+      dialogueLoadError = error instanceof Error ? error.message : "Skenario Everyday English belum dapat dimuat.";
+      renderDialogueLibrary();
+    }
+  }
+
+  function openDialogue(dialogueId) {
+    if (!dialogues.some((item) => item.id === dialogueId)) return;
+    dialogueRun = { dialogueId, stage: "roleplay", turnIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, transcriptVisible: false, audioUnavailable: false };
+    renderDialogueLibrary();
+  }
+
+  function listenToDialogue() {
+    if (!dialogueRun || dialogueRun.stage !== "roleplay") return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue) return;
+    const script = dialogue.transcript.map((line) => line.speaker + ": " + line.text).join(" ");
+    dialogueRun.audioUnavailable = !playText(script);
+    if (dialogueRun.audioUnavailable) dialogueRun.transcriptVisible = true;
+    renderDialogueLibrary();
+  }
+
+  function answerDialogue(answerIndex) {
+    if (!dialogueRun || dialogueRun.stage !== "roleplay" || dialogueRun.locked) return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    const turn = dialogue && dialogue.turns[dialogueRun.turnIndex];
+    if (!turn || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= turn.options.length) return;
+    dialogueRun.selectedAnswer = answerIndex;
+    dialogueRun.isCorrect = answerIndex === turn.answer;
+    dialogueRun.locked = true;
+    dialogueRun.answers.push({ turnId: turn.id, correct: dialogueRun.isCorrect });
+    renderDialogueLibrary();
+  }
+
+  function finishDialogue() {
+    if (!dialogueRun || dialogueRun.stage !== "roleplay") return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue || dialogueRun.answers.length !== dialogue.turns.length) return;
+    const score = dialogueRun.answers.filter((answer) => answer.correct).length;
+    const total = dialogue.turns.length;
+    const passed = score >= Math.ceil(total * 2 / 3);
+    const completedAt = new Date().toISOString();
+    const entry = dialogueEntry(dialogue.id);
+    const attempt = { attemptId: makeId(), score, total, passed, completedAt };
+    entry.attempts = [...(entry.attempts || []), attempt].slice(-100);
+    entry.bestScore = Math.max(Number(entry.bestScore) || 0, score);
+    if (passed && !entry.completedAt) entry.completedAt = completedAt;
+    entry.updatedAt = completedAt;
+    progress.dialogueProgress[dialogue.id] = entry;
+    saveProgress();
+    dialogueRun.stage = "result";
+    dialogueRun.result = { score, total, passed };
+    renderDialogueLibrary();
+  }
+
+  function advanceDialogue() {
+    if (!dialogueRun || !dialogueRun.locked || dialogueRun.stage !== "roleplay") return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue) return;
+    if (dialogueRun.turnIndex >= dialogue.turns.length - 1) {
+      finishDialogue();
+      return;
+    }
+    dialogueRun.turnIndex += 1;
+    dialogueRun.locked = false;
+    dialogueRun.selectedAnswer = null;
+    dialogueRun.isCorrect = false;
+    renderDialogueLibrary();
+  }
+
+  function openSpeakingFromDialogue(dialogueId) {
+    const dialogue = dialogues.find((item) => item.id === dialogueId);
+    if (!dialogue || !studioDrafts) return;
+    dialogueRun = null;
+    renderDialogueLibrary();
+    selectStudioPrompt("speaking", dialogue.speakingPromptId);
+    $("#adventure-speaking-studio")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   function initListeners() {
     document.addEventListener("click", (event) => {
       const select = event.target.closest("[data-adventure-select]");
@@ -1081,6 +1286,19 @@
       const storyRetry = event.target.closest("[data-story-retry]");
       if (storyRetry) { openStory(storyRetry.dataset.storyRetry); return; }
       if (event.target.closest("[data-story-listen]")) { listenToStory(); return; }
+      const dialogueOpen = event.target.closest("[data-dialogue-open]");
+      if (dialogueOpen) { openDialogue(dialogueOpen.dataset.dialogueOpen); return; }
+      if (event.target.closest("[data-dialogue-close]")) { dialogueRun = null; renderDialogueLibrary(); return; }
+      if (event.target.closest("[data-dialogue-reload]")) { dialogueLoadError = ""; dialoguesLoaded = false; renderDialogueLibrary(); void loadDialogues(); return; }
+      const dialogueAnswer = event.target.closest("[data-dialogue-answer]");
+      if (dialogueAnswer) { answerDialogue(Number(dialogueAnswer.dataset.dialogueAnswer)); return; }
+      if (event.target.closest("[data-dialogue-next]")) { advanceDialogue(); return; }
+      const dialogueRetry = event.target.closest("[data-dialogue-retry]");
+      if (dialogueRetry) { openDialogue(dialogueRetry.dataset.dialogueRetry); return; }
+      if (event.target.closest("[data-dialogue-listen]")) { listenToDialogue(); return; }
+      if (event.target.closest("[data-dialogue-transcript]")) { if (dialogueRun) { dialogueRun.transcriptVisible = !dialogueRun.transcriptVisible; renderDialogueLibrary(); } return; }
+      const dialogueSpeaking = event.target.closest("[data-dialogue-speaking]");
+      if (dialogueSpeaking) { openSpeakingFromDialogue(dialogueSpeaking.dataset.dialogueSpeaking); return; }
       const studioPrompt = event.target.closest("[data-studio-prompt]");
       if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
       const studioComplete = event.target.closest("[data-studio-complete]");
@@ -1112,6 +1330,7 @@
       studioDrafts = readStudioDrafts();
       initListeners(); renderAll();
       void loadStories();
+      void loadDialogues();
     } catch (error) {
       const panel = $("#adventure-mission-panel");
       if (panel) panel.textContent = error.message || "Petualangan belum dapat dimuat.";
