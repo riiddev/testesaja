@@ -1886,3 +1886,43 @@ h1,h2,h3{overflow-wrap:break-word}
 .adventure-learning-path button:hover{border-color:var(--sage-deep);background:var(--sage)}
 .adventure-learning-path button:focus-visible{outline:3px solid color-mix(in srgb,var(--sage-deep) 45%,transparent);outline-offset:2px}
 @media(max-width:560px){.adventure-learning-path{padding:12px}.adventure-learning-path>div{display:grid;grid-template-columns:1fr}.adventure-learning-path button{width:100%;min-height:40px;text-align:left}}
+
+
+/* Workspace IA redesign — secondary dashboard controls stay available without competing with today's plan. */
+.home-secondary-details { margin: 19px 0 0; }
+.home-secondary-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-block: 1px solid var(--line);
+  color: var(--body);
+  font-size: .72rem;
+  font-weight: 650;
+  cursor: pointer;
+  list-style: none;
+}
+.home-secondary-details > summary::-webkit-details-marker { display: none; }
+.home-secondary-details > summary::after {
+  content: "+";
+  color: var(--sage-deep);
+  font-size: 1rem;
+  line-height: 1;
+}
+.home-secondary-details[open] > summary::after { content: "−"; }
+.home-secondary-details[open] > .home-secondary-grid { margin-top: 18px; }
+.home-adventure-link { white-space: nowrap; }
+.side-link:focus-visible,
+.learning-tab:focus-visible,
+.reading-mode-button:focus-visible,
+.home-secondary-details > summary:focus-visible,
+.home-adventure-link:focus-visible {
+  outline: 2px solid var(--sage-deep);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .home-secondary-details[open] > .home-secondary-grid { grid-template-columns: 1fr; }
+  .home-study-plan-steps { grid-template-columns: 1fr; }
+  .home-adventure-link { padding-inline: 0; }
+}
