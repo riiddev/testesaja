@@ -9,6 +9,7 @@ const json = (path) => JSON.parse(read(path));
 const mirrorPairs = [
   ["belajar.js", "public/belajar.js"],
   ["data/vocabulary.json", "public/data/vocabulary.json"],
+  ["data/grammar.json", "public/data/grammar.json"],
   ["data/habit-reading-library.json", "public/data/habit-reading-library.json"],
   ["data/reading-lessons.json", "public/data/reading-lessons.json"],
 ];
@@ -49,6 +50,41 @@ for (const entry of vocabulary.entries) {
   }
 }
 assert.equal(importedDraftCount, 965, "Keep all imported A–E entries visibly marked for human editorial review");
+
+const grammar = json("data/grammar.json");
+assert.ok(Array.isArray(grammar.topics) && grammar.topics.length >= 19, "Expected the expanded A1–B2 grammar curriculum");
+const grammarTopicIds = new Set();
+const grammarQuestionIds = new Set();
+const grammarLevels = Object.fromEntries(["A1", "A2", "B1", "B2"].map((level) => [level, 0]));
+let grammarQuestionCount = 0;
+for (const topic of grammar.topics) {
+  assert.ok(topic.id && topic.title && topic.summary && topic.explanation && topic.checkpoint, "Every grammar topic needs a complete lesson structure");
+  assert.ok(!grammarTopicIds.has(topic.id), `Duplicate grammar topic id: ${topic.id}`);
+  grammarTopicIds.add(topic.id);
+  assert.ok(["A1", "A2", "B1", "B2"].includes(topic.level), `${topic.title}: invalid CEFR level`);
+  grammarLevels[topic.level] += 1;
+  assert.ok(Number.isInteger(topic.estimatedMinutes) && topic.estimatedMinutes >= 5, `${topic.title}: invalid duration`);
+  for (const field of ["patterns", "examples", "mistakes", "questions"]) {
+    assert.ok(Array.isArray(topic[field]) && topic[field].length >= 2, `${topic.title}: missing ${field}`);
+  }
+  for (const example of topic.examples) assert.ok(example.en && example.id, `${topic.title}: example needs English and Indonesian`);
+  for (const mistake of topic.mistakes) assert.ok(mistake.wrong && mistake.right && mistake.why, `${topic.title}: incomplete common-error guidance`);
+  for (const question of topic.questions) {
+    grammarQuestionCount += 1;
+    assert.ok(question.id && question.prompt && question.explanation, `${topic.title}: incomplete question`);
+    assert.ok(!grammarQuestionIds.has(question.id), `Duplicate grammar question id: ${question.id}`);
+    grammarQuestionIds.add(question.id);
+    if (question.type === "multiple-choice") {
+      assert.ok(Array.isArray(question.options) && question.options.length >= 3, `${topic.title}: multiple-choice question needs options`);
+      assert.equal(new Set(question.options).size, question.options.length, `${topic.title}: duplicate answer choices`);
+      assert.ok(Number.isInteger(question.answer) && question.answer >= 0 && question.answer < question.options.length, `${topic.title}: invalid answer key`);
+    } else if (question.type === "typed") {
+      assert.ok(Array.isArray(question.accepted) && question.accepted.length > 0, `${topic.title}: typed question needs accepted answers`);
+    } else assert.fail(`${topic.title}: unsupported question type ${question.type}`);
+  }
+}
+assert.ok(Object.values(grammarLevels).every((count) => count >= 3), "Grammar needs multiple topics at every CEFR level");
+assert.ok(grammarQuestionCount >= 55, "Expanded grammar question bank is too small");
 
 const habit = json("data/habit-reading-library.json");
 assert.equal(habit.sourcePageCount, 175, "HABIT PDF physical page count changed");
@@ -243,7 +279,8 @@ assert.ok(["A1", "A2", "B1", "B2"].every((level) => pronunciationLevels.has(leve
 assert.match(pronunciationLibrary.note, /locally|lokal/i, "Pronunciation Studio must disclose local microphone analysis");
 
 console.log("Content audit passed.");
-console.log(`- Vocabulary: ${vocabulary.entries.length} unique headwords; ${importedDraftCount} imported rows stay explicitly flagged for human review.`);
+console.log(`- Vocabulary: ${vocabulary.entries.length} unique headwords; ${importedDraftCount} imported rows remain flagged for human review; ${assistantEditorialPass.length} A1/A2 items have an assistant context/definition pass.`);
+console.log(`- Grammar: ${grammar.topics.length} lessons and ${grammarQuestionCount} validated questions across A1–B2.`);
 console.log(`- HABIT library: ${habit.passages.length} unique passages; ${storedWordCount.toLocaleString("en-US")} words; 175 physical PDF pages / 174 numbered content pages.`);
 console.log(`- Reading skills: ${reading.skills.length} skills and ${questionCount} checked questions.`);
 console.log(`- Everyday Stories: ${storyLibrary.stories.length} stories across A1–B2; focus words link to checked vocabulary IDs and all question keys are valid.`);
