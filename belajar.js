@@ -846,7 +846,7 @@
     $$(".lesson-answer").forEach(b=>b.addEventListener("click",async()=>{
       if(ui.result)return;const q=t.questions[ui.index],n=Number(b.dataset.grammarChoice),correct=n===q.answer;
       await recordGrammar(t,q,correct,q.options[n],q.options[q.answer]);if(correct)ui.sessionCorrect++;
-      ui.result={correct,explanation:q.explanation,expected:q.options[q.answer]};renderLesson(t.id);
+      ui.result={correct,explanation:q.explanation,expected:q.options[q.answer]};renderLesson(t.id);renderTopicList();
     }));
     $("#grammar-answer-form")?.addEventListener("submit",async e=>{
       e.preventDefault();if(ui.result)return;const q=t.questions[ui.index],ans=$("#grammar-typed-answer").value.trim(),accepted=q.accepted||[],correct=accepted.some(x=>norm(x)===norm(ans));
