@@ -2059,3 +2059,16 @@ h1,h2,h3{overflow-wrap:break-word}
 .detail-supplementary-content { display:grid; gap:13px; padding:2px 0 14px; }
 .detail-supplementary-content > div { min-width:0; }
 .detail-supplementary-content .detail-section-label { margin-top:8px; }
+
+
+/* Tablet: keep a compact labeled sidebar between the mobile and desktop layouts. */
+@media(min-width:761px) and (max-width:1050px) {
+  :root { --sidebar:190px; }
+  .sidebar { padding-inline:12px; }
+  .side-link { gap:8px; padding-inline:9px; font-size:.67rem; }
+  .nav-icon { width:18px; font-size:.76rem; }
+  .workspace { padding-inline:22px; }
+  .app-topbar { padding-inline:22px; }
+  .vocab-layout { grid-template-columns:minmax(0,1fr) minmax(245px,.8fr); gap:14px; }
+  .word-detail { padding:16px; }
+}
