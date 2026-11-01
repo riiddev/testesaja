@@ -289,6 +289,108 @@
           "explanation": "Of course accepts the request, and the second sentence explains exactly what you will do and when."
         }
       ]
+    },
+    {
+      "id": "revising-a-project-proposal",
+      "level": "B2",
+      "title": "Revising a Project Proposal",
+      "subtitle": "Challenge an assumption, weigh consequences, and suggest a workable alternative.",
+      "estimatedMinutes": 8,
+      "setting": "Your student team has proposed a campus study-space project. A new cost estimate means the group must revise its plan before presenting it to the student council.",
+      "speakingPromptId": "discuss-study-plan",
+      "focusWords": [
+        {
+          "id": "b2-substantial",
+          "word": "substantial",
+          "meaning": "cukup besar atau penting dalam jumlah, nilai, atau pengaruh"
+        },
+        {
+          "id": "b2-undermine",
+          "word": "undermine",
+          "meaning": "melemahkan secara bertahap; mengurangi kekuatan atau kepercayaan"
+        },
+        {
+          "id": "batch-consequence-noun",
+          "word": "consequence",
+          "meaning": "konsekuensi; akibat"
+        },
+        {
+          "id": "batch-alternative-noun",
+          "word": "alternative",
+          "meaning": "pilihan lain; alternatif"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Maya",
+          "text": "The revised estimate shows a substantial increase in the equipment cost. I am worried that the current proposal is no longer realistic."
+        },
+        {
+          "speaker": "You",
+          "text": "I agree that the increase changes our assumptions. However, removing the quiet study area entirely could undermine the main purpose of the project."
+        },
+        {
+          "speaker": "Maya",
+          "text": "That is a fair point. What alternative would you suggest?"
+        },
+        {
+          "speaker": "You",
+          "text": "We could open the quiet area in phases and use the first month's feedback to decide what equipment is essential."
+        },
+        {
+          "speaker": "Maya",
+          "text": "That would reduce the initial cost, although we should be clear about the consequences of delaying the second phase."
+        },
+        {
+          "speaker": "You",
+          "text": "Absolutely. We can include a review date and explain that the second phase depends on usage and the remaining budget."
+        },
+        {
+          "speaker": "Maya",
+          "text": "Good. Let's revise the proposal and make those conditions explicit before Friday."
+        }
+      ],
+      "turns": [
+        {
+          "id": "proposal-turn-1",
+          "partnerLine": "The revised estimate shows a substantial increase in the equipment cost. I am worried that the current proposal is no longer realistic.",
+          "prompt": "You want to acknowledge the concern without abandoning the project's main purpose. Which response is strongest?",
+          "options": [
+            "I agree the increase changes our assumptions, but removing the quiet area could undermine the project's main purpose.",
+            "The estimate is wrong, so we should ignore it.",
+            "I do not care about the cost because the idea is important."
+          ],
+          "answer": 0,
+          "response": "I agree the increase changes our assumptions, but removing the quiet area could undermine the project's main purpose.",
+          "explanation": "The response recognises the new evidence while explaining why the original objective still matters. Could undermine describes how a decision may weaken the project's purpose."
+        },
+        {
+          "id": "proposal-turn-2",
+          "partnerLine": "That is a fair point. What alternative would you suggest?",
+          "prompt": "You want to reduce the initial cost while keeping the project possible. What is the most practical suggestion?",
+          "options": [
+            "We should buy everything immediately and hope the budget works.",
+            "We could open the quiet area in phases and review feedback before buying the remaining equipment.",
+            "We should cancel the project without discussing any other option."
+          ],
+          "answer": 1,
+          "response": "We could open the quiet area in phases and review feedback before buying the remaining equipment.",
+          "explanation": "A phased approach is a realistic alternative: it limits the initial commitment and uses evidence before the next decision."
+        },
+        {
+          "id": "proposal-turn-3",
+          "partnerLine": "That would reduce the initial cost, although we should be clear about the consequences of delaying the second phase.",
+          "prompt": "How should you respond to make the proposal more accountable?",
+          "options": [
+            "There will be no consequences, so there is nothing to explain.",
+            "Let's leave that detail out of the presentation.",
+            "We can set a review date and explain that the second phase depends on usage and the remaining budget."
+          ],
+          "answer": 2,
+          "response": "We can set a review date and explain that the second phase depends on usage and the remaining budget.",
+          "explanation": "A review date and clear conditions make the consequences visible and give the team a measurable basis for continuing."
+        }
+      ]
     }
   ]
 }
