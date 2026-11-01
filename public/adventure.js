@@ -875,7 +875,8 @@
     const words = studioWordCount(text);
     const sentences = text ? text.split(/[.!?]+/).map((part) => part.trim()).filter(Boolean).length : 0;
     const connectors = ["because", "so", "however", "first", "then", "after", "finally", "also", "although", "therefore", "for example", "as a result", "but"];
-    const found = connectors.filter((word) => new RegExp("\\b" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\  function renderStudioPromptButtons(kind, selectedId) {") + "\\b", "i").test(text));
+    const normalized = " " + text.toLocaleLowerCase("en").replace(/[^a-z0-9 ]+/g, " ").replace(/\\s+/g, " ") + " ";
+    const found = connectors.filter((word) => normalized.includes(" " + word + " "));
     return { words, sentences, connectors: found };
   }
   function renderWritingSignals(value) {
