@@ -433,14 +433,20 @@
     if (!$('#view-' + next)) return;
     view = next;
     $$(".view").forEach(el => el.classList.toggle("is-visible",el.dataset.view === next));
-    const activeTopView = ["grammar","matching","study"].includes(next) ? "vocabulary" : next;
-    $$(".side-link").forEach(el => el.classList.toggle("is-active",el.dataset.viewTarget === activeTopView));
-    $$(".learning-tab").forEach(el => {
+    const activeTopView = ["grammar","matching","study"].includes(next) ? "vocabulary" : ["adventure","placement"].includes(next) ? "overview" : next;
+    $(".side-link").forEach(el => {
+      const active = el.dataset.viewTarget === activeTopView;
+      el.classList.toggle("is-active", active);
+      if (active) el.setAttribute("aria-current", "page");
+      else el.removeAttribute("aria-current");
+    });
+    $(".learning-tab").forEach(el => {
       const active = el.dataset.viewTarget === next;
       el.classList.toggle("is-active", active);
       el.setAttribute("aria-selected", String(active));
+      el.setAttribute("tabindex", active ? "0" : "-1");
     });
-    const topbarLabels = {overview:"Beranda",vocabulary:"Belajar · Kosakata",grammar:"Belajar · Grammar",matching:"Belajar · Matching",study:"Sesi belajar",reading:"Bacaan",adventure:"Petualangan",review:"Review",placement:"Cek level",progress:"Progres"};
+    const topbarLabels = {overview:"Beranda",vocabulary:"Belajar · Kosakata",grammar:"Belajar · Grammar",matching:"Belajar · Matching",study:"Sesi belajar",reading:"Bacaan",adventure:"Beranda · Petualangan",review:"Review",placement:"Beranda · Cek level",progress:"Progres"};
     const topbarCurrent = $("#topbar-current");
     if (topbarCurrent) topbarCurrent.textContent = topbarLabels[next] || "Ruang belajar";
     if (next === "overview") renderOverview();
@@ -922,10 +928,11 @@
       const readingModeBtn=e.target.closest("[data-reading-mode]");
       if(readingModeBtn){
         const mode=readingModeBtn.dataset.readingMode==="skills"?"skills":"habit";
-        $$(".reading-mode-button").forEach(button=>{
+        $(".reading-mode-button").forEach(button=>{
           const active=button.dataset.readingMode===mode;
           button.classList.toggle("is-active",active);
           button.setAttribute("aria-selected",String(active));
+          button.setAttribute("tabindex",active?"0":"-1");
         });
         const habit=$("#habit-library-section"),skills=$("#reading-skills-section");
         if(habit)habit.hidden=mode!=="habit";
@@ -977,6 +984,19 @@
     $("#exit-study").addEventListener("click",()=>setView(activeStudy&&activeStudy.mode==="review"?"review":"vocabulary"));
     $("#speak-word")?.addEventListener("click",()=>speak("notice"));
     document.addEventListener("keydown",e=>{
+      const tab=e.target.closest(".learning-subnav [role='tab'], #reading-mode-switch [role='tab']");
+      if(tab && ["ArrowLeft","ArrowRight","Home","End"].includes(e.key)){
+        const group=tab.closest(".learning-subnav, #reading-mode-switch");
+        const tabs=Array.from(group.querySelectorAll("[role='tab']:not([disabled])"));
+        const current=tabs.indexOf(tab);
+        if(tabs.length && current>=0){
+          const nextIndex=e.key==="Home"?0:e.key==="End"?tabs.length-1:(current+(e.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;
+          e.preventDefault();
+          tabs[nextIndex].focus();
+          tabs[nextIndex].click();
+        }
+        return;
+      }
       if(e.key==="/"&&view==="vocabulary"&&!["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)){e.preventDefault();$("#vocab-search").focus();}
       if(e.key==="Escape")$("#goal-dialog")?.close();
     });
