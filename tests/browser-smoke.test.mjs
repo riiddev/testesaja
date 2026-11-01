@@ -1029,6 +1029,15 @@ test("Listening Lab B2 exercise asks learners to distinguish contrast and infer 
   const page = await browser.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "listening-b2-preview-access",
+      refresh_token: "listening-b2-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "listening-b2-preview-user", email: "listening-b2-preview@example.com" },
+    }));
+  });
   await page.route("**/api/account**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
   });
@@ -1061,6 +1070,13 @@ test("Listening Lab keeps the exercise usable when browser speech synthesis is u
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "listening-fallback-preview-access",
+      refresh_token: "listening-fallback-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "listening-fallback-preview-user", email: "listening-fallback-preview@example.com" },
+    }));
     Object.defineProperty(window, "speechSynthesis", { configurable: true, value: undefined });
     window.SpeechSynthesisUtterance = undefined;
   });
