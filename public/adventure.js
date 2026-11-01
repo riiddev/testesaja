@@ -75,7 +75,18 @@
     for (const [phraseId, entry] of Object.entries(base.pronunciationProgress)) {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.pronunciationProgress[phraseId]; continue; }
       entry.attempts = Array.isArray(entry.attempts)
-        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && typeof attempt.completedAt === "string" && Number.isFinite(attempt.durationMs) && Number.isFinite(attempt.voiceShare)).slice(-50)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && typeof attempt.completedAt === "string" && Number.isFinite(attempt.durationMs) && Number.isFinite(attempt.voiceShare))
+          .map((attempt) => ({
+            attemptId: attempt.attemptId.slice(0, 140),
+            completedAt: attempt.completedAt,
+            durationMs: Math.max(0, Math.min(12000, Number(attempt.durationMs) || 0)),
+            voiceShare: Math.max(0, Math.min(1, Number(attempt.voiceShare) || 0)),
+            voicedFrames: Math.max(0, Math.min(200, Math.trunc(Number(attempt.voicedFrames) || 0))),
+            meanRms: Math.max(0, Math.min(1, Number(attempt.meanRms) || 0)),
+            pauseCount: Math.max(0, Math.min(30, Math.trunc(Number(attempt.pauseCount) || 0))),
+            pitchMedian: Number.isFinite(attempt.pitchMedian) ? Math.max(60, Math.min(400, Number(attempt.pitchMedian))) : null,
+            pitchRangeSemitones: Number.isFinite(attempt.pitchRangeSemitones) ? Math.max(0, Math.min(24, Number(attempt.pitchRangeSemitones))) : null,
+          })).slice(-50)
         : [];
       entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
     }
