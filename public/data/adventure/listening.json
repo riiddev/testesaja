@@ -88,7 +88,14 @@
           "answer": 1,
           "explanation": "Leo offers to stay with Mia while she waits. The sentence is a friendly offer, not a direction."
         }
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-rainy-morning",
+        "dialogueId": "at-the-cafe",
+        "pronunciationId": "clear-instructions",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction"
+      }
     },
     {
       "id": "booking-a-study-room",
@@ -179,7 +186,14 @@
           "answer": 0,
           "explanation": "Preparing the slides before the meeting suggests that Maya wants the group to use its meeting time effectively."
         }
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-change-of-plan",
+        "dialogueId": "finding-the-bus-station",
+        "pronunciationId": "confirm-the-time",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "weekend-story"
+      }
     },
     {
       "id": "changing-an-appointment",
@@ -274,7 +288,14 @@
           "answer": 1,
           "explanation": "Noah asks to reschedule rather than simply cancel, showing that he wants to keep the appointment and give notice."
         }
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-shared-workspace",
+        "dialogueId": "planning-a-study-session",
+        "pronunciationId": "polite-reschedule",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
     },
     {
       "id": "reviewing-a-study-proposal",
@@ -379,7 +400,410 @@
           "answer": 1,
           "explanation": "A limited trial with a review date allows the committee to evaluate real demand and costs before making a longer-term decision."
         }
-      ]
+      ],
+      "learningPath": {
+        "storyId": "the-cost-of-convenience",
+        "dialogueId": "revising-a-project-proposal",
+        "pronunciationId": "contrasting-evidence",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
+    },
+    {
+      "id": "finding-a-lunchbox",
+      "level": "A1",
+      "title": "Finding a Lunchbox",
+      "subtitle": "Follow a short conversation about a missing item.",
+      "estimatedMinutes": 5,
+      "setting": "Two classmates look for a lunchbox before the next lesson.",
+      "focusWords": [
+        {
+          "id": "a1-neighbor",
+          "word": "neighbor",
+          "meaning": "tetangga"
+        },
+        {
+          "id": "a1-usually",
+          "word": "usually",
+          "meaning": "biasanya"
+        },
+        {
+          "id": "a1-arrive",
+          "word": "arrive",
+          "meaning": "tiba"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Mia",
+          "text": "I think I left my lunchbox in the classroom."
+        },
+        {
+          "speaker": "Leo",
+          "text": "We can go back and look for it before the next lesson."
+        },
+        {
+          "speaker": "Mia",
+          "text": "Thank you. I usually put it in my bag, but today I was in a hurry."
+        },
+        {
+          "speaker": "Leo",
+          "text": "There it is, next to the window."
+        },
+        {
+          "speaker": "Mia",
+          "text": "Great. We should arrive at class before the bell rings."
+        }
+      ],
+      "stages": [
+        {
+          "id": "lunchbox-gist",
+          "kind": "gist",
+          "label": "Catch the main idea",
+          "audioText": "Mia: I think I left my lunchbox in the classroom. Leo: We can go back and look for it before the next lesson.",
+          "prompt": "What are Mia and Leo trying to do?",
+          "options": [
+            "Find a missing lunchbox",
+            "Buy a new school bag",
+            "Prepare a class presentation"
+          ],
+          "answer": 0,
+          "explanation": "Mia thinks she left her lunchbox in the classroom, so they go back to look for it."
+        },
+        {
+          "id": "lunchbox-detail",
+          "kind": "detail",
+          "label": "Listen for a detail",
+          "audioText": "Leo: There it is, next to the window.",
+          "prompt": "Where is the lunchbox?",
+          "options": [
+            "Inside Mia's bag",
+            "Next to the window",
+            "Near the school gate"
+          ],
+          "answer": 1,
+          "explanation": "Leo points out that the lunchbox is next to the window."
+        },
+        {
+          "id": "lunchbox-inference",
+          "kind": "inference",
+          "label": "Understand the reason",
+          "audioText": "Mia: I usually put it in my bag, but today I was in a hurry.",
+          "prompt": "Why did Mia probably leave the lunchbox behind?",
+          "options": [
+            "She was in a hurry.",
+            "She did not bring lunch.",
+            "The classroom was closed."
+          ],
+          "answer": 0,
+          "explanation": "Mia explains that she usually puts the lunchbox in her bag but was in a hurry today."
+        }
+      ],
+      "learningPath": {
+        "storyId": "a-rainy-morning",
+        "dialogueId": "at-the-cafe",
+        "pronunciationId": "friendly-question",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction"
+      }
+    },
+    {
+      "id": "checking-a-booking",
+      "level": "A2",
+      "title": "Checking a Booking",
+      "subtitle": "Listen for a time, a condition, and a practical next step.",
+      "estimatedMinutes": 6,
+      "setting": "A student checks a study-room reservation with a librarian.",
+      "focusWords": [
+        {
+          "id": "a2-available",
+          "word": "available",
+          "meaning": "tersedia"
+        },
+        {
+          "id": "a2-notice",
+          "word": "notice",
+          "meaning": "menyadari"
+        },
+        {
+          "id": "a2-prepare",
+          "word": "prepare",
+          "meaning": "mempersiapkan"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Maya",
+          "text": "I booked the small room for our group this afternoon."
+        },
+        {
+          "speaker": "Librarian",
+          "text": "I noticed your booking. The room is available from three until five."
+        },
+        {
+          "speaker": "Maya",
+          "text": "Do we need to bring our own projector?"
+        },
+        {
+          "speaker": "Librarian",
+          "text": "The projector is already in the room, but please check the cable before you begin."
+        },
+        {
+          "speaker": "Maya",
+          "text": "That helps. We can prepare the slides before everyone arrives."
+        }
+      ],
+      "stages": [
+        {
+          "id": "booking-gist",
+          "kind": "gist",
+          "label": "Catch the main idea",
+          "audioText": "Maya: I booked the small room for our group this afternoon. Librarian: I noticed your booking. The room is available from three until five.",
+          "prompt": "What is Maya checking?",
+          "options": [
+            "A study-room reservation",
+            "A train ticket",
+            "A library membership fee"
+          ],
+          "answer": 0,
+          "explanation": "Maya and the librarian discuss the time and conditions of a study-room booking."
+        },
+        {
+          "id": "booking-detail",
+          "kind": "detail",
+          "label": "Listen for a condition",
+          "audioText": "Librarian: The projector is already in the room, but please check the cable before you begin.",
+          "prompt": "What should Maya check before starting?",
+          "options": [
+            "The room number",
+            "The projector cable",
+            "The library opening hours"
+          ],
+          "answer": 1,
+          "explanation": "The librarian specifically asks Maya to check the cable."
+        },
+        {
+          "id": "booking-inference",
+          "kind": "inference",
+          "label": "Understand the next step",
+          "audioText": "Maya: That helps. We can prepare the slides before everyone arrives.",
+          "prompt": "What does Maya plan to do?",
+          "options": [
+            "Prepare the presentation before the group arrives.",
+            "Cancel the booking.",
+            "Ask the librarian to prepare the slides."
+          ],
+          "answer": 0,
+          "explanation": "Maya says the group can prepare the slides before everyone arrives."
+        }
+      ],
+      "learningPath": {
+        "storyId": "a-change-of-plan",
+        "dialogueId": "finding-the-bus-station",
+        "pronunciationId": "confirm-the-time",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "weekend-story"
+      }
+    },
+    {
+      "id": "improving-a-study-routine",
+      "level": "B1",
+      "title": "Improving a Study Routine",
+      "subtitle": "Compare suggestions and identify the evidence behind a change.",
+      "estimatedMinutes": 7,
+      "setting": "Two students discuss a study routine after reviewing their recent results.",
+      "focusWords": [
+        {
+          "id": "b1-evidence",
+          "word": "evidence",
+          "meaning": "bukti"
+        },
+        {
+          "id": "b1-maintain",
+          "word": "maintain",
+          "meaning": "mempertahankan"
+        },
+        {
+          "id": "b1-reliable",
+          "word": "reliable",
+          "meaning": "dapat diandalkan"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Alya",
+          "text": "Our practice results show that we remember more when we review in shorter sessions."
+        },
+        {
+          "speaker": "Bima",
+          "text": "That is useful evidence, but we should check whether the pattern is reliable over several weeks."
+        },
+        {
+          "speaker": "Alya",
+          "text": "I can maintain the routine if we review for twenty minutes after lunch."
+        },
+        {
+          "speaker": "Bima",
+          "text": "That sounds manageable. We could also record which topics still cause problems."
+        },
+        {
+          "speaker": "Alya",
+          "text": "Agreed. Then we can adjust the plan instead of repeating every topic."
+        }
+      ],
+      "stages": [
+        {
+          "id": "routine-gist",
+          "kind": "gist",
+          "label": "Catch the main idea",
+          "audioText": "Alya: Our practice results show that we remember more when we review in shorter sessions. Bima: That is useful evidence, but we should check whether the pattern is reliable over several weeks.",
+          "prompt": "What are Alya and Bima mainly discussing?",
+          "options": [
+            "How to improve their study routine using practice results",
+            "How to choose a new university",
+            "Why they should stop reviewing topics"
+          ],
+          "answer": 0,
+          "explanation": "They discuss short review sessions and whether their results support changing the routine."
+        },
+        {
+          "id": "routine-detail",
+          "kind": "detail",
+          "label": "Listen for a detail",
+          "audioText": "Alya: I can maintain the routine if we review for twenty minutes after lunch.",
+          "prompt": "How long does Alya suggest reviewing?",
+          "options": [
+            "Ten minutes",
+            "Twenty minutes",
+            "One hour"
+          ],
+          "answer": 1,
+          "explanation": "Alya proposes twenty-minute sessions after lunch."
+        },
+        {
+          "id": "routine-inference",
+          "kind": "inference",
+          "label": "Understand the implication",
+          "audioText": "Alya: Agreed. Then we can adjust the plan instead of repeating every topic.",
+          "prompt": "What does Alya imply about their next study plan?",
+          "options": [
+            "It should respond to topics that remain difficult.",
+            "It should repeat every topic equally.",
+            "It should avoid using practice results."
+          ],
+          "answer": 0,
+          "explanation": "They intend to use evidence about difficult topics to adjust what they review."
+        }
+      ],
+      "learningPath": {
+        "storyId": "a-shared-workspace",
+        "dialogueId": "planning-a-study-session",
+        "pronunciationId": "balanced-emphasis",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
+    },
+    {
+      "id": "evaluating-a-new-schedule",
+      "level": "B2",
+      "title": "Evaluating a New Schedule",
+      "subtitle": "Separate headline figures from the wider evidence.",
+      "estimatedMinutes": 8,
+      "setting": "A committee evaluates whether a university should extend evening study-room hours.",
+      "focusWords": [
+        {
+          "id": "b2-substantial",
+          "word": "substantial",
+          "meaning": "cukup besar atau penting"
+        },
+        {
+          "id": "b2-whereas",
+          "word": "whereas",
+          "meaning": "sedangkan"
+        },
+        {
+          "id": "b2-undermine",
+          "word": "undermine",
+          "meaning": "melemahkan"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Dina",
+          "text": "The latest survey suggests substantial demand for longer opening hours during examination week."
+        },
+        {
+          "speaker": "Rafi",
+          "text": "Yes, whereas attendance on ordinary weekdays has remained almost unchanged."
+        },
+        {
+          "speaker": "Dina",
+          "text": "A permanent extension could undermine the budget if the additional visits are limited to a few weeks."
+        },
+        {
+          "speaker": "Rafi",
+          "text": "We might test the change during the next examination period and compare actual usage."
+        },
+        {
+          "speaker": "Dina",
+          "text": "We should also examine staff availability and the cost of security."
+        },
+        {
+          "speaker": "Rafi",
+          "text": "Agreed. A short trial would give us stronger evidence before a permanent decision."
+        }
+      ],
+      "stages": [
+        {
+          "id": "schedule-gist",
+          "kind": "gist",
+          "label": "Catch the main argument",
+          "audioText": "Dina: The latest survey suggests substantial demand for longer opening hours during examination week. Rafi: Yes, whereas attendance on ordinary weekdays has remained almost unchanged.",
+          "prompt": "What is the committee evaluating?",
+          "options": [
+            "Whether to extend study-room opening hours",
+            "Whether to remove the examination period",
+            "Whether to reduce the number of staff"
+          ],
+          "answer": 0,
+          "explanation": "The speakers compare demand during examination week with ordinary weekday attendance."
+        },
+        {
+          "id": "schedule-detail",
+          "kind": "detail",
+          "label": "Listen for a contrast",
+          "audioText": "Rafi: Yes, whereas attendance on ordinary weekdays has remained almost unchanged.",
+          "prompt": "What contrast does Rafi identify?",
+          "options": [
+            "Exam-week demand is higher, but ordinary weekday attendance has barely changed.",
+            "Attendance has fallen on every day.",
+            "Staff availability has increased substantially."
+          ],
+          "answer": 0,
+          "explanation": "Rafi contrasts substantial examination-week demand with almost unchanged attendance on ordinary weekdays."
+        },
+        {
+          "id": "schedule-inference",
+          "kind": "inference",
+          "label": "Infer the recommendation",
+          "audioText": "Rafi: Agreed. A short trial would give us stronger evidence before a permanent decision.",
+          "prompt": "What is the likely recommendation?",
+          "options": [
+            "Run a limited trial and evaluate evidence before making a permanent change.",
+            "Extend opening hours permanently without further review.",
+            "Ignore staffing and security costs."
+          ],
+          "answer": 0,
+          "explanation": "A short trial would help the committee assess demand and practical costs before deciding."
+        }
+      ],
+      "learningPath": {
+        "storyId": "the-cost-of-convenience",
+        "dialogueId": "revising-a-project-proposal",
+        "pronunciationId": "measured-recommendation",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
     }
   ]
 }

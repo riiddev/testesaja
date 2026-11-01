@@ -69,13 +69,20 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 - `data/oxford3000/editorial-overrides-loader.js` — combines gzip and gzip/Base64 overlays in the browser before the learning workspace loads.
 - `data/oxford3000/ATTRIBUTION.md`, `data/oxford3000/audit.json` — source attribution and content-quality audit.
 
-## Next work
+## Curriculum expansion status
 
-1. Human-review high-frequency meanings, parts of speech, examples, and Indonesian translations, starting with A1/A2.
-2. Replace unreliable or fragmentary examples and improve context variants before expanding the mastery-ready pool.
-3. Expand grammar lessons and validated question banks topic by topic.
-4. Expand Listening Lab and Pronunciation Studio with reviewed A1–B2 listening, stress, connected speech, and intonation practice; keep connecting reading, dialogue, listening, speaking, and writing through shared learning goals.
-5. Continue responsive, accessibility, persistence, backup/restore, and regression checks.
+- Grammar now contains **19 lessons and 57 checked questions** across A1–B2, with Indonesian explanations, examples, common-error notes, and focused practice.
+- Everyday Stories now contains **8 graded passages**, two per CEFR band, each with comprehension checks and a shared learning path to a dialogue, listening activity, pronunciation phrase, Speaking Studio prompt, and Writing Studio prompt.
+- Listening Lab now contains **8 staged exercises**, with two per CEFR band. Every exercise includes gist, detail, and inference practice grounded in its transcript.
+- Pronunciation Studio now contains **16 guided phrases**, four per CEFR band, covering word/sentence stress, rhythm, linking, question intonation, contrast, and longer thought groups.
+- The first editorial pass adds contextual practice and concise definitions to **37 high-frequency A1/A2 entries**. Those imported entries remain marked as drafts; the assistant pass is not a substitute for independent human language review.
+
+## Remaining editorial and release work
+
+1. Independently review the 965 imported A–E vocabulary drafts, prioritising high-frequency A1/A2 meanings, parts of speech, examples, and Indonesian translations.
+2. Continue replacing weak or overly generic examples and add contextual variants before expanding the mastery-ready pool.
+3. Keep expanding grammar and listening material based on observed learner needs, while reviewing the new answer keys and linguistic nuance.
+4. Complete responsive, accessibility, persistence, backup/restore, and browser regression checks on the unified preview before merging.
 
 **Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
 

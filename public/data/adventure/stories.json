@@ -65,7 +65,14 @@
           "answer": 0,
           "explanation": "Usually describes a habit or something that happens on most occasions."
         }
-      ]
+      ],
+      "learningPath": {
+        "dialogueId": "at-the-cafe",
+        "listeningId": "missed-the-bus",
+        "pronunciationId": "polite-help",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction"
+      }
     },
     {
       "id": "the-wrong-turn",
@@ -134,7 +141,14 @@
           "answer": 1,
           "explanation": "He records the correct route so the next visit will be easier."
         }
-      ]
+      ],
+      "learningPath": {
+        "dialogueId": "finding-the-bus-station",
+        "listeningId": "booking-a-study-room",
+        "pronunciationId": "book-a-room",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "weekend-story"
+      }
     },
     {
       "id": "a-better-place-to-study",
@@ -203,7 +217,14 @@
           "answer": 0,
           "explanation": "The students improved a shared resource by communicating and organizing their time."
         }
-      ]
+      ],
+      "learningPath": {
+        "dialogueId": "planning-a-study-session",
+        "listeningId": "changing-an-appointment",
+        "pronunciationId": "reschedule-appointment",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
     },
     {
       "id": "the-library-after-hours",
@@ -268,7 +289,296 @@
           "answer": 2,
           "explanation": "The council reviewed several kinds of evidence and adjusted the schedule rather than treating higher attendance as proof that everything was working."
         }
-      ]
+      ],
+      "learningPath": {
+        "dialogueId": "revising-a-project-proposal",
+        "listeningId": "reviewing-a-study-proposal",
+        "pronunciationId": "proposal-evidence",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
+    },
+    {
+      "id": "a-rainy-morning",
+      "level": "A1",
+      "title": "A Rainy Morning",
+      "subtitle": "A small change makes the journey easier.",
+      "estimatedMinutes": 5,
+      "paragraphs": [
+        "On Monday morning, Sari leaves home earlier than usual. Dark clouds are above the town, and she thinks it may rain before school starts. She puts a small umbrella in her bag and walks to the bus stop.",
+        "At the stop, her neighbor Bima is waiting too. The first bus is full, so they wait for another one. Bima asks Sari about her English homework, and they talk until the bus arrives. The rain begins just as they get on. Sari is glad that she brought her umbrella, but she is even happier to have someone to talk to."
+      ],
+      "focusWords": [
+        {
+          "id": "a1-usually",
+          "word": "usually",
+          "meaning": "biasanya"
+        },
+        {
+          "id": "a1-neighbor",
+          "word": "neighbor",
+          "meaning": "tetangga"
+        },
+        {
+          "id": "a1-improve",
+          "word": "improve",
+          "meaning": "menjadi lebih baik"
+        }
+      ],
+      "questions": [
+        {
+          "id": "rain-q1",
+          "prompt": "Why does Sari leave home earlier than usual?",
+          "options": [
+            "She expects that it may rain.",
+            "She wants to buy a new bag.",
+            "She has forgotten her homework."
+          ],
+          "answer": 0,
+          "explanation": "Dark clouds make Sari think that rain may arrive before school starts."
+        },
+        {
+          "id": "rain-q2",
+          "prompt": "Why do Sari and Bima wait for another bus?",
+          "options": [
+            "The first bus is full.",
+            "The bus stop is closed.",
+            "They want to walk to school."
+          ],
+          "answer": 0,
+          "explanation": "The passage states that the first bus is full."
+        },
+        {
+          "id": "rain-q3",
+          "prompt": "What is Sari pleased about besides bringing her umbrella?",
+          "options": [
+            "She meets someone to talk to.",
+            "She finds a new school.",
+            "She finishes her homework on the bus."
+          ],
+          "answer": 0,
+          "explanation": "Sari enjoys having someone to talk to while they wait."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "at-the-cafe",
+        "listeningId": "missed-the-bus",
+        "pronunciationId": "polite-help",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction"
+      }
+    },
+    {
+      "id": "a-change-of-plan",
+      "level": "A2",
+      "title": "A Change of Plan",
+      "subtitle": "A short delay leads to a better decision.",
+      "estimatedMinutes": 6,
+      "paragraphs": [
+        "Rafi and Nisa plan to study at the public library after lunch. When they arrive, they notice a sign saying that the quiet room is not available until three. Nisa suggests waiting in the garden, but the weather is getting worse.",
+        "Instead, Rafi checks the library website and finds a smaller room on the second floor. It is available now, although they need to book it at the front desk. They decide to use the room for an hour and prepare their presentation there. The change takes only a few minutes, and they avoid wasting the afternoon."
+      ],
+      "focusWords": [
+        {
+          "id": "a2-notice",
+          "word": "notice",
+          "meaning": "menyadari atau memperhatikan"
+        },
+        {
+          "id": "a2-avoid",
+          "word": "avoid",
+          "meaning": "menghindari"
+        },
+        {
+          "id": "a2-available",
+          "word": "available",
+          "meaning": "tersedia"
+        }
+      ],
+      "questions": [
+        {
+          "id": "plan-q1",
+          "prompt": "What problem do Rafi and Nisa discover?",
+          "options": [
+            "The quiet room is not available until three.",
+            "The library has closed for the day.",
+            "They have forgotten their presentation."
+          ],
+          "answer": 0,
+          "explanation": "The sign says the quiet room will only be available from three."
+        },
+        {
+          "id": "plan-q2",
+          "prompt": "How do they find another place to study?",
+          "options": [
+            "Rafi checks the library website.",
+            "Nisa calls a taxi.",
+            "They ask another student to leave."
+          ],
+          "answer": 0,
+          "explanation": "Rafi checks the website and finds a smaller room on the second floor."
+        },
+        {
+          "id": "plan-q3",
+          "prompt": "What does the final sentence suggest?",
+          "options": [
+            "They solve the problem without losing much time.",
+            "They decide not to study that day.",
+            "They must wait until the next morning."
+          ],
+          "answer": 0,
+          "explanation": "The alternative room allows them to continue their plan and avoid wasting the afternoon."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "finding-the-bus-station",
+        "listeningId": "booking-a-study-room",
+        "pronunciationId": "book-a-room",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "weekend-story"
+      }
+    },
+    {
+      "id": "a-shared-workspace",
+      "level": "B1",
+      "title": "A Shared Workspace",
+      "subtitle": "A small group uses evidence to improve a common room.",
+      "estimatedMinutes": 7,
+      "paragraphs": [
+        "Students at a community centre often struggled to find a quiet place to work. The centre had a shared room, but it was rarely organised. Some visitors used it for group conversations, whereas others needed a quiet desk to prepare for examinations.",
+        "A group of volunteers collected feedback for two weeks. Their notes showed that most people wanted the room to remain flexible, but they also needed clear quiet hours. The volunteers contributed a simple schedule and suggested that the centre test it for one month.",
+        "The manager agreed to the trial. At the end of the month, the centre compared attendance records with the original feedback. The new routine did not solve every problem, but the evidence helped the team decide what to improve next."
+      ],
+      "focusWords": [
+        {
+          "id": "b1-reliable",
+          "word": "reliable",
+          "meaning": "dapat diandalkan"
+        },
+        {
+          "id": "b1-contribute",
+          "word": "contribute",
+          "meaning": "menyumbangkan atau berkontribusi"
+        },
+        {
+          "id": "b1-evidence",
+          "word": "evidence",
+          "meaning": "bukti"
+        }
+      ],
+      "questions": [
+        {
+          "id": "workspace-q1",
+          "prompt": "What conflict existed in the shared room?",
+          "options": [
+            "Some people wanted conversation while others needed quiet.",
+            "Visitors wanted the centre to close permanently.",
+            "The room had too many computers."
+          ],
+          "answer": 0,
+          "explanation": "The room served visitors with different needs: group conversations and quiet study."
+        },
+        {
+          "id": "workspace-q2",
+          "prompt": "Why did the volunteers collect feedback for two weeks?",
+          "options": [
+            "To understand what visitors needed before suggesting a schedule.",
+            "To prove that the manager was wrong.",
+            "To decide which volunteers should leave."
+          ],
+          "answer": 0,
+          "explanation": "Their feedback provided information about the needs of different visitors."
+        },
+        {
+          "id": "workspace-q3",
+          "prompt": "What is the most reasonable conclusion?",
+          "options": [
+            "A small trial and evidence can guide further improvements.",
+            "A schedule always solves every problem immediately.",
+            "Visitors should never share a workspace."
+          ],
+          "answer": 0,
+          "explanation": "The passage says the trial did not solve everything, but the evidence helped identify the next improvements."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "planning-a-study-session",
+        "listeningId": "changing-an-appointment",
+        "pronunciationId": "reschedule-appointment",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
+    },
+    {
+      "id": "the-cost-of-convenience",
+      "level": "B2",
+      "title": "The Cost of Convenience",
+      "subtitle": "A faster service is not automatically a better service.",
+      "estimatedMinutes": 8,
+      "paragraphs": [
+        "A university introduced an automated booking system for its study rooms. The system was intended to reduce queues and make room availability more transparent. During the first month, the number of completed bookings increased substantially, and students reported that the process was easier to use.",
+        "However, the headline figures concealed a less convenient experience for some users. Students who had limited internet access found it harder to compete for popular time slots, whereas students who could check the system frequently had an advantage. A few rooms also remained empty because reservations were not cancelled when plans changed.",
+        "The university reviewed the booking data alongside feedback from students and staff. Rather than abandoning the system, it introduced a short check-in window and a simpler cancellation process. The revised policy did not remove every difficulty, but it made the service more responsive to different circumstances."
+      ],
+      "focusWords": [
+        {
+          "id": "b2-substantial",
+          "word": "substantial",
+          "meaning": "cukup besar atau penting"
+        },
+        {
+          "id": "b2-whereas",
+          "word": "whereas",
+          "meaning": "sedangkan"
+        },
+        {
+          "id": "b2-undermine",
+          "word": "undermine",
+          "meaning": "melemahkan"
+        }
+      ],
+      "questions": [
+        {
+          "id": "convenience-q1",
+          "prompt": "What did the increase in completed bookings fail to show by itself?",
+          "options": [
+            "Whether all students had equal access to the booking system.",
+            "Whether the rooms had enough chairs.",
+            "Whether the university owned the buildings."
+          ],
+          "answer": 0,
+          "explanation": "The headline number did not reveal that students with limited internet access faced a disadvantage."
+        },
+        {
+          "id": "convenience-q2",
+          "prompt": "Why did some rooms remain empty?",
+          "options": [
+            "Some users did not cancel reservations when their plans changed.",
+            "The system automatically removed all reservations.",
+            "Students were not allowed to book rooms."
+          ],
+          "answer": 0,
+          "explanation": "Reservations were sometimes left active even when the student no longer needed the room."
+        },
+        {
+          "id": "convenience-q3",
+          "prompt": "Which statement best reflects the university's response?",
+          "options": [
+            "It adjusted the system using usage data and user feedback.",
+            "It removed all digital services immediately.",
+            "It ignored the concerns because booking numbers had increased."
+          ],
+          "answer": 0,
+          "explanation": "The university used evidence to introduce a check-in window and easier cancellation rather than abandoning the system."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "revising-a-project-proposal",
+        "listeningId": "reviewing-a-study-proposal",
+        "pronunciationId": "proposal-evidence",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
     }
   ]
 }

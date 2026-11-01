@@ -214,7 +214,7 @@ assert.ok(dialogueLevels.has("A1") && dialogueLevels.has("A2") && dialogueLevels
 
 const listeningLibrary = json("public/data/adventure/listening.json");
 assert.equal(listeningLibrary.schemaVersion, 1, "Listening Lab schema version changed");
-assert.ok(Array.isArray(listeningLibrary.exercises) && listeningLibrary.exercises.length >= 4, "Expected at least four Listening Lab exercises");
+assert.ok(Array.isArray(listeningLibrary.exercises) && listeningLibrary.exercises.length >= 8, "Expected at least four Listening Lab exercises");
 const listeningIds = new Set();
 const listeningStageIds = new Set();
 const listeningLevels = new Set();
@@ -256,7 +256,7 @@ assert.ok(["A1", "A2", "B1", "B2"].every((level) => listeningLevels.has(level)),
 
 const pronunciationLibrary = json("public/data/adventure/pronunciation.json");
 assert.equal(pronunciationLibrary.schemaVersion, 1, "Pronunciation Studio schema version changed");
-assert.ok(Array.isArray(pronunciationLibrary.exercises) && pronunciationLibrary.exercises.length >= 8, "Expected at least eight Pronunciation Studio exercises");
+assert.ok(Array.isArray(pronunciationLibrary.exercises) && pronunciationLibrary.exercises.length >= 16, "Expected at least eight Pronunciation Studio exercises");
 const pronunciationIds = new Set();
 const pronunciationLevels = new Set();
 for (const exercise of pronunciationLibrary.exercises) {
@@ -276,6 +276,26 @@ for (const exercise of pronunciationLibrary.exercises) {
   assert.ok(!("audioUrl" in exercise) && !("audioData" in exercise) && !("recording" in exercise), `${exercise.title}: phrase content must not embed audio files`);
 }
 assert.ok(["A1", "A2", "B1", "B2"].every((level) => pronunciationLevels.has(level)), "Pronunciation Studio should cover A1 through B2");
+assert.ok(["A1", "A2", "B1", "B2"].every((level) => storyLevels.has(level)), "Everyday Stories should cover A1 through B2");
+const storyIdSet = storyIds;
+const dialogueIdSet = dialogueIds;
+const listeningIdSet = listeningIds;
+const pronunciationIdSet = pronunciationIds;
+const allowedWritingPrompts = new Set(["short-introduction", "weekend-story", "helpful-message", "study-reflection", "balanced-proposal"]);
+function auditLearningPath(path, label) {
+  assert.ok(path && typeof path === "object", `${label}: shared learning path is required`);
+  if (path.storyId) assert.ok(storyIdSet.has(path.storyId), `${label}: unknown linked story ${path.storyId}`);
+  if (path.dialogueId) assert.ok(dialogueIdSet.has(path.dialogueId), `${label}: unknown linked dialogue ${path.dialogueId}`);
+  if (path.listeningId) assert.ok(listeningIdSet.has(path.listeningId), `${label}: unknown linked listening exercise ${path.listeningId}`);
+  if (path.pronunciationId) assert.ok(pronunciationIdSet.has(path.pronunciationId), `${label}: unknown linked pronunciation exercise ${path.pronunciationId}`);
+  if (path.speakingPromptId) assert.ok(allowedSpeakingPrompts.has(path.speakingPromptId), `${label}: unknown Speaking Studio prompt ${path.speakingPromptId}`);
+  if (path.writingPromptId) assert.ok(allowedWritingPrompts.has(path.writingPromptId), `${label}: unknown Writing Studio prompt ${path.writingPromptId}`);
+}
+for (const story of storyLibrary.stories) auditLearningPath(story.learningPath, story.title);
+for (const dialogue of dialogueLibrary.dialogues) auditLearningPath(dialogue.learningPath, dialogue.title);
+for (const exercise of listeningLibrary.exercises) auditLearningPath(exercise.learningPath, exercise.title);
+for (const exercise of pronunciationLibrary.exercises) auditLearningPath(exercise.learningPath, exercise.title);
+
 assert.match(pronunciationLibrary.note, /locally|lokal/i, "Pronunciation Studio must disclose local microphone analysis");
 
 console.log("Content audit passed.");
@@ -284,6 +304,7 @@ console.log(`- Grammar: ${grammar.topics.length} lessons and ${grammarQuestionCo
 console.log(`- HABIT library: ${habit.passages.length} unique passages; ${storedWordCount.toLocaleString("en-US")} words; 175 physical PDF pages / 174 numbered content pages.`);
 console.log(`- Reading skills: ${reading.skills.length} skills and ${questionCount} checked questions.`);
 console.log(`- Everyday Stories: ${storyLibrary.stories.length} stories across A1–B2; focus words link to checked vocabulary IDs and all question keys are valid.`);
+console.log("- Shared learning paths: reading, dialogue, listening, pronunciation, speaking, and writing references are validated.");
 console.log(`- Everyday English: ${dialogueLibrary.dialogues.length} situational scenarios across A1–B2; response keys, transcript lines, vocabulary IDs, and Speaking Studio links are valid.`);
 console.log(`- Listening Lab: ${listeningLibrary.exercises.length} staged exercises across A1–B2; audio excerpts align with transcripts, focus words link to vocabulary, and all three answer keys per exercise are valid.`);
 console.log(`- Pronunciation Studio: ${pronunciationLibrary.exercises.length} guided speaking phrases across A1–B2; stress targets, thought groups, intonation notes, and local-analysis disclosure are checked.`);

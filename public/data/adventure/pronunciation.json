@@ -30,7 +30,14 @@
         "Tekankan HELP dan PLEASE, bukan setiap kata kecil.",
         "Jaga kata could, you, dan me tetap ringan.",
         "Akhiri permintaan dengan nada ramah, bukan datar atau terlalu keras."
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-rainy-morning",
+        "listeningId": "finding-a-lunchbox",
+        "dialogueId": "at-the-cafe",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction"
+      }
     },
     {
       "id": "daily-routine",
@@ -58,7 +65,14 @@
         "Beri tekanan utama pada USUALLY dan BUS.",
         "Hindari jeda setelah setiap kata.",
         "Biarkan nada turun di akhir kalimat."
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-rainy-morning",
+        "listeningId": "missed-the-bus",
+        "dialogueId": "at-the-cafe",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction"
+      }
     },
     {
       "id": "book-a-room",
@@ -86,7 +100,14 @@
         "Jangan memberi tekanan kuat pada could dan I.",
         "Satukan study room sebagai satu kelompok makna.",
         "Jaga kenaikan nada tetap ringan dan alami."
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-change-of-plan",
+        "listeningId": "checking-a-booking",
+        "dialogueId": "finding-the-bus-station",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "weekend-story"
+      }
     },
     {
       "id": "meeting-time",
@@ -116,7 +137,14 @@
         "Pertahankan the sebagai kata ringan.",
         "Jangan memisahkan starts dan at terlalu jauh.",
         "Buat nine terdengar jelas sebagai informasi utama."
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-change-of-plan",
+        "listeningId": "checking-a-booking",
+        "dialogueId": "at-the-cafe",
+        "speakingPromptId": "cafe-order",
+        "writingPromptId": "weekend-story"
+      }
     },
     {
       "id": "reschedule-appointment",
@@ -146,7 +174,14 @@
         "Tekankan tiga kata utama, bukan seluruh kalimat.",
         "Pertahankan tempo stabil pada frasa yang panjang.",
         "Hindari jeda panjang sebelum appointment."
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-shared-workspace",
+        "listeningId": "improving-a-study-routine",
+        "dialogueId": "planning-a-study-session",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
     },
     {
       "id": "before-we-decide",
@@ -177,7 +212,14 @@
         "Tekanan pada rather menunjukkan preferensi.",
         "Beri energi pada review dan notes.",
         "Akhiri decide dengan jelas tanpa mempercepat suku kata terakhir."
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-shared-workspace",
+        "listeningId": "improving-a-study-routine",
+        "dialogueId": "planning-a-study-session",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
     },
     {
       "id": "proposal-evidence",
@@ -208,7 +250,14 @@
         "Tekankan kata yang membawa evaluasi dan kontras.",
         "Buat jeda setelah promising terdengar disengaja, bukan ragu-ragu.",
         "Jaga klausa kedua tetap mengalir."
-      ]
+      ],
+      "learningPath": {
+        "storyId": "the-cost-of-convenience",
+        "listeningId": "evaluating-a-new-schedule",
+        "dialogueId": "revising-a-project-proposal",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
     },
     {
       "id": "weigh-the-benefits",
@@ -238,7 +287,314 @@
         "Jangan menekan semua kata dengan kekuatan sama.",
         "Seimbangkan panjang dan energi dua kelompok perbandingan.",
         "Tekankan cost sebagai titik akhir informasi."
-      ]
+      ],
+      "learningPath": {
+        "storyId": "the-cost-of-convenience",
+        "listeningId": "evaluating-a-new-schedule",
+        "dialogueId": "revising-a-project-proposal",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
+    },
+    {
+      "id": "clear-instructions",
+      "level": "A1",
+      "title": "Giving Simple Instructions",
+      "category": "Everyday communication",
+      "targetSeconds": 4,
+      "phrase": "PLEASE OPEN the BOOK and LOOK at the FIRST PAGE.",
+      "meaning": "Tolong buka buku dan lihat halaman pertama.",
+      "focus": "Sentence stress",
+      "stressWords": [
+        "PLEASE OPEN",
+        "BOOK",
+        "LOOK",
+        "FIRST PAGE"
+      ],
+      "phraseGroups": [
+        "PLEASE OPEN",
+        "the BOOK",
+        "and LOOK at the FIRST PAGE."
+      ],
+      "intonation": {
+        "label": "Clear, calm instruction",
+        "description": "Tekankan kata kerja dan objek utama, lalu turunkan nada dengan tenang pada akhir instruksi."
+      },
+      "linking": "Hubungkan kata kecil seperti the dan at dengan kata penting di sekitarnya.",
+      "coaching": [
+        "Beri tekanan pada OPEN, BOOK, LOOK, dan FIRST PAGE.",
+        "Jangan menekan setiap kata dengan kekuatan yang sama.",
+        "Pertahankan tempo yang cukup pelan agar instruksi mudah dipahami."
+      ],
+      "learningPath": {
+        "storyId": "a-rainy-morning",
+        "listeningId": "finding-a-lunchbox",
+        "dialogueId": "at-the-cafe",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction"
+      }
+    },
+    {
+      "id": "friendly-question",
+      "level": "A1",
+      "title": "A Friendly Question",
+      "category": "Everyday conversation",
+      "targetSeconds": 3,
+      "phrase": "WHERE is the BUS STOP?",
+      "meaning": "Di mana halte busnya?",
+      "focus": "Question intonation",
+      "stressWords": [
+        "WHERE",
+        "BUS STOP"
+      ],
+      "phraseGroups": [
+        "WHERE is the",
+        "BUS STOP?"
+      ],
+      "intonation": {
+        "label": "Rising question",
+        "description": "Mulai dengan nada jelas pada where dan naikkan sedikit di akhir pertanyaan."
+      },
+      "linking": "Satukan is the sebagai bagian ringan di antara kata utama.",
+      "coaching": [
+        "Tekankan WHERE dan BUS STOP.",
+        "Hindari jeda antara is dan the.",
+        "Akhiri dengan nada tanya yang ringan."
+      ],
+      "learningPath": {
+        "storyId": "a-rainy-morning",
+        "listeningId": "missed-the-bus",
+        "dialogueId": "finding-the-bus-station",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "short-introduction"
+      }
+    },
+    {
+      "id": "connected-phrase",
+      "level": "A2",
+      "title": "Connecting a Short Phrase",
+      "category": "Daily arrangements",
+      "targetSeconds": 4,
+      "phrase": "WE usually MEET after CLASS.",
+      "meaning": "Kami biasanya bertemu setelah kelas.",
+      "focus": "Rhythm and linking",
+      "stressWords": [
+        "WE",
+        "MEET",
+        "CLASS"
+      ],
+      "phraseGroups": [
+        "WE usually",
+        "MEET after",
+        "CLASS."
+      ],
+      "intonation": {
+        "label": "Steady statement",
+        "description": "Pertahankan irama stabil dan turunkan nada secara alami pada kata terakhir."
+      },
+      "linking": "Rangkai meet after sebagai aliran yang mulus tanpa memisahkan kedua kata terlalu jauh.",
+      "coaching": [
+        "Tekankan informasi utama, bukan setiap kata.",
+        "Jaga usually tetap ringan.",
+        "Akhiri class dengan nada turun."
+      ],
+      "learningPath": {
+        "storyId": "a-change-of-plan",
+        "listeningId": "checking-a-booking",
+        "dialogueId": "finding-the-bus-station",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "weekend-story"
+      }
+    },
+    {
+      "id": "confirm-the-time",
+      "level": "A2",
+      "title": "Confirming a Time",
+      "category": "Making arrangements",
+      "targetSeconds": 4,
+      "phrase": "CAN we MEET at HALF past THREE?",
+      "meaning": "Bisakah kita bertemu pukul setengah empat?",
+      "focus": "Question intonation",
+      "stressWords": [
+        "CAN",
+        "MEET",
+        "HALF",
+        "THREE"
+      ],
+      "phraseGroups": [
+        "CAN we MEET",
+        "at HALF past",
+        "THREE?"
+      ],
+      "intonation": {
+        "label": "Polite rising question",
+        "description": "Buat pertanyaan terdengar ramah dan naikkan nada sedikit pada informasi waktu."
+      },
+      "linking": "Ucapkan at half past sebagai satu kelompok pendek sebelum three.",
+      "coaching": [
+        "Pertahankan can we sebagai pembuka ringan.",
+        "Tekankan meet dan informasi waktunya.",
+        "Jangan mempercepat half past."
+      ],
+      "learningPath": {
+        "storyId": "a-change-of-plan",
+        "listeningId": "checking-a-booking",
+        "dialogueId": "at-the-cafe",
+        "speakingPromptId": "cafe-order",
+        "writingPromptId": "weekend-story"
+      }
+    },
+    {
+      "id": "balanced-emphasis",
+      "level": "B1",
+      "title": "Balanced Emphasis",
+      "category": "Discussion and teamwork",
+      "targetSeconds": 5,
+      "phrase": "I'd RATHER REVIEW the PLAN before we DECIDE.",
+      "meaning": "Saya lebih memilih meninjau rencana sebelum kita memutuskan.",
+      "focus": "Contrastive stress",
+      "stressWords": [
+        "RATHER",
+        "REVIEW",
+        "PLAN",
+        "DECIDE"
+      ],
+      "phraseGroups": [
+        "I'd RATHER",
+        "REVIEW the PLAN",
+        "before we DECIDE."
+      ],
+      "intonation": {
+        "label": "Emphasis then falling finish",
+        "description": "Tekankan preferensi, lalu turunkan nada pada decide untuk menutup gagasan."
+      },
+      "linking": "Kelompokkan before we decide sebagai satu bagian penutup.",
+      "coaching": [
+        "Tekankan rather untuk menunjukkan preferensi.",
+        "Beri energi pada review dan plan.",
+        "Jangan memisahkan before we dari decide dengan jeda panjang."
+      ],
+      "learningPath": {
+        "storyId": "a-shared-workspace",
+        "listeningId": "improving-a-study-routine",
+        "dialogueId": "planning-a-study-session",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
+    },
+    {
+      "id": "polite-reschedule",
+      "level": "B1",
+      "title": "Politely Rescheduling",
+      "category": "Polite workplace English",
+      "targetSeconds": 6,
+      "phrase": "WOULD it be POSSIBLE to MOVE the MEETING?",
+      "meaning": "Apakah memungkinkan untuk memindahkan rapat?",
+      "focus": "Polite phrasing and emphasis",
+      "stressWords": [
+        "WOULD",
+        "POSSIBLE",
+        "MOVE",
+        "MEETING"
+      ],
+      "phraseGroups": [
+        "Would it be POSSIBLE",
+        "to MOVE",
+        "the MEETING?"
+      ],
+      "intonation": {
+        "label": "Gentle rise and fall",
+        "description": "Bangun nada secara halus pada possible, lalu akhiri meeting dengan sopan."
+      },
+      "linking": "Ucapkan would it be sebagai pembuka ringan sebelum menekankan possible.",
+      "coaching": [
+        "Tekankan possible, move, dan meeting.",
+        "Jaga tempo stabil pada frasa panjang.",
+        "Akhiri dengan nada sopan, bukan terlalu datar."
+      ],
+      "learningPath": {
+        "storyId": "a-shared-workspace",
+        "listeningId": "changing-an-appointment",
+        "dialogueId": "planning-a-study-session",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
+    },
+    {
+      "id": "contrasting-evidence",
+      "level": "B2",
+      "title": "Contrasting Evidence",
+      "category": "Academic and professional discussion",
+      "targetSeconds": 6,
+      "phrase": "The PROPOSAL is PROMISING, although the EVIDENCE is LIMITED.",
+      "meaning": "Proposal itu menjanjikan, meskipun buktinya terbatas.",
+      "focus": "Contrast and thought groups",
+      "stressWords": [
+        "PROPOSAL",
+        "PROMISING",
+        "EVIDENCE",
+        "LIMITED"
+      ],
+      "phraseGroups": [
+        "The PROPOSAL is PROMISING,",
+        "although the EVIDENCE",
+        "is LIMITED."
+      ],
+      "intonation": {
+        "label": "Contrast then measured fall",
+        "description": "Beri jeda pendek setelah promising untuk menandai kontras, lalu turunkan nada pada limited."
+      },
+      "linking": "Jangan memisahkan although dari klausa setelahnya; gunakan jeda pendek hanya setelah promising.",
+      "coaching": [
+        "Tekankan kata yang membawa evaluasi dan kontras.",
+        "Buat jeda setelah promising terdengar disengaja.",
+        "Jaga klausa kedua tetap mengalir."
+      ],
+      "learningPath": {
+        "storyId": "the-cost-of-convenience",
+        "listeningId": "evaluating-a-new-schedule",
+        "dialogueId": "revising-a-project-proposal",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
+    },
+    {
+      "id": "measured-recommendation",
+      "level": "B2",
+      "title": "A Measured Recommendation",
+      "category": "Critical discussion",
+      "targetSeconds": 7,
+      "phrase": "We should CAREFULLY WEIGH the long-term BENEFITS against the initial COST.",
+      "meaning": "Kita sebaiknya mempertimbangkan manfaat jangka panjang dengan cermat dibandingkan biaya awal.",
+      "focus": "Long sentence rhythm",
+      "stressWords": [
+        "CAREFULLY",
+        "WEIGH",
+        "BENEFITS",
+        "COST"
+      ],
+      "phraseGroups": [
+        "We should CAREFULLY WEIGH",
+        "the long-term BENEFITS",
+        "against the initial COST."
+      ],
+      "intonation": {
+        "label": "Balanced comparison, falling finish",
+        "description": "Buat dua sisi perbandingan terdengar seimbang, lalu turunkan nada pada cost."
+      },
+      "linking": "Sambungkan kelompok kata di setiap bagian, tetapi beri batas makna sebelum against.",
+      "coaching": [
+        "Jangan menekan semua kata dengan kekuatan sama.",
+        "Seimbangkan panjang kedua kelompok perbandingan.",
+        "Tekankan cost sebagai titik akhir informasi."
+      ],
+      "learningPath": {
+        "storyId": "the-cost-of-convenience",
+        "listeningId": "evaluating-a-new-schedule",
+        "dialogueId": "revising-a-project-proposal",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
     }
   ]
 }

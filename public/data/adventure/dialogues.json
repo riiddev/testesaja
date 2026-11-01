@@ -98,7 +98,13 @@
           "response": "That's all, thank you.",
           "explanation": "That's all, thank you is a natural, polite way to say your order is complete."
         }
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-rainy-morning",
+        "listeningId": "missed-the-bus",
+        "pronunciationId": "polite-help",
+        "writingPromptId": "short-introduction"
+      }
     },
     {
       "id": "finding-the-bus-station",
@@ -195,7 +201,13 @@
           "response": "Thank you for your help.",
           "explanation": "Thank you for your help is a polite closing after someone gives you directions."
         }
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-change-of-plan",
+        "listeningId": "booking-a-study-room",
+        "pronunciationId": "book-a-room",
+        "writingPromptId": "weekend-story"
+      }
     },
     {
       "id": "planning-a-study-session",
@@ -288,7 +300,13 @@
           "response": "Of course. I'll read it tonight and share my comments.",
           "explanation": "Of course accepts the request, and the second sentence explains exactly what you will do and when."
         }
-      ]
+      ],
+      "learningPath": {
+        "storyId": "a-shared-workspace",
+        "listeningId": "changing-an-appointment",
+        "pronunciationId": "reschedule-appointment",
+        "writingPromptId": "study-reflection"
+      }
     },
     {
       "id": "revising-a-project-proposal",
@@ -390,7 +408,13 @@
           "response": "We can set a review date and explain that the second phase depends on usage and the remaining budget.",
           "explanation": "A review date and clear conditions make the consequences visible and give the team a measurable basis for continuing."
         }
-      ]
+      ],
+      "learningPath": {
+        "storyId": "the-cost-of-convenience",
+        "listeningId": "reviewing-a-study-proposal",
+        "pronunciationId": "proposal-evidence",
+        "writingPromptId": "balanced-proposal"
+      }
     }
   ]
 }
