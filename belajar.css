@@ -1886,3 +1886,223 @@ h1,h2,h3{overflow-wrap:break-word}
 .adventure-learning-path button:hover{border-color:var(--sage-deep);background:var(--sage)}
 .adventure-learning-path button:focus-visible{outline:3px solid color-mix(in srgb,var(--sage-deep) 45%,transparent);outline-offset:2px}
 @media(max-width:560px){.adventure-learning-path{padding:12px}.adventure-learning-path>div{display:grid;grid-template-columns:1fr}.adventure-learning-path button{width:100%;min-height:40px;text-align:left}}
+
+
+/* Workspace IA redesign — secondary dashboard controls stay available without competing with today's plan. */
+.home-secondary-details { margin: 19px 0 0; }
+.home-secondary-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-block: 1px solid var(--line);
+  color: var(--body);
+  font-size: .72rem;
+  font-weight: 650;
+  cursor: pointer;
+  list-style: none;
+}
+.home-secondary-details > summary::-webkit-details-marker { display: none; }
+.home-secondary-details > summary::after {
+  content: "+";
+  color: var(--sage-deep);
+  font-size: 1rem;
+  line-height: 1;
+}
+.home-secondary-details[open] > summary::after { content: "−"; }
+.home-secondary-details[open] > .home-secondary-grid { margin-top: 18px; }
+.home-adventure-link { white-space: nowrap; }
+.side-link:focus-visible,
+.learning-tab:focus-visible,
+.reading-mode-button:focus-visible,
+.home-secondary-details > summary:focus-visible,
+.home-adventure-link:focus-visible {
+  outline: 2px solid var(--sage-deep);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .home-secondary-details[open] > .home-secondary-grid { grid-template-columns: 1fr; }
+  .home-study-plan-steps { grid-template-columns: 1fr; }
+  .home-adventure-link { padding-inline: 0; }
+}
+
+
+/* Phase 2 — focused topic and reading-skill details on mobile. */
+.grammar-detail-back,.reading-detail-back { display:none; }
+.progress-summary {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  margin:9px 0 30px;
+  padding:14px 0;
+  border-block:1px solid var(--line);
+}
+.progress-summary > div { min-width:0; padding:2px 18px; border-right:1px solid var(--line); }
+.progress-summary > div:first-child { padding-left:0; }
+.progress-summary > div:last-child { padding-right:0; border-right:0; }
+.progress-summary strong {
+  display:block;
+  margin-top:5px;
+  color:var(--ink);
+  font:400 1.75rem/1.1 "Lora",Georgia,serif;
+}
+.progress-history-details { border-top:1px solid var(--ink); }
+.progress-history-details > summary {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px 0; border-bottom:1px solid var(--line);
+  color:var(--ink); font-size:.78rem; font-weight:650; cursor:pointer; list-style:none;
+}
+.progress-history-details > summary::-webkit-details-marker { display:none; }
+.progress-history-details > summary::after { content:"+"; color:var(--sage-deep); font-size:1rem; }
+.progress-history-details[open] > summary::after { content:"−"; }
+.progress-history-details > summary small { margin-left:auto; color:var(--muted); font-size:.61rem; font-weight:500; }
+.progress-history-details .history-list { border-top:0; }
+.progress-data-block { padding-top:18px; border-top:1px solid var(--line); }
+.progress-data-copy { max-width:620px; margin:5px 0 15px; color:var(--muted); font-size:.69rem; line-height:1.7; }
+.progress-data-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.progress-data-actions #backup-status { flex-basis:100%; }
+
+@media(max-width:760px) {
+  #view-grammar.is-detail-view .page-heading,
+  #view-grammar.is-detail-view .learning-subnav { display:none; }
+  #view-grammar .grammar-layout { grid-template-columns:1fr; }
+  #view-grammar .grammar-layout:not(.is-detail-open) .lesson-panel { display:none; }
+  #view-grammar .grammar-layout.is-detail-open .topic-list-panel { display:none; }
+  #view-grammar .lesson-panel { padding:18px; }
+  #view-grammar .grammar-detail-back { display:inline-flex; min-height:38px; margin-bottom:14px; }
+  #reading-skills-section:not(.is-detail-open) .reading-lesson-panel { display:none; }
+  #reading-skills-section.is-detail-open .reading-progress-strip,
+  #reading-skills-section.is-detail-open .reading-category-tabs,
+  #reading-skills-section.is-detail-open .reading-skill-panel { display:none; }
+  #reading-skills-section.is-detail-open .reading-layout { grid-template-columns:1fr; }
+  #reading-skills-section.is-detail-open .reading-lesson-panel { display:block; min-width:0; padding:15px; }
+  #reading-skills-section .reading-detail-back { display:inline-flex; min-height:38px; margin-bottom:14px; }
+  .progress-summary { gap:0; margin-bottom:24px; }
+  .progress-summary > div { padding-inline:10px; }
+  .progress-summary > div:first-child { padding-left:0; }
+  .progress-summary strong { font-size:1.45rem; }
+}
+@media(max-width:420px) {
+  .progress-summary .metric-label { font-size:.43rem; letter-spacing:0; }
+  .progress-summary strong { font-size:1.28rem; }
+}
+
+
+/* Mobile primary navigation follows a thumb-reachable bottom-bar pattern. */
+@media(max-width:760px) {
+  .sidebar { padding-bottom:0; border-bottom:0; }
+  .side-nav {
+    position:fixed;
+    z-index:70;
+    right:0;
+    bottom:0;
+    left:0;
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:0;
+    margin:0;
+    padding:7px 7px calc(7px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);
+    background:color-mix(in srgb,var(--paper) 95%,transparent);
+    backdrop-filter:blur(16px);
+  }
+  .side-link {
+    position:relative;
+    min-width:0;
+    min-height:49px;
+    display:flex;
+    flex:initial;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    padding:5px 2px;
+    border:0;
+    border-bottom:2px solid transparent;
+    font-size:.52rem;
+    line-height:1.2;
+    white-space:normal;
+    text-align:center;
+  }
+  .side-link.is-active { border:0; border-bottom:2px solid var(--sage-deep); }
+  .nav-icon { display:block; font-size:1rem; line-height:1; }
+  .nav-count { position:absolute; top:1px; right:calc(50% - 21px); margin:0; }
+  .workspace { padding-bottom:calc(92px + env(safe-area-inset-bottom)); }
+}
+@media(max-width:380px) {
+  .side-link { font-size:.47rem; }
+  .nav-icon { font-size:.92rem; }
+}
+
+
+.detail-supplementary {
+  margin-top:16px;
+  border-block:1px solid var(--line);
+}
+.detail-supplementary > summary {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 0;
+  color:var(--body);
+  font-size:.7rem;
+  font-weight:650;
+  cursor:pointer;
+  list-style:none;
+}
+.detail-supplementary > summary::-webkit-details-marker { display:none; }
+.detail-supplementary > summary::after { content:"+"; color:var(--sage-deep); font-size:1rem; }
+.detail-supplementary[open] > summary::after { content:"−"; }
+.detail-supplementary > summary small { margin-left:auto; color:var(--muted); font-size:.58rem; font-weight:500; }
+.detail-supplementary-content { display:grid; gap:13px; padding:2px 0 14px; }
+.detail-supplementary-content > div { min-width:0; }
+.detail-supplementary-content .detail-section-label { margin-top:8px; }
+
+
+/* Tablet: keep a compact labeled sidebar between the mobile and desktop layouts. */
+@media(min-width:761px) and (max-width:1050px) {
+  :root { --sidebar:190px; }
+  .sidebar { padding-inline:12px; }
+  .side-link { gap:8px; padding-inline:9px; font-size:.67rem; }
+  .nav-icon { width:18px; font-size:.76rem; }
+  .workspace { padding-inline:22px; }
+  .app-topbar { padding-inline:22px; }
+  .vocab-layout { grid-template-columns:minmax(0,1fr) minmax(245px,.8fr); gap:14px; }
+  .word-detail { padding:16px; }
+}
+
+
+/* HABIT passage: use a focused reader on small screens, then return to its collection. */
+.habit-library-detail > .mobile-detail-back { display:none; }
+.habit-library-detail > .mobile-detail-back:focus-visible {
+  outline:2px solid var(--sage-deep);
+  outline-offset:3px;
+}
+@media(max-width:760px) {
+  #habit-library-section.is-detail-open .habit-library-header,
+  #habit-library-section.is-detail-open .habit-library-controls,
+  #habit-library-section.is-detail-open .habit-library-note,
+  #habit-library-section.is-detail-open .habit-library-grid,
+  #habit-library-section.is-detail-open .habit-library-more {
+    display:none;
+  }
+  #habit-library-section.is-detail-open .habit-library-detail {
+    margin-top:0;
+    padding-top:0;
+    border-top:0;
+  }
+  #habit-library-section.is-detail-open .habit-library-detail > .mobile-detail-back {
+    display:inline-flex;
+    min-height:40px;
+    margin:0 0 16px;
+  }
+  #habit-library-section.is-detail-open .habit-detail-close { display:none; }
+  #habit-library-section.is-detail-open .habit-passage-body p {
+    grid-template-columns:24px minmax(0,1fr);
+    gap:8px;
+    font-size:.76rem;
+    line-height:1.85;
+  }
+}

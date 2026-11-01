@@ -183,6 +183,7 @@
     if (!lessonData) return;
     skillId = id;
     readingRun = {skillId:id,questionIndex:0,selected:null,answered:false,finished:false,sessionCorrect:0};
+    $("#reading-skills-section")?.classList.add("is-detail-open");
     renderReading();
   }
   function renderReadingSkillList() {
@@ -208,7 +209,7 @@
       '<span class="reading-passage-source">' + escapeHtml(lessonData.passage.source) + '</span></div></details>';
     if (run.finished) {
       $("#reading-lesson").innerHTML =
-        '<div class="reading-result"><span class="reading-result-number">' + String(run.sessionCorrect).padStart(2,"0") + '/' + String(questionTotal).padStart(2,"0") +
+        '<button class="mobile-detail-back reading-detail-back" type="button" data-reading-back>← Kembali ke keterampilan</button><div class="reading-result"><span class="reading-result-number">' + String(run.sessionCorrect).padStart(2,"0") + '/' + String(questionTotal).padStart(2,"0") +
         '</span><h2>' + escapeHtml(skill.title) + '</h2><p>Kamu menjawab ' + run.sessionCorrect + ' dari ' + questionTotal + ' soal dengan benar pada sesi ini. ' +
         (run.sessionCorrect === questionTotal ? 'Jawabanmu didukung oleh bukti teks.' : 'Baca kembali pembahasan, lalu ulangi latihan untuk menguatkan strategi.') + '</p>' +
         '<div class="reading-result-actions"><button class="secondary-action" type="button" data-reading-retry>Ulangi keterampilan ↻</button><button class="primary-action" type="button" data-reading-next-skill>Lanjut ke keterampilan berikutnya →</button></div></div>';
@@ -235,7 +236,7 @@
     }
     question += '</div>';
     $("#reading-lesson").innerHTML =
-      '<div class="reading-skill-title"><div><h2>' + escapeHtml(skill.title) + '</h2><p class="reading-skill-subtitle">' + escapeHtml(skill.indonesian) + '</p></div><span class="reading-done-tag">' +
+      '<button class="mobile-detail-back reading-detail-back" type="button" data-reading-back>← Kembali ke keterampilan</button><div class="reading-skill-title"><div><h2>' + escapeHtml(skill.title) + '</h2><p class="reading-skill-subtitle">' + escapeHtml(skill.indonesian) + '</p></div><span class="reading-done-tag">' +
       (p.completed ? 'PERNAH DILATIH' : 'BELUM DILATIH') + '</span></div>' +
       '<div class="reading-definition"><p>' + escapeHtml(skill.definition) + '</p><div class="reading-strategy"><ol>' +
       skill.strategy.map(function (step) {return '<li>' + escapeHtml(step) + '</li>';}).join("") + '</ol></div></div>' +
@@ -348,6 +349,12 @@
     }
     if (event.target.closest("#matching-check")) {checkMatchingPair();return;}
     if (event.target.closest("#matching-new-round") || event.target.closest("[data-match-restart]")) {prepareMatchingRound();return;}
+    if (event.target.closest("[data-reading-back]")) {
+      $("#reading-skills-section")?.classList.remove("is-detail-open");
+      renderReading();
+      $$("#reading-skill-list [data-reading-skill]").find(button=>button.dataset.readingSkill===skillId)?.focus();
+      return;
+    }
     const category = event.target.closest("[data-reading-category]");
     if (category && lessonData) {
       groupId = category.dataset.readingCategory;
@@ -356,6 +363,7 @@
         skillId = first.id;
         readingRun = {skillId:skillId,questionIndex:0,selected:null,answered:false,finished:false,sessionCorrect:0};
       }
+      $("#reading-skills-section")?.classList.remove("is-detail-open");
       renderReading();
       return;
     }
@@ -637,9 +645,13 @@
       habitVisibleCount += 9; renderHabitLibraryList(); return;
     }
     if (event.target.closest("[data-habit-close],[data-habit-back]")) {
+      const returnToPassageId = activeHabitPassageId;
       activeHabitPassageId = null;
       $("#habit-library-section")?.classList.remove("is-detail-open");
-      renderHabitLibraryList(); renderHabitPassageDetail(); return;
+      renderHabitLibraryList();
+      renderHabitPassageDetail();
+      $$("#habit-library-list [data-habit-open]").find(button => button.dataset.habitOpen === returnToPassageId)?.focus();
+      return;
     }
     const check = event.target.closest("[data-habit-check]");
     if (check && activeHabitPassageId && habitLibrary) {

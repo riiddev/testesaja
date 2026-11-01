@@ -365,7 +365,8 @@
         "listeningId": "missed-the-bus",
         "pronunciationId": "polite-help",
         "speakingPromptId": "first-introduction",
-        "writingPromptId": "short-introduction"
+        "writingPromptId": "short-introduction",
+        "storyId": "a-helpful-neighbor"
       }
     },
     {

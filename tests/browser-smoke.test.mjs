@@ -137,7 +137,7 @@ test("vocabulary search returns a matching word and reading practice saves an an
     const counter = document.querySelector("#vocab-result-count");
     return Boolean(counter && counter.textContent.includes("dari"));
   }, null, { timeout: 20000 });
-  await page.locator('#view-overview .home-primary-action[data-view-target="vocabulary"]').click();
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
   await page.locator("#vocab-search").fill("abandon");
   await page.waitForFunction(() => {
     const row = document.querySelector("#vocab-list [data-select-word]");
@@ -161,6 +161,16 @@ test("vocabulary search returns a matching word and reading practice saves an an
   await contextOptions.first().locator("input").check();
   await page.locator("#context-form button[type='submit']").click();
   await page.locator("#study-next").waitFor({ state: "visible" });
+
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#vocab-search").fill("hello");
+  await page.waitForFunction(() => Boolean(document.querySelector('#vocab-list [data-select-word]')?.textContent.toLowerCase().includes("hello")));
+  await page.locator('#vocab-list [data-select-word]').first().click();
+  const supplementary = page.locator("#word-detail .detail-supplementary");
+  assert.equal(await supplementary.count(), 1, "collocations should be available without crowding the primary word detail");
+  assert.equal(await supplementary.evaluate(el => el.open), false, "supplementary context should start collapsed");
+  await supplementary.locator("summary").click();
+  assert.equal(await supplementary.evaluate(el => el.open), true, "learners can expand supplementary context when needed");
 
   await page.locator('[data-view-target="reading"]').first().click();
   await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 20000 });
@@ -2044,7 +2054,8 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
   page.on("dialog", (dialog) => dialog.accept());
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="grammar"]').first().click();
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   const topicButtons = page.locator("#grammar-topic-list .topic-button");
   await topicButtons.first().waitFor({ state: "visible" });
   await topicButtons.first().click();
@@ -2060,7 +2071,8 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
   assert.ok(backupPath, "backup export should create a JSON download");
   const backupBytes = await readFile(backupPath);
 
-  await page.locator("[data-view-target=\"grammar\"]").first().click();
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   await topicButtons.nth(1).click();
   await page.locator("#lesson-panel .lesson-answer").first().click();
   await page.locator("#lesson-panel .lesson-feedback").waitFor({ state: "visible" });
@@ -2073,11 +2085,129 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
     buffer: backupBytes,
   });
   await page.waitForFunction(() => document.querySelector("#backup-status")?.textContent.includes("berhasil dipulihkan"));
-  await page.locator('[data-view-target="grammar"]').first().click();
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   assert.match(await topicButtons.first().innerText(), /1\/3 soal dicoba/,
     "progress included in the exported backup should be restored");
   assert.match(await topicButtons.nth(1).innerText(), /0\/3 soal dicoba/,
     "progress created after the backup should be replaced by the older backup state");
   assert.deepEqual(pageErrors, [], "backup restoration should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("workspace IA keeps five primary destinations, keyboard tabs, and a reachable Adventure route", async () => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "ia-preview-access",
+      refresh_token: "ia-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "ia-preview-user", email: "ia-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  const primaryLabels = await page.locator(".side-nav .side-link").evaluateAll((nodes) =>
+    nodes.map((node) => node.querySelectorAll("span")[1]?.textContent.trim())
+  );
+  assert.deepEqual(primaryLabels, ["Beranda", "Belajar", "Bacaan", "Review", "Progres"]);
+  assert.equal(await page.locator(".side-nav [data-view-target='adventure']").count(), 0);
+  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
+  assert.equal(await page.locator("#home-primary-label").innerText(), "Mulai sesi pertama");
+  await page.locator("#home-primary-action").click();
+  assert.equal(await page.locator("#view-study").isVisible(), true,
+    "a new learner should be taken directly into their first guided session");
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  assert.equal(await page.locator(".side-nav").evaluate(el => getComputedStyle(el).position), "fixed",
+    "the primary navigation should remain thumb-reachable at the bottom on mobile");
+
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  assert.equal(await page.locator("#view-vocabulary").isVisible(), true);
+  await page.locator("#vocab-search").fill("hello");
+  await page.waitForFunction(() => Boolean(document.querySelector("#vocab-list [data-select-word]")));
+  const firstWord = page.locator("#vocab-list [data-select-word]").first();
+  const firstWordId = await firstWord.getAttribute("data-select-word");
+  await firstWord.click();
+  assert.equal(await page.locator("#vocab-layout").evaluate(el => el.classList.contains("is-detail-open")), true);
+  assert.equal(await page.locator("#vocab-list").isVisible(), false);
+  await page.locator("#word-detail [data-vocab-back]").click();
+  assert.equal(await page.locator("#vocab-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
+  assert.equal(await page.locator("#vocab-list").isVisible(), true);
+  assert.equal(await page.evaluate(() => document.activeElement?.dataset.selectWord), firstWordId,
+    "closing a word detail should restore focus to the selected vocabulary row");
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
+  assert.equal(await page.locator("#view-grammar").isVisible(), true);
+  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "vocabulary");
+  assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
+  await page.locator(".side-nav [data-view-target='overview']").click();
+  assert.equal(await page.locator("#home-primary-action").getAttribute("data-home-action"), "active-study",
+    "an unfinished session should be resumable from the home CTA");
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
+  await page.locator("#grammar-topic-list [data-topic-id]").first().click();
+  assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), true);
+  await page.locator("#lesson-panel .lesson-answer").first().click();
+  await page.locator("#lesson-panel .lesson-feedback").waitFor({state:"visible"});
+  await page.locator("[data-grammar-back]").click();
+  assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
+  await page.locator(".side-nav [data-view-target='overview']").click();
+  assert.equal(await page.locator("#home-primary-label").innerText(), "Lanjutkan belajar",
+    "a learner with saved activity should see the continue-learning CTA");
+
+  await page.locator(".side-nav [data-view-target='reading']").click();
+  assert.equal(await page.locator("#habit-library-section").isVisible(), true);
+  assert.equal(await page.locator("#reading-skills-section").isVisible(), false);
+  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"));
+  const firstHabit = page.locator("#habit-library-list [data-habit-open]").first();
+  await firstHabit.click();
+  assert.equal(await page.locator("#habit-library-section").evaluate(el => el.classList.contains("is-detail-open")), true);
+  assert.equal(await page.locator("#habit-library-list").isVisible(), false);
+  assert.equal(await page.locator("#habit-library-detail").isVisible(), true);
+  const firstHabitId = await firstHabit.getAttribute("data-habit-open");
+  await page.locator("#habit-library-detail [data-habit-back]").click();
+  assert.equal(await page.locator("#habit-library-section").evaluate(el => el.classList.contains("is-detail-open")), false);
+  assert.equal(await page.locator("#habit-library-list").isVisible(), true);
+  assert.equal(await page.evaluate(() => document.activeElement?.dataset.habitOpen), firstHabitId,
+    "returning from HABIT detail should restore focus to its passage card");
+  assert.equal(await page.locator("#reading-skills-section").isVisible(), false);
+  const skillsTab = page.locator("#reading-mode-skills-tab");
+  await skillsTab.press("ArrowLeft");
+  assert.equal(await page.locator("#reading-mode-habit-tab").getAttribute("aria-selected"), "true");
+  await skillsTab.click();
+  assert.equal(await page.locator("#habit-library-section").isVisible(), false);
+  assert.equal(await page.locator("#reading-skills-section").isVisible(), true);
+  assert.equal(await page.locator("#reading-mode-skills-tab").getAttribute("aria-selected"), "true");
+  const firstSkill = page.locator("#reading-skill-list [data-reading-skill]").first();
+  await firstSkill.click();
+  assert.equal(await page.locator("#reading-skills-section").evaluate(el => el.classList.contains("is-detail-open")), true);
+  await page.locator("#reading-lesson [data-reading-back]").click();
+  assert.equal(await page.locator("#reading-skills-section").evaluate(el => el.classList.contains("is-detail-open")), false);
+
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  assert.equal(await page.locator("#progress-words-tried").count(), 1);
+  assert.equal(await page.locator("#progress-grammar-tried").count(), 1);
+  assert.equal(await page.locator("#progress-reading-tried").count(), 1);
+  assert.equal(await page.locator(".progress-history-details").evaluate(el => el.open), false);
+  assert.equal(await page.locator("#export-backup").isVisible(), true);
+
+  await page.locator(".side-nav [data-view-target='overview']").click();
+  await page.locator("#home-adventure-link").click();
+  assert.equal(await page.locator("#view-adventure").isVisible(), true);
+  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
+
+  for (const width of [360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(overflow <= 1, `the workspace should not overflow horizontally at ${width}px`);
+  }
+  assert.deepEqual(pageErrors, [], "workspace navigation should not throw browser JavaScript errors");
   await page.close();
 });

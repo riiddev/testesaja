@@ -42,7 +42,7 @@ The unmodified compressed Oxford corpus has **2,970 records with an Indonesian m
 
 The Oxford source list is available at [Oxford Learner's Dictionaries — American Oxford 3000 PDF](https://www.oxfordlearnersdictionaries.com/external/pdf/wordlists/oxford-3000-5000/American_Oxford_3000.pdf). SinauuEnglish is an independent project and is not affiliated with or endorsed by Oxford University Press.
 
-The grammar curriculum currently contains **6 lessons and 18 topic-specific questions**. Broader grammar coverage and human review of the vocabulary corpus remain ongoing work.
+The grammar curriculum currently contains **19 lessons and 57 checked topic-specific questions** across A1–B2. Independent human review of the vocabulary corpus remains ongoing work.
 
 ## Accounts and cross-device progress
 
