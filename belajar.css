@@ -1876,3 +1876,13 @@ h1,h2,h3{overflow-wrap:break-word}
   .placement-result-actions{display:grid;grid-template-columns:1fr}
   .placement-secondary{width:100%}
 }
+
+ 
+.adventure-learning-path{margin-top:18px;padding:14px 15px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.adventure-learning-path>span{display:block;color:var(--sage-deep);font-size:.48rem;font-weight:800;letter-spacing:.1em}
+.adventure-learning-path>p{margin:5px 0 11px;color:var(--muted);font-size:.59rem;line-height:1.6}
+.adventure-learning-path>div{display:flex;flex-wrap:wrap;gap:7px}
+.adventure-learning-path button{min-height:35px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--sheet);color:var(--sage-deep);font-size:.55rem;font-weight:700;cursor:pointer}
+.adventure-learning-path button:hover{border-color:var(--sage-deep);background:var(--sage)}
+.adventure-learning-path button:focus-visible{outline:3px solid color-mix(in srgb,var(--sage-deep) 45%,transparent);outline-offset:2px}
+@media(max-width:560px){.adventure-learning-path{padding:12px}.adventure-learning-path>div{display:grid;grid-template-columns:1fr}.adventure-learning-path button{width:100%;min-height:40px;text-align:left}}

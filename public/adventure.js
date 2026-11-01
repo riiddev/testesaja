@@ -1376,6 +1376,31 @@
       (cards ? '<div class="adventure-story-grid">' + cards + '</div>' : '<p class="adventure-story-empty">Belum ada cerita tersedia.</p>');
   }
 
+  function renderLearningPathLinks(path) {
+    if (!path || typeof path !== "object") return "";
+    const actions = [];
+    if (storiesLoaded && Array.isArray(stories) && stories.some((item) => item.id === path.storyId)) {
+      actions.push('<button type="button" data-learning-path-link data-story-open="' + escapeHtml(path.storyId) + '">Baca cerita terkait</button>');
+    }
+    if (dialoguesLoaded && Array.isArray(dialogues) && dialogues.some((item) => item.id === path.dialogueId)) {
+      actions.push('<button type="button" data-learning-path-link data-dialogue-open="' + escapeHtml(path.dialogueId) + '">Dengarkan dialog</button>');
+    }
+    if (listeningLoaded && Array.isArray(listeningExercises) && listeningExercises.some((item) => item.id === path.listeningId)) {
+      actions.push('<button type="button" data-learning-path-link data-listening-open="' + escapeHtml(path.listeningId) + '">Latihan listening</button>');
+    }
+    if (pronunciationLoaded && Array.isArray(pronunciationExercises) && pronunciationExercises.some((item) => item.id === path.pronunciationId)) {
+      actions.push('<button type="button" data-learning-path-link data-pronunciation-open="' + escapeHtml(path.pronunciationId) + '">Latihan pronunciation</button>');
+    }
+    if (studioDrafts && STUDIO_PROMPTS.speaking.some((item) => item.id === path.speakingPromptId)) {
+      actions.push('<button type="button" data-learning-path-link data-studio-kind="speaking" data-studio-prompt="' + escapeHtml(path.speakingPromptId) + '">Lanjut ke Speaking Studio</button>');
+    }
+    if (studioDrafts && STUDIO_PROMPTS.writing.some((item) => item.id === path.writingPromptId)) {
+      actions.push('<button type="button" data-learning-path-link data-studio-kind="writing" data-studio-prompt="' + escapeHtml(path.writingPromptId) + '">Lanjut ke Writing Studio</button>');
+    }
+    if (!actions.length) return "";
+    return '<section class="adventure-learning-path" aria-label="Jalur belajar lanjutan"><span>LANJUTKAN JALUR BELAJAR</span><p>Hubungkan latihan ini dengan keterampilan lain.</p><div>' + actions.join("") + '</div></section>';
+  }
+
   function renderStoryRun(node) {
     const story = stories.find((item) => item.id === storyRun.storyId);
     if (!story) { storyRun = null; renderStoryLibrary(); return; }
@@ -1389,6 +1414,7 @@
           '<p>Skormu <strong>' + storyRun.result.score + '/' + storyRun.result.total + '</strong>. ' +
           (passed ? 'Kamu menjawab setidaknya dua pertanyaan dengan tepat. Cerita ini tercatat sebagai selesai.' : 'Jawaban yang tepat sudah dijelaskan. Ulangi cerita untuk memperkuat pemahaman.') + '</p>' +
           '<div class="adventure-story-result-actions"><button class="adventure-story-retry" type="button" data-story-retry="' + escapeHtml(story.id) + '">Ulangi cerita ↗</button><button class="adventure-story-back" type="button" data-story-close>Kembali ke koleksi</button></div>' +
+        renderLearningPathLinks(story.learningPath) +
         '</div>';
       return;
     }
@@ -1559,6 +1585,7 @@
           '<p>Jawaban tepat: <strong>' + listeningRun.result.score + '/' + listeningRun.result.total + '</strong>. ' +
           (passed ? 'Latihan ini tercatat selesai. Ulangi kapan pun untuk memperkuat pemahaman.' : 'Pelajari penjelasannya, lalu coba lagi dengan kecepatan audio yang nyaman.') + '</p>' +
           '<div class="listening-lab-result-actions"><button class="listening-lab-button" type="button" data-listening-retry="' + escapeHtml(exercise.id) + '">Ulangi latihan ↗</button><button class="listening-lab-button is-secondary" type="button" data-listening-close>Kembali ke koleksi</button></div>' +
+        renderLearningPathLinks(exercise.learningPath) +
         '</div>';
       return;
     }
@@ -1825,6 +1852,7 @@
         '<section class="pronunciation-studio-guidance"><div><span class="eyebrow">WORD STRESS</span><strong>Kata yang perlu mendapat tekanan</strong><div class="pronunciation-studio-stress-words">' + stressedWords + '</div></div><div><span class="eyebrow">THOUGHT GROUPS</span><strong>Kelompokkan frasa</strong><div class="pronunciation-studio-phrase-groups">' + phraseGroups + '</div></div><div><span class="eyebrow">INTONATION</span><strong>' + escapeHtml(exercise.intonation.label) + '</strong><p>' + escapeHtml(exercise.intonation.description) + '</p></div><div><span class="eyebrow">CONNECTED SPEECH</span><p>' + escapeHtml(exercise.linking) + '</p></div><ul>' + tips + '</ul></section>' +
         body +
         '<p class="pronunciation-studio-privacy">Privasi: mikrofon dianalisis lokal. Tidak ada audio mentah yang disimpan, dikirim, atau diunggah. Browser tidak memeriksa fonem secara otomatis; gunakan panduan tekanan dan intonasi untuk latihan mandiri.</p>' +
+        renderLearningPathLinks(exercise.learningPath) +
       '</div>';
   }
 
@@ -2066,6 +2094,7 @@
             '<button class="adventure-dialogue-speaking" type="button" data-dialogue-speaking="' + escapeHtml(dialogue.id) + '">Lanjut ke Speaking Studio ↗</button>' +
             '<button class="adventure-dialogue-back" type="button" data-dialogue-close>Kembali ke skenario</button>' +
           '</div>' +
+        renderLearningPathLinks(dialogue.learningPath) +
         '</div>';
       return;
     }

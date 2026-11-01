@@ -1894,3 +1894,120 @@ test("Placement Check ignores malformed saved results and starts with a clean as
   assert.deepEqual(pageErrors, [], "corrupt placement storage should not break the workspace");
   await page.close();
 });
+
+
+
+test("Grammar curriculum covers A1-B2 with the expanded topic bank", async () => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "grammar-expanded-access",
+      refresh_token: "grammar-expanded-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "grammar-expanded-user", email: "grammar-expanded@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="grammar"]').first().click();
+  await page.locator("#view-grammar.is-visible").waitFor({ state: "visible" });
+  const topicCodes = await page.locator("#grammar-topic-list .topic-code").allInnerTexts();
+  assert.equal(topicCodes.length, 19);
+  for (const [level, expected] of [["A1", 6], ["A2", 6], ["B1", 4], ["B2", 3]]) {
+    assert.equal(topicCodes.filter((value) => value === level).length, expected, level + " lesson coverage changed");
+  }
+  const measurements = await page.evaluate(() => ({
+    viewport: innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  assert.ok(measurements.document <= measurements.viewport + 1, "Grammar view should not overflow at 390px");
+  assert.deepEqual(pageErrors, [], "expanded Grammar view should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+
+test("Everyday Stories result links the learner to related listening, dialogue, pronunciation, speaking, and writing", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "learning-path-access",
+      refresh_token: "learning-path-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "learning-path-user", email: "learning-path@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-story-open="a-rainy-morning"]').waitFor({ state: "visible" });
+  await page.locator('[data-story-open="a-rainy-morning"]').click();
+  for (const answer of [0, 0, 0]) {
+    await page.locator('[data-story-answer="' + answer + '"]').click();
+    await page.locator(".adventure-story-feedback").waitFor({ state: "visible" });
+    await page.locator("[data-story-next]").click();
+  }
+  const result = page.locator("#adventure-story-result");
+  await result.waitFor({ state: "visible" });
+  const links = result.locator("[data-learning-path-link]");
+  await links.first().waitFor({ state: "visible" });
+  const labels = (await links.allInnerTexts()).join(" | ");
+  assert.match(labels, /Baca cerita terkait|Dengarkan dialog|Latihan listening|Latihan pronunciation/);
+  assert.ok(labels.includes("Lanjut ke Speaking Studio"));
+  assert.ok(labels.includes("Lanjut ke Writing Studio"));
+  assert.ok(await page.locator("#adventure-learning-path").count() === 0 || await result.locator(".adventure-learning-path").isVisible(),
+    "cross-skill pathway should be visible");
+  await result.locator('[data-dialogue-open="at-the-cafe"]').click();
+  await page.locator("#adventure-dialogue-reader").waitFor({ state: "visible" });
+  assert.match(await page.locator("#adventure-dialogue-reader").innerText(), /At the Café/);
+  assert.deepEqual(pageErrors, [], "cross-skill handoff should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+
+test("Pronunciation Studio contains four guided phrases at every CEFR band", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "pronunciation-level-access",
+      refresh_token: "pronunciation-level-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "pronunciation-level-user", email: "pronunciation-level@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const cards = page.locator("#adventure-pronunciation-studio [data-pronunciation-open]");
+  await cards.first().waitFor({ state: "visible" });
+  assert.equal(await cards.count(), 16);
+  const levels = await page.locator("#adventure-pronunciation-studio .adventure-story-level").allInnerTexts();
+  for (const level of ["A1", "A2", "B1", "B2"]) {
+    assert.equal(levels.filter((value) => value === level).length, 4, level + " pronunciation coverage changed");
+  }
+  await cards.filter({ has: page.locator('[data-pronunciation-open="contrasting-evidence"]') }).count().catch(()=>0);
+  await page.locator('[data-pronunciation-open="clear-instructions"]').click();
+  await page.locator("#pronunciation-studio-reader").waitFor({ state: "visible" });
+  assert.ok(await page.locator("#pronunciation-studio-reader .adventure-learning-path [data-learning-path-link]").count() >= 4);
+  assert.deepEqual(pageErrors, [], "Pronunciation Studio should not throw browser JavaScript errors");
+  await page.close();
+});

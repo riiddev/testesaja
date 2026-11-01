@@ -132,7 +132,7 @@
     const isCorrect = answerIndex === question.answer;
     placementRun.locked = true;
     placementRun.answers.push({level:question.level,category:question.category,correct:isCorrect});
-    $("#placement-options [data-placement-answer]").forEach(button => {
+    $$("#placement-options [data-placement-answer]").forEach(button => {
       const index = Number(button.dataset.placementAnswer);
       button.disabled = true;
       if (index === question.answer) button.classList.add("is-correct");
