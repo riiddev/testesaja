@@ -2034,3 +2034,28 @@ h1,h2,h3{overflow-wrap:break-word}
   .side-link { font-size:.47rem; }
   .nav-icon { font-size:.92rem; }
 }
+
+
+.detail-supplementary {
+  margin-top:16px;
+  border-block:1px solid var(--line);
+}
+.detail-supplementary > summary {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 0;
+  color:var(--body);
+  font-size:.7rem;
+  font-weight:650;
+  cursor:pointer;
+  list-style:none;
+}
+.detail-supplementary > summary::-webkit-details-marker { display:none; }
+.detail-supplementary > summary::after { content:"+"; color:var(--sage-deep); font-size:1rem; }
+.detail-supplementary[open] > summary::after { content:"−"; }
+.detail-supplementary > summary small { margin-left:auto; color:var(--muted); font-size:.58rem; font-weight:500; }
+.detail-supplementary-content { display:grid; gap:13px; padding:2px 0 14px; }
+.detail-supplementary-content > div { min-width:0; }
+.detail-supplementary-content .detail-section-label { margin-top:8px; }
