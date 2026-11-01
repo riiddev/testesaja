@@ -964,6 +964,33 @@ h1,h2,h3{overflow-wrap:break-word}
 .home-daily-goal .goal-line{font-size:.68rem}
 .home-daily-goal .progress-track{height:6px;border-radius:8px}
 .home-daily-goal .progress-track span{border-radius:8px}
+
+.home-study-plan{margin-top:30px;padding:clamp(19px,2.7vw,28px);border:1px solid var(--line);border-radius:14px;background:var(--sheet)}
+.home-study-plan-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:22px;margin-bottom:19px}
+.home-study-plan-heading .eyebrow{display:block;margin-bottom:7px;font-size:.52rem}
+.home-study-plan-heading h2{margin:0;font-size:1.7rem;line-height:1.15}
+.home-study-plan-heading p{margin:6px 0 0;color:var(--muted);font-size:.66rem;line-height:1.65}
+.home-study-plan-summary{flex:0 0 78px;display:grid;justify-items:end;gap:3px}
+.home-study-plan-summary strong{color:var(--ink);font:400 1.55rem/1 "Lora",Georgia,serif}
+.home-study-plan-summary>span{color:var(--muted);font-size:.43rem;font-weight:800;letter-spacing:.09em}
+.home-study-plan-track{width:78px;height:4px;overflow:hidden;margin-top:4px;border-radius:5px;background:var(--paper-deep)}
+.home-study-plan-track i{display:block;width:0;height:100%;border-radius:inherit;background:var(--sage-deep);transition:width .2s ease}
+.home-study-plan-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.home-study-plan-step{min-width:0;display:flex;flex-direction:column;align-items:flex-start;padding:15px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.home-study-plan-step.is-complete{border-color:color-mix(in srgb,var(--sage-deep) 36%,var(--line));background:color-mix(in srgb,var(--sage) 18%,var(--paper))}
+.home-study-plan-step-meta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;color:var(--sage-deep);font-size:.45rem;font-weight:800;letter-spacing:.06em}
+.home-study-plan-step-meta small{color:var(--muted);font-size:.43rem;white-space:nowrap}
+.home-study-plan-step h3{margin:0 0 6px;color:var(--ink);font:500 .92rem/1.4 "Lora",Georgia,serif}
+.home-study-plan-step p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.59rem;line-height:1.65}
+.home-study-plan-action{min-height:35px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--sheet);color:var(--sage-deep);font-size:.56rem;font-weight:700;cursor:pointer}
+.home-study-plan-action:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 25%,var(--sheet))}
+.home-study-plan-action:disabled{cursor:default;border-color:transparent;background:transparent;color:var(--sage-deep);padding-left:0}
+.home-study-plan-quest-progress{margin:-5px 0 10px;color:var(--sage-deep);font-size:.5rem}
+.home-study-plan-note{margin:12px 0 0;color:var(--muted);font-size:.53rem;line-height:1.6}
+.home-study-plan-loading{padding:15px;border:1px dashed var(--line);color:var(--muted);font-size:.62rem}
+@media(max-width:850px){.home-study-plan-steps{grid-template-columns:1fr}.home-study-plan-step{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:0 12px}.home-study-plan-step-meta{grid-column:1/-1}.home-study-plan-step h3,.home-study-plan-step p{grid-column:1}.home-study-plan-step p{margin-bottom:0}.home-study-plan-action{grid-column:2;grid-row:2 / span 2;align-self:center}}
+@media(max-width:560px){.home-study-plan{margin-top:23px;padding:17px 14px}.home-study-plan-heading{gap:12px}.home-study-plan-heading h2{font-size:1.42rem}.home-study-plan-heading p{font-size:.59rem}.home-study-plan-summary{flex-basis:55px}.home-study-plan-summary strong{font-size:1.25rem}.home-study-plan-track{width:55px}.home-study-plan-step{padding:13px 11px}.home-study-plan-step h3{font-size:.82rem}.home-study-plan-step p{font-size:.56rem}.home-study-plan-action{max-width:130px;padding-inline:7px;font-size:.52rem}}
+
 .home-practice-choices{margin-top:38px;padding-top:26px;border-top:1px solid var(--line)}
 .home-choice-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
 .home-choice{min-width:0;display:grid;grid-template-columns:34px minmax(0,1fr) 12px;align-items:center;gap:10px;padding:14px 11px;border:1px solid var(--line);border-radius:11px;background:var(--sheet);text-align:left;cursor:pointer;transition:border-color .18s ease,transform .18s ease}

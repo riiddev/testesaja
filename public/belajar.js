@@ -239,6 +239,146 @@
     const details = b.total + " kata tersedia · " + b.learning + " learning · " + b.due + " review · " + b.weak + " weak";
     return '<div class="level-progress-row"><span class="level-progress-code">'+level+'</span><div class="level-progress-main"><strong>'+esc(LABELS[level])+'<span>'+pct+'%</span></strong><div class="progress-track"><span style="width:'+pct+'%"></span></div>'+(detailed?'<p style="margin:7px 0 0;color:var(--muted);font-size:.62rem">'+esc(details)+'</p>':"")+'</div><span class="level-progress-count">'+b.mastered+'/'+b.total+'</span></div>';
   }
+  function getPlanVocabularyTask(today) {
+    const existing = state.history.slice().reverse().find(item =>
+      item.date === today && item.type === "vocabulary" && item.wordId
+    );
+    let word = existing ? words.find(item => item.id === existing.wordId) : null;
+    let mode = existing && existing.mode === "review" ? "review" : "learn";
+
+    if (!word) {
+      const due = dueWords().slice().sort((a,b) =>
+        new Date(state.wordProgress[a.id].nextReviewAt) - new Date(state.wordProgress[b.id].nextReviewAt)
+      );
+      if (due.length) {
+        word = due[0];
+        mode = "review";
+      } else {
+        word = words.find(item => canStudyWord(item) && statusOf(item) === "new")
+          || words.find(item => canStudyWord(item) && state.favorites.includes(item.id))
+          || words.find(item => canStudyWord(item) && statusOf(item) !== "mastered")
+          || words.find(canStudyWord);
+        mode = "learn";
+      }
+    }
+
+    if (!word) return { word:null, mode:"learn", done:false, title:"Kosakata siap dijelajahi", description:"Pilih satu kata yang menarik untuk mulai berlatih." };
+    const p = state.wordProgress[word.id] || {};
+    let done = false;
+    if (mode === "review") {
+      done = (p.reviewHistory || []).some(item => item.date === today);
+    } else {
+      const skills = new Set(state.events
+        .filter(item => item.wordId === word.id && item.date === today)
+        .map(item => item.skill));
+      done = ["recall","context","production"].every(skill => skills.has(skill));
+    }
+    return {
+      word, mode, done,
+      title: mode === "review" ? "Ingat kembali · " + word.word : "Pelajari kata · " + word.word,
+      description: mode === "review"
+        ? "Satu kata sudah waktunya diulang. Coba ingat makna dan penggunaannya."
+        : "Belum ada review yang jatuh tempo. Pelajari satu kata baru melalui arti, konteks, dan penggunaan."
+    };
+  }
+
+  function getPlanGrammarTask(today) {
+    const previous = state.history.slice().reverse().find(item =>
+      item.date === today && item.type === "grammar" && item.topicId
+    );
+    const candidates = topics.map(topic => {
+      const p = state.grammarProgress[topic.id] || {};
+      const unique = Object.keys(p.answers || {}).length;
+      const attempts = Number(p.attempts) || 0;
+      const accuracy = attempts ? (Number(p.correct) || 0) / attempts : 1;
+      const coverage = unique / Math.max(1, topic.questions.length);
+      const priority = attempts > 0 && accuracy < 0.7
+        ? 0
+        : unique < topic.questions.length ? 1 : 2;
+      const score = priority === 0 ? accuracy : priority === 1 ? coverage : accuracy;
+      return { topic, attempts, unique, accuracy, priority, score };
+    });
+    candidates.sort((a,b) => a.priority - b.priority || a.score - b.score || a.topic.title.localeCompare(b.topic.title));
+    const chosen = previous
+      ? candidates.find(item => item.topic.id === previous.topicId)
+      : candidates[0];
+    const item = chosen || candidates[0];
+    if (!item) return { topic:null, done:false, description:"Materi grammar belum tersedia." };
+    const done = state.history.some(entry =>
+      entry.date === today && entry.type === "grammar" && entry.topicId === item.topic.id
+    );
+    let description = "Belum pernah dicoba. Mulai dari penjelasan dan latihan dasar.";
+    if (item.attempts > 0 && item.accuracy < 0.7) {
+      description = "Akurasi sebelumnya " + Math.round(item.accuracy * 100) + "%. Kembali ke konsep ini dan periksa alasannya.";
+    } else if (item.unique > 0) {
+      description = item.unique + "/" + item.topic.questions.length + " soal unik sudah dicoba. Lanjutkan bagian yang belum selesai.";
+    }
+    return { topic:item.topic, done, description };
+  }
+
+  function getPlanAdventureTask(today) {
+    let snapshot = {};
+    try {
+      snapshot = window.sinauuAdventureBackup?.()
+        || JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
+    } catch (_) { snapshot = {}; }
+    const quest = snapshot.dailyQuests && snapshot.dailyQuests[today];
+    const total = Array.isArray(quest?.stepIds) ? quest.stepIds.length : 3;
+    const completed = Array.isArray(quest?.completedStepIds) ? quest.completedStepIds.length : 0;
+    return {
+      done: Boolean(quest?.completedAt),
+      started: Boolean(quest?.startedAt),
+      progress: quest ? Math.min(completed,total) + "/" + total + " tantangan" : "3 tantangan singkat",
+      description: quest?.completedAt
+        ? "Daily Quest hari ini sudah selesai. Istirahat juga bagian dari belajar."
+        : quest?.startedAt
+          ? "Kamu sudah memulai. Lanjutkan " + Math.min(completed,total) + " dari " + total + " tantangan."
+          : "Gunakan kosakata dan grammar dalam tiga tantangan singkat di First Steps Island."
+    };
+  }
+
+  function renderStudyPlan() {
+    const node = $("#home-study-plan-steps");
+    if (!node || !state) return;
+    const today = dayKey();
+    const vocabulary = getPlanVocabularyTask(today);
+    const grammar = getPlanGrammarTask(today);
+    const adventure = getPlanAdventureTask(today);
+    const steps = [vocabulary, grammar, adventure];
+    const doneCount = steps.filter(item => item.done).length;
+    const count = $("#home-study-plan-count");
+    const bar = $("#home-study-plan-bar");
+    if (count) count.textContent = doneCount + "/3";
+    if (bar) bar.style.width = Math.round(doneCount / 3 * 100) + "%";
+
+    const vocabularyAction = vocabulary.word
+      ? '<button type="button" class="home-study-plan-action" data-plan-vocabulary="' + esc(vocabulary.word.id) + '" data-plan-mode="' + vocabulary.mode + '"' + (vocabulary.done ? ' disabled' : '') + '>' +
+        (vocabulary.done ? 'Selesai ✓' : vocabulary.mode === "review" ? 'Mulai review ↗' : 'Mulai belajar ↗') + '</button>'
+      : '<button type="button" class="home-study-plan-action" data-view-target="vocabulary">Jelajahi kosakata ↗</button>';
+    const grammarAction = grammar.topic
+      ? '<button type="button" class="home-study-plan-action" data-plan-topic="' + esc(grammar.topic.id) + '"' + (grammar.done ? ' disabled' : '') + '>' +
+        (grammar.done ? 'Selesai ✓' : 'Buka latihan ↗') + '</button>'
+      : '<button type="button" class="home-study-plan-action" data-view-target="grammar">Buka grammar ↗</button>';
+    const adventureAction = '<button type="button" class="home-study-plan-action" data-plan-adventure' + (adventure.done ? ' disabled' : '') + '>' +
+      (adventure.done ? 'Selesai ✓' : adventure.started ? 'Lanjutkan quest ↗' : 'Mulai Daily Quest ↗') + '</button>';
+
+    node.innerHTML =
+      '<article class="home-study-plan-step' + (vocabulary.done ? ' is-complete' : '') + '">' +
+        '<div class="home-study-plan-step-meta"><span>01 · INGAT KEMBALI</span><small>5 MENIT</small></div>' +
+        '<h3>' + esc(vocabulary.title) + '</h3><p>' + esc(vocabulary.description) + '</p>' + vocabularyAction +
+      '</article>' +
+      '<article class="home-study-plan-step' + (grammar.done ? ' is-complete' : '') + '">' +
+        '<div class="home-study-plan-step-meta"><span>02 · PAHAMI POLA</span><small>5 MENIT</small></div>' +
+        '<h3>' + esc(grammar.topic?.title || "Grammar") + '</h3><p>' + esc(grammar.description) + '</p>' + grammarAction +
+      '</article>' +
+      '<article class="home-study-plan-step' + (adventure.done ? ' is-complete' : '') + '">' +
+        '<div class="home-study-plan-step-meta"><span>03 · GUNAKAN BAHASA</span><small>5 MENIT</small></div>' +
+        '<h3>Daily Quest · First Steps Island</h3><p>' + esc(adventure.description) + '</p>' +
+        (adventure.started && !adventure.done ? '<small class="home-study-plan-quest-progress">' + esc(adventure.progress) + '</small>' : '') +
+        adventureAction +
+      '</article>';
+  }
+
   function renderOverview() {
     const stats = levelStats(), mastered = words.filter(w=>statusOf(w)==="mastered").length, due=dueWords().length, activities=activityToday(), goal=Number(state.settings.dailyGoal)||10;
     $("#metric-mastered").textContent=mastered;
@@ -255,6 +395,7 @@
     topics.filter(t=>!(state.grammarProgress[t.id]&&state.grammarProgress[t.id].attempts)).slice(0,2).forEach(t=>suggestions.push({type:"GRAMMAR",title:t.title,description:t.summary,topicId:t.id}));
     words.filter(w=>canStudyWord(w)&&statusOf(w)==="new").slice(0,3).forEach(w=>suggestions.push({type:"WORD",title:w.word,description:w.meaning,wordId:w.id}));
     $("#resume-list").innerHTML=suggestions.slice(0,4).map(x=>'<div class="resume-item"><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.description)+'</p></div><button class="resume-action" type="button" '+(x.wordId?'data-study-word="'+esc(x.wordId)+'"':'data-open-topic="'+esc(x.topicId)+'"')+'>Mulai ↗</button></div>').join("") || '<div class="empty-state">Materi yang tersedia sudah pernah dicoba. Pilih topik lain.</div>';
+    renderStudyPlan();
   }
   function renderVocabulary(resetList=true) {
     if(resetList)listLimit=100;
@@ -534,6 +675,9 @@
     finally{$("#import-backup").value="";}
   }
   function bindEvents() {
+    window.addEventListener("sinauu:local-extras-saved",()=>{
+      if(state && view==="overview")renderStudyPlan();
+    });
     document.addEventListener("click",async e=>{
       const readingModeBtn=e.target.closest("[data-reading-mode]");
       if(readingModeBtn){
@@ -550,6 +694,15 @@
       }
       const vocabBack=e.target.closest("[data-vocab-back]");
       if(vocabBack){vocabDetailOpen=false;renderVocabulary(false);return;}
+      const planVocabulary=e.target.closest("[data-plan-vocabulary]");
+      if(planVocabulary){startStudy(planVocabulary.dataset.planVocabulary,planVocabulary.dataset.planMode||"learn");return;}
+      const planTopic=e.target.closest("[data-plan-topic]");
+      if(planTopic){activeTopic=planTopic.dataset.planTopic;setView("grammar");return;}
+      if(e.target.closest("[data-plan-adventure]")){
+        setView("adventure");
+        $("#adventure-daily-quest")?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+        return;
+      }
       const viewBtn=e.target.closest("[data-view-target]");
       if(viewBtn){setView(viewBtn.dataset.viewTarget);return;}
       const wordBtn=e.target.closest("[data-select-word]");
