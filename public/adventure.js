@@ -21,9 +21,10 @@
   let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, initialized = false;
   let stories = [], storiesLoaded = false, storyLoadError = "", storyRun = null;
   let dialogues = [], dialoguesLoaded = false, dialogueLoadError = "", dialogueRun = null;
+  let listeningExercises = [], listeningLoaded = false, listeningLoadError = "", listeningRun = null;
 
   function emptyProgress() {
-    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, storyProgress: {}, dialogueProgress: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
+    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, storyProgress: {}, dialogueProgress: {}, listeningProgress: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
   }
   function readStored() {
     try {
@@ -52,6 +53,16 @@
     base.dialogueProgress = raw.dialogueProgress && typeof raw.dialogueProgress === "object" && !Array.isArray(raw.dialogueProgress) ? raw.dialogueProgress : {};
     for (const [dialogueId, entry] of Object.entries(base.dialogueProgress)) {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.dialogueProgress[dialogueId]; continue; }
+      entry.attempts = Array.isArray(entry.attempts)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && Number.isInteger(attempt.score) && Number.isInteger(attempt.total) && typeof attempt.completedAt === "string").slice(-100)
+        : [];
+      entry.bestScore = entry.attempts.reduce((best, attempt) => Math.max(best, attempt.score), 0);
+      entry.completedAt = typeof entry.completedAt === "string" ? entry.completedAt : entry.attempts.find((attempt) => attempt.passed)?.completedAt || null;
+      entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
+    }
+    base.listeningProgress = raw.listeningProgress && typeof raw.listeningProgress === "object" && !Array.isArray(raw.listeningProgress) ? raw.listeningProgress : {};
+    for (const [exerciseId, entry] of Object.entries(base.listeningProgress)) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.listeningProgress[exerciseId]; continue; }
       entry.attempts = Array.isArray(entry.attempts)
         ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && Number.isInteger(attempt.score) && Number.isInteger(attempt.total) && typeof attempt.completedAt === "string").slice(-100)
         : [];
@@ -443,7 +454,7 @@
     }
     checkAchievements();
     renderHeaderStats(); renderMap(); renderMissionDetail(); renderSkillProfile(); renderAchievements();
-    renderDailyQuest(); renderMistakeJournal(); renderStudios(); renderStoryLibrary(); renderDialogueLibrary();
+    renderDailyQuest(); renderMistakeJournal(); renderStudios(); renderStoryLibrary(); renderDialogueLibrary(); renderListeningLab();
   }
   function openMission(missionId) {
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
@@ -466,6 +477,7 @@
     saveProgress();
     renderMissionDetail();
     renderDailyQuest();
+    renderListeningLab();
   }
 
   function listenToStep() {
@@ -1055,6 +1067,189 @@
     renderStoryLibrary();
   }
 
+
+  function listeningEntry(exerciseId) {
+    return progress.listeningProgress[exerciseId] && typeof progress.listeningProgress[exerciseId] === "object"
+      ? progress.listeningProgress[exerciseId]
+      : { attempts: [], bestScore: 0, completedAt: null, updatedAt: null };
+  }
+
+  function renderListeningLab() {
+    const node = $("#adventure-listening-lab");
+    if (!node) return;
+    if (listeningRun) { renderListeningRun(node); return; }
+    if (!listeningLoaded) {
+      node.innerHTML = '<div class="listening-lab-heading"><div><span class="eyebrow">LISTEN IN LAYERS</span><h3>Listening Lab</h3><p>Latih telinga secara bertahap: gagasan utama, detail, lalu maksud pembicara.</p></div></div><p class="listening-lab-empty">Menyiapkan latihan listening…</p>';
+      return;
+    }
+    if (listeningLoadError) {
+      node.innerHTML = '<div class="listening-lab-heading"><div><span class="eyebrow">LISTEN IN LAYERS</span><h3>Listening Lab</h3><p>Latih telinga secara bertahap: gagasan utama, detail, lalu maksud pembicara.</p></div></div><p class="listening-lab-empty">' + escapeHtml(listeningLoadError) + '</p><button class="listening-lab-button" type="button" data-listening-reload>Muat ulang latihan</button>';
+      return;
+    }
+    const completed = listeningExercises.filter((exercise) => Boolean(listeningEntry(exercise.id).completedAt)).length;
+    const cards = listeningExercises.map((exercise) => {
+      const entry = listeningEntry(exercise.id);
+      const done = Boolean(entry.completedAt);
+      const attempts = Array.isArray(entry.attempts) ? entry.attempts.length : 0;
+      const best = Number(entry.bestScore) || 0;
+      return '<article class="listening-lab-card">' +
+        '<div class="listening-lab-card-top"><span class="adventure-story-level">' + escapeHtml(exercise.level) + '</span><span class="adventure-story-status">' + (done ? 'SELESAI ✓' : attempts ? 'PERNAH DICOBA' : 'LATIHAN BARU') + '</span></div>' +
+        '<h4>' + escapeHtml(exercise.title) + '</h4><p>' + escapeHtml(exercise.subtitle) + '</p>' +
+        '<div class="listening-lab-card-meta"><span>' + escapeHtml(String(exercise.estimatedMinutes || 5)) + ' MENIT</span><span>' + attempts + ' percobaan' + (attempts ? ' · terbaik ' + best + '/' + exercise.stages.length : '') + '</span></div>' +
+        '<button class="listening-lab-button" type="button" data-listening-open="' + escapeHtml(exercise.id) + '">' + (done ? 'Dengarkan lagi ↗' : attempts ? 'Lanjut berlatih ↗' : 'Mulai latihan ↗') + '</button>' +
+      '</article>';
+    }).join("");
+    node.innerHTML =
+      '<div class="listening-lab-heading"><div><span class="eyebrow">LISTEN IN LAYERS / A1–B2</span><h3>Listening Lab</h3><p>Dengarkan tanpa teks terlebih dahulu. Setelah menangkap gagasan utama, cari detail penting, lalu simpulkan maksud pembicara. Transkrip tersedia sebagai bahan evaluasi.</p></div><span class="adventure-story-count">' + completed + '/' + listeningExercises.length + '<small>SELESAI</small></span></div>' +
+      (cards ? '<div class="listening-lab-grid">' + cards + '</div>' : '<p class="listening-lab-empty">Belum ada latihan tersedia.</p>');
+  }
+
+  function renderListeningRun(node) {
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    if (!exercise) { listeningRun = null; renderListeningLab(); return; }
+    if (listeningRun.stage === "result") {
+      const passed = Boolean(listeningRun.result?.passed);
+      node.innerHTML =
+        '<div class="listening-lab-result" id="listening-lab-result">' +
+          '<span class="adventure-story-level">' + escapeHtml(exercise.level) + '</span>' +
+          '<div class="adventure-story-result-mark">' + (passed ? '✓' : '↻') + '</div>' +
+          '<h4>' + (passed ? 'Kamu menangkap isi percakapan.' : 'Coba dengarkan sekali lagi.') + '</h4>' +
+          '<p>Jawaban tepat: <strong>' + listeningRun.result.score + '/' + listeningRun.result.total + '</strong>. ' +
+          (passed ? 'Latihan ini tercatat selesai. Ulangi kapan pun untuk memperkuat pemahaman.' : 'Pelajari penjelasannya, lalu coba lagi dengan kecepatan audio yang nyaman.') + '</p>' +
+          '<div class="listening-lab-result-actions"><button class="listening-lab-button" type="button" data-listening-retry="' + escapeHtml(exercise.id) + '">Ulangi latihan ↗</button><button class="listening-lab-button is-secondary" type="button" data-listening-close>Kembali ke koleksi</button></div>' +
+        '</div>';
+      return;
+    }
+    const stage = exercise.stages[listeningRun.stageIndex];
+    const answered = listeningRun.locked;
+    const stageLabels = { gist: "GAGASAN UTAMA", detail: "DETAIL PENTING", inference: "MAKSUD PEMBICARA" };
+    const stageChoices = stage.options.map((option, index) => {
+      const correct = index === stage.answer;
+      const chosen = index === listeningRun.selectedAnswer;
+      return '<button type="button" class="listening-lab-option' + (answered && correct ? ' is-correct' : '') + (answered && chosen && !correct ? ' is-wrong' : '') + '" data-listening-answer="' + index + '"' + (answered ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>';
+    }).join("");
+    const transcript = listeningRun.transcriptVisible
+      ? '<div class="listening-lab-transcript" id="listening-lab-transcript">' + exercise.transcript.map((line) => '<p><strong>' + escapeHtml(line.speaker) + '</strong><span>' + escapeHtml(line.text) + '</span></p>').join("") + '</div>'
+      : "";
+    const vocabulary = exercise.focusWords.map((word) => '<span class="listening-lab-word"><strong>' + escapeHtml(word.word) + '</strong><span>' + escapeHtml(word.meaning) + '</span></span>').join("");
+    const rateButtons = [0.75, 0.9, 1].map((rate) => '<button type="button" data-listening-rate="' + rate + '" aria-pressed="' + (Number(progress.listeningRate) === rate) + '">' + (rate === 1 ? '1×' : rate.toFixed(2).replace(/0$/, '') + '×') + '</button>').join("");
+    const audioNote = listeningRun.audioUnavailable
+      ? '<small>Suara browser tidak tersedia di perangkat ini. Buka transkrip untuk tetap melanjutkan latihan.</small>'
+      : '<small>Audio disuarakan oleh browser; tidak ada rekaman mikrofon atau audio yang diunggah. Dengarkan dulu sebelum membuka transkrip.</small>';
+    node.innerHTML =
+      '<div class="listening-lab-reader" id="listening-lab-reader">' +
+        '<div class="listening-lab-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(exercise.level) + '</span><span>·</span><span>' + escapeHtml(String(exercise.estimatedMinutes || 5)) + ' MENIT</span></div><button class="listening-lab-button is-secondary" type="button" data-listening-close>← Koleksi</button></div>' +
+        '<h3 class="listening-lab-title">' + escapeHtml(exercise.title) + '</h3><p class="listening-lab-setting">' + escapeHtml(exercise.setting) + '</p>' +
+        '<div class="listening-lab-stage-top"><span>' + escapeHtml(stageLabels[stage.kind] || "LISTENING CHECK") + '</span><strong>TAHAP ' + (listeningRun.stageIndex + 1) + '/' + exercise.stages.length + '</strong></div>' +
+        '<div class="adventure-story-progress"><i style="width:' + Math.round((listeningRun.stageIndex + 1) / exercise.stages.length * 100) + '%"></i></div>' +
+        '<div class="listening-lab-stage-track">' + exercise.stages.map((item, index) => '<span class="' + (index < listeningRun.stageIndex ? 'is-done' : index === listeningRun.stageIndex ? 'is-active' : '') + '">' + (index + 1) + '</span>').join("") + '</div>' +
+        '<div class="listening-lab-stage-label">' + escapeHtml(stage.label) + '</div>' +
+        '<div class="listening-lab-player"><button class="listening-lab-play" type="button" data-listening-play>▶ Dengarkan audio</button><div class="listening-lab-speed"><span>KECEPATAN</span>' + rateButtons + '</div>' + audioNote + '</div>' +
+        '<h4 class="listening-lab-question">' + escapeHtml(stage.prompt) + '</h4>' +
+        '<div class="listening-lab-options">' + stageChoices + '</div>' +
+        (answered ? '<div class="listening-lab-feedback' + (listeningRun.isCorrect ? '' : ' is-wrong') + '" role="status"><strong>' + (listeningRun.isCorrect ? 'Tepat.' : 'Belum tepat.') + '</strong>' + escapeHtml(stage.explanation) + (!listeningRun.isCorrect ? '<br>Jawaban: ' + escapeHtml(stage.options[stage.answer]) : '') + '</div>' : '') +
+        (answered ? '<div class="listening-lab-actions"><button class="listening-lab-button" type="button" data-listening-next>' + (listeningRun.stageIndex === exercise.stages.length - 1 ? 'Lihat hasil →' : 'Tahap berikutnya →') + '</button></div>' : '') +
+        '<div class="listening-lab-transcript-tools"><button class="listening-lab-transcript-toggle" type="button" data-listening-transcript>' + (listeningRun.transcriptVisible ? 'Sembunyikan transkrip' : 'Buka transkrip') + '</button><span>Gunakan setelah mencoba memahami audio.</span></div>' +
+        transcript +
+        '<div class="listening-lab-vocabulary">' + vocabulary + '</div>' +
+      '</div>';
+  }
+
+  async function loadListeningLab() {
+    try {
+      const response = await fetch("/data/adventure/listening.json", { cache: "no-cache" });
+      if (!response.ok) throw new Error("Koleksi Listening Lab belum dapat dimuat.");
+      const data = await response.json();
+      if (!data || data.schemaVersion !== 1 || !Array.isArray(data.exercises)) throw new Error("Format Listening Lab tidak sesuai.");
+      const ids = new Set();
+      listeningExercises = data.exercises.filter((exercise) => {
+        const valid = exercise && typeof exercise.id === "string" && exercise.id && !ids.has(exercise.id) &&
+          typeof exercise.title === "string" && ["A1", "A2", "B1", "B2"].includes(exercise.level) &&
+          Array.isArray(exercise.transcript) && exercise.transcript.length >= 4 &&
+          exercise.transcript.every((line) => line && typeof line.speaker === "string" && typeof line.text === "string") &&
+          Array.isArray(exercise.focusWords) && exercise.focusWords.length >= 3 &&
+          Array.isArray(exercise.stages) && exercise.stages.length === 3 &&
+          exercise.stages.every((stage) => stage && typeof stage.id === "string" && ["gist", "detail", "inference"].includes(stage.kind) &&
+            typeof stage.audioText === "string" && stage.audioText.trim() && typeof stage.prompt === "string" &&
+            Array.isArray(stage.options) && stage.options.length >= 3 && Number.isInteger(stage.answer) &&
+            stage.answer >= 0 && stage.answer < stage.options.length && typeof stage.explanation === "string");
+        if (valid) ids.add(exercise.id);
+        return valid;
+      });
+      if (listeningExercises.length !== data.exercises.length) throw new Error("Sebagian latihan tidak lolos pemeriksaan struktur.");
+      listeningLoaded = true;
+      listeningLoadError = "";
+      renderListeningLab();
+    } catch (error) {
+      listeningLoaded = true;
+      listeningLoadError = error instanceof Error ? error.message : "Listening Lab belum dapat dimuat.";
+      renderListeningLab();
+    }
+  }
+
+  function openListening(exerciseId) {
+    if (!listeningExercises.some((item) => item.id === exerciseId)) return;
+    listeningRun = { exerciseId, stage: "practice", stageIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, transcriptVisible: false, audioUnavailable: false };
+    renderListeningLab();
+  }
+
+  function playListeningStage() {
+    if (!listeningRun || listeningRun.stage !== "practice") return;
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    const stage = exercise && exercise.stages[listeningRun.stageIndex];
+    if (!stage) return;
+    listeningRun.audioUnavailable = !playText(stage.audioText);
+    if (listeningRun.audioUnavailable) listeningRun.transcriptVisible = true;
+    renderListeningLab();
+  }
+
+  function answerListening(answerIndex) {
+    if (!listeningRun || listeningRun.stage !== "practice" || listeningRun.locked) return;
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    const stage = exercise && exercise.stages[listeningRun.stageIndex];
+    if (!stage || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= stage.options.length) return;
+    listeningRun.selectedAnswer = answerIndex;
+    listeningRun.isCorrect = answerIndex === stage.answer;
+    listeningRun.locked = true;
+    listeningRun.answers.push({ stageId: stage.id, correct: listeningRun.isCorrect });
+    renderListeningLab();
+  }
+
+  function finishListening() {
+    if (!listeningRun || listeningRun.stage !== "practice") return;
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    if (!exercise || listeningRun.answers.length !== exercise.stages.length) return;
+    const score = listeningRun.answers.filter((answer) => answer.correct).length;
+    const total = exercise.stages.length;
+    const passed = score >= Math.ceil(total * 2 / 3);
+    const completedAt = new Date().toISOString();
+    const entry = listeningEntry(exercise.id);
+    const attempt = { attemptId: makeId(), score, total, passed, completedAt };
+    entry.attempts = [...(entry.attempts || []), attempt].slice(-100);
+    entry.bestScore = Math.max(Number(entry.bestScore) || 0, score);
+    if (passed && !entry.completedAt) entry.completedAt = completedAt;
+    entry.updatedAt = completedAt;
+    progress.listeningProgress[exercise.id] = entry;
+    saveProgress();
+    listeningRun.stage = "result";
+    listeningRun.result = { score, total, passed };
+    renderListeningLab();
+  }
+
+  function advanceListening() {
+    if (!listeningRun || !listeningRun.locked || listeningRun.stage !== "practice") return;
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    if (!exercise) return;
+    if (listeningRun.stageIndex >= exercise.stages.length - 1) { finishListening(); return; }
+    listeningRun.stageIndex += 1;
+    listeningRun.locked = false;
+    listeningRun.selectedAnswer = null;
+    listeningRun.isCorrect = false;
+    listeningRun.transcriptVisible = false;
+    listeningRun.audioUnavailable = false;
+    renderListeningLab();
+  }
+
   function dialogueEntry(dialogueId) {
     return progress.dialogueProgress[dialogueId] && typeof progress.dialogueProgress[dialogueId] === "object"
       ? progress.dialogueProgress[dialogueId]
@@ -1299,6 +1494,19 @@
       if (event.target.closest("[data-dialogue-transcript]")) { if (dialogueRun) { dialogueRun.transcriptVisible = !dialogueRun.transcriptVisible; renderDialogueLibrary(); } return; }
       const dialogueSpeaking = event.target.closest("[data-dialogue-speaking]");
       if (dialogueSpeaking) { openSpeakingFromDialogue(dialogueSpeaking.dataset.dialogueSpeaking); return; }
+      const listeningOpen = event.target.closest("[data-listening-open]");
+      if (listeningOpen) { openListening(listeningOpen.dataset.listeningOpen); return; }
+      if (event.target.closest("[data-listening-close]")) { listeningRun = null; renderListeningLab(); return; }
+      if (event.target.closest("[data-listening-reload]")) { listeningLoadError = ""; listeningLoaded = false; renderListeningLab(); void loadListeningLab(); return; }
+      if (event.target.closest("[data-listening-play]")) { playListeningStage(); return; }
+      const listeningRate = event.target.closest("[data-listening-rate]");
+      if (listeningRate) { setListeningRate(listeningRate.dataset.listeningRate); return; }
+      if (event.target.closest("[data-listening-transcript]")) { if (listeningRun) { listeningRun.transcriptVisible = !listeningRun.transcriptVisible; renderListeningLab(); } return; }
+      const listeningAnswer = event.target.closest("[data-listening-answer]");
+      if (listeningAnswer) { answerListening(Number(listeningAnswer.dataset.listeningAnswer)); return; }
+      if (event.target.closest("[data-listening-next]")) { advanceListening(); return; }
+      const listeningRetry = event.target.closest("[data-listening-retry]");
+      if (listeningRetry) { openListening(listeningRetry.dataset.listeningRetry); return; }
       const studioPrompt = event.target.closest("[data-studio-prompt]");
       if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
       const studioComplete = event.target.closest("[data-studio-complete]");
@@ -1331,6 +1539,7 @@
       initListeners(); renderAll();
       void loadStories();
       void loadDialogues();
+      void loadListeningLab();
     } catch (error) {
       const panel = $("#adventure-mission-panel");
       if (panel) panel.textContent = error.message || "Petualangan belum dapat dimuat.";
