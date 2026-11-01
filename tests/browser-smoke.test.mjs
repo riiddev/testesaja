@@ -368,6 +368,14 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
           recordedAt: "2026-10-31T09:52:00.000Z", resolvedAt: null, status: "open",
         },
       },
+      storyProgress: {
+        "a-helpful-neighbor": {
+          attempts: [{ attemptId: "story-device-a", score: 2, total: 3, passed: true, completedAt: "2026-10-31T09:59:00.000Z" }],
+          bestScore: 2,
+          completedAt: "2026-10-31T09:59:00.000Z",
+          updatedAt: "2026-10-31T09:59:00.000Z",
+        },
+      },
       studioSessions: [{ sessionId: "speaking:ask-directions:2026-10-31", studioType: "speaking", promptId: "ask-directions", wordCount: 0, checklistCompleted: 3, completedAt: "2026-10-31T09:58:00.000Z", updatedAt: "2026-10-31T09:58:00.000Z" }],
       achievementIds: ["first-mission"],
       updatedAt: "2026-10-31T10:00:00.000Z",
@@ -397,6 +405,8 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   assert.equal(restored?.listeningRate, 0.75, "Listening Lab speed preference should restore on the second profile");
   assert.deepEqual(restored?.dailyQuests?.["2026-10-31"]?.completedStepIds, ["word-neighbor"], "Daily Quest progress should restore on the second profile");
   assert.equal(restored?.mistakeJournal?.["device-a-mistake"]?.status, "open", "Mistake Journal entries should restore on the second profile");
+  assert.equal(restored?.storyProgress?.["a-helpful-neighbor"]?.attempts?.length, 1, "the first device's story attempt should restore on the second profile");
+  assert.equal(restored?.storyProgress?.["a-helpful-neighbor"]?.bestScore, 2, "the first story best score should be retained");
 
   await second.evaluate(() => {
     const snapshot = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
@@ -406,12 +416,20 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
     const mistake = snapshot.mistakeJournal["device-a-mistake"];
     mistake.resolvedAt = new Date(Date.now() + 1000).toISOString();
     mistake.status = "resolved";
+    const story = snapshot.storyProgress["a-helpful-neighbor"];
+    story.attempts.push({ attemptId: "story-device-b", score: 3, total: 3, passed: true, completedAt: new Date(Date.now() + 1000).toISOString() });
+    story.bestScore = 3;
+    story.updatedAt = new Date(Date.now() + 1000).toISOString();
     localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(snapshot));
     window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
   });
   await new Promise((resolve) => setTimeout(resolve, 1500));
   assert.ok(remoteState?.extras?.adventureProgress?.dailyQuests?.["2026-10-31"]?.completedStepIds?.includes("grammar-article"), "Daily Quest completion from device B should merge into the cloud snapshot");
   assert.equal(remoteState?.extras?.adventureProgress?.mistakeJournal?.["device-a-mistake"]?.status, "resolved", "a resolved Mistake Journal entry should win during merge");
+  const mergedStory = remoteState?.extras?.adventureProgress?.storyProgress?.["a-helpful-neighbor"];
+  assert.equal(mergedStory?.attempts?.length, 2, "story attempts from both devices should be merged, not overwritten");
+  assert.equal(mergedStory?.bestScore, 3, "the higher story score should become the merged best score");
+  assert.ok(mergedStory?.completedAt, "the story completion should remain recorded after merging");
   assert.deepEqual(pageErrors, [], "cross-device merge should not throw browser JavaScript errors");
   await firstContext.close();
   await secondContext.close();
