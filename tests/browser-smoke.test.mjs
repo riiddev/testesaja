@@ -606,10 +606,11 @@ test("Spaced Mistake Review advances 1, 3, and 7-day stages and only then marks 
       expires_at: Math.floor(now / 1000) + 7200,
       user: { id: "mistake-interval-user", email: "mistake-interval@example.com" },
     }));
-    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify({
-      schemaVersion: 1,
-      mistakeJournal: {
-        "spaced-review-fixture": {
+    if (!localStorage.getItem("sinauu-adventure-progress-v1")) {
+      localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify({
+        schemaVersion: 1,
+        mistakeJournal: {
+          "spaced-review-fixture": {
           mistakeId: "spaced-review-fixture",
           sourceType: "mission",
           sourceId: "fixture",
@@ -627,7 +628,8 @@ test("Spaced Mistake Review advances 1, 3, and 7-day stages and only then marks 
           reviewHistory: [{ reviewedAt: new Date(now - 10 * 86400000).toISOString(), correct: true, stage: 1 }]
         }
       }
-    }));
+      }));
+    }
   });
   await page.route("**/api/account**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
