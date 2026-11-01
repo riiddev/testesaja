@@ -1708,3 +1708,32 @@ h1,h2,h3{overflow-wrap:break-word}
   .speaking-studio-partner,.speaking-studio-response,.speaking-studio-finished{padding:11px}
   .speaking-studio-partner blockquote{font-size:.88rem}
 }
+
+
+/* Writing Studio: local planning, drafting, revision, and reflection */
+.writing-studio-stage{margin-top:13px;padding:13px;border:1px solid var(--line);background:var(--paper)}
+.writing-studio-stage-heading{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.writing-studio-stage-heading>span,.writing-studio-reflection>span,.writing-studio-signals>span{color:var(--sage-deep);font:700 .47rem "Plus Jakarta Sans",monospace;letter-spacing:.09em}
+.writing-studio-stage-heading>strong{color:var(--ink);font:500 .83rem "Lora",Georgia,serif}
+.writing-studio-stage>p,.writing-studio-reflection>p{margin:6px 0 10px;color:var(--muted);font-size:.55rem;line-height:1.65}
+.writing-studio-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}
+.writing-studio-plan-field{display:grid;gap:5px;min-width:0}
+.writing-studio-plan-field>span{color:var(--muted);font:700 .44rem "Plus Jakarta Sans",monospace;letter-spacing:.07em}
+.writing-studio-plan-field textarea{width:100%;min-height:74px;padding:8px;border:1px solid var(--line);border-radius:0;background:var(--sheet);color:var(--ink);font:.58rem/1.6 "Plus Jakarta Sans",sans-serif;resize:vertical}
+.writing-studio-outline-button{margin-top:9px;padding:7px 10px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.54rem;font-weight:700;cursor:pointer}
+.writing-studio-signals{margin-top:10px;padding:10px;border:1px solid var(--line);background:var(--sheet)}
+.writing-studio-signals>ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0 0;padding:0;list-style:none}
+.writing-studio-signals li{display:grid;gap:4px;min-width:0;padding:7px;background:var(--paper)}
+.writing-studio-signals li strong{font-size:.52rem}
+.writing-studio-signals li small{color:var(--muted);font-size:.47rem;line-height:1.5;overflow-wrap:anywhere}
+.writing-studio-signals li.is-ready strong{color:var(--sage-deep)}
+.writing-studio-signals li.is-pending strong{color:var(--muted)}
+.writing-studio-reflection{margin-top:13px}
+.writing-studio-reflection .adventure-studio-checklist{margin-top:8px}
+.writing-studio-review-locked{padding:10px;border:1px dashed var(--line);color:var(--muted);font-size:.53rem;line-height:1.6}
+#studio-writing-draft,#studio-writing-revision{width:100%;min-height:126px;padding:12px;border:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--ink);font:.68rem/1.75 "Plus Jakarta Sans",sans-serif;resize:vertical}
+@media(max-width:560px){
+  .writing-studio-plan-grid{grid-template-columns:1fr}
+  .writing-studio-plan-field textarea{min-height:58px}
+  .writing-studio-signals>ul{grid-template-columns:1fr}
+}
