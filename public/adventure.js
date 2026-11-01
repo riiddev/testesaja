@@ -711,7 +711,7 @@
       if (mistakeFilterValue === "open") return !item.resolvedAt && !isMistakeMastered(item);
       if (mistakeFilterValue === "due") return isMistakeDue(item);
       if (mistakeFilterValue === "reviewing") return Boolean(item.resolvedAt) && !isMistakeMastered(item);
-      if (mistakeFilterValue === "resolved") return isMistakeMastered(item);
+      if (mistakeFilterValue === "resolved") return Boolean(item.resolvedAt);
       return true;
     };
     const visible = all.filter(matchesFilter).slice(0, 8);
@@ -724,7 +724,7 @@
       const match = mistakeStep(item);
       const mastered = isMistakeMastered(item);
       const due = isMistakeDue(item);
-      const stateLabel = mastered ? "TUNTAS" : !item.resolvedAt ? "PERLU DIPAHAMI" : due ? "JATUH TEMPO" : "REVIEW TERJADWAL";
+      const stateLabel = mastered ? "TUNTAS" : !item.resolvedAt ? "PERLU DIPAHAMI" : due ? "SUDAH DIPERBAIKI · JATUH TEMPO" : "SUDAH DIPERBAIKI · REVIEW TERJADWAL";
       const stage = mistakeReviewStage(item);
       const schedule = mastered ? "4/4 pengulangan berhasil" :
         (stage + "/4 berhasil · " + (due ? "tersedia untuk latihan sekarang" : "berikutnya " + formatMistakeReviewDate(item.nextReviewAt)));
@@ -739,7 +739,7 @@
       } else if (!mastered && !match && mission) {
         action = '<button type="button" data-mistake-review="' + escapeHtml(item.missionId) + '">Ulangi misi ↗</button>';
       }
-      const rowClass = mastered ? "is-resolved" : item.resolvedAt ? "is-reviewing" : "is-open";
+      const rowClass = mastered ? "is-resolved" : item.resolvedAt ? "is-resolved is-reviewing" : "is-open";
       return '<article class="adventure-mistake-row ' + rowClass + '">' +
         '<div class="adventure-mistake-top"><span>' + escapeHtml(item.skill) + '</span><span>' + stateLabel + '</span></div>' +
         '<strong>' + escapeHtml(item.prompt) + '</strong>' +
