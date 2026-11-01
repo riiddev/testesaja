@@ -2123,6 +2123,18 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
 
   await page.locator(".side-nav [data-view-target='vocabulary']").click();
   assert.equal(await page.locator("#view-vocabulary").isVisible(), true);
+  await page.locator("#vocab-search").fill("hello");
+  await page.waitForFunction(() => Boolean(document.querySelector("#vocab-list [data-select-word]")));
+  const firstWord = page.locator("#vocab-list [data-select-word]").first();
+  const firstWordId = await firstWord.getAttribute("data-select-word");
+  await firstWord.click();
+  assert.equal(await page.locator("#vocab-layout").evaluate(el => el.classList.contains("is-detail-open")), true);
+  assert.equal(await page.locator("#vocab-list").isVisible(), false);
+  await page.locator("#word-detail [data-vocab-back]").click();
+  assert.equal(await page.locator("#vocab-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
+  assert.equal(await page.locator("#vocab-list").isVisible(), true);
+  assert.equal(await page.evaluate(() => document.activeElement?.dataset.selectWord), firstWordId,
+    "closing a word detail should restore focus to the selected vocabulary row");
   await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   assert.equal(await page.locator("#view-grammar").isVisible(), true);
   assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "vocabulary");
@@ -2141,9 +2153,12 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   assert.equal(await page.locator("#habit-library-section").evaluate(el => el.classList.contains("is-detail-open")), true);
   assert.equal(await page.locator("#habit-library-list").isVisible(), false);
   assert.equal(await page.locator("#habit-library-detail").isVisible(), true);
+  const firstHabitId = await firstHabit.getAttribute("data-habit-open");
   await page.locator("#habit-library-detail [data-habit-back]").click();
   assert.equal(await page.locator("#habit-library-section").evaluate(el => el.classList.contains("is-detail-open")), false);
   assert.equal(await page.locator("#habit-library-list").isVisible(), true);
+  assert.equal(await page.evaluate(() => document.activeElement?.dataset.habitOpen), firstHabitId,
+    "returning from HABIT detail should restore focus to its passage card");
   assert.equal(await page.locator("#reading-skills-section").isVisible(), false);
   const skillsTab = page.locator("#reading-mode-skills-tab");
   await skillsTab.press("ArrowLeft");
