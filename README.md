@@ -124,3 +124,11 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 - No speech-recognition service is used. Raw audio is not written to storage or uploaded; only compact practice metrics and timestamps are saved in `pronunciationProgress` and merged across devices through CloudBundle v2.
 - The metrics do not identify phonemes or determine whether a word was pronounced correctly. Microphone gain, background noise, device hardware, and voice characteristics affect the measurements. Stress and intonation correctness remain guided self-practice rather than an automated grade.
 - Microphone access requires browser permission and a secure context (HTTPS or localhost). If access is unavailable, the phrase guide and browser-generated reference voice remain available.
+
+
+## Speaking Studio
+
+- Speaking Studio now includes guided, open-ended roleplay scenarios across A1–B2. Each scenario has three partner turns, a spoken browser-generated partner line, a response goal, and optional phrase hints.
+- Learners answer aloud in their own words and move the conversation forward themselves. A three-part self-review becomes available after the final turn.
+- Conversation turn progress and reflection checkboxes stay in the user-scoped local draft store. CloudBundle v2 receives only a compact completed-session summary; no learner audio, speech transcript, or spoken response text is captured or synced.
+- Browser speech synthesis is optional. If unavailable, the partner's written line remains visible so the activity can still be completed.
