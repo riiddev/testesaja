@@ -248,7 +248,7 @@
   }
 
   let words = [], topics = [], state, db = null, storageMode = "loading";
-  let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100, vocabDetailOpen = false, cloudApplying = false;
+  let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100, vocabDetailOpen = false, grammarDetailOpen = false, cloudApplying = false;
   const grammarUI = {};
 
   function freshState() {
@@ -820,6 +820,8 @@
       return '<button class="topic-button '+(activeTopic===t.id?"is-active":"")+'" data-topic-id="'+esc(t.id)+'" type="button"><span class="topic-code">'+esc(t.level)+'</span><span><strong>'+esc(t.title)+'</strong><small>'+n+'/'+t.questions.length+' soal dicoba</small></span></button>';
     }).join("");
     if(!activeTopic||!topics.some(t=>t.id===activeTopic))activeTopic=topics[0]?.id;
+    $("#grammar-layout")?.classList.toggle("is-detail-open",grammarDetailOpen);
+    $("#view-grammar")?.classList.toggle("is-detail-view",grammarDetailOpen);
     if(activeTopic)renderLesson(activeTopic);
   }
   function renderLesson(id) {
@@ -830,7 +832,7 @@
     const patterns=t.patterns.map(x=>'<div class="pattern-item"><strong>'+esc(x.label)+'</strong><pre>'+esc(x.pattern)+'</pre></div>').join("");
     const examples=t.examples.map(x=>'<div class="lesson-example"><strong>'+esc(x.en)+'</strong><span>'+esc(x.id)+'</span></div>').join("");
     const mistakes=t.mistakes.map(x=>'<div class="mistake-item"><div class="wrong">'+esc(x.wrong)+'</div><div class="right">'+esc(x.right)+'</div><p>'+esc(x.why)+'</p></div>').join("");
-    $("#lesson-panel").innerHTML='<div class="lesson-head-meta"><span>'+esc(t.level)+' / '+esc(t.category.toUpperCase())+'</span><span>'+t.estimatedMinutes+' MENIT</span></div><h2>'+esc(t.title)+'</h2><p class="lesson-summary">'+esc(t.summary)+'</p><div class="lesson-body"><h3>Penjelasan</h3><p>'+esc(t.explanation)+'</p><h3>Pola kalimat</h3><div class="pattern-list">'+patterns+'</div><h3>Contoh dan terjemahan</h3><div class="lesson-examples">'+examples+'</div><h3>Kesalahan yang sering terjadi</h3><div class="mistake-list">'+mistakes+'</div><div class="checkpoint"><strong>Checkpoint.</strong> '+esc(t.checkpoint)+'</div></div><div class="lesson-quiz"><div class="lesson-quiz-heading"><h3>Latihan khusus topik ini</h3><span>'+unique+'/'+t.questions.length+' soal unik dicoba</span></div><div id="lesson-question-container">'+lessonQuestion(t,ui)+'</div><p class="lesson-progress-note">Akurasi semua percobaan: '+(p.attempts?p.correct+"/"+p.attempts+" benar ("+Math.round(p.correct/p.attempts*100)+"%)":"belum ada percobaan")+'. Ini bukan status mastery grammar.</p></div>';
+    $("#lesson-panel").innerHTML='<button class="mobile-detail-back grammar-detail-back" type="button" data-grammar-back>← Kembali ke daftar topik</button><div class="lesson-head-meta"><span>'+esc(t.level)+' / '+esc(t.category.toUpperCase())+'</span><span>'+t.estimatedMinutes+' MENIT</span></div><h2>'+esc(t.title)+'</h2><p class="lesson-summary">'+esc(t.summary)+'</p><div class="lesson-body"><h3>Penjelasan</h3><p>'+esc(t.explanation)+'</p><h3>Pola kalimat</h3><div class="pattern-list">'+patterns+'</div><h3>Contoh dan terjemahan</h3><div class="lesson-examples">'+examples+'</div><h3>Kesalahan yang sering terjadi</h3><div class="mistake-list">'+mistakes+'</div><div class="checkpoint"><strong>Checkpoint.</strong> '+esc(t.checkpoint)+'</div></div><div class="lesson-quiz"><div class="lesson-quiz-heading"><h3>Latihan khusus topik ini</h3><span>'+unique+'/'+t.questions.length+' soal unik dicoba</span></div><div id="lesson-question-container">'+lessonQuestion(t,ui)+'</div><p class="lesson-progress-note">Akurasi semua percobaan: '+(p.attempts?p.correct+"/"+p.attempts+" benar ("+Math.round(p.correct/p.attempts*100)+"%)":"belum ada percobaan")+'. Ini bukan status mastery grammar.</p></div>';
     bindGrammar(t);
   }
   function lessonQuestion(t,ui) {
@@ -847,12 +849,12 @@
     $$(".lesson-answer").forEach(b=>b.addEventListener("click",async()=>{
       if(ui.result)return;const q=t.questions[ui.index],n=Number(b.dataset.grammarChoice),correct=n===q.answer;
       await recordGrammar(t,q,correct,q.options[n],q.options[q.answer]);if(correct)ui.sessionCorrect++;
-      ui.result={correct,explanation:q.explanation,expected:q.options[q.answer]};renderLesson(t.id);renderTopicList();renderTopicList();
+      ui.result={correct,explanation:q.explanation,expected:q.options[q.answer]};renderLesson(t.id);renderTopicList();
     }));
     $("#grammar-answer-form")?.addEventListener("submit",async e=>{
       e.preventDefault();if(ui.result)return;const q=t.questions[ui.index],ans=$("#grammar-typed-answer").value.trim(),accepted=q.accepted||[],correct=accepted.some(x=>norm(x)===norm(ans));
       await recordGrammar(t,q,correct,ans,accepted.join(" / "));if(correct)ui.sessionCorrect++;
-      ui.result={correct,explanation:q.explanation,expected:accepted.join(" / ")};renderLesson(t.id);renderTopicList();renderTopicList();
+      ui.result={correct,explanation:q.explanation,expected:accepted.join(" / ")};renderLesson(t.id);renderTopicList();
     });
     $("#grammar-next")?.addEventListener("click",()=>{ui.index++;ui.result=null;renderLesson(t.id);renderTopicList();});
     $("#restart-topic")?.addEventListener("click",()=>{ui.index=0;ui.result=null;ui.sessionCorrect=0;renderLesson(t.id);});
@@ -952,7 +954,7 @@
       const planVocabulary=e.target.closest("[data-plan-vocabulary]");
       if(planVocabulary){startStudy(planVocabulary.dataset.planVocabulary,planVocabulary.dataset.planMode||"learn");return;}
       const planTopic=e.target.closest("[data-plan-topic]");
-      if(planTopic){activeTopic=planTopic.dataset.planTopic;setView("grammar");return;}
+      if(planTopic){activeTopic=planTopic.dataset.planTopic;grammarDetailOpen=true;setView("grammar");return;}
       if(e.target.closest("[data-plan-adventure]")){
         setView("adventure");
         $("#adventure-daily-quest")?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
@@ -967,9 +969,15 @@
       const fav=e.target.closest("[data-favorite-word]");
       if(fav){const id=fav.dataset.favoriteWord;state.favorites=state.favorites.includes(id)?state.favorites.filter(x=>x!==id):state.favorites.concat(id);await save();renderVocabulary(false);toast(state.favorites.includes(id)?"Kata disimpan ke favorit.":"Kata dihapus dari favorit.");return;}
       const topic=e.target.closest("[data-topic-id]");
-      if(topic){activeTopic=topic.dataset.topicId;renderGrammar();return;}
+      if(e.target.closest("[data-grammar-back]")){
+        grammarDetailOpen=false;
+        renderGrammar();
+        $("#grammar-topic-list [data-topic-id]").find(button=>button.dataset.topicId===activeTopic)?.focus();
+        return;
+      }
+      if(topic){activeTopic=topic.dataset.topicId;grammarDetailOpen=true;renderGrammar();return;}
       const openTopic=e.target.closest("[data-open-topic]");
-      if(openTopic){activeTopic=openTopic.dataset.openTopic;setView("grammar");return;}
+      if(openTopic){activeTopic=openTopic.dataset.openTopic;grammarDetailOpen=true;setView("grammar");return;}
       const review=e.target.closest("[data-review-word]");
       if(review){startStudy(review.dataset.reviewWord,"review");return;}
     });
