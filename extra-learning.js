@@ -645,9 +645,13 @@
       habitVisibleCount += 9; renderHabitLibraryList(); return;
     }
     if (event.target.closest("[data-habit-close],[data-habit-back]")) {
+      const returnToPassageId = activeHabitPassageId;
       activeHabitPassageId = null;
       $("#habit-library-section")?.classList.remove("is-detail-open");
-      renderHabitLibraryList(); renderHabitPassageDetail(); return;
+      renderHabitLibraryList();
+      renderHabitPassageDetail();
+      $$("#habit-library-list [data-habit-open]").find(button => button.dataset.habitOpen === returnToPassageId)?.focus();
+      return;
     }
     const check = event.target.closest("[data-habit-check]");
     if (check && activeHabitPassageId && habitLibrary) {
