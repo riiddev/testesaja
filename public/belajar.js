@@ -641,6 +641,7 @@
     topics.filter(t=>!(state.grammarProgress[t.id]&&state.grammarProgress[t.id].attempts)).slice(0,2).forEach(t=>suggestions.push({type:"GRAMMAR",title:t.title,description:t.summary,topicId:t.id}));
     words.filter(w=>canStudyWord(w)&&statusOf(w)==="new").slice(0,3).forEach(w=>suggestions.push({type:"WORD",title:w.word,description:w.meaning,wordId:w.id}));
     $("#resume-list").innerHTML=suggestions.slice(0,4).map(x=>'<div class="resume-item"><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.description)+'</p></div><button class="resume-action" type="button" '+(x.wordId?'data-study-word="'+esc(x.wordId)+'"':'data-open-topic="'+esc(x.topicId)+'"')+'>Mulai ↗</button></div>').join("") || '<div class="empty-state">Materi yang tersedia sudah pernah dicoba. Pilih topik lain.</div>';
+    renderPlacementTeaser();
     renderStudyPlan();
   }
   function renderVocabulary(resetList=true) {
@@ -845,12 +846,12 @@
     $$(".lesson-answer").forEach(b=>b.addEventListener("click",async()=>{
       if(ui.result)return;const q=t.questions[ui.index],n=Number(b.dataset.grammarChoice),correct=n===q.answer;
       await recordGrammar(t,q,correct,q.options[n],q.options[q.answer]);if(correct)ui.sessionCorrect++;
-      ui.result={correct,explanation:q.explanation,expected:q.options[q.answer]};renderLesson(t.id);
+      ui.result={correct,explanation:q.explanation,expected:q.options[q.answer]};renderLesson(t.id);renderTopicList();
     }));
     $("#grammar-answer-form")?.addEventListener("submit",async e=>{
       e.preventDefault();if(ui.result)return;const q=t.questions[ui.index],ans=$("#grammar-typed-answer").value.trim(),accepted=q.accepted||[],correct=accepted.some(x=>norm(x)===norm(ans));
       await recordGrammar(t,q,correct,ans,accepted.join(" / "));if(correct)ui.sessionCorrect++;
-      ui.result={correct,explanation:q.explanation,expected:accepted.join(" / ")};renderLesson(t.id);
+      ui.result={correct,explanation:q.explanation,expected:accepted.join(" / ")};renderLesson(t.id);renderTopicList();
     });
     $("#grammar-next")?.addEventListener("click",()=>{ui.index++;ui.result=null;renderLesson(t.id);renderTopicList();});
     $("#restart-topic")?.addEventListener("click",()=>{ui.index=0;ui.result=null;ui.sessionCorrect=0;renderLesson(t.id);});
