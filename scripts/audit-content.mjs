@@ -51,6 +51,18 @@ for (const entry of vocabulary.entries) {
 }
 assert.equal(importedDraftCount, 965, "Keep all imported A–E entries visibly marked for human editorial review");
 
+const assistantEditorialPass = vocabulary.entries.filter((entry) =>
+  entry.editorialPass === "assistant-editorial-pass-2026-11"
+);
+assert.ok(assistantEditorialPass.length >= 35, "Expected the first high-frequency A1/A2 editorial pass");
+for (const entry of assistantEditorialPass) {
+  assert.ok(entry.draft === true && entry.contentStatus === "assistant-curated-draft", `${entry.word}: assistant editorial changes must not remove the human-review flag`);
+  assert.ok(entry.definition && entry.context && entry.context.prompt, `${entry.word}: missing editorial definition or context prompt`);
+  assert.ok(Array.isArray(entry.context.options) && entry.context.options.length >= 3, `${entry.word}: context needs at least three options`);
+  assert.ok(Number.isInteger(entry.context.answer) && entry.context.answer >= 0 && entry.context.answer < entry.context.options.length, `${entry.word}: invalid context answer key`);
+}
+
+
 const grammar = json("data/grammar.json");
 assert.ok(Array.isArray(grammar.topics) && grammar.topics.length >= 19, "Expected the expanded A1–B2 grammar curriculum");
 const grammarTopicIds = new Set();
