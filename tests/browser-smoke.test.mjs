@@ -734,3 +734,53 @@ test("Everyday Stories supports graded reading, comprehension feedback, and save
   await page.close();
 });
 
+
+
+test("Everyday Stories includes a B2 reading with inference-based comprehension checks", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "story-b2-preview-access",
+      refresh_token: "story-b2-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "story-b2-preview-user", email: "story-b2-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+
+  const storyCard = page.locator('[data-story-open="the-library-after-hours"]');
+  await storyCard.waitFor({ state: "visible" });
+  assert.match(await storyCard.innerText(), /B2/);
+  await storyCard.locator("button").click();
+
+  const reader = page.locator("#adventure-story-reader");
+  await reader.waitFor({ state: "visible" });
+  assert.match(await reader.innerText(), /The Library After Hours/);
+  assert.match(await reader.innerText(), /substantial/);
+  assert.match(await reader.innerText(), /whereas/);
+  assert.match(await reader.innerText(), /undermine/);
+  assert.equal(await page.locator("[data-story-answer]").count(), 3);
+
+  for (const answer of [1, 0, 2]) {
+    await page.locator('[data-story-answer="' + answer + '"]').click();
+    await page.locator(".adventure-story-feedback").waitFor({ state: "visible" });
+    await page.locator("[data-story-next]").click();
+  }
+
+  const result = page.locator("#adventure-story-result");
+  await result.waitFor({ state: "visible" });
+  assert.match(await result.innerText(), /3\/3/);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.equal(saved?.storyProgress?.["the-library-after-hours"]?.bestScore, 3);
+  assert.ok(saved?.storyProgress?.["the-library-after-hours"]?.completedAt);
+  assert.deepEqual(pageErrors, [], "B2 Everyday Stories should not throw browser JavaScript errors");
+  await page.close();
+});
