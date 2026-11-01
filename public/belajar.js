@@ -949,7 +949,13 @@
         return;
       }
       const vocabBack=e.target.closest("[data-vocab-back]");
-      if(vocabBack){vocabDetailOpen=false;renderVocabulary(false);return;}
+      if(vocabBack){
+        const returnToWordId=selectedWord;
+        vocabDetailOpen=false;
+        renderVocabulary(false);
+        $$("#vocab-list [data-select-word]").find(button=>button.dataset.selectWord===returnToWordId)?.focus();
+        return;
+      }
       const placementStart=e.target.closest("#placement-start");
       if(placementStart){startPlacement();return;}
       const placementAnswer=e.target.closest("[data-placement-answer]");
