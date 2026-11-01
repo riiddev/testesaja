@@ -139,7 +139,7 @@ assert.ok(storyLevels.has("A1") && storyLevels.has("A2") && storyLevels.has("B1"
 
 const dialogueLibrary = json("public/data/adventure/dialogues.json");
 assert.equal(dialogueLibrary.schemaVersion, 1, "Everyday English schema version changed");
-assert.ok(Array.isArray(dialogueLibrary.dialogues) && dialogueLibrary.dialogues.length >= 3, "Expected at least three Everyday English scenarios");
+assert.ok(Array.isArray(dialogueLibrary.dialogues) && dialogueLibrary.dialogues.length >= 4, "Expected at least four Everyday English scenarios");
 const dialogueIds = new Set();
 const dialogueTurnIds = new Set();
 const allowedSpeakingPrompts = new Set(["first-introduction", "ask-directions", "cafe-order", "discuss-study-plan"]);
@@ -173,12 +173,12 @@ for (const dialogue of dialogueLibrary.dialogues) {
     assert.equal(turn.response, turn.options[turn.answer], `${dialogue.title}: recommended response must match the answer key`);
   }
 }
-assert.ok(dialogueLevels.has("A1") && dialogueLevels.has("A2") && dialogueLevels.has("B1"), "Everyday English should cover A1, A2, and B1");
+assert.ok(dialogueLevels.has("A1") && dialogueLevels.has("A2") && dialogueLevels.has("B1") && dialogueLevels.has("B2"), "Everyday English should cover A1 through B2");
 
 console.log("Content audit passed.");
 console.log(`- Vocabulary: ${vocabulary.entries.length} unique headwords; ${importedDraftCount} imported rows stay explicitly flagged for human review.`);
 console.log(`- HABIT library: ${habit.passages.length} unique passages; ${storedWordCount.toLocaleString("en-US")} words; 175 physical PDF pages / 174 numbered content pages.`);
 console.log(`- Reading skills: ${reading.skills.length} skills and ${questionCount} checked questions.`);
 console.log(`- Everyday Stories: ${storyLibrary.stories.length} stories across A1–B2; focus words link to checked vocabulary IDs and all question keys are valid.`);
-console.log(`- Everyday English: ${dialogueLibrary.dialogues.length} situational scenarios across A1–B1; response keys, transcript lines, vocabulary IDs, and Speaking Studio links are valid.`);
+console.log(`- Everyday English: ${dialogueLibrary.dialogues.length} situational scenarios across A1–B2; response keys, transcript lines, vocabulary IDs, and Speaking Studio links are valid.`);
 console.log("- Root/public JSON mirrors match byte-for-byte.");
