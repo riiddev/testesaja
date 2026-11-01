@@ -1740,7 +1740,7 @@ test("Daily study plan adapts to due vocabulary, a weak grammar topic, and an in
   await grammarStep.locator("[data-plan-topic]").click();
   await page.locator("#view-grammar.is-visible").waitFor({ state: "visible" });
   assert.match(await page.locator("#lesson-panel").innerText(), /Present simple/i);
-  await page.locator('[data-view-target="overview"]').click();
+  await page.locator('[data-view-target="overview"]').first().click();
   await page.locator("[data-plan-adventure]").click();
   await page.locator("#view-adventure.is-visible").waitFor({ state: "visible" });
   await page.locator("#adventure-daily-quest .adventure-extra-heading").waitFor({ state: "visible" });
