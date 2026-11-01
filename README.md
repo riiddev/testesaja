@@ -132,3 +132,11 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 - Learners answer aloud in their own words and move the conversation forward themselves. A three-part self-review becomes available after the final turn.
 - Conversation turn progress and reflection checkboxes stay in the user-scoped local draft store. CloudBundle v2 receives only a compact completed-session summary; no learner audio, speech transcript, or spoken response text is captured or synced.
 - Browser speech synthesis is optional. If unavailable, the partner's written line remains visible so the activity can still be completed.
+
+
+## Writing Studio
+
+- Writing Studio uses a four-part learning loop: plan ideas, draft freely, revise for clarity, and complete a three-part self-review.
+- Five original tasks span A1–B2: a short introduction, weekend story, study invitation, learning reflection, and balanced proposal.
+- The outline can be moved into the first draft as editable text. Lightweight structure signals count sentences, common connectors, and words; they are not a grammar checker or an AI writing score.
+- Planning notes, first drafts, and revisions stay in the existing user-scoped local browser store. CloudBundle v2 receives only the compact completed-session summary and revised word count; raw writing is never synced or included in progress backup.
