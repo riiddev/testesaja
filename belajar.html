@@ -464,9 +464,29 @@
 
         <section class="view" id="view-progress" data-view="progress">
           <div class="page-heading compact-heading"><h1>Progres yang <em>bisa dilacak.</em></h1><p class="page-lede">Ringkasan ini dihitung dari korpus dan aktivitas yang tersimpan di perangkatmu.</p></div>
+          <div class="progress-summary" aria-label="Ringkasan progres">
+            <div><span class="metric-label">KATA MASTERED</span><strong id="progress-mastered">0</strong></div>
+            <div><span class="metric-label">REVIEW JATUH TEMPO</span><strong id="progress-due">0</strong></div>
+            <div><span class="metric-label">AKTIVITAS TERCATAT</span><strong id="progress-activity-count">0</strong></div>
+          </div>
           <section class="section-block progress-levels-block"><div class="block-heading"><div><h2>Kemajuan per level</h2></div></div><div class="level-progress-list detailed-levels" id="progress-levels"></div></section>
           <section class="section-block grammar-progress-block"><div class="block-heading"><div><h2>Topik yang sudah dicoba</h2></div></div><div id="grammar-progress-list" class="grammar-progress-list"></div></section>
-          <section class="section-block history-block"><div class="block-heading"><div><h2>Aktivitas terbaru</h2></div><button class="plain-action" id="export-backup" type="button">Ekspor backup ↓</button></div><div class="history-list" id="history-list"></div><div class="backup-row"><label class="import-button" for="import-backup">Pulihkan dari backup JSON ↑</label><input id="import-backup" type="file" accept="application/json,.json" hidden><span id="backup-status" role="status"></span></div></section>
+          <section class="section-block history-block">
+            <details class="progress-history-details">
+              <summary><span>Aktivitas terbaru</span><small>Catatan latihan di perangkat ini</small></summary>
+              <div class="history-list" id="history-list"></div>
+            </details>
+          </section>
+          <section class="section-block progress-data-block">
+            <div class="block-heading"><div><h2>Data belajar</h2></div></div>
+            <p class="progress-data-copy">Simpan salinan progres untuk dipindahkan ke perangkat lain. Memulihkan backup akan mengganti progres lokal saat ini.</p>
+            <div class="progress-data-actions">
+              <button class="primary-action" id="export-backup" type="button">Ekspor backup JSON ↓</button>
+              <label class="import-button" for="import-backup">Pulihkan backup ↑</label>
+              <input id="import-backup" type="file" accept="application/json,.json" hidden>
+              <span id="backup-status" role="status"></span>
+            </div>
+          </section>
         </section>
 
       </div>
