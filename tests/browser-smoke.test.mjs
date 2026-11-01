@@ -1268,3 +1268,96 @@ test("Pronunciation Studio includes B2 guidance for contrast and long sentence r
   assert.deepEqual(pageErrors, [], "B2 Pronunciation Studio should not throw browser JavaScript errors");
   await page.close();
 });
+
+
+test("Speaking Studio guides an open conversation, keeps turn progress local, and stores only a self-review summary", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "speaking-preview-access",
+      refresh_token: "speaking-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "speaking-preview-user", email: "speaking-preview@example.com" },
+    }));
+    window.__speakingPartnerLines = [];
+    window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: { cancel() {}, speak(utterance) { window.__speakingPartnerLines.push(utterance.text); } },
+    });
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+
+  const studio = page.locator("#adventure-speaking-studio");
+  await studio.getByText("Speaking Studio", { exact: true }).waitFor();
+  assert.match(await studio.innerText(), /YOUR PARTNER SAYS/);
+  assert.match(await studio.innerText(), /Is this your first class here/);
+  await studio.locator("[data-speaking-play-partner]").click();
+  assert.deepEqual(await page.evaluate(() => window.__speakingPartnerLines), ["Hi! I'm Alex. Is this your first class here?"]);
+
+  await studio.locator("[data-speaking-next-turn]").click();
+  assert.match(await studio.innerText(), /TURN 2 \/ 3/);
+  assert.match(await studio.innerText(), /What do you like doing after class/);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  assert.match(await studio.innerText(), /TURN 2 \/ 3/, "the current conversation turn should survive a reload");
+
+  await studio.locator("[data-speaking-next-turn]").click();
+  assert.match(await studio.innerText(), /TURN 3 \/ 3/);
+  await studio.locator("[data-speaking-next-turn]").click();
+  assert.match(await studio.innerText(), /CONVERSATION COMPLETE/);
+  assert.equal(await studio.locator("[data-studio-check]").count(), 3);
+  const complete = studio.locator("[data-studio-complete]");
+  assert.equal(await complete.isDisabled(), true, "self-review is required before saving a session");
+  for (let index = 0; index < 3; index += 1) {
+    await studio.locator('[data-studio-check="' + index + '"]').check();
+  }
+  assert.equal(await complete.isDisabled(), false);
+  await complete.click();
+
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  const session = saved?.studioSessions?.find((item) => item.studioType === "speaking" && item.promptId === "first-introduction");
+  assert.ok(session, "a completed speaking session should be recorded");
+  assert.equal(session.wordCount, 0);
+  assert.equal(session.checklistCompleted, 3);
+  assert.ok(!("text" in session) && !("transcript" in session) && !("audioData" in session), "session metadata must not contain an answer transcript or audio");
+  const cloudBundle = await page.evaluate(() => window.sinauuExportLocalBundle());
+  const cloudSessions = cloudBundle?.extras?.adventureProgress?.studioSessions || [];
+  const cloudSession = cloudSessions.find((item) => item.studioType === "speaking" && item.promptId === "first-introduction");
+  assert.ok(cloudSession, "the compact session summary should be included in CloudBundle v2");
+  assert.ok(!("text" in cloudSession) && !("transcript" in cloudSession) && !("audioData" in cloudSession));
+  assert.deepEqual(pageErrors, [], "Speaking Studio should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("Speaking Studio includes a B2 discussion with counterarguments and an evidence-based follow-up", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const studio = page.locator("#adventure-speaking-studio");
+  await studio.locator('[data-studio-prompt="present-study-proposal"]').click();
+  assert.match(await studio.innerText(), /B2/);
+  assert.match(await studio.innerText(), /students who prefer group study/);
+  await studio.locator("[data-speaking-next-turn]").click();
+  assert.match(await studio.innerText(), /Which changes would you prioritise first/);
+  await studio.locator("[data-speaking-next-turn]").click();
+  assert.match(await studio.innerText(), /How would we know whether the proposal is working/);
+  assert.deepEqual(pageErrors, [], "B2 Speaking Studio scenario should not throw browser JavaScript errors");
+  await page.close();
+});
