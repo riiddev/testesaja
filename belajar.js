@@ -881,6 +881,9 @@
   }
   function renderProgress() {
     const stats=levelStats();
+    $("#progress-mastered").textContent=String(words.filter(w=>statusOf(w)==="mastered").length);
+    $("#progress-due").textContent=String(dueWords().length);
+    $("#progress-activity-count").textContent=String(state.history.length);
     $("#progress-levels").innerHTML=LEVELS.map(l=>levelRow(l,stats[l],true)).join("");
     $("#grammar-progress-list").innerHTML=topics.map(t=>{
       const p=state.grammarProgress[t.id]||{attempts:0,correct:0,answers:{}},n=Object.keys(p.answers||{}).length,score=p.attempts?Math.round(p.correct/p.attempts*100):null;
