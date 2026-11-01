@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 1,
+  "title": "Pronunciation Studio",
+  "note": "Panduan tekanan kata, pengelompokan frasa, dan intonasi. Analisis mikrofon dijalankan lokal di browser; tidak menggunakan speech recognition, tidak menyimpan audio, dan tidak mengirim suara ke server.",
+  "exercises": [
+    {
+      "id": "polite-help",
+      "level": "A1",
+      "title": "A Polite Request",
+      "category": "Everyday conversation",
+      "targetSeconds": 3,
+      "phrase": "Could you help me, please?",
+      "meaning": "Bisakah kamu membantuku, tolong?",
+      "focus": "Polite intonation",
+      "stressWords": [
+        "HELP",
+        "PLEASE"
+      ],
+      "phraseGroups": [
+        "Could you",
+        "HELP me",
+        "PLEASE?"
+      ],
+      "intonation": {
+        "label": "Gentle rise, then fall",
+        "description": "Naikkan nada sedikit saat meminta bantuan, lalu akhiri kata please dengan lembut dan turun."
+      },
+      "linking": "Ucapkan “could you” sebagai satu aliran ringan. Jangan memberi tekanan yang sama pada setiap kata.",
+      "coaching": [
+        "Tekankan HELP dan PLEASE, bukan setiap kata kecil.",
+        "Jaga kata could, you, dan me tetap ringan.",
+        "Akhiri permintaan dengan nada ramah, bukan datar atau terlalu keras."
+      ]
+    },
+    {
+      "id": "daily-routine",
+      "level": "A1",
+      "title": "Talking About a Routine",
+      "category": "Daily life",
+      "targetSeconds": 3,
+      "phrase": "I usually take the bus.",
+      "meaning": "Aku biasanya naik bus.",
+      "focus": "Sentence stress",
+      "stressWords": [
+        "USUALLY",
+        "BUS"
+      ],
+      "phraseGroups": [
+        "I usually",
+        "take the BUS."
+      ],
+      "intonation": {
+        "label": "Falling statement",
+        "description": "Gunakan aliran santai dan turunkan nada secara alami di akhir pernyataan."
+      },
+      "linking": "Hubungkan “take the” dengan ringan sebelum memberi tekanan pada bus.",
+      "coaching": [
+        "Beri tekanan utama pada USUALLY dan BUS.",
+        "Hindari jeda setelah setiap kata.",
+        "Biarkan nada turun di akhir kalimat."
+      ]
+    },
+    {
+      "id": "book-a-room",
+      "level": "A2",
+      "title": "Booking a Study Room",
+      "category": "Making arrangements",
+      "targetSeconds": 4,
+      "phrase": "Could I book a study room?",
+      "meaning": "Bisakah saya memesan ruang belajar?",
+      "focus": "Question intonation",
+      "stressWords": [
+        "BOOK",
+        "STUDY ROOM"
+      ],
+      "phraseGroups": [
+        "Could I BOOK",
+        "a STUDY ROOM?"
+      ],
+      "intonation": {
+        "label": "Rising question",
+        "description": "Karena ini pertanyaan yes/no yang sopan, biarkan nada sedikit naik di bagian akhir."
+      },
+      "linking": "Pertahankan could I sebagai pembuka yang ringan, lalu arahkan energi pada book dan study room.",
+      "coaching": [
+        "Jangan memberi tekanan kuat pada could dan I.",
+        "Satukan study room sebagai satu kelompok makna.",
+        "Jaga kenaikan nada tetap ringan dan alami."
+      ]
+    },
+    {
+      "id": "meeting-time",
+      "level": "A2",
+      "title": "Confirming a Meeting Time",
+      "category": "Daily arrangements",
+      "targetSeconds": 4,
+      "phrase": "The meeting starts at half past nine.",
+      "meaning": "Rapat dimulai pukul setengah sepuluh.",
+      "focus": "Rhythm and linking",
+      "stressWords": [
+        "MEETING",
+        "STARTS",
+        "NINE"
+      ],
+      "phraseGroups": [
+        "The MEETING",
+        "STARTS at half past",
+        "NINE."
+      ],
+      "intonation": {
+        "label": "Clear falling statement",
+        "description": "Jaga nada stabil pada informasi waktu, lalu turun dengan jelas pada nine."
+      },
+      "linking": "Rangkai “starts at” dan “half past” tanpa jeda panjang di antaranya.",
+      "coaching": [
+        "Pertahankan the sebagai kata ringan.",
+        "Jangan memisahkan starts dan at terlalu jauh.",
+        "Buat nine terdengar jelas sebagai informasi utama."
+      ]
+    },
+    {
+      "id": "reschedule-appointment",
+      "level": "B1",
+      "title": "Rescheduling an Appointment",
+      "category": "Polite workplace English",
+      "targetSeconds": 6,
+      "phrase": "Would it be possible to reschedule our appointment?",
+      "meaning": "Apakah memungkinkan untuk menjadwalkan ulang janji temu kita?",
+      "focus": "Polite phrasing and emphasis",
+      "stressWords": [
+        "POSSIBLE",
+        "RESCHEDULE",
+        "APPOINTMENT"
+      ],
+      "phraseGroups": [
+        "Would it be POSSIBLE",
+        "to RESCHEDULE",
+        "our APPOINTMENT?"
+      ],
+      "intonation": {
+        "label": "Polite rise and gentle fall",
+        "description": "Bangun nada secara halus pada possible, lalu akhiri appointment dengan nada turun yang sopan."
+      },
+      "linking": "Ucapkan pembuka would it be secara ringan. Jangan membuat setiap suku kata terdengar terpisah.",
+      "coaching": [
+        "Tekankan tiga kata utama, bukan seluruh kalimat.",
+        "Pertahankan tempo stabil pada frasa yang panjang.",
+        "Hindari jeda panjang sebelum appointment."
+      ]
+    },
+    {
+      "id": "before-we-decide",
+      "level": "B1",
+      "title": "Sharing a Preference",
+      "category": "Discussion and teamwork",
+      "targetSeconds": 5,
+      "phrase": "I'd rather review the notes before we decide.",
+      "meaning": "Aku lebih memilih meninjau catatan sebelum kita memutuskan.",
+      "focus": "Contrastive stress",
+      "stressWords": [
+        "RATHER",
+        "REVIEW",
+        "NOTES",
+        "DECIDE"
+      ],
+      "phraseGroups": [
+        "I'd rather",
+        "REVIEW the NOTES",
+        "before we deCIDE."
+      ],
+      "intonation": {
+        "label": "Emphasis, then a falling finish",
+        "description": "Tekankan pilihan yang kamu utamakan, lalu tutup kalimat dengan nada turun yang tenang."
+      },
+      "linking": "Kelompokkan “before we decide” sebagai satu bagian penutup, bukan tiga potongan terpisah.",
+      "coaching": [
+        "Tekanan pada rather menunjukkan preferensi.",
+        "Beri energi pada review dan notes.",
+        "Akhiri decide dengan jelas tanpa mempercepat suku kata terakhir."
+      ]
+    },
+    {
+      "id": "proposal-evidence",
+      "level": "B2",
+      "title": "Evaluating a Proposal",
+      "category": "Academic and professional discussion",
+      "targetSeconds": 6,
+      "phrase": "The proposal is promising, although the evidence remains limited.",
+      "meaning": "Proposal tersebut menjanjikan, meskipun buktinya masih terbatas.",
+      "focus": "Contrast and thought groups",
+      "stressWords": [
+        "PROPOSAL",
+        "PROMISING",
+        "EVIDENCE",
+        "LIMITED"
+      ],
+      "phraseGroups": [
+        "The PROPOSAL is PROMISING,",
+        "although the EVIDENCE",
+        "remains LIMITED."
+      ],
+      "intonation": {
+        "label": "Contrast, then a measured fall",
+        "description": "Beri ruang kecil setelah promising untuk menandai kontras, lalu turunkan nada secara terukur pada limited."
+      },
+      "linking": "Jangan memisahkan although dari klausa setelahnya. Gunakan jeda pendek hanya setelah promising.",
+      "coaching": [
+        "Tekankan kata yang membawa evaluasi dan kontras.",
+        "Buat jeda setelah promising terdengar disengaja, bukan ragu-ragu.",
+        "Jaga klausa kedua tetap mengalir."
+      ]
+    },
+    {
+      "id": "weigh-the-benefits",
+      "level": "B2",
+      "title": "Weighing the Benefits",
+      "category": "Critical discussion",
+      "targetSeconds": 6,
+      "phrase": "We should weigh the long-term benefits against the initial cost.",
+      "meaning": "Kita perlu mempertimbangkan manfaat jangka panjang dibandingkan biaya awal.",
+      "focus": "Long sentence rhythm",
+      "stressWords": [
+        "WEIGH",
+        "LONG-TERM BENEFITS",
+        "INITIAL COST"
+      ],
+      "phraseGroups": [
+        "We should WEIGH",
+        "the LONG-TERM BENEFITS",
+        "against the INITIAL COST."
+      ],
+      "intonation": {
+        "label": "Balanced comparison, falling finish",
+        "description": "Buat dua sisi perbandingan terdengar seimbang, lalu turunkan nada pada cost untuk menutup gagasan."
+      },
+      "linking": "Sambungkan kelompok kata di setiap bagian, tetapi beri batas makna yang jelas sebelum against.",
+      "coaching": [
+        "Jangan menekan semua kata dengan kekuatan sama.",
+        "Seimbangkan panjang dan energi dua kelompok perbandingan.",
+        "Tekankan cost sebagai titik akhir informasi."
+      ]
+    }
+  ]
+}
