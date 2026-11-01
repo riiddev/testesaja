@@ -384,6 +384,14 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
           updatedAt: "2026-10-31T09:57:00.000Z",
         },
       },
+      listeningProgress: {
+        "missed-the-bus": {
+          attempts: [{ attemptId: "listening-device-a", score: 2, total: 3, passed: true, completedAt: "2026-10-31T09:56:00.000Z" }],
+          bestScore: 2,
+          completedAt: "2026-10-31T09:56:00.000Z",
+          updatedAt: "2026-10-31T09:56:00.000Z",
+        },
+      },
       studioSessions: [{ sessionId: "speaking:ask-directions:2026-10-31", studioType: "speaking", promptId: "ask-directions", wordCount: 0, checklistCompleted: 3, completedAt: "2026-10-31T09:58:00.000Z", updatedAt: "2026-10-31T09:58:00.000Z" }],
       achievementIds: ["first-mission"],
       updatedAt: "2026-10-31T10:00:00.000Z",
@@ -417,6 +425,8 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   assert.equal(restored?.storyProgress?.["a-helpful-neighbor"]?.bestScore, 2, "the first story best score should be retained");
   assert.equal(restored?.dialogueProgress?.["at-the-cafe"]?.attempts?.length, 1, "the first device's dialogue attempt should restore on the second profile");
   assert.equal(restored?.dialogueProgress?.["at-the-cafe"]?.bestScore, 2, "the first dialogue best score should be retained");
+  assert.equal(restored?.listeningProgress?.["missed-the-bus"]?.attempts?.length, 1, "the first device's Listening Lab attempt should restore on the second profile");
+  assert.equal(restored?.listeningProgress?.["missed-the-bus"]?.bestScore, 2, "the first Listening Lab best score should be retained");
 
   await second.evaluate(() => {
     const snapshot = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
@@ -434,6 +444,10 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
     dialogue.attempts.push({ attemptId: "dialogue-device-b", score: 3, total: 3, passed: true, completedAt: new Date(Date.now() + 1000).toISOString() });
     dialogue.bestScore = 3;
     dialogue.updatedAt = new Date(Date.now() + 1000).toISOString();
+    const listening = snapshot.listeningProgress["missed-the-bus"];
+    listening.attempts.push({ attemptId: "listening-device-b", score: 3, total: 3, passed: true, completedAt: new Date(Date.now() + 1000).toISOString() });
+    listening.bestScore = 3;
+    listening.updatedAt = new Date(Date.now() + 1000).toISOString();
     localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(snapshot));
     window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
   });
@@ -448,6 +462,10 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   assert.equal(mergedDialogue?.attempts?.length, 2, "dialogue attempts from both devices should be merged, not overwritten");
   assert.equal(mergedDialogue?.bestScore, 3, "the higher dialogue score should become the merged best score");
   assert.ok(mergedDialogue?.completedAt, "the dialogue completion should remain recorded after merging");
+  const mergedListening = remoteState?.extras?.adventureProgress?.listeningProgress?.["missed-the-bus"];
+  assert.equal(mergedListening?.attempts?.length, 2, "Listening Lab attempts from both devices should be merged, not overwritten");
+  assert.equal(mergedListening?.bestScore, 3, "the higher Listening Lab score should become the merged best score");
+  assert.ok(mergedListening?.completedAt, "the Listening Lab completion should remain recorded after merging");
   assert.deepEqual(pageErrors, [], "cross-device merge should not throw browser JavaScript errors");
   await firstContext.close();
   await secondContext.close();
@@ -920,5 +938,119 @@ test("Everyday English includes a B2 discussion that evaluates evidence, alterna
   assert.equal(saved?.dialogueProgress?.["revising-a-project-proposal"]?.bestScore, 3);
   assert.ok(saved?.dialogueProgress?.["revising-a-project-proposal"]?.completedAt);
   assert.deepEqual(pageErrors, [], "B2 Everyday English should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("Listening Lab teaches gist, detail, and inference with optional transcript, saved speed, and local progress", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "listening-preview-access",
+      refresh_token: "listening-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "listening-preview-user", email: "listening-preview@example.com" },
+    }));
+    window.__spokenListeningTexts = [];
+    window.SpeechSynthesisUtterance = class {
+      constructor(text) { this.text = text; }
+    };
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: { cancel() {}, speak(utterance) { window.__spokenListeningTexts.push(utterance.text); } },
+    });
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+
+  const open = page.locator('[data-listening-open="missed-the-bus"]');
+  const card = open.locator("xpath=ancestor::article");
+  await open.waitFor({ state: "visible" });
+  assert.match(await card.innerText(), /A1/);
+  await open.click();
+
+  const reader = page.locator("#listening-lab-reader");
+  await reader.waitFor({ state: "visible" });
+  assert.match(await reader.innerText(), /Missed the Bus/);
+  assert.match(await reader.innerText(), /TAHAP 1\/3/);
+  assert.equal(await page.locator("#listening-lab-transcript").count(), 0, "transcript should start hidden");
+
+  await page.locator("[data-listening-play]").click();
+  const spoken = await page.evaluate(() => window.__spokenListeningTexts);
+  assert.ok(spoken.length === 1 && spoken[0].includes("Mia:"), "the browser should read only the current listening stage");
+  await page.locator('[data-listening-rate="0.75"]').click();
+  assert.equal(await page.locator('[data-listening-rate="0.75"]').getAttribute("aria-pressed"), "true");
+  let saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.equal(saved?.listeningRate, 0.75, "Listening Lab playback speed should persist");
+
+  await page.locator("[data-listening-transcript]").click();
+  await page.locator("#listening-lab-transcript").waitFor({ state: "visible" });
+  assert.match(await page.locator("#listening-lab-transcript").innerText(), /I usually take the early bus/);
+
+  for (const [index, answer] of [0, 1, 1].entries()) {
+    await page.locator('[data-listening-answer="' + answer + '"]').click();
+    await page.locator(".listening-lab-feedback").waitFor({ state: "visible" });
+    if (index < 2) {
+      await page.locator("[data-listening-next]").click();
+      assert.match(await reader.innerText(), new RegExp("TAHAP " + (index + 2) + "/3"));
+    } else {
+      await page.locator("[data-listening-next]").click();
+    }
+  }
+
+  const result = page.locator("#listening-lab-result");
+  await result.waitFor({ state: "visible" });
+  assert.match(await result.innerText(), /3\/3/);
+  saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.equal(saved?.listeningProgress?.["missed-the-bus"]?.bestScore, 3);
+  assert.ok(saved?.listeningProgress?.["missed-the-bus"]?.completedAt);
+  const bundle = await page.evaluate(() => window.sinauuExportLocalBundle());
+  assert.ok(bundle.extras.adventureProgress.listeningProgress["missed-the-bus"], "Listening Lab progress should be included in CloudBundle v2");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const restoredCard = page.locator('[data-listening-open="missed-the-bus"]').locator("xpath=ancestor::article");
+  await restoredCard.waitFor({ state: "visible" });
+  assert.match(await restoredCard.innerText(), /SELESAI/);
+  assert.deepEqual(pageErrors, [], "Listening Lab should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("Listening Lab B2 exercise asks learners to distinguish contrast and infer a recommendation", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const open = page.locator('[data-listening-open="reviewing-a-study-proposal"]');
+  const card = open.locator("xpath=ancestor::article");
+  await open.waitFor({ state: "visible" });
+  assert.match(await card.innerText(), /B2/);
+  await open.click();
+  const reader = page.locator("#listening-lab-reader");
+  await reader.waitFor({ state: "visible" });
+  assert.match(await reader.innerText(), /Reviewing a Study-Space Proposal/);
+  await page.locator('[data-listening-answer="0"]').click();
+  await page.locator("[data-listening-next]").click();
+  assert.match(await reader.innerText(), /Listen for a contrast/);
+  await page.locator('[data-listening-answer="0"]').click();
+  await page.locator("[data-listening-next]").click();
+  await page.locator('[data-listening-answer="1"]').click();
+  await page.locator("[data-listening-next]").click();
+  assert.match(await page.locator("#listening-lab-result").innerText(), /3\/3/);
+  assert.deepEqual(pageErrors, [], "B2 Listening Lab should not throw browser JavaScript errors");
   await page.close();
 });
