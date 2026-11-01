@@ -18,10 +18,14 @@
   ];
   let curriculum = null;
   let progress = normalizeProgress(readStored());
-  let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, initialized = false;
+  let selectedMissionId = null, currentFeedback = null, currentFeedbackStepId = null, listenReady = false, listenTranscriptVisible = false, dailyTranscriptVisible = false, selectedMistakeReviewId = null, mistakeReviewFeedback = null, mistakeReviewTranscriptVisible = false, mistakeReviewListenReady = false, initialized = false;
+  let stories = [], storiesLoaded = false, storyLoadError = "", storyRun = null;
+  let dialogues = [], dialoguesLoaded = false, dialogueLoadError = "", dialogueRun = null;
+  let listeningExercises = [], listeningLoaded = false, listeningLoadError = "", listeningRun = null;
+  let pronunciationExercises = [], pronunciationLoaded = false, pronunciationLoadError = "", pronunciationRun = null, pronunciationCapture = null;
 
   function emptyProgress() {
-    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
+    return { schemaVersion: 1, missionProgress: {}, skillEvidence: {}, xpLedger: {}, dailyQuests: {}, mistakeJournal: {}, storyProgress: {}, dialogueProgress: {}, listeningProgress: {}, pronunciationProgress: {}, listeningRate: 0.9, achievementIds: [], studioSessions: [], updatedAt: new Date().toISOString() };
   }
   function readStored() {
     try {
@@ -37,6 +41,55 @@
     base.xpLedger = raw.xpLedger && typeof raw.xpLedger === "object" && !Array.isArray(raw.xpLedger) ? raw.xpLedger : {};
     base.dailyQuests = raw.dailyQuests && typeof raw.dailyQuests === "object" && !Array.isArray(raw.dailyQuests) ? raw.dailyQuests : {};
     base.mistakeJournal = raw.mistakeJournal && typeof raw.mistakeJournal === "object" && !Array.isArray(raw.mistakeJournal) ? raw.mistakeJournal : {};
+    base.storyProgress = raw.storyProgress && typeof raw.storyProgress === "object" && !Array.isArray(raw.storyProgress) ? raw.storyProgress : {};
+    for (const [storyId, entry] of Object.entries(base.storyProgress)) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.storyProgress[storyId]; continue; }
+      entry.attempts = Array.isArray(entry.attempts)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && Number.isInteger(attempt.score) && Number.isInteger(attempt.total) && typeof attempt.completedAt === "string").slice(-100)
+        : [];
+      entry.bestScore = entry.attempts.reduce((best, attempt) => Math.max(best, attempt.score), 0);
+      entry.completedAt = typeof entry.completedAt === "string" ? entry.completedAt : entry.attempts.find((attempt) => attempt.passed)?.completedAt || null;
+      entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
+    }
+    base.dialogueProgress = raw.dialogueProgress && typeof raw.dialogueProgress === "object" && !Array.isArray(raw.dialogueProgress) ? raw.dialogueProgress : {};
+    for (const [dialogueId, entry] of Object.entries(base.dialogueProgress)) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.dialogueProgress[dialogueId]; continue; }
+      entry.attempts = Array.isArray(entry.attempts)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && Number.isInteger(attempt.score) && Number.isInteger(attempt.total) && typeof attempt.completedAt === "string").slice(-100)
+        : [];
+      entry.bestScore = entry.attempts.reduce((best, attempt) => Math.max(best, attempt.score), 0);
+      entry.completedAt = typeof entry.completedAt === "string" ? entry.completedAt : entry.attempts.find((attempt) => attempt.passed)?.completedAt || null;
+      entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
+    }
+    base.listeningProgress = raw.listeningProgress && typeof raw.listeningProgress === "object" && !Array.isArray(raw.listeningProgress) ? raw.listeningProgress : {};
+    for (const [exerciseId, entry] of Object.entries(base.listeningProgress)) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.listeningProgress[exerciseId]; continue; }
+      entry.attempts = Array.isArray(entry.attempts)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && Number.isInteger(attempt.score) && Number.isInteger(attempt.total) && typeof attempt.completedAt === "string").slice(-100)
+        : [];
+      entry.bestScore = entry.attempts.reduce((best, attempt) => Math.max(best, attempt.score), 0);
+      entry.completedAt = typeof entry.completedAt === "string" ? entry.completedAt : entry.attempts.find((attempt) => attempt.passed)?.completedAt || null;
+      entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
+    }
+    base.pronunciationProgress = raw.pronunciationProgress && typeof raw.pronunciationProgress === "object" && !Array.isArray(raw.pronunciationProgress) ? raw.pronunciationProgress : {};
+    for (const [phraseId, entry] of Object.entries(base.pronunciationProgress)) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.pronunciationProgress[phraseId]; continue; }
+      entry.attempts = Array.isArray(entry.attempts)
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && typeof attempt.completedAt === "string" && Number.isFinite(attempt.durationMs) && Number.isFinite(attempt.voiceShare))
+          .map((attempt) => ({
+            attemptId: attempt.attemptId.slice(0, 140),
+            completedAt: attempt.completedAt,
+            durationMs: Math.max(0, Math.min(12000, Number(attempt.durationMs) || 0)),
+            voiceShare: Math.max(0, Math.min(1, Number(attempt.voiceShare) || 0)),
+            voicedFrames: Math.max(0, Math.min(200, Math.trunc(Number(attempt.voicedFrames) || 0))),
+            meanRms: Math.max(0, Math.min(1, Number(attempt.meanRms) || 0)),
+            pauseCount: Math.max(0, Math.min(30, Math.trunc(Number(attempt.pauseCount) || 0))),
+            pitchMedian: Number.isFinite(attempt.pitchMedian) ? Math.max(60, Math.min(400, Number(attempt.pitchMedian))) : null,
+            pitchRangeSemitones: Number.isFinite(attempt.pitchRangeSemitones) ? Math.max(0, Math.min(24, Number(attempt.pitchRangeSemitones))) : null,
+          })).slice(-50)
+        : [];
+      entry.updatedAt = typeof entry.updatedAt === "string" ? entry.updatedAt : base.updatedAt;
+    }
     base.listeningRate = [0.75, 0.9, 1].includes(Number(raw.listeningRate)) ? Number(raw.listeningRate) : 0.9;
     base.achievementIds = Array.isArray(raw.achievementIds) ? Array.from(new Set(raw.achievementIds.filter((item) => typeof item === "string"))).slice(0, 100) : [];
     base.studioSessions = Array.isArray(raw.studioSessions) ? raw.studioSessions.filter((item) => item && typeof item === "object" && typeof item.sessionId === "string" && ["speaking", "writing"].includes(item.studioType) && typeof item.promptId === "string").map((item) => ({ sessionId: item.sessionId.slice(0, 140), studioType: item.studioType, promptId: item.promptId.slice(0, 80), wordCount: Math.max(0, Math.min(5000, Number(item.wordCount) || 0)), checklistCompleted: Math.max(0, Math.min(5, Number(item.checklistCompleted) || 0)), completedAt: typeof item.completedAt === "string" ? item.completedAt : base.updatedAt, updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : base.updatedAt })).slice(-500) : [];
@@ -61,10 +114,32 @@
       quest.wrongAttempts = quest.wrongAttempts && typeof quest.wrongAttempts === "object" ? quest.wrongAttempts : {};
     }
     for (const [mistakeId, mistake] of Object.entries(base.mistakeJournal)) {
-      if (!mistake || typeof mistake !== "object" || typeof mistake.mistakeId !== "string") delete base.mistakeJournal[mistakeId];
-      else {
-        mistake.status = mistake.resolvedAt ? "resolved" : "open";
-        mistake.recordedAt = typeof mistake.recordedAt === "string" ? mistake.recordedAt : base.updatedAt;
+      if (!mistake || typeof mistake !== "object" || typeof mistake.mistakeId !== "string") { delete base.mistakeJournal[mistakeId]; continue; }
+      mistake.recordedAt = typeof mistake.recordedAt === "string" ? mistake.recordedAt : base.updatedAt;
+      const hasReviewStage = Number.isInteger(mistake.reviewStage);
+      mistake.reviewStage = hasReviewStage ? Math.max(0, Math.min(4, mistake.reviewStage)) : (mistake.resolvedAt ? 4 : 0);
+      mistake.reviewHistory = Array.isArray(mistake.reviewHistory)
+        ? mistake.reviewHistory.filter((entry) => entry && typeof entry.reviewedAt === "string" && typeof entry.correct === "boolean").slice(-8)
+        : [];
+      if (mistake.reviewStage >= 4) {
+        mistake.masteredAt = typeof mistake.masteredAt === "string" ? mistake.masteredAt : (mistake.resolvedAt || mistake.recordedAt);
+        mistake.resolvedAt = mistake.resolvedAt || mistake.masteredAt;
+        mistake.nextReviewAt = null;
+        mistake.status = "mastered";
+      } else if (mistake.reviewStage > 0) {
+        mistake.resolvedAt = mistake.resolvedAt || mistake.lastReviewedAt || mistake.recordedAt;
+        const intervals = [1, 3, 7];
+        const interval = intervals[mistake.reviewStage - 1];
+        if (typeof mistake.nextReviewAt !== "string" && interval) {
+          const anchor = Date.parse(mistake.lastReviewedAt || mistake.resolvedAt);
+          mistake.nextReviewAt = new Date((Number.isFinite(anchor) ? anchor : Date.now()) + interval * 86400000).toISOString();
+        }
+        mistake.status = "reviewing";
+      } else {
+        mistake.resolvedAt = null;
+        mistake.masteredAt = null;
+        mistake.nextReviewAt = typeof mistake.nextReviewAt === "string" ? mistake.nextReviewAt : mistake.recordedAt;
+        mistake.status = "open";
       }
     }
     const dailyDates = Object.keys(base.dailyQuests).sort();
@@ -164,7 +239,7 @@
 
   function checkAchievements() {
     const completedDays = Object.values(progress.dailyQuests).filter((quest) => quest && quest.completedAt).length;
-    const resolvedMistakes = Object.values(progress.mistakeJournal).filter((mistake) => mistake && mistake.resolvedAt).length;
+    const resolvedMistakes = Object.values(progress.mistakeJournal).filter((mistake) => mistake && (mistake.masteredAt || Number(mistake.reviewStage) >= 4)).length;
     const allSkillsPracticed = SKILLS.every(([skill]) => evidenceCount(skill) >= 3);
     const conditions = [
       ["first-mission", curriculum.missions.some((mission) => missionCompleted(mission.id))],
@@ -193,7 +268,7 @@
       ["island-clear", "Island Notes", "Menyelesaikan seluruh misi First Steps Island."],
       ["daily-first", "Daily Explorer", "Menyelesaikan Daily Quest pertamamu."],
       ["daily-seven", "Steady Traveller", "Menyelesaikan Daily Quest pada tujuh hari berbeda."],
-      ["mistake-five", "Learning from Mistakes", "Memperbaiki lima jawaban yang pernah keliru."],
+      ["mistake-five", "Learning from Mistakes", "Menuntaskan pengulangan terjadwal untuk lima kesalahan."],
       ["all-skills", "Six Ways to Grow", "Mengumpulkan sedikitnya tiga bukti latihan pada setiap skill."],
       ["cafe-customer", "A Polite Customer", "Menyelesaikan misi A Day at the Café."]
     ];
@@ -201,7 +276,7 @@
     node.innerHTML = items.length ? items.map((item) =>
       '<div class="adventure-achievement"><span>✳</span><div><strong>' + item[1] + '</strong><small>' + item[2] + '</small></div></div>'
     ).join("") : "<p>Achievement akan muncul setelah kamu menyelesaikan tantangan belajar.</p>";
-    const resolved = Object.values(progress.mistakeJournal).filter((mistake) => mistake && mistake.resolvedAt).length;
+    const resolved = Object.values(progress.mistakeJournal).filter((mistake) => mistake && (mistake.masteredAt || Number(mistake.reviewStage) >= 4)).length;
     const days = Object.values(progress.dailyQuests).filter((quest) => quest && quest.completedAt).length;
     node.insertAdjacentHTML("beforeend", '<p class="adventure-achievement-next">Berikutnya: ' + days + '/7 Daily Quest · ' + resolved + '/5 kesalahan diperbaiki.</p>');
   }
@@ -421,14 +496,14 @@
     }
     checkAchievements();
     renderHeaderStats(); renderMap(); renderMissionDetail(); renderSkillProfile(); renderAchievements();
-    renderDailyQuest(); renderMistakeJournal(); renderStudios();
+    renderDailyQuest(); renderMistakeJournal(); renderStudios(); renderStoryLibrary(); renderDialogueLibrary(); renderListeningLab(); renderPronunciationStudio();
   }
   function openMission(missionId) {
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
     selectedMissionId = missionId; currentFeedback = null; listenReady = false; listenTranscriptVisible = false; renderAll();
   }
   function playText(text) {
-    if (!("speechSynthesis" in window) || typeof window.SpeechSynthesisUtterance !== "function") return false;
+    if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return false;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text || "");
     utterance.lang = "en-US";
@@ -444,6 +519,7 @@
     saveProgress();
     renderMissionDetail();
     renderDailyQuest();
+    renderListeningLab();
   }
 
   function listenToStep() {
@@ -513,44 +589,244 @@
       wrongAnswer: input.wrongAnswer || "Belum memilih jawaban",
       correctAnswer: input.correctAnswer || "",
       explanation: input.explanation || "",
-      recordedAt: new Date().toISOString(), resolvedAt: null, status: "open"
+      recordedAt: new Date().toISOString(), resolvedAt: null, status: "open",
+      reviewStage: 0, nextReviewAt: new Date().toISOString(), reviewHistory: []
     };
     saveProgress();
   }
 
-  function resolveMistakes(missionId, stepId, sourceId) {
-    let changed = false;
-    for (const mistake of Object.values(progress.mistakeJournal)) {
-      if (mistake.missionId === missionId && mistake.stepId === stepId && mistake.sourceId === sourceId && !mistake.resolvedAt) {
-        mistake.resolvedAt = new Date().toISOString();
-        mistake.status = "resolved";
-        changed = true;
-      }
+  const MISTAKE_REVIEW_INTERVALS = [1, 3, 7];
+
+  function mistakeReviewStage(item) {
+    return Math.max(0, Math.min(4, Math.floor(Number(item && item.reviewStage) || 0)));
+  }
+
+  function isMistakeMastered(item) {
+    return Boolean(item && (item.masteredAt || mistakeReviewStage(item) >= 4));
+  }
+
+  function isMistakeDue(item, now = Date.now()) {
+    if (!item || isMistakeMastered(item)) return false;
+    const dueAt = Date.parse(item.nextReviewAt || item.recordedAt || "");
+    return !Number.isFinite(dueAt) || dueAt <= now;
+  }
+
+  function formatMistakeReviewDate(value) {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return "hari ini";
+    const today = localDateKey();
+    const tomorrow = localDateKey(new Date(Date.now() + 86400000));
+    const dateKey = localDateKey(date);
+    if (dateKey === today) return "hari ini";
+    if (dateKey === tomorrow) return "besok";
+    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  }
+
+  function applyMistakeReviewSuccess(item) {
+    if (!item || isMistakeMastered(item) || !isMistakeDue(item)) return false;
+    const now = new Date();
+    const nextStage = Math.min(4, mistakeReviewStage(item) + 1);
+    item.reviewStage = nextStage;
+    item.resolvedAt = item.resolvedAt || now.toISOString();
+    item.lastReviewedAt = now.toISOString();
+    item.reviewHistory = Array.isArray(item.reviewHistory) ? item.reviewHistory : [];
+    item.reviewHistory.push({ reviewedAt: now.toISOString(), correct: true, stage: nextStage });
+    item.reviewHistory = item.reviewHistory.slice(-8);
+    if (nextStage >= 4) {
+      item.masteredAt = now.toISOString();
+      item.status = "mastered";
+      item.nextReviewAt = null;
+    } else {
+      item.masteredAt = null;
+      item.status = "reviewing";
+      item.nextReviewAt = new Date(now.getTime() + MISTAKE_REVIEW_INTERVALS[nextStage - 1] * 86400000).toISOString();
     }
-    if (changed) saveProgress();
+    return true;
+  }
+
+  function resetMistakeReviewAfterWrong(item) {
+    if (!item) return;
+    const now = new Date().toISOString();
+    item.reviewStage = 0;
+    item.resolvedAt = null;
+    item.masteredAt = null;
+    item.status = "open";
+    item.nextReviewAt = now;
+    item.lastReviewedAt = now;
+    item.reviewHistory = Array.isArray(item.reviewHistory) ? item.reviewHistory : [];
+    item.reviewHistory.push({ reviewedAt: now, correct: false, stage: 0 });
+    item.reviewHistory = item.reviewHistory.slice(-8);
+  }
+
+  function mistakeStep(item) {
+    const mission = curriculum && curriculum.missions.find((entry) => entry.id === item.missionId);
+    const step = mission && mission.steps.find((entry) => entry.id === item.stepId);
+    if (!mission || !step || !Array.isArray(step.options) || !step.options.length || !Number.isInteger(step.answer)) return null;
+    return { mission, step };
+  }
+
+  function renderMistakeReview(item) {
+    const match = mistakeStep(item);
+    if (!match) return "";
+    const step = match.step;
+    const feedback = mistakeReviewFeedback && mistakeReviewFeedback.mistakeId === item.mistakeId ? mistakeReviewFeedback : null;
+    const stageNumber = Math.min(4, mistakeReviewStage(item) + 1);
+    let context = "";
+    if (step.type === "read" && step.passage) {
+      context = '<div class="adventure-mistake-review-context"><small>READ AGAIN · CONTEXT</small><p>' + escapeHtml(step.passage).replace(/\\n|\n/g, "<br>") + '</p></div>';
+    } else if (step.type === "listen" && step.audioText) {
+      context = '<div class="adventure-mistake-review-listen"><button type="button" data-mistake-listen>▶ Dengarkan dialog lagi</button>' +
+        '<button type="button" data-mistake-transcript>' + (mistakeReviewTranscriptVisible ? "Sembunyikan transkrip" : "Tampilkan transkrip") + '</button>' +
+        (mistakeReviewTranscriptVisible ? '<p>' + escapeHtml(step.audioText) + '</p>' : '<small>Dengarkan kembali sebelum memilih jawaban. Transkrip tersedia bila diperlukan.</small>') + '</div>';
+    }
+    const choices = feedback && feedback.kind === "success" ? "" : '<div class="adventure-options adventure-mistake-review-options">' +
+      step.options.map((option, index) => '<button class="adventure-option" type="button" data-mistake-answer="' + index + '" data-mistake-id="' + escapeHtml(item.mistakeId) + '"' +
+        (step.type === "listen" && !mistakeReviewListenReady ? " disabled" : "") + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>').join("") + '</div>';
+    let feedbackHtml = "";
+    if (feedback && feedback.kind === "success") {
+      const mastered = isMistakeMastered(item);
+      const next = item.nextReviewAt ? " Pengulangan berikutnya: " + formatMistakeReviewDate(item.nextReviewAt) + "." : "";
+      feedbackHtml = '<div class="adventure-feedback success" role="status"><strong>' + (mastered ? "Kesalahan ini sudah kamu kuasai." : "Ingatannya berhasil dipanggil kembali.") + '</strong><p>' +
+        (mastered ? "Empat kali pengulangan berhasil, termasuk setelah jeda. Catatan ini tuntas." : "Review " + item.reviewStage + "/4 berhasil." + next) + '</p>' +
+        '<p class="adventure-mistake-review-correct">Jawaban tepat: ' + escapeHtml(step.options[step.answer]) + '</p><p class="adventure-mistake-explanation">' + escapeHtml(step.explanation || "") + '</p></div>';
+    } else if (feedback && feedback.kind === "try-again") {
+      feedbackHtml = '<div class="adventure-feedback try-again" role="status"><strong>Belum tepat. Coba sekali lagi.</strong><p>Jadwal pengulangan kembali ke tahap pertama. Perhatikan konteksnya; jawaban tepat belum ditampilkan.</p></div>';
+    }
+    return '<section class="adventure-mistake-review" aria-label="Latihan ulang kesalahan">' +
+      '<div class="adventure-mistake-review-heading"><div><small>SPACED RETRIEVAL · REVIEW ' + stageNumber + ' / 4</small><strong>Ingat kembali, tanpa melihat kunci jawaban.</strong></div><button type="button" data-mistake-review-close>Tutup</button></div>' +
+      context + '<h4>' + escapeHtml(step.prompt) + '</h4>' + choices + feedbackHtml + '</section>';
   }
 
   function renderMistakeJournal() {
     const node = $("#adventure-mistake-journal");
     if (!node) return;
     const all = Object.values(progress.mistakeJournal).sort((a, b) => String(b.recordedAt || "").localeCompare(String(a.recordedAt || "")));
-    const openCount = all.filter((item) => !item.resolvedAt).length;
-    const visible = all.filter((item) => mistakeFilterValue === "all" || (mistakeFilterValue === "open" ? !item.resolvedAt : Boolean(item.resolvedAt))).slice(0, 8);
+    const dueCount = all.filter((item) => isMistakeDue(item)).length;
+    const openCount = all.filter((item) => !item.resolvedAt && !isMistakeMastered(item)).length;
+    const reviewingCount = all.filter((item) => item.resolvedAt && !isMistakeMastered(item)).length;
+    const selected = selectedMistakeReviewId ? all.find((item) => item.mistakeId === selectedMistakeReviewId) : null;
+    const reviewPanel = selected && !isMistakeMastered(selected) && (isMistakeDue(selected) || (mistakeReviewFeedback && mistakeReviewFeedback.mistakeId === selected.mistakeId && mistakeReviewFeedback.kind === "success"))
+      ? renderMistakeReview(selected) : "";
+    const matchesFilter = (item) => {
+      if (mistakeFilterValue === "open") return !item.resolvedAt && !isMistakeMastered(item);
+      if (mistakeFilterValue === "due") return isMistakeDue(item);
+      if (mistakeFilterValue === "reviewing") return Boolean(item.resolvedAt) && !isMistakeMastered(item);
+      if (mistakeFilterValue === "resolved") return Boolean(item.resolvedAt);
+      return true;
+    };
+    const visible = all.filter(matchesFilter).slice(0, 8);
     const filters = '<div class="adventure-journal-filters">' +
-      ['open','resolved','all'].map((value) => '<button type="button" data-mistake-filter="' + value + '" class="' + (mistakeFilterValue === value ? 'is-active' : '') + '">' + (value === "open" ? 'Perlu diulang' : value === "resolved" ? 'Sudah diperbaiki' : 'Semua') + '</button>').join("") +
+      [["open","Perlu dipahami"],["due","Jatuh tempo"],["reviewing","Dijadwalkan"],["resolved","Tuntas"],["all","Semua"]]
+        .map(([value, label]) => '<button type="button" data-mistake-filter="' + value + '" class="' + (mistakeFilterValue === value ? "is-active" : "") + '">' + label + '</button>').join("") +
       '</div>';
     const rows = visible.length ? visible.map((item) => {
       const mission = curriculum.missions.find((entry) => entry.id === item.missionId);
-      return '<article class="adventure-mistake-row ' + (item.resolvedAt ? 'is-resolved' : 'is-open') + '">' +
-        '<div class="adventure-mistake-top"><span>' + escapeHtml(item.skill) + '</span><span>' + (item.resolvedAt ? 'SUDAH DIPERBAIKI' : 'PERLU DIULANG') + '</span></div>' +
+      const match = mistakeStep(item);
+      const mastered = isMistakeMastered(item);
+      const due = isMistakeDue(item);
+      const stateLabel = mastered ? "TUNTAS" : !item.resolvedAt ? "PERLU DIPAHAMI" : due ? "SUDAH DIPERBAIKI · JATUH TEMPO" : "SUDAH DIPERBAIKI · REVIEW TERJADWAL";
+      const stage = mistakeReviewStage(item);
+      const schedule = mastered ? "4/4 pengulangan berhasil" :
+        (stage + "/4 berhasil · " + (due ? "tersedia untuk latihan sekarang" : "berikutnya " + formatMistakeReviewDate(item.nextReviewAt)));
+      const explanation = mastered
+        ? '<p class="adventure-mistake-answer is-correct"><span>Jawaban tepat</span> ' + escapeHtml(item.correctAnswer) + '</p><p class="adventure-mistake-explanation">' + escapeHtml(item.explanation) + '</p>'
+        : '<details class="adventure-mistake-details"><summary>Lihat jawaban dan pembahasan</summary><p class="adventure-mistake-answer is-correct"><span>Jawaban tepat</span> ' + escapeHtml(item.correctAnswer) + '</p><p class="adventure-mistake-explanation">' + escapeHtml(item.explanation) + '</p></details>';
+      let action = '<span>✓ Tuntas</span>';
+      if (!mastered && match) {
+        action = due
+          ? '<button type="button" data-mistake-review-one="' + escapeHtml(item.mistakeId) + '">Latih lagi ↗</button>'
+          : '<button type="button" disabled aria-disabled="true">Review ' + escapeHtml(formatMistakeReviewDate(item.nextReviewAt)) + '</button>';
+      } else if (!mastered && !match && mission) {
+        action = '<button type="button" data-mistake-review="' + escapeHtml(item.missionId) + '">Ulangi misi ↗</button>';
+      }
+      const rowClass = mastered ? "is-resolved" : item.resolvedAt ? "is-resolved is-reviewing" : "is-open";
+      return '<article class="adventure-mistake-row ' + rowClass + '">' +
+        '<div class="adventure-mistake-top"><span>' + escapeHtml(item.skill) + '</span><span>' + stateLabel + '</span></div>' +
         '<strong>' + escapeHtml(item.prompt) + '</strong>' +
         '<p class="adventure-mistake-answer"><span>Jawabanmu</span> ' + escapeHtml(item.wrongAnswer) + '</p>' +
-        '<p class="adventure-mistake-answer is-correct"><span>Jawaban tepat</span> ' + escapeHtml(item.correctAnswer) + '</p>' +
-        '<p class="adventure-mistake-explanation">' + escapeHtml(item.explanation) + '</p>' +
-        '<div class="adventure-mistake-bottom"><small>' + escapeHtml(mission?.title || "Daily Quest") + '</small>' +
-        (!item.resolvedAt && mission ? '<button type="button" data-mistake-review="' + escapeHtml(item.missionId) + '">Ulangi misi ↗</button>' : '<span>✓ Tersimpan</span>') + '</div></article>';
-    }).join("") : '<p class="adventure-journal-empty">' + (mistakeFilterValue === "open" ? 'Belum ada kesalahan yang perlu diulang. Bagus, pertahankan kebiasaan memeriksa jawaban.' : 'Belum ada catatan pada filter ini.') + '</p>';
-    node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">LEARN FROM IT</span><h3>Mistake Journal</h3><p>Kesalahan bukan hukuman. Catat, pahami, lalu coba lagi.</p></div><span class="adventure-journal-count">' + openCount + '<small>PERLU DIULANG</small></span></div>' + filters + rows;
+        explanation +
+        '<div class="adventure-mistake-progress"><span>REVIEW ' + stage + ' / 4</span><i><b style="width:' + (stage / 4 * 100) + '%"></b></i><small>' + escapeHtml(schedule) + '</small></div>' +
+        '<div class="adventure-mistake-bottom"><small>' + escapeHtml(mission?.title || "Daily Quest") + '</small>' + action + '</div></article>';
+    }).join("") : '<p class="adventure-journal-empty">' +
+      (mistakeFilterValue === "due" ? "Belum ada pengulangan yang jatuh tempo. Kesalahan berikutnya akan muncul sesuai jadwal." :
+        mistakeFilterValue === "reviewing" ? "Belum ada catatan yang sedang menunggu pengulangan terjadwal." :
+        mistakeFilterValue === "resolved" ? "Belum ada kesalahan yang tuntas melalui seluruh tahap pengulangan." :
+        mistakeFilterValue === "open" ? "Belum ada kesalahan yang perlu dipahami. Bagus, pertahankan kebiasaan memeriksa jawaban." :
+        "Belum ada catatan pada filter ini.") + '</p>';
+    node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">LEARN FROM IT</span><h3>Mistake Journal</h3><p>Jawaban benar belum langsung dianggap dikuasai. Kita akan mengulangnya setelah jeda 1, 3, dan 7 hari.</p></div><span class="adventure-journal-count">' + dueCount + '<small>JATUH TEMPO</small></span></div>' +
+      '<p class="adventure-journal-summary">' + openCount + ' belum berhasil diingat · ' + reviewingCount + ' menunggu review.</p>' + reviewPanel + filters + rows;
+  }
+
+  function openMistakeReview(mistakeId) {
+    const item = progress.mistakeJournal[mistakeId];
+    if (!item || isMistakeMastered(item) || !isMistakeDue(item) || !mistakeStep(item)) return;
+    selectedMistakeReviewId = mistakeId;
+    mistakeReviewFeedback = null;
+    mistakeReviewTranscriptVisible = false;
+    mistakeReviewListenReady = false;
+    renderMistakeJournal();
+  }
+
+  function closeMistakeReview() {
+    selectedMistakeReviewId = null;
+    mistakeReviewFeedback = null;
+    mistakeReviewTranscriptVisible = false;
+    mistakeReviewListenReady = false;
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    renderMistakeJournal();
+  }
+
+  function listenToMistakeReview() {
+    const item = selectedMistakeReviewId && progress.mistakeJournal[selectedMistakeReviewId];
+    const match = item && mistakeStep(item);
+    if (!match || match.step.type !== "listen") return;
+    mistakeReviewListenReady = true;
+    mistakeReviewTranscriptVisible = !playText(match.step.audioText);
+    renderMistakeJournal();
+  }
+
+  function toggleMistakeReviewTranscript() {
+    const item = selectedMistakeReviewId && progress.mistakeJournal[selectedMistakeReviewId];
+    const match = item && mistakeStep(item);
+    if (!match || match.step.type !== "listen") return;
+    mistakeReviewListenReady = true;
+    mistakeReviewTranscriptVisible = !mistakeReviewTranscriptVisible;
+    renderMistakeJournal();
+  }
+
+  function answerMistakeReview(mistakeId, answerIndex) {
+    const item = progress.mistakeJournal[mistakeId];
+    const match = item && mistakeStep(item);
+    if (!item || isMistakeMastered(item) || !isMistakeDue(item) || !match) return;
+    const step = match.step;
+    if (step.type === "listen" && !mistakeReviewListenReady) return;
+    if (Number(answerIndex) === Number(step.answer)) {
+      if (!applyMistakeReviewSuccess(item)) return;
+      mistakeReviewFeedback = { mistakeId, kind: "success" };
+      saveProgress();
+      checkAchievements();
+      renderMistakeJournal();
+      renderSkillProfile();
+      renderAchievements();
+    } else {
+      resetMistakeReviewAfterWrong(item);
+      mistakeReviewFeedback = { mistakeId, kind: "try-again" };
+      saveProgress();
+      renderMistakeJournal();
+    }
+  }
+
+  function resolveMistakes(missionId, stepId, sourceId) {
+    let changed = false;
+    for (const mistake of Object.values(progress.mistakeJournal)) {
+      if (mistake.missionId === missionId && mistake.stepId === stepId && mistake.sourceId === sourceId && !isMistakeMastered(mistake) && isMistakeDue(mistake)) {
+        changed = applyMistakeReviewSuccess(mistake) || changed;
+      }
+    }
+    if (changed) {
+      saveProgress();
+      checkAchievements();
+    }
   }
 
   function renderDailyQuest() {
@@ -680,14 +956,73 @@
   // Standalone studios: raw drafts/checklists are device-local and never enter CloudBundle.
   const STUDIO_PROMPTS = {
     speaking: [
-      { id: "first-introduction", title: "Introduce yourself", level: "A1", context: "You meet a new classmate before the lesson starts.", prompt: "Introduce yourself, share one thing you enjoy, and explain why you are learning English.", starters: ["Hi, my name is …", "I enjoy … because …", "I’m learning English to …"], checks: ["Open with a greeting and your name.", "Share at least two relevant details.", "Finish naturally and invite a response."] },
-      { id: "ask-directions", title: "Ask for directions", level: "A1–A2", context: "You are in town and need to find the nearest bus stop.", prompt: "Ask someone for directions. Mention where you want to go and clarify one landmark.", starters: ["Excuse me, could you tell me …?", "Should I turn …?", "Thank you for your help."], checks: ["Explain where you want to go.", "Ask one clear follow-up question.", "Thank the person politely."] },
-      { id: "cafe-order", title: "Order at a café", level: "A1–A2", context: "You are ordering a drink and a snack at a small café.", prompt: "Order something politely, mention one preference, and ask about the price.", starters: ["Could I have …, please?", "Can I get it without …?", "How much is it altogether?"], checks: ["Greet the staff and order clearly.", "Mention a preference or request.", "Check the price and close politely."] }
+      {
+        id: "first-introduction", title: "Introduce yourself", level: "A1",
+        context: "You meet a new classmate before the lesson starts.",
+        prompt: "Introduce yourself, build a little connection, and ask your classmate a question.",
+        starters: ["Hi, my name is …", "I enjoy … because …", "What about you?"],
+        checks: ["I answered the partner's main question clearly.", "I added a relevant detail about myself.", "I responded naturally and invited the partner to continue."],
+        turns: [
+          { partnerLine: "Hi! I'm Alex. Is this your first class here?", prompt: "Say hello, tell Alex your name, and say whether this is your first class.", hint: "A simple greeting and one short sentence are enough.", starters: ["Hi, Alex. I'm …", "Yes, it is. / No, it isn't."] },
+          { partnerLine: "Nice to meet you. What do you like doing after class?", prompt: "Share one activity you enjoy and add a little detail about it.", hint: "Mention when you do it or why you enjoy it.", starters: ["I enjoy …", "I usually do it …", "I like it because …"] },
+          { partnerLine: "That sounds fun. What made you decide to learn English?", prompt: "Explain one reason for learning English, then ask Alex a question.", hint: "Connect English to a real goal, such as study, work, travel, or meeting people.", starters: ["I'm learning English because …", "What about you?"] }
+        ]
+      },
+      {
+        id: "ask-directions", title: "Ask for directions", level: "A1–A2",
+        context: "You are in town and need to find the nearest bus stop.",
+        prompt: "Ask for directions, clarify a landmark, and make sure you know where to go.",
+        starters: ["Excuse me, could you tell me …?", "Should I turn …?", "Thank you for your help."],
+        checks: ["I explained where I wanted to go.", "I asked a useful follow-up question.", "I confirmed the direction and thanked the partner."],
+        turns: [
+          { partnerLine: "Hello! You look like you're trying to find somewhere. Can I help?", prompt: "Ask where the nearest bus stop is.", hint: "Start politely and name the place you need.", starters: ["Excuse me, could you tell me where …?", "I'm looking for …"] },
+          { partnerLine: "Of course. Walk straight for two blocks. It's beside the library.", prompt: "Check that you understood the landmark or distance.", hint: "Repeat one detail as a question to confirm it.", starters: ["So I should walk …?", "Is it next to …?"] },
+          { partnerLine: "That's right. You can't miss it. Is there anything else you need?", prompt: "Ask one final practical question, then close the conversation politely.", hint: "You could ask how long the walk takes or thank the person.", starters: ["How long does it take to …?", "That's very helpful. Thank you."] }
+        ]
+      },
+      {
+        id: "cafe-order", title: "Order at a café", level: "A1–A2",
+        context: "You are ordering a drink and a snack at a small café.",
+        prompt: "Order politely, explain one preference, and check the price.",
+        starters: ["Could I have …, please?", "Can I get it without …?", "How much is it altogether?"],
+        checks: ["I placed my order politely and clearly.", "I explained a preference or made a request.", "I checked the price and closed the conversation."],
+        turns: [
+          { partnerLine: "Good afternoon! Welcome in. What would you like today?", prompt: "Order one drink and one snack.", hint: "You can use 'Could I have …, please?' for a polite order.", starters: ["Could I have …, please?", "I'd like … and …"] },
+          { partnerLine: "Certainly. Would you like anything changed or added to your order?", prompt: "Mention one preference, such as less sugar or no ice.", hint: "Keep the request simple and polite.", starters: ["Could you make it …?", "Could I have it without …?"] },
+          { partnerLine: "No problem. Your total is five dollars. Would you like a receipt?", prompt: "Respond to the total, answer the receipt question, and thank the staff member.", hint: "You can confirm the price before closing.", starters: ["That's fine, thank you.", "Yes, please. / No, thank you."] }
+        ]
+      },
+      {
+        id: "discuss-study-plan", title: "Discuss a study plan", level: "B1",
+        context: "Your group needs to finish a presentation by Friday.",
+        prompt: "Negotiate a fair plan, explain a scheduling constraint, and agree on next steps.",
+        starters: ["I suggest that we …", "I am available …, but …", "I can review … before …"],
+        checks: ["I made a clear suggestion and supported it with a reason.", "I acknowledged a constraint and responded constructively.", "I confirmed a realistic next step with the group."],
+        turns: [
+          { partnerLine: "We need to finish the presentation by Friday. How should we divide the work?", prompt: "Suggest a fair division of the tasks and explain why it would work.", hint: "Give a practical proposal, then connect it to the group's strengths or time.", starters: ["I suggest that we …", "That would help because …"] },
+          { partnerLine: "I can prepare the slides, but I have an exam on Thursday. Could we adjust the deadline?", prompt: "Acknowledge the concern and negotiate a realistic adjustment.", hint: "Show that you heard the concern before offering an alternative.", starters: ["That makes sense. We could …", "Would it help if …?"] },
+          { partnerLine: "That works for me. How about we review everything together on Friday morning?", prompt: "Confirm or refine the plan, including one concrete action.", hint: "Make the next step specific: who will do what, and by when?", starters: ["Agreed. I'll … by …", "Let's check in at …"] }
+        ]
+      },
+      {
+        id: "present-study-proposal", title: "Present a study proposal", level: "B2",
+        context: "You are discussing a proposal for a quieter study zone with a student committee.",
+        prompt: "Defend a proposal thoughtfully, respond to a concern, and suggest how to evaluate the result.",
+        starters: ["I understand that concern. However, …", "The strongest evidence is …", "We could review the impact by …"],
+        checks: ["I presented a clear position and supported it with evidence or reasoning.", "I addressed a different viewpoint fairly before responding.", "I proposed a measurable and realistic next step."],
+        turns: [
+          { partnerLine: "I like the idea of a quieter study zone, but how would it help students who prefer group study?", prompt: "Acknowledge the concern and explain how the proposal could serve different study needs.", hint: "Avoid treating the other view as wrong. Consider separate zones, schedules, or flexible use.", starters: ["That's a fair concern. One option is …", "The aim isn't to …, but to …"] },
+          { partnerLine: "Space and funding are limited. Which changes would you prioritise first?", prompt: "Prioritise one or two changes and justify your choice.", hint: "Explain the likely benefit, cost, and what can reasonably be done first.", starters: ["I'd prioritise … because …", "A low-cost first step would be …"] },
+          { partnerLine: "How would we know whether the proposal is working after one month?", prompt: "Suggest a simple way to evaluate the proposal and decide what happens next.", hint: "Choose evidence that could actually be collected, then explain how it would guide a decision.", starters: ["We could compare …", "If the results show …, we should …"] }
+        ]
+      }
     ],
     writing: [
       { id: "short-introduction", title: "A short introduction", level: "A1", context: "Write a short profile for a new class discussion board.", prompt: "Introduce yourself, mention an interest, and explain one goal you have for learning English.", target: "50–80 words", starters: ["My name is …", "In my free time, I …", "One of my goals is …"], checks: ["My purpose is clear from the beginning.", "I included specific details, not only general claims.", "I checked spelling, punctuation, and sentence endings."] },
       { id: "weekend-story", title: "A weekend story", level: "A1–A2", context: "Tell a friend about something you did last weekend.", prompt: "Write about one activity from your weekend. Include where you went, who was there, and how you felt.", target: "60–90 words", starters: ["Last weekend, I …", "I went there with …", "I felt … because …"], checks: ["The events follow a clear order.", "I included a place, person, or concrete detail.", "I checked past-tense verbs and punctuation."] },
-      { id: "helpful-message", title: "Invite a study partner", level: "A2", context: "Send a friendly message to someone you want to study with.", prompt: "Invite a friend to study together. Suggest a time and place, then ask whether they are available.", target: "40–70 words", starters: ["Hi …, are you free …?", "We could meet at …", "Let me know what works for you."], checks: ["The invitation and purpose are easy to understand.", "I included a time and a place.", "The tone is friendly and the message has a clear closing."] }
+      { id: "helpful-message", title: "Invite a study partner", level: "A2", context: "Send a friendly message to someone you want to study with.", prompt: "Invite a friend to study together. Suggest a time and place, then ask whether they are available.", target: "40–70 words", starters: ["Hi …, are you free …?", "We could meet at …", "Let me know what works for you."], checks: ["The invitation and purpose are easy to understand.", "I included a time and a place.", "The tone is friendly and the message has a clear closing."] },
+      { id: "study-reflection", title: "Reflect on a study habit", level: "B1", context: "Write a short reflection for a student learning journal.", prompt: "Describe one study habit you changed, explain why you changed it, and reflect on the result.", target: "100–130 words", starters: ["I used to …, but …", "One reason for this change was …", "As a result, …"], checks: ["I described a clear change and its context.", "I explained the reason and result with relevant detail.", "I used linking words to make the reflection easy to follow."] },
+      { id: "balanced-proposal", title: "A balanced proposal", level: "B2", context: "Write to a student committee about improving a shared study space.", prompt: "Propose one realistic improvement, acknowledge a possible drawback, and explain how the committee could evaluate the result.", target: "140–180 words", starters: ["A practical improvement would be …", "Although this may involve …, …", "Its impact could be evaluated by …"], checks: ["I made a focused proposal and supported it with reasoning.", "I acknowledged a limitation and addressed it fairly.", "I suggested a realistic way to measure the outcome."] }
     ]
   };
   const STUDIO_DRAFTS_KEY = "sinauu-adventure-studio-drafts-v1";
@@ -716,9 +1051,18 @@
           for (const prompt of allowed) {
             const state = saved.prompts[prompt.id];
             if (!state || typeof state !== "object") continue;
+            const hasTurnProgress = kind !== "speaking" || Number.isInteger(state.turnIndex);
+            const savedPlan = kind === "writing" && state.plan && typeof state.plan === "object" && !Array.isArray(state.plan) ? state.plan : {};
             empty[kind].prompts[prompt.id] = {
               text: kind === "writing" && typeof state.text === "string" ? state.text.slice(0, 12000) : "",
-              checked: Array.isArray(state.checked) ? Array.from(new Set(state.checked.filter((value) => Number.isInteger(value) && value >= 0 && value < 3))) : []
+              revision: kind === "writing" && typeof state.revision === "string" ? state.revision.slice(0, 12000) : "",
+              plan: kind === "writing" ? {
+                opening: typeof savedPlan.opening === "string" ? savedPlan.opening.slice(0, 1200) : "",
+                detail: typeof savedPlan.detail === "string" ? savedPlan.detail.slice(0, 1200) : "",
+                closing: typeof savedPlan.closing === "string" ? savedPlan.closing.slice(0, 1200) : ""
+              } : { opening: "", detail: "", closing: "" },
+              checked: kind === "speaking" && !hasTurnProgress ? [] : Array.isArray(state.checked) ? Array.from(new Set(state.checked.filter((value) => Number.isInteger(value) && value >= 0 && value < 3))) : [],
+              turnIndex: kind === "speaking" && hasTurnProgress ? Math.max(0, Math.min(prompt.turns.length, state.turnIndex)) : 0
             };
           }
         }
@@ -738,13 +1082,47 @@
   }
   function studioState(kind, promptId) {
     const group = studioDrafts[kind];
-    if (!group.prompts[promptId]) group.prompts[promptId] = { text: "", checked: [] };
+    if (!group.prompts[promptId]) group.prompts[promptId] = { text: "", revision: "", plan: { opening: "", detail: "", closing: "" }, checked: [], turnIndex: 0 };
+    if (!Number.isInteger(group.prompts[promptId].turnIndex)) group.prompts[promptId].turnIndex = 0;
+    if (!group.prompts[promptId].plan || typeof group.prompts[promptId].plan !== "object") group.prompts[promptId].plan = { opening: "", detail: "", closing: "" };
+    if (typeof group.prompts[promptId].revision !== "string") group.prompts[promptId].revision = "";
     return group.prompts[promptId];
   }
   function studioWordCount(value) {
     const text = String(value || "").trim();
     return text ? text.split(/\s+/).filter(Boolean).length : 0;
   }
+  function writingSignals(value) {
+    const text = String(value || "").trim();
+    const words = studioWordCount(text);
+    const sentences = text ? text.split(/[.!?]+/).map((part) => part.trim()).filter(Boolean).length : 0;
+    const connectors = ["because", "so", "however", "first", "then", "after", "finally", "also", "although", "therefore", "for example", "as a result", "but"];
+    const normalized = " " + text.toLocaleLowerCase("en").replace(/[^a-z0-9 ]+/g, " ").replace(/\\s+/g, " ") + " ";
+    const found = connectors.filter((word) => normalized.includes(" " + word + " "));
+    return { words, sentences, connectors: found };
+  }
+  function renderWritingSignals(value) {
+    const signal = writingSignals(value);
+    const rows = [
+      ["Sentence shape", signal.sentences >= 3, signal.sentences + " sentence" + (signal.sentences === 1 ? "" : "s") + " found"],
+      ["Idea connections", signal.connectors.length > 0, signal.connectors.length ? signal.connectors.slice(0, 3).join(", ") : "Try a connector such as because, however, or as a result"],
+      ["Enough material", signal.words >= 25, signal.words + " words · at least 25 needed to finish"]
+    ];
+    return '<div class="writing-studio-signals" aria-live="polite"><span>QUICK STRUCTURE CHECK · NOT A GRAMMAR SCORE</span><ul>' + rows.map(([label, good, detail]) =>
+      '<li class="' + (good ? "is-ready" : "is-pending") + '"><strong>' + (good ? "✓ " : "○ ") + label + '</strong><small>' + escapeHtml(detail) + '</small></li>'
+    ).join("") + '</ul></div>';
+  }
+  function buildWritingOutline() {
+    if (!studioDrafts) return;
+    const promptId = studioDrafts.writing.selectedPromptId;
+    const state = studioState("writing", promptId);
+    const parts = [state.plan.opening, state.plan.detail, state.plan.closing].map((item) => String(item || "").trim()).filter(Boolean);
+    if (!parts.length) return;
+    state.text = parts.join(" ") + (/[.!?]$/.test(parts[parts.length - 1]) ? "" : ".");
+    saveStudioDrafts();
+    renderStudios();
+  }
+
   function renderStudioPromptButtons(kind, selectedId) {
     return STUDIO_PROMPTS[kind].map((prompt) =>
       '<button type="button" class="adventure-studio-scenario' + (prompt.id === selectedId ? ' is-active' : '') + '" data-studio-kind="' + kind + '" data-studio-prompt="' + prompt.id + '" aria-pressed="' + (prompt.id === selectedId) + '">' +
@@ -764,32 +1142,66 @@
       const prompt = STUDIO_PROMPTS.speaking.find((item) => item.id === group.selectedPromptId) || STUDIO_PROMPTS.speaking[0];
       const state = studioState("speaking", prompt.id);
       const done = progress.studioSessions.filter((item) => item.studioType === "speaking").length;
+      const turns = Array.isArray(prompt.turns) ? prompt.turns : [];
+      const turnIndex = Math.max(0, Math.min(turns.length, state.turnIndex || 0));
+      const conversationFinished = turns.length > 0 && turnIndex >= turns.length;
+      const activeTurn = turns[turnIndex];
+      const conversationPanel = conversationFinished
+        ? '<div class="speaking-studio-finished" role="status"><span>CONVERSATION COMPLETE</span><strong>Great work. You carried the conversation through ' + turns.length + ' turns.</strong><p>Sekarang tinjau cara kamu menjawab. Tidak ada jawaban tunggal yang harus dihafalkan.</p><button type="button" data-speaking-restart>Ulangi percakapan</button></div>'
+        : activeTurn
+          ? '<div class="speaking-studio-conversation" aria-live="polite">' +
+            '<div class="speaking-studio-progress"><span>TURN ' + (turnIndex + 1) + ' / ' + turns.length + '</span><span>YOUR CONVERSATION</span></div>' +
+            '<div class="speaking-studio-partner"><span>YOUR PARTNER SAYS</span><blockquote>' + escapeHtml(activeTurn.partnerLine) + '</blockquote><button type="button" data-speaking-play-partner>▶ Dengarkan partner</button><small id="speaking-partner-audio-note">Dengarkan, lalu jawab dengan suara sendiri. Kamu boleh memutar ulang.</small></div>' +
+            '<div class="speaking-studio-response"><span>YOUR TURN</span><strong>' + escapeHtml(activeTurn.prompt) + '</strong><details><summary>Butuh sedikit bantuan?</summary><p>' + escapeHtml(activeTurn.hint) + '</p><div class="adventure-studio-phrases">' + activeTurn.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></details></div>' +
+            '<button type="button" class="primary-action adventure-studio-submit" data-speaking-next-turn>Saya sudah menjawab · lanjut ↗</button>' +
+          '</div>'
+          : '<p class="adventure-studio-instruction">Skenario ini belum memiliki giliran percakapan.</p>';
+      const reflectionPanel = conversationFinished
+        ? '<div class="speaking-studio-reflection"><span>SELF-REVIEW / CHECK YOUR RESPONSE</span><p>Centang dengan jujur setelah mengucapkan semua jawaban.</p>' + renderStudioChecklist("speaking", prompt, state) + '</div>'
+        : '<p class="adventure-studio-instruction">Ikuti giliran partner satu per satu. Jawab dengan kalimatmu sendiri; petunjuk hanya bantuan, bukan naskah wajib.</p>';
       speakingNode.innerHTML =
-        '<div class="adventure-studio-heading"><div><span class="eyebrow">SPEAKING / SAY IT YOUR WAY</span><h3>Speaking Studio</h3><p>Latihan bicara dengan suara sendiri. Tidak ada rekaman atau penilaian aksen otomatis.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
+        '<div class="adventure-studio-heading"><div><span class="eyebrow">SPEAKING / SAY IT YOUR WAY</span><h3>Speaking Studio</h3><p>Latihan percakapan dua arah. Suara partner dibuat oleh browser; jawabanmu tidak direkam atau dinilai otomatis.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
         '<div class="adventure-studio-scenarios">' + renderStudioPromptButtons("speaking", prompt.id) + '</div>' +
         '<div class="adventure-studio-prompt"><span>' + prompt.level + ' · SITUATION</span><p>' + escapeHtml(prompt.context) + '</p><strong>' + escapeHtml(prompt.prompt) + '</strong><div class="adventure-studio-phrases">' + prompt.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></div>' +
-        '<p class="adventure-studio-instruction">Coba ucapkan jawabanmu dengan suara jelas. Tidak perlu menghafal kalimat contoh.</p>' +
-        renderStudioChecklist("speaking", prompt, state) +
-        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="speaking" data-studio-complete' + (state.checked.length === 3 ? '' : ' disabled') + '>Saya sudah berlatih ↗</button>' +
-        '<small class="adventure-studio-local-note">Yang disimpan ke akun hanya bukti sesi latihan, bukan suara atau transkrip.</small>';
+        conversationPanel + reflectionPanel +
+        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="speaking" data-studio-complete' + (conversationFinished && state.checked.length === prompt.checks.length ? '' : ' disabled') + '>Selesaikan dan simpan sesi ↗</button>' +
+        '<small class="adventure-studio-local-note">Yang disimpan ke akun hanya bukti sesi latihan dan hasil checklist. Tidak ada suara, transkrip, atau draft jawaban yang disimpan ke cloud.</small>';
     }
     const writingNode = $("#adventure-writing-studio");
     if (writingNode) {
       const group = studioDrafts.writing;
       const prompt = STUDIO_PROMPTS.writing.find((item) => item.id === group.selectedPromptId) || STUDIO_PROMPTS.writing[0];
       const state = studioState("writing", prompt.id);
-      const words = studioWordCount(state.text);
+      const draftWords = studioWordCount(state.text);
+      const revisionWords = studioWordCount(state.revision);
       const done = progress.studioSessions.filter((item) => item.studioType === "writing").length;
+      const planField = (key, label, placeholder) =>
+        '<label class="writing-studio-plan-field"><span>' + label + '</span><textarea data-writing-plan="' + key + '" rows="2" maxlength="1200" placeholder="' + placeholder + '">' + escapeHtml(state.plan[key]) + '</textarea></label>';
+      const readyForReview = revisionWords >= 25;
       writingNode.innerHTML =
-        '<div class="adventure-studio-heading"><div><span class="eyebrow">WRITING / MAKE IT CLEAR</span><h3>Writing Studio</h3><p>Susun ide, tulis draft, lalu periksa kembali sebelum menandai sesi selesai.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
+        '<div class="adventure-studio-heading"><div><span class="eyebrow">WRITING / PLAN · DRAFT · REVISE</span><h3>Writing Studio</h3><p>Bangun ide, tulis versi pertama, lalu revisi dengan tujuan yang jelas. Tidak ada penilaian AI atau koreksi otomatis.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
         '<div class="adventure-studio-scenarios">' + renderStudioPromptButtons("writing", prompt.id) + '</div>' +
-        '<div class="adventure-studio-prompt"><span>' + prompt.level + ' · ' + prompt.target + '</span><p>' + escapeHtml(prompt.context) + '</p><strong>' + escapeHtml(prompt.prompt) + '</strong><div class="adventure-studio-phrases">' + prompt.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></div>' +
-        '<label class="adventure-studio-field" for="studio-writing-draft">YOUR DRAFT <span id="studio-writing-count">' + words + ' words</span></label>' +
-        '<textarea id="studio-writing-draft" data-studio-kind="writing" data-studio-prompt-id="' + prompt.id + '" rows="6" maxlength="12000" placeholder="Write your first draft here…">' + escapeHtml(state.text) + '</textarea>' +
-        '<div class="adventure-studio-draft-actions"><small>Draft hanya tersimpan di perangkat dan akun browser ini.</small><button type="button" data-studio-kind="writing" data-studio-clear>Hapus draft</button></div>' +
-        renderStudioChecklist("writing", prompt, state) +
-        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="writing" data-studio-complete' + (words >= 25 && state.checked.length === 3 ? '' : ' disabled') + '>Tandai sesi selesai ↗</button>' +
-        '<small class="adventure-studio-local-note">Teks mentah tidak dikirim ke cloud, spreadsheet, atau backup akun.</small>';
+        '<div class="adventure-studio-prompt"><span>' + prompt.level + ' · TARGET ' + escapeHtml(prompt.target) + '</span><p>' + escapeHtml(prompt.context) + '</p><strong>' + escapeHtml(prompt.prompt) + '</strong><div class="adventure-studio-phrases">' + prompt.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></div>' +
+        '<section class="writing-studio-stage"><div class="writing-studio-stage-heading"><span>01 / PLAN</span><strong>Put your ideas in order</strong></div><p>Tidak perlu menulis kalimat sempurna. Catat inti yang ingin kamu sampaikan.</p>' +
+        '<div class="writing-studio-plan-grid">' +
+          planField("opening", "OPENING / MAIN IDEA", "What is the main point or situation?") +
+          planField("detail", "DETAIL / EXAMPLE", "What happened, why, or what evidence supports it?") +
+          planField("closing", "CLOSING / NEXT THOUGHT", "What should the reader remember or do next?") +
+        '</div><button type="button" class="writing-studio-outline-button" data-writing-build-outline>Use my outline in the draft ↗</button></section>' +
+        '<section class="writing-studio-stage"><div class="writing-studio-stage-heading"><span>02 / DRAFT</span><strong>Write without over-editing</strong></div>' +
+        '<label class="adventure-studio-field" for="studio-writing-draft">FIRST DRAFT <span id="studio-writing-count">' + draftWords + ' words</span></label>' +
+        '<textarea id="studio-writing-draft" data-studio-kind="writing" data-studio-prompt-id="' + prompt.id + '" rows="6" maxlength="12000" placeholder="Turn your outline into a complete first draft…">' + escapeHtml(state.text) + '</textarea>' +
+        '<div class="adventure-studio-draft-actions"><small>Draft tersimpan lokal pada perangkat dan akun browser ini.</small><button type="button" data-studio-kind="writing" data-studio-clear>Reset latihan</button></div></section>' +
+        '<section class="writing-studio-stage"><div class="writing-studio-stage-heading"><span>03 / REVISE</span><strong>Make the message clearer</strong></div><p>Periksa urutan ide, tambahkan detail yang membantu, lalu tulis ulang dengan kata-katamu sendiri.</p>' +
+        '<label class="adventure-studio-field" for="studio-writing-revision">REVISED VERSION <span id="studio-writing-revision-count">' + revisionWords + ' words</span></label>' +
+        '<textarea id="studio-writing-revision" data-studio-kind="writing" data-studio-prompt-id="' + prompt.id + '" rows="7" maxlength="12000" placeholder="Write your improved version here…">' + escapeHtml(state.revision) + '</textarea>' +
+        renderWritingSignals(state.revision || state.text) +
+        '</section>' +
+        '<section class="writing-studio-reflection"><span>SELF-REVIEW / FINAL CHECK</span><p>' + (readyForReview ? "Baca ulang versi revisimu, lalu tandai semua hal yang sudah kamu periksa." : "Tulis versi revisi minimal 25 kata untuk membuka checklist refleksi.") + '</p>' +
+        (readyForReview ? renderStudioChecklist("writing", prompt, state) : '<div class="writing-studio-review-locked">Checklist terbuka setelah versi revisimu mencapai minimal 25 kata.</div>') +
+        '</section>' +
+        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="writing" data-studio-complete' + (readyForReview && state.checked.length === prompt.checks.length ? '' : ' disabled') + '>Selesaikan dan simpan sesi ↗</button>' +
+        '<small class="adventure-studio-local-note">Kerangka, draft, dan revisi tidak masuk ke cloud, spreadsheet, atau backup akun. Hanya ringkasan sesi yang disinkronkan.</small>';
     }
   }
   function updateStudioCompleteButton(kind) {
@@ -800,7 +1212,8 @@
     const state = studioState(kind, promptId);
     const button = $("[data-studio-complete]", node);
     if (!button || !prompt) return;
-    const ready = state.checked.length === prompt.checks.length && (kind !== "writing" || studioWordCount(state.text) >= 25);
+    const conversationReady = kind !== "speaking" || state.turnIndex >= (prompt.turns?.length || 0);
+    const ready = state.checked.length === prompt.checks.length && conversationReady && (kind !== "writing" || studioWordCount(state.revision) >= 25);
     button.disabled = !ready;
   }
   function completeStudioPractice(kind) {
@@ -808,8 +1221,8 @@
     const promptId = studioDrafts[kind].selectedPromptId;
     const prompt = STUDIO_PROMPTS[kind].find((item) => item.id === promptId);
     const state = studioState(kind, promptId);
-    const words = studioWordCount(state.text);
-    if (!prompt || state.checked.length !== prompt.checks.length || (kind === "writing" && words < 25)) return;
+    const words = studioWordCount(kind === "writing" ? state.revision : state.text);
+    if (!prompt || state.checked.length !== prompt.checks.length || (kind === "speaking" && state.turnIndex < (prompt.turns?.length || 0)) || (kind === "writing" && words < 25)) return;
     const dateKey = localDateKey();
     const sessionId = kind + ":" + promptId + ":" + dateKey;
     const now = new Date().toISOString();
@@ -850,20 +1263,985 @@
     saveStudioDrafts();
     updateStudioCompleteButton(kind);
   }
-  function updateStudioDraft(text) {
-    if (!studioDrafts) return;
-    const field = $("#studio-writing-draft");
-    if (!field) return;
-    const state = studioState("writing", field.dataset.studioPromptId);
-    state.text = String(text || "").slice(0, 12000);
-    const count = $("#studio-writing-count");
-    if (count) count.textContent = studioWordCount(state.text) + " words";
+  function updateStudioDraft(field) {
+    if (!studioDrafts || !field) return;
+    const promptId = field.dataset.studioPromptId || studioDrafts.writing.selectedPromptId;
+    const state = studioState("writing", promptId);
+    if (field.matches("[data-writing-plan]")) {
+      const key = field.dataset.writingPlan;
+      if (["opening", "detail", "closing"].includes(key)) state.plan[key] = String(field.value || "").slice(0, 1200);
+    } else if (field.id === "studio-writing-draft") {
+      state.text = String(field.value || "").slice(0, 12000);
+      const count = $("#studio-writing-count");
+      if (count) count.textContent = studioWordCount(state.text) + " words";
+    } else if (field.id === "studio-writing-revision") {
+      state.revision = String(field.value || "").slice(0, 12000);
+      const count = $("#studio-writing-revision-count");
+      if (count) count.textContent = studioWordCount(state.revision) + " words";
+      const signals = $(".writing-studio-signals");
+      if (signals) signals.outerHTML = renderWritingSignals(state.revision || state.text);
+      if (studioWordCount(state.revision) >= 25 && !$(".writing-studio-reflection [data-studio-check]")) {
+        const prompt = STUDIO_PROMPTS.writing.find((item) => item.id === promptId);
+        const review = $(".writing-studio-reflection");
+        if (review && prompt) {
+          const intro = review.querySelector("p");
+          if (intro) intro.textContent = "Baca ulang versi revisimu, lalu tandai semua hal yang sudah kamu periksa.";
+          const locked = review.querySelector(".writing-studio-review-locked");
+          if (locked) locked.outerHTML = renderStudioChecklist("writing", prompt, state);
+        }
+      } else if (studioWordCount(state.revision) < 25) {
+        state.checked = [];
+        const review = $(".writing-studio-reflection");
+        if (review) {
+          const intro = review.querySelector("p");
+          if (intro) intro.textContent = "Tulis versi revisi minimal 25 kata untuk membuka checklist refleksi.";
+          const checks = review.querySelector(".adventure-studio-checklist");
+          if (checks) checks.outerHTML = '<div class="writing-studio-review-locked">Checklist terbuka setelah versi revisimu mencapai minimal 25 kata.</div>';
+        }
+      }
+    }
     saveStudioDrafts();
     updateStudioCompleteButton("writing");
   }
 
+
+  function playSpeakingPartner() {
+    if (!studioDrafts) return;
+    const promptId = studioDrafts.speaking.selectedPromptId;
+    const prompt = STUDIO_PROMPTS.speaking.find((item) => item.id === promptId);
+    const state = prompt && studioState("speaking", promptId);
+    const turn = prompt && prompt.turns && prompt.turns[state.turnIndex];
+    if (!turn) return;
+    const played = playText(turn.partnerLine);
+    const note = $("#speaking-partner-audio-note", $("#adventure-speaking-studio"));
+    if (note) note.textContent = played
+      ? "Suara partner diputar oleh browser. Kamu boleh mendengarkan lagi sebelum menjawab."
+      : "Suara browser tidak tersedia. Baca kalimat partner di atas, lalu jawab dengan suara sendiri.";
+  }
+  function advanceSpeakingTurn() {
+    if (!studioDrafts) return;
+    const promptId = studioDrafts.speaking.selectedPromptId;
+    const prompt = STUDIO_PROMPTS.speaking.find((item) => item.id === promptId);
+    if (!prompt || !Array.isArray(prompt.turns)) return;
+    const state = studioState("speaking", promptId);
+    if (state.turnIndex >= prompt.turns.length) return;
+    state.turnIndex += 1;
+    saveStudioDrafts();
+    renderStudios();
+  }
+  function restartSpeakingPractice() {
+    if (!studioDrafts) return;
+    const promptId = studioDrafts.speaking.selectedPromptId;
+    const state = studioState("speaking", promptId);
+    state.turnIndex = 0;
+    state.checked = [];
+    if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+    saveStudioDrafts();
+    renderStudios();
+  }
+
+  function storyEntry(storyId) {
+    return progress.storyProgress[storyId] && typeof progress.storyProgress[storyId] === "object"
+      ? progress.storyProgress[storyId]
+      : { attempts: [], bestScore: 0, completedAt: null, updatedAt: null };
+  }
+
+  function renderStoryLibrary() {
+    const node = $("#adventure-story-library");
+    if (!node) return;
+    if (storyRun) { renderStoryRun(node); return; }
+    if (!storiesLoaded) {
+      node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">READ · LISTEN · UNDERSTAND</span><h3>Everyday Stories</h3><p>Cerita pendek untuk melihat bahasa bekerja dalam situasi sehari-hari.</p></div></div><p class="adventure-story-empty">Menyiapkan koleksi cerita…</p>';
+      return;
+    }
+    if (storyLoadError) {
+      node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">READ · LISTEN · UNDERSTAND</span><h3>Everyday Stories</h3><p>Cerita pendek untuk melihat bahasa bekerja dalam situasi sehari-hari.</p></div></div><p class="adventure-story-empty">' + escapeHtml(storyLoadError) + '</p><button class="adventure-story-back" type="button" data-story-reload>Muat ulang cerita</button>';
+      return;
+    }
+    const completed = stories.filter((story) => Boolean(storyEntry(story.id).completedAt)).length;
+    const cards = stories.map((story) => {
+      const entry = storyEntry(story.id);
+      const done = Boolean(entry.completedAt);
+      const attempts = Array.isArray(entry.attempts) ? entry.attempts.length : 0;
+      const best = Number(entry.bestScore) || 0;
+      return '<article class="adventure-story-card">' +
+        '<div class="adventure-story-card-top"><span class="adventure-story-level">' + escapeHtml(story.level) + '</span><span class="adventure-story-status">' + (done ? 'SELESAI ✓' : attempts ? 'PERNAH DICOBA' : 'CERITA BARU') + '</span></div>' +
+        '<h4>' + escapeHtml(story.title) + '</h4><p>' + escapeHtml(story.subtitle) + '</p>' +
+        '<div class="adventure-story-card-meta"><span>' + escapeHtml(String(story.estimatedMinutes || 5)) + ' MENIT</span><span>' + attempts + ' percobaan' + (attempts ? ' · terbaik ' + best + '/' + (story.questions?.length || 3) : '') + '</span></div>' +
+        '<button type="button" data-story-open="' + escapeHtml(story.id) + '">' + (done ? 'Baca lagi ↗' : attempts ? 'Lanjut berlatih ↗' : 'Buka cerita ↗') + '</button>' +
+      '</article>';
+    }).join("");
+    node.innerHTML =
+      '<div class="adventure-story-heading"><div><span class="eyebrow">READ · LISTEN · UNDERSTAND</span><h3>Everyday Stories</h3><p>Mulai dari cerita sederhana, amati kosakata dalam konteks, lalu jawab pertanyaan berdasarkan isi bacaan. Audio browser tersedia sebagai latihan tambahan.</p></div><span class="adventure-story-count">' + completed + '/' + stories.length + '<small>SELESAI</small></span></div>' +
+      (cards ? '<div class="adventure-story-grid">' + cards + '</div>' : '<p class="adventure-story-empty">Belum ada cerita tersedia.</p>');
+  }
+
+  function renderLearningPathLinks(path) {
+    if (!path || typeof path !== "object") return "";
+    const actions = [];
+    if (storiesLoaded && Array.isArray(stories) && stories.some((item) => item.id === path.storyId)) {
+      actions.push('<button type="button" data-learning-path-link data-story-open="' + escapeHtml(path.storyId) + '">Baca cerita terkait</button>');
+    }
+    if (dialoguesLoaded && Array.isArray(dialogues) && dialogues.some((item) => item.id === path.dialogueId)) {
+      actions.push('<button type="button" data-learning-path-link data-dialogue-open="' + escapeHtml(path.dialogueId) + '">Dengarkan dialog</button>');
+    }
+    if (listeningLoaded && Array.isArray(listeningExercises) && listeningExercises.some((item) => item.id === path.listeningId)) {
+      actions.push('<button type="button" data-learning-path-link data-listening-open="' + escapeHtml(path.listeningId) + '">Latihan listening</button>');
+    }
+    if (pronunciationLoaded && Array.isArray(pronunciationExercises) && pronunciationExercises.some((item) => item.id === path.pronunciationId)) {
+      actions.push('<button type="button" data-learning-path-link data-pronunciation-open="' + escapeHtml(path.pronunciationId) + '">Latihan pronunciation</button>');
+    }
+    if (studioDrafts && STUDIO_PROMPTS.speaking.some((item) => item.id === path.speakingPromptId)) {
+      actions.push('<button type="button" data-learning-path-link data-studio-kind="speaking" data-studio-prompt="' + escapeHtml(path.speakingPromptId) + '">Lanjut ke Speaking Studio</button>');
+    }
+    if (studioDrafts && STUDIO_PROMPTS.writing.some((item) => item.id === path.writingPromptId)) {
+      actions.push('<button type="button" data-learning-path-link data-studio-kind="writing" data-studio-prompt="' + escapeHtml(path.writingPromptId) + '">Lanjut ke Writing Studio</button>');
+    }
+    if (!actions.length) return "";
+    return '<section class="adventure-learning-path" aria-label="Jalur belajar lanjutan"><span>LANJUTKAN JALUR BELAJAR</span><p>Hubungkan latihan ini dengan keterampilan lain.</p><div>' + actions.join("") + '</div></section>';
+  }
+
+  function renderStoryRun(node) {
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story) { storyRun = null; renderStoryLibrary(); return; }
+    if (storyRun.stage === "result") {
+      const passed = Boolean(storyRun.result?.passed);
+      node.innerHTML =
+        '<div class="adventure-story-result" id="adventure-story-result">' +
+          '<span class="adventure-story-level">' + escapeHtml(story.level) + '</span>' +
+          '<div class="adventure-story-result-mark">' + (passed ? '✓' : '↻') + '</div>' +
+          '<h4>' + (passed ? 'Cerita selesai dipahami.' : 'Coba baca sekali lagi.') + '</h4>' +
+          '<p>Skormu <strong>' + storyRun.result.score + '/' + storyRun.result.total + '</strong>. ' +
+          (passed ? 'Kamu menjawab setidaknya dua pertanyaan dengan tepat. Cerita ini tercatat sebagai selesai.' : 'Jawaban yang tepat sudah dijelaskan. Ulangi cerita untuk memperkuat pemahaman.') + '</p>' +
+          '<div class="adventure-story-result-actions"><button class="adventure-story-retry" type="button" data-story-retry="' + escapeHtml(story.id) + '">Ulangi cerita ↗</button><button class="adventure-story-back" type="button" data-story-close>Kembali ke koleksi</button></div>' +
+        renderLearningPathLinks(story.learningPath) +
+        '</div>';
+      return;
+    }
+    const question = story.questions[storyRun.questionIndex];
+    const answered = storyRun.locked;
+    const choices = question.options.map((option, index) => {
+      const correct = index === question.answer;
+      const chosen = index === storyRun.selectedAnswer;
+      return '<button type="button" class="adventure-story-option' + (answered && correct ? ' is-correct' : '') + (answered && chosen && !correct ? ' is-wrong' : '') + '" data-story-answer="' + index + '"' + (answered ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>';
+    }).join("");
+    const paragraphs = story.paragraphs.map((paragraph) => '<p>' + escapeHtml(paragraph) + '</p>').join("");
+    const vocabulary = story.focusWords.map((word) => '<span class="adventure-story-word"><strong>' + escapeHtml(word.word) + '</strong><span>' + escapeHtml(word.meaning) + '</span></span>').join("");
+    const note = storyRun.audioUnavailable ? '<small>Suara browser tidak tersedia di perangkat ini. Kamu tetap bisa membaca cerita seperti biasa.</small>' : '<small>Suara dibuat oleh browser dan tidak direkam atau diunggah.</small>';
+    node.innerHTML =
+      '<div class="adventure-story-reader" id="adventure-story-reader">' +
+        '<div class="adventure-story-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(story.level) + '</span><span>·</span><span>' + escapeHtml(String(story.estimatedMinutes || 5)) + ' MENIT</span></div><button class="adventure-story-back" type="button" data-story-close>← Koleksi</button></div>' +
+        '<h3 class="adventure-story-title">' + escapeHtml(story.title) + '</h3><p class="adventure-story-subtitle">' + escapeHtml(story.subtitle) + '</p>' +
+        '<div class="adventure-story-text">' + paragraphs + '</div>' +
+        '<div class="adventure-story-audio"><button class="adventure-story-listen" type="button" data-story-listen>▶ Dengarkan cerita</button>' + note + '</div>' +
+        '<div class="adventure-story-vocabulary">' + vocabulary + '</div>' +
+        '<section class="adventure-story-quiz" aria-labelledby="adventure-story-question">' +
+          '<div class="adventure-story-quiz-meta"><span>COMPREHENSION CHECK</span><span>SOAL ' + (storyRun.questionIndex + 1) + '/' + story.questions.length + '</span></div>' +
+          '<div class="adventure-story-progress"><i style="width:' + Math.round((storyRun.questionIndex + 1) / story.questions.length * 100) + '%"></i></div>' +
+          '<h4 id="adventure-story-question">' + escapeHtml(question.prompt) + '</h4>' +
+          '<div class="adventure-story-options">' + choices + '</div>' +
+          (answered ? '<div class="adventure-story-feedback' + (storyRun.isCorrect ? '' : ' is-wrong') + '" role="status"><strong>' + (storyRun.isCorrect ? 'Tepat.' : 'Belum tepat.') + '</strong>' + escapeHtml(question.explanation) + (!storyRun.isCorrect ? '<br>Jawaban: ' + escapeHtml(question.options[question.answer]) : '') + '</div>' : '') +
+          (answered ? '<div class="adventure-story-actions"><button class="adventure-story-next" type="button" data-story-next>' + (storyRun.questionIndex === story.questions.length - 1 ? 'Lihat hasil →' : 'Soal berikutnya →') + '</button></div>' : '') +
+        '</section>' +
+      '</div>';
+  }
+
+  async function loadStories() {
+    try {
+      const response = await fetch("/data/adventure/stories.json", { cache: "no-cache" });
+      if (!response.ok) throw new Error("Koleksi cerita belum dapat dimuat.");
+      const data = await response.json();
+      if (!data || data.schemaVersion !== 1 || !Array.isArray(data.stories)) throw new Error("Format Everyday Stories tidak sesuai.");
+      const ids = new Set();
+      stories = data.stories.filter((story) => {
+        const valid = story && typeof story.id === "string" && story.id && !ids.has(story.id) &&
+          typeof story.title === "string" && ["A1", "A2", "B1", "B2"].includes(story.level) &&
+          Array.isArray(story.paragraphs) && story.paragraphs.length > 0 && story.paragraphs.every((item) => typeof item === "string") &&
+          Array.isArray(story.focusWords) && Array.isArray(story.questions) && story.questions.length >= 3 &&
+          story.questions.every((question) => question && Array.isArray(question.options) && question.options.length >= 2 && Number.isInteger(question.answer) && question.answer >= 0 && question.answer < question.options.length);
+        if (valid) ids.add(story.id);
+        return valid;
+      });
+      if (stories.length !== data.stories.length) throw new Error("Sebagian cerita tidak lolos pemeriksaan struktur.");
+      storiesLoaded = true;
+      storyLoadError = "";
+      renderStoryLibrary();
+    } catch (error) {
+      storiesLoaded = true;
+      storyLoadError = error instanceof Error ? error.message : "Koleksi cerita belum dapat dimuat.";
+      renderStoryLibrary();
+    }
+  }
+
+  function openStory(storyId) {
+    if (!stories.some((item) => item.id === storyId)) return;
+    storyRun = { storyId, stage: "reading", questionIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, audioUnavailable: false };
+    renderStoryLibrary();
+  }
+
+  function answerStory(answerIndex) {
+    if (!storyRun || storyRun.stage !== "reading" || storyRun.locked) return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    const question = story && story.questions[storyRun.questionIndex];
+    if (!question || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= question.options.length) return;
+    storyRun.selectedAnswer = answerIndex;
+    storyRun.isCorrect = answerIndex === question.answer;
+    storyRun.locked = true;
+    storyRun.answers.push({ questionId: question.id, correct: storyRun.isCorrect });
+    renderStoryLibrary();
+  }
+
+  function finishStory() {
+    if (!storyRun || storyRun.stage !== "reading") return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story || storyRun.answers.length !== story.questions.length) return;
+    const score = storyRun.answers.filter((answer) => answer.correct).length;
+    const total = story.questions.length;
+    const passed = score >= Math.ceil(total * 2 / 3);
+    const completedAt = new Date().toISOString();
+    const entry = storyEntry(story.id);
+    const attempt = { attemptId: makeId(), score, total, passed, completedAt };
+    entry.attempts = [...(entry.attempts || []), attempt].slice(-100);
+    entry.bestScore = Math.max(Number(entry.bestScore) || 0, score);
+    if (passed && !entry.completedAt) entry.completedAt = completedAt;
+    entry.updatedAt = completedAt;
+    progress.storyProgress[story.id] = entry;
+    saveProgress();
+    storyRun.stage = "result";
+    storyRun.result = { score, total, passed };
+    renderStoryLibrary();
+  }
+
+  function advanceStory() {
+    if (!storyRun || !storyRun.locked || storyRun.stage !== "reading") return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story) return;
+    if (storyRun.questionIndex >= story.questions.length - 1) {
+      finishStory();
+      return;
+    }
+    storyRun.questionIndex += 1;
+    storyRun.locked = false;
+    storyRun.selectedAnswer = null;
+    storyRun.isCorrect = false;
+    renderStoryLibrary();
+  }
+
+  function listenToStory() {
+    if (!storyRun || storyRun.stage !== "reading") return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story) return;
+    storyRun.audioUnavailable = !playText(story.paragraphs.join(" "));
+    renderStoryLibrary();
+  }
+
+
+  function listeningEntry(exerciseId) {
+    return progress.listeningProgress[exerciseId] && typeof progress.listeningProgress[exerciseId] === "object"
+      ? progress.listeningProgress[exerciseId]
+      : { attempts: [], bestScore: 0, completedAt: null, updatedAt: null };
+  }
+
+  function renderListeningLab() {
+    const node = $("#adventure-listening-lab");
+    if (!node) return;
+    if (listeningRun) { renderListeningRun(node); return; }
+    if (!listeningLoaded) {
+      node.innerHTML = '<div class="listening-lab-heading"><div><span class="eyebrow">LISTEN IN LAYERS</span><h3>Listening Lab</h3><p>Latih telinga secara bertahap: gagasan utama, detail, lalu maksud pembicara.</p></div></div><p class="listening-lab-empty">Menyiapkan latihan listening…</p>';
+      return;
+    }
+    if (listeningLoadError) {
+      node.innerHTML = '<div class="listening-lab-heading"><div><span class="eyebrow">LISTEN IN LAYERS</span><h3>Listening Lab</h3><p>Latih telinga secara bertahap: gagasan utama, detail, lalu maksud pembicara.</p></div></div><p class="listening-lab-empty">' + escapeHtml(listeningLoadError) + '</p><button class="listening-lab-button" type="button" data-listening-reload>Muat ulang latihan</button>';
+      return;
+    }
+    const completed = listeningExercises.filter((exercise) => Boolean(listeningEntry(exercise.id).completedAt)).length;
+    const cards = listeningExercises.map((exercise) => {
+      const entry = listeningEntry(exercise.id);
+      const done = Boolean(entry.completedAt);
+      const attempts = Array.isArray(entry.attempts) ? entry.attempts.length : 0;
+      const best = Number(entry.bestScore) || 0;
+      return '<article class="listening-lab-card">' +
+        '<div class="listening-lab-card-top"><span class="adventure-story-level">' + escapeHtml(exercise.level) + '</span><span class="adventure-story-status">' + (done ? 'SELESAI ✓' : attempts ? 'PERNAH DICOBA' : 'LATIHAN BARU') + '</span></div>' +
+        '<h4>' + escapeHtml(exercise.title) + '</h4><p>' + escapeHtml(exercise.subtitle) + '</p>' +
+        '<div class="listening-lab-card-meta"><span>' + escapeHtml(String(exercise.estimatedMinutes || 5)) + ' MENIT</span><span>' + attempts + ' percobaan' + (attempts ? ' · terbaik ' + best + '/' + exercise.stages.length : '') + '</span></div>' +
+        '<button class="listening-lab-button" type="button" data-listening-open="' + escapeHtml(exercise.id) + '">' + (done ? 'Dengarkan lagi ↗' : attempts ? 'Lanjut berlatih ↗' : 'Mulai latihan ↗') + '</button>' +
+      '</article>';
+    }).join("");
+    node.innerHTML =
+      '<div class="listening-lab-heading"><div><span class="eyebrow">LISTEN IN LAYERS / A1–B2</span><h3>Listening Lab</h3><p>Dengarkan tanpa teks terlebih dahulu. Setelah menangkap gagasan utama, cari detail penting, lalu simpulkan maksud pembicara. Transkrip tersedia sebagai bahan evaluasi.</p></div><span class="adventure-story-count">' + completed + '/' + listeningExercises.length + '<small>SELESAI</small></span></div>' +
+      (cards ? '<div class="listening-lab-grid">' + cards + '</div>' : '<p class="listening-lab-empty">Belum ada latihan tersedia.</p>');
+  }
+
+  function renderListeningRun(node) {
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    if (!exercise) { listeningRun = null; renderListeningLab(); return; }
+    if (listeningRun.stage === "result") {
+      const passed = Boolean(listeningRun.result?.passed);
+      node.innerHTML =
+        '<div class="listening-lab-result" id="listening-lab-result">' +
+          '<span class="adventure-story-level">' + escapeHtml(exercise.level) + '</span>' +
+          '<div class="adventure-story-result-mark">' + (passed ? '✓' : '↻') + '</div>' +
+          '<h4>' + (passed ? 'Kamu menangkap isi percakapan.' : 'Coba dengarkan sekali lagi.') + '</h4>' +
+          '<p>Jawaban tepat: <strong>' + listeningRun.result.score + '/' + listeningRun.result.total + '</strong>. ' +
+          (passed ? 'Latihan ini tercatat selesai. Ulangi kapan pun untuk memperkuat pemahaman.' : 'Pelajari penjelasannya, lalu coba lagi dengan kecepatan audio yang nyaman.') + '</p>' +
+          '<div class="listening-lab-result-actions"><button class="listening-lab-button" type="button" data-listening-retry="' + escapeHtml(exercise.id) + '">Ulangi latihan ↗</button><button class="listening-lab-button is-secondary" type="button" data-listening-close>Kembali ke koleksi</button></div>' +
+        renderLearningPathLinks(exercise.learningPath) +
+        '</div>';
+      return;
+    }
+    const stage = exercise.stages[listeningRun.stageIndex];
+    const answered = listeningRun.locked;
+    const stageLabels = { gist: "GAGASAN UTAMA", detail: "DETAIL PENTING", inference: "MAKSUD PEMBICARA" };
+    const stageChoices = stage.options.map((option, index) => {
+      const correct = index === stage.answer;
+      const chosen = index === listeningRun.selectedAnswer;
+      return '<button type="button" class="listening-lab-option' + (answered && correct ? ' is-correct' : '') + (answered && chosen && !correct ? ' is-wrong' : '') + '" data-listening-answer="' + index + '"' + (answered ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>';
+    }).join("");
+    const transcript = listeningRun.transcriptVisible
+      ? '<div class="listening-lab-transcript" id="listening-lab-transcript">' + exercise.transcript.map((line) => '<p><strong>' + escapeHtml(line.speaker) + '</strong><span>' + escapeHtml(line.text) + '</span></p>').join("") + '</div>'
+      : "";
+    const vocabulary = exercise.focusWords.map((word) => '<span class="listening-lab-word"><strong>' + escapeHtml(word.word) + '</strong><span>' + escapeHtml(word.meaning) + '</span></span>').join("");
+    const rateButtons = [0.75, 0.9, 1].map((rate) => '<button type="button" data-listening-rate="' + rate + '" aria-pressed="' + (Number(progress.listeningRate) === rate) + '">' + (rate === 1 ? '1×' : rate.toFixed(2).replace(/0$/, '') + '×') + '</button>').join("");
+    const audioNote = listeningRun.audioUnavailable
+      ? '<small>Suara browser tidak tersedia di perangkat ini. Buka transkrip untuk tetap melanjutkan latihan.</small>'
+      : '<small>Audio disuarakan oleh browser; tidak ada rekaman mikrofon atau audio yang diunggah. Dengarkan dulu sebelum membuka transkrip.</small>';
+    node.innerHTML =
+      '<div class="listening-lab-reader" id="listening-lab-reader">' +
+        '<div class="listening-lab-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(exercise.level) + '</span><span>·</span><span>' + escapeHtml(String(exercise.estimatedMinutes || 5)) + ' MENIT</span></div><button class="listening-lab-button is-secondary" type="button" data-listening-close>← Koleksi</button></div>' +
+        '<h3 class="listening-lab-title">' + escapeHtml(exercise.title) + '</h3><p class="listening-lab-setting">' + escapeHtml(exercise.setting) + '</p>' +
+        '<div class="listening-lab-stage-top"><span>' + escapeHtml(stageLabels[stage.kind] || "LISTENING CHECK") + '</span><strong>TAHAP ' + (listeningRun.stageIndex + 1) + '/' + exercise.stages.length + '</strong></div>' +
+        '<div class="adventure-story-progress"><i style="width:' + Math.round((listeningRun.stageIndex + 1) / exercise.stages.length * 100) + '%"></i></div>' +
+        '<div class="listening-lab-stage-track">' + exercise.stages.map((item, index) => '<span class="' + (index < listeningRun.stageIndex ? 'is-done' : index === listeningRun.stageIndex ? 'is-active' : '') + '">' + (index + 1) + '</span>').join("") + '</div>' +
+        '<div class="listening-lab-stage-label">' + escapeHtml(stage.label) + '</div>' +
+        '<div class="listening-lab-player"><button class="listening-lab-play" type="button" data-listening-play>▶ Dengarkan audio</button><div class="listening-lab-speed"><span>KECEPATAN</span>' + rateButtons + '</div>' + audioNote + '</div>' +
+        '<h4 class="listening-lab-question">' + escapeHtml(stage.prompt) + '</h4>' +
+        '<div class="listening-lab-options">' + stageChoices + '</div>' +
+        (answered ? '<div class="listening-lab-feedback' + (listeningRun.isCorrect ? '' : ' is-wrong') + '" role="status"><strong>' + (listeningRun.isCorrect ? 'Tepat.' : 'Belum tepat.') + '</strong>' + escapeHtml(stage.explanation) + (!listeningRun.isCorrect ? '<br>Jawaban: ' + escapeHtml(stage.options[stage.answer]) : '') + '</div>' : '') +
+        (answered ? '<div class="listening-lab-actions"><button class="listening-lab-button" type="button" data-listening-next>' + (listeningRun.stageIndex === exercise.stages.length - 1 ? 'Lihat hasil →' : 'Tahap berikutnya →') + '</button></div>' : '') +
+        '<div class="listening-lab-transcript-tools"><button class="listening-lab-transcript-toggle" type="button" data-listening-transcript>' + (listeningRun.transcriptVisible ? 'Sembunyikan transkrip' : 'Buka transkrip') + '</button><span>Gunakan setelah mencoba memahami audio.</span></div>' +
+        transcript +
+        '<div class="listening-lab-vocabulary">' + vocabulary + '</div>' +
+      '</div>';
+  }
+
+  async function loadListeningLab() {
+    try {
+      const response = await fetch("/data/adventure/listening.json", { cache: "no-cache" });
+      if (!response.ok) throw new Error("Koleksi Listening Lab belum dapat dimuat.");
+      const data = await response.json();
+      if (!data || data.schemaVersion !== 1 || !Array.isArray(data.exercises)) throw new Error("Format Listening Lab tidak sesuai.");
+      const ids = new Set();
+      listeningExercises = data.exercises.filter((exercise) => {
+        const valid = exercise && typeof exercise.id === "string" && exercise.id && !ids.has(exercise.id) &&
+          typeof exercise.title === "string" && ["A1", "A2", "B1", "B2"].includes(exercise.level) &&
+          Array.isArray(exercise.transcript) && exercise.transcript.length >= 4 &&
+          exercise.transcript.every((line) => line && typeof line.speaker === "string" && typeof line.text === "string") &&
+          Array.isArray(exercise.focusWords) && exercise.focusWords.length >= 3 &&
+          Array.isArray(exercise.stages) && exercise.stages.length === 3 &&
+          exercise.stages.every((stage) => stage && typeof stage.id === "string" && ["gist", "detail", "inference"].includes(stage.kind) &&
+            typeof stage.audioText === "string" && stage.audioText.trim() && typeof stage.prompt === "string" &&
+            Array.isArray(stage.options) && stage.options.length >= 3 && Number.isInteger(stage.answer) &&
+            stage.answer >= 0 && stage.answer < stage.options.length && typeof stage.explanation === "string");
+        if (valid) ids.add(exercise.id);
+        return valid;
+      });
+      if (listeningExercises.length !== data.exercises.length) throw new Error("Sebagian latihan tidak lolos pemeriksaan struktur.");
+      listeningLoaded = true;
+      listeningLoadError = "";
+      renderListeningLab();
+    } catch (error) {
+      listeningLoaded = true;
+      listeningLoadError = error instanceof Error ? error.message : "Listening Lab belum dapat dimuat.";
+      renderListeningLab();
+    }
+  }
+
+  function openListening(exerciseId) {
+    if (!listeningExercises.some((item) => item.id === exerciseId)) return;
+    listeningRun = { exerciseId, stage: "practice", stageIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, transcriptVisible: false, audioUnavailable: false };
+    renderListeningLab();
+  }
+
+  function playListeningStage() {
+    if (!listeningRun || listeningRun.stage !== "practice") return;
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    const stage = exercise && exercise.stages[listeningRun.stageIndex];
+    if (!stage) return;
+    listeningRun.audioUnavailable = !playText(stage.audioText);
+    if (listeningRun.audioUnavailable) listeningRun.transcriptVisible = true;
+    renderListeningLab();
+  }
+
+  function answerListening(answerIndex) {
+    if (!listeningRun || listeningRun.stage !== "practice" || listeningRun.locked) return;
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    const stage = exercise && exercise.stages[listeningRun.stageIndex];
+    if (!stage || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= stage.options.length) return;
+    listeningRun.selectedAnswer = answerIndex;
+    listeningRun.isCorrect = answerIndex === stage.answer;
+    listeningRun.locked = true;
+    listeningRun.answers.push({ stageId: stage.id, correct: listeningRun.isCorrect });
+    renderListeningLab();
+  }
+
+  function finishListening() {
+    if (!listeningRun || listeningRun.stage !== "practice") return;
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    if (!exercise || listeningRun.answers.length !== exercise.stages.length) return;
+    const score = listeningRun.answers.filter((answer) => answer.correct).length;
+    const total = exercise.stages.length;
+    const passed = score >= Math.ceil(total * 2 / 3);
+    const completedAt = new Date().toISOString();
+    const entry = listeningEntry(exercise.id);
+    const attempt = { attemptId: makeId(), score, total, passed, completedAt };
+    entry.attempts = [...(entry.attempts || []), attempt].slice(-100);
+    entry.bestScore = Math.max(Number(entry.bestScore) || 0, score);
+    if (passed && !entry.completedAt) entry.completedAt = completedAt;
+    entry.updatedAt = completedAt;
+    progress.listeningProgress[exercise.id] = entry;
+    saveProgress();
+    listeningRun.stage = "result";
+    listeningRun.result = { score, total, passed };
+    renderListeningLab();
+  }
+
+  function advanceListening() {
+    if (!listeningRun || !listeningRun.locked || listeningRun.stage !== "practice") return;
+    const exercise = listeningExercises.find((item) => item.id === listeningRun.exerciseId);
+    if (!exercise) return;
+    if (listeningRun.stageIndex >= exercise.stages.length - 1) { finishListening(); return; }
+    listeningRun.stageIndex += 1;
+    listeningRun.locked = false;
+    listeningRun.selectedAnswer = null;
+    listeningRun.isCorrect = false;
+    listeningRun.transcriptVisible = false;
+    listeningRun.audioUnavailable = false;
+    renderListeningLab();
+  }
+
+
+  function pronunciationEntry(phraseId) {
+    return progress.pronunciationProgress[phraseId] && typeof progress.pronunciationProgress[phraseId] === "object"
+      ? progress.pronunciationProgress[phraseId]
+      : { attempts: [], updatedAt: null };
+  }
+
+  function renderStressedGroup(group) {
+    return String(group || "").split(/(\s+)/).map((token) => {
+      if (!token.trim()) return token;
+      const clean = token.replace(/[.,?!;:]+$/, "");
+      const stressed = /[A-Z]/.test(clean) && clean === clean.toLocaleUpperCase("en");
+      const punctuation = token.slice(clean.length);
+      return stressed
+        ? "<strong>" + escapeHtml(clean) + "</strong>" + escapeHtml(punctuation)
+        : escapeHtml(token);
+    }).join("");
+  }
+
+  function pronunciationFeedback(exercise, metrics) {
+    const notes = [];
+    if (!metrics || metrics.voicedFrames < 3) return ["Suara belum terdeteksi dengan cukup jelas. Periksa izin mikrofon, jarak ke mikrofon, dan kebisingan sekitar, lalu coba lagi."];
+    if (metrics.durationMs / 1000 < exercise.targetSeconds * 0.62) notes.push("Rekaman lebih singkat dari target latihan. Coba beri ruang pada setiap kelompok kata.");
+    else if (metrics.durationMs / 1000 > exercise.targetSeconds * 1.65) notes.push("Rekaman lebih panjang dari target latihan. Coba jaga aliran kalimat tanpa mempercepat kata penting.");
+    if (metrics.pauseCount >= Math.max(3, exercise.phraseGroups.length + 1)) notes.push("Ada beberapa jeda panjang. Latih pengelompokan frasa agar kata-kata dalam satu kelompok mengalir bersama.");
+    else notes.push("Aliran suara terdeteksi cukup menyambung. Pertahankan batas jeda pada kelompok makna, bukan di setiap kata.");
+    if (metrics.meanRms < 0.012) notes.push("Energi suara yang tertangkap relatif rendah. Coba bicara sedikit lebih jelas atau dekatkan mikrofon.");
+    else if (metrics.meanRms > 0.12) notes.push("Energi suara yang tertangkap cukup tinggi. Jaga jarak mikrofon dan hindari berteriak.");
+    if (Number.isFinite(metrics.pitchRangeSemitones)) {
+      if (metrics.pitchRangeSemitones < 1.3) notes.push("Perubahan tinggi nada pada rekaman cukup sempit. Coba ikuti petunjuk intonasi dan contoh suara sekali lagi.");
+      else if (metrics.pitchRangeSemitones > 9) notes.push("Perubahan tinggi nada cukup lebar. Pastikan penekanan tetap alami dan tidak setiap kata terdengar ditekankan.");
+      else notes.push("Ada variasi tinggi nada yang terukur. Bandingkan kontur ini dengan petunjuk naik-turun pada latihan.");
+    } else {
+      notes.push("Kontur tinggi nada belum cukup jelas untuk dianalisis. Rekam kembali di lingkungan yang lebih tenang.");
+    }
+    notes.push("Ini analisis energi, jeda, tempo, dan kontur nada—bukan pemeriksaan fonem atau penilaian otomatis bahwa setiap kata sudah diucapkan benar.");
+    return notes;
+  }
+
+  function renderPronunciationStudio() {
+    const node = $("#adventure-pronunciation-studio");
+    if (!node) return;
+    if (pronunciationRun) { renderPronunciationRun(node); return; }
+    if (!pronunciationLoaded) {
+      node.innerHTML = '<div class="pronunciation-studio-heading"><div><span class="eyebrow">SPEAK · NOTICE · REFINE</span><h3>Pronunciation Studio</h3><p>Latih tekanan kata dan intonasi dengan contoh suara, lalu amati rekaman mikrofon secara lokal.</p></div></div><p class="pronunciation-studio-empty">Menyiapkan latihan pengucapan…</p>';
+      return;
+    }
+    if (pronunciationLoadError) {
+      node.innerHTML = '<div class="pronunciation-studio-heading"><div><span class="eyebrow">SPEAK · NOTICE · REFINE</span><h3>Pronunciation Studio</h3><p>Latih tekanan kata dan intonasi dengan contoh suara, lalu amati rekaman mikrofon secara lokal.</p></div></div><p class="pronunciation-studio-empty">' + escapeHtml(pronunciationLoadError) + '</p><button class="pronunciation-studio-button" type="button" data-pronunciation-reload>Muat ulang latihan</button>';
+      return;
+    }
+    const completed = pronunciationExercises.filter((exercise) => pronunciationEntry(exercise.id).attempts.length > 0).length;
+    const cards = pronunciationExercises.map((exercise) => {
+      const entry = pronunciationEntry(exercise.id);
+      const latest = entry.attempts[entry.attempts.length - 1];
+      return '<article class="pronunciation-studio-card">' +
+        '<div class="pronunciation-studio-card-top"><span class="adventure-story-level">' + escapeHtml(exercise.level) + '</span><span class="adventure-story-status">' + (latest ? 'PERNAH DILATIH' : 'LATIHAN BARU') + '</span></div>' +
+        '<h4>' + escapeHtml(exercise.title) + '</h4><p>' + escapeHtml(exercise.category) + '</p>' +
+        '<div class="pronunciation-studio-card-meta"><span>' + escapeHtml(exercise.focus) + '</span><span>' + entry.attempts.length + ' percobaan</span></div>' +
+        '<button class="pronunciation-studio-button" type="button" data-pronunciation-open="' + escapeHtml(exercise.id) + '">' + (latest ? 'Lanjut berlatih ↗' : 'Mulai latihan ↗') + '</button>' +
+      '</article>';
+    }).join("");
+    node.innerHTML =
+      '<div class="pronunciation-studio-heading"><div><span class="eyebrow">SPEAK · NOTICE · REFINE / A1–B2</span><h3>Pronunciation Studio</h3><p>Amati suku kata yang perlu ditekankan, kelompok kata, dan arah intonasi. Putar contoh suara, rekam kalimatmu, lalu lihat indikator tempo, jeda, energi, serta kontur nada.</p></div><span class="adventure-story-count">' + completed + '/' + pronunciationExercises.length + '<small>PERNAH DILATIH</small></span></div>' +
+      '<p class="pronunciation-studio-privacy">Mikrofon hanya dianalisis di browser selama kamu menekan rekam. Audio mentah tidak disimpan atau diunggah; hanya ringkasan metrik latihan yang disimpan.</p>' +
+      (cards ? '<div class="pronunciation-studio-grid">' + cards + '</div>' : '<p class="pronunciation-studio-empty">Belum ada latihan tersedia.</p>');
+  }
+
+  function pitchContourSvg(samples) {
+    const points = (samples || []).filter((item) => Number.isFinite(item.pitch)).map((item) => item.pitch);
+    if (points.length < 3) return '<p class="pronunciation-studio-no-pitch">Kontur nada belum cukup terbaca pada rekaman ini.</p>';
+    const sorted = [...points].sort((a, b) => a - b);
+    const min = sorted[Math.floor((sorted.length - 1) * 0.1)];
+    const max = sorted[Math.ceil((sorted.length - 1) * 0.9)];
+    const span = Math.max(1, max - min);
+    const coords = points.map((pitch, index) => {
+      const x = 8 + index / Math.max(1, points.length - 1) * 304;
+      const y = 60 - Math.max(0, Math.min(1, (pitch - min) / span)) * 48;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+    return '<svg class="pronunciation-studio-pitch-chart" viewBox="0 0 320 72" role="img" aria-label="Kontur tinggi nada yang terukur selama rekaman"><polyline points="' + coords + '" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 62H312" stroke="currentColor" opacity=".2" stroke-width="1"/></svg>';
+  }
+
+  function renderPronunciationRun(node) {
+    const exercise = pronunciationExercises.find((item) => item.id === pronunciationRun.exerciseId);
+    if (!exercise) { pronunciationRun = null; renderPronunciationStudio(); return; }
+    const entry = pronunciationEntry(exercise.id);
+    const history = entry.attempts.length;
+    const phraseGroups = exercise.phraseGroups.map((group) => '<span class="pronunciation-studio-phrase-group">' + renderStressedGroup(group) + '</span>').join('<span class="pronunciation-studio-group-break" aria-hidden="true">/</span>');
+    const stressedWords = exercise.stressWords.map((word) => '<span>' + escapeHtml(word) + '</span>').join("");
+    const tips = exercise.coaching.map((tip) => '<li>' + escapeHtml(tip) + '</li>').join("");
+    const capture = pronunciationCapture;
+    const requesting = Boolean(pronunciationRun.requesting);
+    let body = "";
+    if (pronunciationRun.metrics) {
+      const metrics = pronunciationRun.metrics;
+      const feedback = pronunciationRun.feedback || [];
+      const seconds = (metrics.durationMs / 1000).toFixed(1);
+      const voicePercent = Math.round(metrics.voiceShare * 100);
+      const pitchText = Number.isFinite(metrics.pitchRangeSemitones) ? metrics.pitchRangeSemitones.toFixed(1) + " semitone" : "—";
+      const feedbackHtml = feedback.map((note) => '<p>' + escapeHtml(note) + '</p>').join("");
+      body =
+        '<section class="pronunciation-studio-result" id="pronunciation-studio-result">' +
+          '<h4>Catatan rekaman terakhir</h4>' +
+          '<p class="pronunciation-studio-disclaimer">Angka di bawah menggambarkan sinyal mikrofon dan tidak menentukan benar-salahnya pelafalan.</p>' +
+          '<div class="pronunciation-studio-metrics">' +
+            '<div><strong>' + seconds + ' dtk</strong><span>Durasi</span></div>' +
+            '<div><strong>' + voicePercent + '%</strong><span>Bagian suara terdeteksi</span></div>' +
+            '<div><strong>' + metrics.pauseCount + '</strong><span>Jeda panjang</span></div>' +
+            '<div><strong>' + pitchText + '</strong><span>Rentang tinggi nada</span></div>' +
+          '</div>' +
+          '<div class="pronunciation-studio-contour"><strong>Kontur tinggi nada</strong>' + pitchContourSvg(pronunciationRun.samples) + '<small>Perubahan nada relatif selama rekaman; bukan pembanding akurasi intonasi.</small></div>' +
+          '<div class="pronunciation-studio-feedback"><strong>Hal yang bisa dicoba</strong>' + feedbackHtml + '</div>' +
+          '<button class="pronunciation-studio-button" type="button" data-pronunciation-record-again>Rekam ulang ↗</button>' +
+        '</section>';
+    } else {
+      body =
+        '<section class="pronunciation-studio-recorder">' +
+          '<div class="pronunciation-studio-recorder-top"><div><strong>Rekam suaramu</strong><p>Tekan mulai, ucapkan frasa dengan nyaman, lalu tekan berhenti. Maksimal 12 detik.</p></div><span class="pronunciation-studio-recorder-status" id="pronunciation-capture-status">' + (capture ? 'SEDANG MEREKAM' : requesting ? 'MENUNGGU IZIN' : 'SIAP') + '</span></div>' +
+          '<div class="pronunciation-studio-meter"><i id="pronunciation-meter" style="width:' + (capture ? '10%' : '0%') + '"></i></div>' +
+          '<div class="pronunciation-studio-recorder-actions"><button class="pronunciation-studio-button" type="button" data-pronunciation-toggle' + (requesting ? ' disabled' : '') + '>' + (capture ? '■ Berhenti merekam' : requesting ? 'Meminta izin mikrofon…' : '● Mulai merekam') + '</button><span id="pronunciation-record-time">' + (capture ? '00:00' : 'Mikrofon belum aktif') + '</span></div>' +
+          '<p class="pronunciation-studio-capture-note" id="pronunciation-capture-note">' + escapeHtml(pronunciationRun.captureError || 'Peramban akan meminta izin mikrofon. Analisis berjalan di perangkat ini dan tidak membuat file rekaman.') + '</p>' +
+        '</section>';
+    }
+    node.innerHTML =
+      '<div class="pronunciation-studio-reader" id="pronunciation-studio-reader">' +
+        '<div class="pronunciation-studio-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(exercise.level) + '</span><span>·</span><span>' + escapeHtml(exercise.focus) + '</span><span>·</span><span>' + history + ' RINGKASAN TERSIMPAN</span></div><button class="pronunciation-studio-button is-secondary" type="button" data-pronunciation-close>← Koleksi</button></div>' +
+        '<h3 class="pronunciation-studio-title">' + escapeHtml(exercise.title) + '</h3><p class="pronunciation-studio-meaning">' + escapeHtml(exercise.meaning) + '</p>' +
+        '<div class="pronunciation-studio-target-label">SAY THIS PHRASE</div><div class="pronunciation-studio-target">' + escapeHtml(exercise.phrase) + '</div>' +
+        '<div class="pronunciation-studio-reference"><button class="pronunciation-studio-button is-reference" type="button" data-pronunciation-reference>▶ Dengarkan contoh</button><span>' + (pronunciationRun.referenceUnavailable ? 'Suara contoh tidak tersedia di browser ini.' : 'Contoh suara dibuat oleh browser.') + '</span></div>' +
+        '<section class="pronunciation-studio-guidance"><div><span class="eyebrow">WORD STRESS</span><strong>Kata yang perlu mendapat tekanan</strong><div class="pronunciation-studio-stress-words">' + stressedWords + '</div></div><div><span class="eyebrow">THOUGHT GROUPS</span><strong>Kelompokkan frasa</strong><div class="pronunciation-studio-phrase-groups">' + phraseGroups + '</div></div><div><span class="eyebrow">INTONATION</span><strong>' + escapeHtml(exercise.intonation.label) + '</strong><p>' + escapeHtml(exercise.intonation.description) + '</p></div><div><span class="eyebrow">CONNECTED SPEECH</span><p>' + escapeHtml(exercise.linking) + '</p></div><ul>' + tips + '</ul></section>' +
+        body +
+        '<p class="pronunciation-studio-privacy">Privasi: mikrofon dianalisis lokal. Tidak ada audio mentah yang disimpan, dikirim, atau diunggah. Browser tidak memeriksa fonem secara otomatis; gunakan panduan tekanan dan intonasi untuk latihan mandiri.</p>' +
+        renderLearningPathLinks(exercise.learningPath) +
+      '</div>';
+  }
+
+  function estimatePronunciationPitch(buffer, sampleRate) {
+    let mean = 0;
+    for (let i = 0; i < buffer.length; i += 1) mean += buffer[i];
+    mean /= buffer.length;
+    let energy = 0;
+    for (let i = 0; i < buffer.length; i += 1) { const value = buffer[i] - mean; energy += value * value; }
+    if (energy / buffer.length < 0.000025) return null;
+    const minLag = Math.max(2, Math.floor(sampleRate / 340));
+    const maxLag = Math.min(Math.floor(sampleRate / 75), Math.floor(buffer.length * 0.45));
+    let bestLag = 0, bestScore = 0;
+    for (let lag = minLag; lag <= maxLag; lag += 1) {
+      let cross = 0, left = 0, right = 0;
+      for (let i = 0; i < buffer.length - lag; i += 4) {
+        const a = buffer[i] - mean, b = buffer[i + lag] - mean;
+        cross += a * b; left += a * a; right += b * b;
+      }
+      const score = cross / Math.sqrt(Math.max(1e-12, left * right));
+      if (score > bestScore) { bestScore = score; bestLag = lag; }
+    }
+    return bestScore >= 0.32 && bestLag ? sampleRate / bestLag : null;
+  }
+
+  function summarizePronunciation(samples, durationMs) {
+    const active = samples.filter((sample) => sample.rms > 0.012);
+    const voiceShare = samples.length ? active.length / samples.length : 0;
+    const meanRms = active.length ? active.reduce((sum, sample) => sum + sample.rms, 0) / active.length : 0;
+    const pitchValues = active.map((sample) => sample.pitch).filter((pitch) => Number.isFinite(pitch));
+    const sortedPitch = [...pitchValues].sort((a, b) => a - b);
+    const percentile = (values, ratio) => values.length ? values[Math.min(values.length - 1, Math.floor((values.length - 1) * ratio))] : null;
+    const lowPitch = percentile(sortedPitch, 0.1), highPitch = percentile(sortedPitch, 0.9);
+    const pitchRangeSemitones = lowPitch && highPitch && highPitch > lowPitch ? 12 * Math.log2(highPitch / lowPitch) : null;
+    let pauseCount = 0, previousTime = null;
+    for (const sample of active) {
+      if (previousTime !== null && sample.t - previousTime >= 520) pauseCount += 1;
+      previousTime = sample.t;
+    }
+    return {
+      durationMs: Math.round(durationMs),
+      voiceShare: Math.max(0, Math.min(1, voiceShare)),
+      voicedFrames: active.length,
+      meanRms: Number(meanRms.toFixed(4)),
+      pauseCount,
+      pitchMedian: percentile(sortedPitch, 0.5),
+      pitchRangeSemitones: Number.isFinite(pitchRangeSemitones) ? Number(pitchRangeSemitones.toFixed(2)) : null,
+    };
+  }
+
+  function stopPronunciationCapture(saveAttempt = true) {
+    const capture = pronunciationCapture;
+    if (!capture) return;
+    pronunciationCapture = null;
+    if (capture.frameId) cancelAnimationFrame(capture.frameId);
+    for (const track of capture.stream.getTracks()) track.stop();
+    try { capture.source.disconnect(); } catch (_) {}
+    try { capture.analyser.disconnect(); } catch (_) {}
+    const durationMs = Math.max(0, performance.now() - capture.startedAt);
+    void capture.context.close().catch(() => {});
+    if (!saveAttempt || !pronunciationRun) {
+      renderPronunciationStudio();
+      return;
+    }
+    const metrics = summarizePronunciation(capture.samples, durationMs);
+    const exercise = pronunciationExercises.find((item) => item.id === pronunciationRun.exerciseId);
+    if (!exercise) return;
+    const completedAt = new Date().toISOString();
+    const attempt = { attemptId: makeId(), completedAt, ...metrics };
+    const entry = pronunciationEntry(exercise.id);
+    entry.attempts = [...(entry.attempts || []), attempt].slice(-50);
+    entry.updatedAt = completedAt;
+    progress.pronunciationProgress[exercise.id] = entry;
+    saveProgress();
+    pronunciationRun.metrics = metrics;
+    pronunciationRun.samples = capture.samples.map((sample) => ({ t: sample.t, pitch: sample.pitch }));
+    pronunciationRun.feedback = pronunciationFeedback(exercise, metrics);
+    pronunciationRun.captureError = "";
+    renderPronunciationStudio();
+  }
+
+  async function startPronunciationCapture() {
+    if (!pronunciationRun || pronunciationCapture || pronunciationRun.requesting) return;
+    const targetRun = pronunciationRun;
+    targetRun.requesting = true;
+    renderPronunciationStudio();
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+      targetRun.requesting = false;
+      targetRun.captureError = "Browser ini tidak menyediakan akses mikrofon. Kamu tetap bisa memakai contoh suara dan panduan visual.";
+      renderPronunciationStudio();
+      return;
+    }
+    const AudioContextType = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextType) {
+      targetRun.requesting = false;
+      targetRun.captureError = "Analisis audio lokal tidak didukung browser ini. Contoh suara dan panduan tetap bisa digunakan.";
+      renderPronunciationStudio();
+      return;
+    }
+    let stream = null, context = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      if (pronunciationRun !== targetRun) { stream.getTracks().forEach((track) => track.stop()); return; }
+      targetRun.requesting = false;
+      context = new AudioContextType();
+      await context.resume();
+      const source = context.createMediaStreamSource(stream);
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.15;
+      source.connect(analyser);
+      pronunciationCapture = { stream, context, source, analyser, startedAt: performance.now(), lastSampleAt: 0, samples: [], frameId: 0 };
+      pronunciationRun.captureError = "";
+      renderPronunciationStudio();
+      const buffer = new Float32Array(analyser.fftSize);
+      const capture = pronunciationCapture;
+      const frame = (now) => {
+        if (pronunciationCapture !== capture) return;
+        const elapsed = now - capture.startedAt;
+        if (elapsed >= 12000) { stopPronunciationCapture(true); return; }
+        if (now - capture.lastSampleAt >= 90) {
+          capture.lastSampleAt = now;
+          analyser.getFloatTimeDomainData(buffer);
+          let sum = 0;
+          for (let i = 0; i < buffer.length; i += 1) sum += buffer[i] * buffer[i];
+          const rms = Math.sqrt(sum / buffer.length);
+          const pitch = rms > 0.012 ? estimatePronunciationPitch(buffer, context.sampleRate) : null;
+          capture.samples.push({ t: elapsed, rms, pitch });
+          const meter = $("#pronunciation-meter");
+          const recordTime = $("#pronunciation-record-time");
+          const status = $("#pronunciation-capture-status");
+          if (meter) meter.style.width = Math.min(100, rms * 500) + "%";
+          if (recordTime) recordTime.textContent = "00:" + String(Math.floor(elapsed / 1000)).padStart(2, "0");
+          if (status) status.textContent = "SEDANG MEREKAM";
+        }
+        capture.frameId = requestAnimationFrame(frame);
+      };
+      capture.frameId = requestAnimationFrame(frame);
+    } catch (error) {
+      if (stream) stream.getTracks().forEach((track) => track.stop());
+      if (context) void context.close().catch(() => {});
+      const reason = error && error.name === "NotAllowedError" ? "Izin mikrofon ditolak. Izinkan akses mikrofon dari pengaturan situs untuk memakai analisis lokal." :
+        error && error.name === "NotFoundError" ? "Tidak ada mikrofon yang terdeteksi di perangkat ini." :
+        "Mikrofon tidak dapat diakses. Periksa izin browser dan pastikan halaman dibuka melalui HTTPS.";
+      if (pronunciationRun === targetRun) { targetRun.requesting = false; targetRun.captureError = reason; renderPronunciationStudio(); }
+    }
+  }
+
+  async function loadPronunciationStudio() {
+    try {
+      const response = await fetch("/data/adventure/pronunciation.json", { cache: "no-cache" });
+      if (!response.ok) throw new Error("Koleksi Pronunciation Studio belum dapat dimuat.");
+      const data = await response.json();
+      if (!data || data.schemaVersion !== 1 || !Array.isArray(data.exercises)) throw new Error("Format Pronunciation Studio tidak sesuai.");
+      const ids = new Set();
+      pronunciationExercises = data.exercises.filter((exercise) => {
+        const valid = exercise && typeof exercise.id === "string" && exercise.id && !ids.has(exercise.id) &&
+          typeof exercise.phrase === "string" && exercise.phrase.trim() && ["A1", "A2", "B1", "B2"].includes(exercise.level) &&
+          Array.isArray(exercise.stressWords) && exercise.stressWords.length >= 1 &&
+          Array.isArray(exercise.phraseGroups) && exercise.phraseGroups.length >= 2 &&
+          exercise.intonation && typeof exercise.intonation.description === "string" &&
+          Array.isArray(exercise.coaching) && exercise.coaching.length >= 2;
+        if (valid) ids.add(exercise.id);
+        return valid;
+      });
+      if (pronunciationExercises.length !== data.exercises.length) throw new Error("Sebagian latihan tidak lolos pemeriksaan struktur.");
+      pronunciationLoaded = true;
+      pronunciationLoadError = "";
+      renderPronunciationStudio();
+    } catch (error) {
+      pronunciationLoaded = true;
+      pronunciationLoadError = error instanceof Error ? error.message : "Pronunciation Studio belum dapat dimuat.";
+      renderPronunciationStudio();
+    }
+  }
+
+  function openPronunciation(exerciseId) {
+    if (!pronunciationExercises.some((item) => item.id === exerciseId)) return;
+    pronunciationRun = { exerciseId, referenceUnavailable: false, captureError: "", metrics: null, samples: [], feedback: [] };
+    renderPronunciationStudio();
+  }
+
+  function closePronunciationStudio() {
+    if (pronunciationCapture) stopPronunciationCapture(false);
+    pronunciationRun = null;
+    renderPronunciationStudio();
+  }
+
+  function dialogueEntry(dialogueId) {
+    return progress.dialogueProgress[dialogueId] && typeof progress.dialogueProgress[dialogueId] === "object"
+      ? progress.dialogueProgress[dialogueId]
+      : { attempts: [], bestScore: 0, completedAt: null, updatedAt: null };
+  }
+
+  function renderDialogueLibrary() {
+    const node = $("#adventure-everyday-english");
+    if (!node) return;
+    if (dialogueRun) { renderDialogueRun(node); return; }
+    if (!dialoguesLoaded) {
+      node.innerHTML = '<div class="adventure-dialogue-heading"><div><span class="eyebrow">LISTEN · RESPOND · SPEAK</span><h3>Everyday English</h3><p>Latihan percakapan dalam situasi yang sering kamu temui.</p></div></div><p class="adventure-dialogue-empty">Menyiapkan skenario dialog…</p>';
+      return;
+    }
+    if (dialogueLoadError) {
+      node.innerHTML = '<div class="adventure-dialogue-heading"><div><span class="eyebrow">LISTEN · RESPOND · SPEAK</span><h3>Everyday English</h3><p>Latihan percakapan dalam situasi yang sering kamu temui.</p></div></div><p class="adventure-dialogue-empty">' + escapeHtml(dialogueLoadError) + '</p><button class="adventure-dialogue-back" type="button" data-dialogue-reload>Muat ulang dialog</button>';
+      return;
+    }
+    const completed = dialogues.filter((dialogue) => Boolean(dialogueEntry(dialogue.id).completedAt)).length;
+    const cards = dialogues.map((dialogue) => {
+      const entry = dialogueEntry(dialogue.id);
+      const done = Boolean(entry.completedAt);
+      const attempts = Array.isArray(entry.attempts) ? entry.attempts.length : 0;
+      const best = Number(entry.bestScore) || 0;
+      return '<article class="adventure-dialogue-card">' +
+        '<div class="adventure-dialogue-card-top"><span class="adventure-story-level">' + escapeHtml(dialogue.level) + '</span><span class="adventure-story-status">' + (done ? 'SELESAI ✓' : attempts ? 'PERNAH DICOBA' : 'SKENARIO BARU') + '</span></div>' +
+        '<h4>' + escapeHtml(dialogue.title) + '</h4><p>' + escapeHtml(dialogue.subtitle) + '</p>' +
+        '<div class="adventure-dialogue-card-meta"><span>' + escapeHtml(String(dialogue.estimatedMinutes || 5)) + ' MENIT</span><span>' + attempts + ' percobaan' + (attempts ? ' · terbaik ' + best + '/' + dialogue.turns.length : '') + '</span></div>' +
+        '<button type="button" data-dialogue-open="' + escapeHtml(dialogue.id) + '">' + (done ? 'Latih lagi ↗' : attempts ? 'Lanjut berlatih ↗' : 'Mulai dialog ↗') + '</button>' +
+      '</article>';
+    }).join("");
+    node.innerHTML =
+      '<div class="adventure-dialogue-heading"><div><span class="eyebrow">LISTEN · RESPOND · SPEAK</span><h3>Everyday English</h3><p>Dengarkan percakapan, amati pilihan kata, lalu pilih respons yang paling alami. Setelah itu, bawa situasinya ke Speaking Studio dan coba ucapkan dengan caramu sendiri.</p></div><span class="adventure-story-count">' + completed + '/' + dialogues.length + '<small>SELESAI</small></span></div>' +
+      (cards ? '<div class="adventure-dialogue-grid">' + cards + '</div>' : '<p class="adventure-dialogue-empty">Belum ada skenario dialog tersedia.</p>');
+  }
+
+  function renderDialogueRun(node) {
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue) { dialogueRun = null; renderDialogueLibrary(); return; }
+    if (dialogueRun.stage === "result") {
+      const passed = Boolean(dialogueRun.result?.passed);
+      node.innerHTML =
+        '<div class="adventure-dialogue-result" id="adventure-dialogue-result">' +
+          '<span class="adventure-story-level">' + escapeHtml(dialogue.level) + '</span>' +
+          '<div class="adventure-story-result-mark">' + (passed ? '✓' : '↻') + '</div>' +
+          '<h4>' + (passed ? 'Percakapan berhasil.' : 'Ayo coba sekali lagi.') + '</h4>' +
+          '<p>Respons tepat: <strong>' + dialogueRun.result.score + '/' + dialogueRun.result.total + '</strong>. ' +
+          (passed ? 'Kamu sudah memilih respons yang tepat di sebagian besar giliran percakapan.' : 'Baca penjelasan setiap respons, lalu ulangi dialog untuk memperkuat ungkapan yang alami.') + '</p>' +
+          '<div class="adventure-dialogue-result-actions">' +
+            '<button class="adventure-dialogue-retry" type="button" data-dialogue-retry="' + escapeHtml(dialogue.id) + '">Ulangi dialog ↗</button>' +
+            '<button class="adventure-dialogue-speaking" type="button" data-dialogue-speaking="' + escapeHtml(dialogue.id) + '">Lanjut ke Speaking Studio ↗</button>' +
+            '<button class="adventure-dialogue-back" type="button" data-dialogue-close>Kembali ke skenario</button>' +
+          '</div>' +
+        renderLearningPathLinks(dialogue.learningPath) +
+        '</div>';
+      return;
+    }
+    const turn = dialogue.turns[dialogueRun.turnIndex];
+    const answered = dialogueRun.locked;
+    const choices = turn.options.map((option, index) => {
+      const correct = index === turn.answer;
+      const chosen = index === dialogueRun.selectedAnswer;
+      return '<button type="button" class="adventure-dialogue-option' + (answered && correct ? ' is-correct' : '') + (answered && chosen && !correct ? ' is-wrong' : '') + '" data-dialogue-answer="' + index + '"' + (answered ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>';
+    }).join("");
+    const transcript = dialogueRun.transcriptVisible
+      ? '<div class="adventure-dialogue-transcript" id="adventure-dialogue-transcript">' + dialogue.transcript.map((line) => '<p><strong>' + escapeHtml(line.speaker) + '</strong><span>' + escapeHtml(line.text) + '</span></p>').join("") + '</div>'
+      : '';
+    const audioNote = dialogueRun.audioUnavailable
+      ? '<small>Audio browser tidak tersedia di perangkat ini. Kamu tetap bisa membaca transkripnya.</small>'
+      : '<small>Audio dibuat oleh browser dengan kecepatan ' + (progress.listeningRate || 0.9) + '×. Suara tidak direkam atau diunggah.</small>';
+    const vocabulary = dialogue.focusWords.map((word) => '<span class="adventure-dialogue-word"><strong>' + escapeHtml(word.word) + '</strong><span>' + escapeHtml(word.meaning) + '</span></span>').join("");
+    node.innerHTML =
+      '<div class="adventure-dialogue-reader" id="adventure-dialogue-reader">' +
+        '<div class="adventure-dialogue-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(dialogue.level) + '</span><span>·</span><span>' + escapeHtml(String(dialogue.estimatedMinutes || 5)) + ' MENIT</span></div><button class="adventure-dialogue-back" type="button" data-dialogue-close>← Skenario</button></div>' +
+        '<h3 class="adventure-dialogue-title">' + escapeHtml(dialogue.title) + '</h3><p class="adventure-dialogue-setting">' + escapeHtml(dialogue.setting) + '</p>' +
+        '<div class="adventure-dialogue-audio"><button class="adventure-dialogue-listen" type="button" data-dialogue-listen>▶ Dengarkan percakapan</button><button class="adventure-dialogue-transcript-toggle" type="button" data-dialogue-transcript>' + (dialogueRun.transcriptVisible ? 'Sembunyikan transkrip' : 'Lihat transkrip') + '</button>' + audioNote + '</div>' +
+        transcript +
+        '<div class="adventure-dialogue-vocabulary">' + vocabulary + '</div>' +
+        '<section class="adventure-dialogue-quiz" aria-labelledby="adventure-dialogue-question">' +
+          '<div class="adventure-dialogue-quiz-meta"><span>YOUR TURN / PILIH RESPONS</span><span>GILIRAN ' + (dialogueRun.turnIndex + 1) + '/' + dialogue.turns.length + '</span></div>' +
+          '<div class="adventure-story-progress"><i style="width:' + Math.round((dialogueRun.turnIndex + 1) / dialogue.turns.length * 100) + '%"></i></div>' +
+          '<div class="adventure-dialogue-partner-line"><span>' + escapeHtml(dialogue.transcript.find((line) => line.text.includes(turn.partnerLine))?.speaker || 'PARTNER') + '</span><p>' + escapeHtml(turn.partnerLine) + '</p></div>' +
+          '<h4 id="adventure-dialogue-question">' + escapeHtml(turn.prompt) + '</h4>' +
+          '<div class="adventure-dialogue-options">' + choices + '</div>' +
+          (answered ? '<div class="adventure-dialogue-feedback' + (dialogueRun.isCorrect ? '' : ' is-wrong') + '" role="status"><strong>' + (dialogueRun.isCorrect ? 'Respons alami.' : 'Belum tepat.') + '</strong>' + escapeHtml(turn.explanation) + (!dialogueRun.isCorrect ? '<br>Respons yang disarankan: ' + escapeHtml(turn.response) : '') + '</div>' : '') +
+          (answered ? '<div class="adventure-dialogue-actions"><button class="adventure-dialogue-next" type="button" data-dialogue-next>' + (dialogueRun.turnIndex === dialogue.turns.length - 1 ? 'Lihat hasil →' : 'Giliran berikutnya →') + '</button></div>' : '') +
+        '</section>' +
+      '</div>';
+  }
+
+  async function loadDialogues() {
+    try {
+      const response = await fetch("/data/adventure/dialogues.json", { cache: "no-cache" });
+      if (!response.ok) throw new Error("Skenario Everyday English belum dapat dimuat.");
+      const data = await response.json();
+      if (!data || data.schemaVersion !== 1 || !Array.isArray(data.dialogues)) throw new Error("Format Everyday English tidak sesuai.");
+      const ids = new Set();
+      dialogues = data.dialogues.filter((dialogue) => {
+        const valid = dialogue && typeof dialogue.id === "string" && dialogue.id && !ids.has(dialogue.id) &&
+          typeof dialogue.title === "string" && ["A1", "A2", "B1", "B2"].includes(dialogue.level) &&
+          Array.isArray(dialogue.transcript) && dialogue.transcript.length >= 4 &&
+          dialogue.transcript.every((line) => line && typeof line.speaker === "string" && typeof line.text === "string") &&
+          Array.isArray(dialogue.focusWords) && Array.isArray(dialogue.turns) && dialogue.turns.length >= 3 &&
+          typeof dialogue.speakingPromptId === "string" &&
+          dialogue.turns.every((turn) => turn && typeof turn.id === "string" && typeof turn.prompt === "string" &&
+            typeof turn.partnerLine === "string" && Array.isArray(turn.options) && turn.options.length >= 2 &&
+            Number.isInteger(turn.answer) && turn.answer >= 0 && turn.answer < turn.options.length);
+        if (valid) ids.add(dialogue.id);
+        return valid;
+      });
+      if (dialogues.length !== data.dialogues.length) throw new Error("Sebagian skenario tidak lolos pemeriksaan struktur.");
+      dialoguesLoaded = true;
+      dialogueLoadError = "";
+      renderDialogueLibrary();
+    } catch (error) {
+      dialoguesLoaded = true;
+      dialogueLoadError = error instanceof Error ? error.message : "Skenario Everyday English belum dapat dimuat.";
+      renderDialogueLibrary();
+    }
+  }
+
+  function openDialogue(dialogueId) {
+    if (!dialogues.some((item) => item.id === dialogueId)) return;
+    dialogueRun = { dialogueId, stage: "roleplay", turnIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, transcriptVisible: false, audioUnavailable: false };
+    renderDialogueLibrary();
+  }
+
+  function listenToDialogue() {
+    if (!dialogueRun || dialogueRun.stage !== "roleplay") return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue) return;
+    const script = dialogue.transcript.map((line) => line.speaker + ": " + line.text).join(" ");
+    dialogueRun.audioUnavailable = !playText(script);
+    if (dialogueRun.audioUnavailable) dialogueRun.transcriptVisible = true;
+    renderDialogueLibrary();
+  }
+
+  function answerDialogue(answerIndex) {
+    if (!dialogueRun || dialogueRun.stage !== "roleplay" || dialogueRun.locked) return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    const turn = dialogue && dialogue.turns[dialogueRun.turnIndex];
+    if (!turn || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= turn.options.length) return;
+    dialogueRun.selectedAnswer = answerIndex;
+    dialogueRun.isCorrect = answerIndex === turn.answer;
+    dialogueRun.locked = true;
+    dialogueRun.answers.push({ turnId: turn.id, correct: dialogueRun.isCorrect });
+    renderDialogueLibrary();
+  }
+
+  function finishDialogue() {
+    if (!dialogueRun || dialogueRun.stage !== "roleplay") return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue || dialogueRun.answers.length !== dialogue.turns.length) return;
+    const score = dialogueRun.answers.filter((answer) => answer.correct).length;
+    const total = dialogue.turns.length;
+    const passed = score >= Math.ceil(total * 2 / 3);
+    const completedAt = new Date().toISOString();
+    const entry = dialogueEntry(dialogue.id);
+    const attempt = { attemptId: makeId(), score, total, passed, completedAt };
+    entry.attempts = [...(entry.attempts || []), attempt].slice(-100);
+    entry.bestScore = Math.max(Number(entry.bestScore) || 0, score);
+    if (passed && !entry.completedAt) entry.completedAt = completedAt;
+    entry.updatedAt = completedAt;
+    progress.dialogueProgress[dialogue.id] = entry;
+    saveProgress();
+    dialogueRun.stage = "result";
+    dialogueRun.result = { score, total, passed };
+    renderDialogueLibrary();
+  }
+
+  function advanceDialogue() {
+    if (!dialogueRun || !dialogueRun.locked || dialogueRun.stage !== "roleplay") return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue) return;
+    if (dialogueRun.turnIndex >= dialogue.turns.length - 1) {
+      finishDialogue();
+      return;
+    }
+    dialogueRun.turnIndex += 1;
+    dialogueRun.locked = false;
+    dialogueRun.selectedAnswer = null;
+    dialogueRun.isCorrect = false;
+    renderDialogueLibrary();
+  }
+
+  function openSpeakingFromDialogue(dialogueId) {
+    const dialogue = dialogues.find((item) => item.id === dialogueId);
+    if (!dialogue || !studioDrafts) return;
+    dialogueRun = null;
+    renderDialogueLibrary();
+    selectStudioPrompt("speaking", dialogue.speakingPromptId);
+    $("#adventure-speaking-studio")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   function initListeners() {
     document.addEventListener("click", (event) => {
+      const viewTarget = event.target.closest("[data-view-target]");
+      if (viewTarget && viewTarget.dataset.viewTarget !== "adventure" && pronunciationCapture) {
+        stopPronunciationCapture(false);
+        pronunciationRun = null;
+      }
       const select = event.target.closest("[data-adventure-select]");
       if (select) { openMission(select.dataset.adventureSelect); return; }
       const start = event.target.closest("[data-adventure-start]");
@@ -886,23 +2264,80 @@
       if (dailyRate) { setListeningRate(dailyRate.dataset.dailyListenRate); return; }
       if (event.target.closest("[data-daily-transcript]")) { dailyTranscriptVisible = !dailyTranscriptVisible; renderDailyQuest(); return; }
       if (event.target.closest("[data-daily-next]")) { advanceDailyQuest(); return; }
+      const focusedReview = event.target.closest("[data-mistake-review-one]");
+      if (focusedReview) { openMistakeReview(focusedReview.dataset.mistakeReviewOne); return; }
+      if (event.target.closest("[data-mistake-review-close]")) { closeMistakeReview(); return; }
+      const focusedAnswer = event.target.closest("[data-mistake-answer]");
+      if (focusedAnswer) { answerMistakeReview(focusedAnswer.dataset.mistakeId, focusedAnswer.dataset.mistakeAnswer); return; }
+      if (event.target.closest("[data-mistake-listen]")) { listenToMistakeReview(); return; }
+      if (event.target.closest("[data-mistake-transcript]")) { toggleMistakeReviewTranscript(); return; }
       const mistakeReview = event.target.closest("[data-mistake-review]");
       if (mistakeReview) { startMission(mistakeReview.dataset.mistakeReview); return; }
       const mistakeFilter = event.target.closest("[data-mistake-filter]");
-      if (mistakeFilter) { mistakeFilterValue = mistakeFilter.dataset.mistakeFilter; renderMistakeJournal(); }
+      if (mistakeFilter) { mistakeFilterValue = mistakeFilter.dataset.mistakeFilter; renderMistakeJournal(); return; }
+      const storyOpen = event.target.closest("[data-story-open]");
+      if (storyOpen) { openStory(storyOpen.dataset.storyOpen); return; }
+      if (event.target.closest("[data-story-close]")) { storyRun = null; renderStoryLibrary(); return; }
+      if (event.target.closest("[data-story-reload]")) { storyLoadError = ""; storiesLoaded = false; renderStoryLibrary(); void loadStories(); return; }
+      const storyAnswer = event.target.closest("[data-story-answer]");
+      if (storyAnswer) { answerStory(Number(storyAnswer.dataset.storyAnswer)); return; }
+      if (event.target.closest("[data-story-next]")) { advanceStory(); return; }
+      const storyRetry = event.target.closest("[data-story-retry]");
+      if (storyRetry) { openStory(storyRetry.dataset.storyRetry); return; }
+      if (event.target.closest("[data-story-listen]")) { listenToStory(); return; }
+      const dialogueOpen = event.target.closest("[data-dialogue-open]");
+      if (dialogueOpen) { openDialogue(dialogueOpen.dataset.dialogueOpen); return; }
+      if (event.target.closest("[data-dialogue-close]")) { dialogueRun = null; renderDialogueLibrary(); return; }
+      if (event.target.closest("[data-dialogue-reload]")) { dialogueLoadError = ""; dialoguesLoaded = false; renderDialogueLibrary(); void loadDialogues(); return; }
+      const dialogueAnswer = event.target.closest("[data-dialogue-answer]");
+      if (dialogueAnswer) { answerDialogue(Number(dialogueAnswer.dataset.dialogueAnswer)); return; }
+      if (event.target.closest("[data-dialogue-next]")) { advanceDialogue(); return; }
+      const dialogueRetry = event.target.closest("[data-dialogue-retry]");
+      if (dialogueRetry) { openDialogue(dialogueRetry.dataset.dialogueRetry); return; }
+      if (event.target.closest("[data-dialogue-listen]")) { listenToDialogue(); return; }
+      if (event.target.closest("[data-dialogue-transcript]")) { if (dialogueRun) { dialogueRun.transcriptVisible = !dialogueRun.transcriptVisible; renderDialogueLibrary(); } return; }
+      const dialogueSpeaking = event.target.closest("[data-dialogue-speaking]");
+      if (dialogueSpeaking) { openSpeakingFromDialogue(dialogueSpeaking.dataset.dialogueSpeaking); return; }
+      const listeningOpen = event.target.closest("[data-listening-open]");
+      if (listeningOpen) { openListening(listeningOpen.dataset.listeningOpen); return; }
+      if (event.target.closest("[data-listening-close]")) { listeningRun = null; renderListeningLab(); return; }
+      if (event.target.closest("[data-listening-reload]")) { listeningLoadError = ""; listeningLoaded = false; renderListeningLab(); void loadListeningLab(); return; }
+      if (event.target.closest("[data-listening-play]")) { playListeningStage(); return; }
+      const listeningRate = event.target.closest("[data-listening-rate]");
+      if (listeningRate) { setListeningRate(listeningRate.dataset.listeningRate); return; }
+      if (event.target.closest("[data-listening-transcript]")) { if (listeningRun) { listeningRun.transcriptVisible = !listeningRun.transcriptVisible; renderListeningLab(); } return; }
+      const listeningAnswer = event.target.closest("[data-listening-answer]");
+      if (listeningAnswer) { answerListening(Number(listeningAnswer.dataset.listeningAnswer)); return; }
+      if (event.target.closest("[data-listening-next]")) { advanceListening(); return; }
+      const listeningRetry = event.target.closest("[data-listening-retry]");
+      if (listeningRetry) { openListening(listeningRetry.dataset.listeningRetry); return; }
+      const pronunciationOpen = event.target.closest("[data-pronunciation-open]");
+      if (pronunciationOpen) { openPronunciation(pronunciationOpen.dataset.pronunciationOpen); return; }
+      if (event.target.closest("[data-pronunciation-close]")) { closePronunciationStudio(); return; }
+      if (event.target.closest("[data-pronunciation-reload]")) { pronunciationLoadError = ""; pronunciationLoaded = false; renderPronunciationStudio(); void loadPronunciationStudio(); return; }
+      if (event.target.closest("[data-pronunciation-reference]")) {
+        if (pronunciationRun) { const exercise = pronunciationExercises.find((item) => item.id === pronunciationRun.exerciseId); if (exercise) pronunciationRun.referenceUnavailable = !playText(exercise.phrase); renderPronunciationStudio(); }
+        return;
+      }
+      if (event.target.closest("[data-pronunciation-toggle]")) { if (pronunciationCapture) stopPronunciationCapture(true); else void startPronunciationCapture(); return; }
+      if (event.target.closest("[data-pronunciation-record-again]")) { pronunciationRun.metrics = null; pronunciationRun.samples = []; pronunciationRun.feedback = []; pronunciationRun.captureError = ""; renderPronunciationStudio(); return; }
+      if (event.target.closest("[data-speaking-play-partner]")) { playSpeakingPartner(); return; }
+      if (event.target.closest("[data-speaking-next-turn]")) { advanceSpeakingTurn(); return; }
+      if (event.target.closest("[data-speaking-restart]")) { restartSpeakingPractice(); return; }
+      if (event.target.closest("[data-writing-build-outline]")) { buildWritingOutline(); return; }
       const studioPrompt = event.target.closest("[data-studio-prompt]");
       if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
       const studioComplete = event.target.closest("[data-studio-complete]");
       if (studioComplete) { completeStudioPractice(studioComplete.dataset.studioKind); return; }
       const studioClear = event.target.closest("[data-studio-clear]");
-      if (studioClear && studioDrafts) { const state = studioState("writing", studioDrafts.writing.selectedPromptId); state.text = ""; state.checked = []; saveStudioDrafts(); renderStudios(); return; }
+      if (studioClear && studioDrafts) { const state = studioState("writing", studioDrafts.writing.selectedPromptId); state.text = ""; state.revision = ""; state.plan = { opening: "", detail: "", closing: "" }; state.checked = []; saveStudioDrafts(); renderStudios(); return; }
     });
     document.addEventListener("change", (event) => {
       if (event.target.matches("[data-adventure-check]")) updateProductionButton();
       if (event.target.matches("[data-studio-check]")) updateStudioChecklist(event.target);
     });
     document.addEventListener("input", (event) => {
-      if (event.target.matches("#studio-writing-draft")) updateStudioDraft(event.target.value);
+      if (event.target.matches("#studio-writing-draft, #studio-writing-revision, [data-writing-plan]")) updateStudioDraft(event.target);
       if (event.target.matches("#adventure-writing")) updateProductionButton();
     });
   }
@@ -920,12 +2355,18 @@
       selectedMissionId = curriculum.missions.find((mission) => missionUnlocked(mission) && !missionCompleted(mission.id))?.id || curriculum.missions[0].id;
       studioDrafts = readStudioDrafts();
       initListeners(); renderAll();
+      void loadStories();
+      void loadDialogues();
+      void loadListeningLab();
+      void loadPronunciationStudio();
     } catch (error) {
       const panel = $("#adventure-mission-panel");
       if (panel) panel.textContent = error.message || "Petualangan belum dapat dimuat.";
     }
   }
 
+  document.addEventListener("visibilitychange", () => { if (document.hidden && pronunciationCapture) stopPronunciationCapture(false); });
+  window.addEventListener("pagehide", () => { if (pronunciationCapture) stopPronunciationCapture(false); });
   window.sinauuAdventureBackup = () => cloneProgress(progress);
   window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); renderAll(); };
   window.sinauuRenderAdventure = () => { if (curriculum) renderAll(); else void init(); };

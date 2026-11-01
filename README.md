@@ -69,23 +69,37 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 - `data/oxford3000/editorial-overrides-loader.js` — combines gzip and gzip/Base64 overlays in the browser before the learning workspace loads.
 - `data/oxford3000/ATTRIBUTION.md`, `data/oxford3000/audit.json` — source attribution and content-quality audit.
 
-## Next work
+## Curriculum expansion status
 
-1. Human-review high-frequency meanings, parts of speech, examples, and Indonesian translations, starting with A1/A2.
-2. Replace unreliable or fragmentary examples and improve context variants before expanding the mastery-ready pool.
-3. Expand grammar lessons and validated question banks topic by topic.
-4. Build stories, everyday English, listening, speaking, writing, and placement-test modules.
-5. Continue responsive, accessibility, persistence, backup/restore, and regression checks.
+- Grammar now contains **19 lessons and 57 checked questions** across A1–B2, with Indonesian explanations, examples, common-error notes, and focused practice.
+- Everyday Stories now contains **8 graded passages**, two per CEFR band, each with comprehension checks and a shared learning path to a dialogue, listening activity, pronunciation phrase, Speaking Studio prompt, and Writing Studio prompt.
+- Listening Lab now contains **8 staged exercises**, with two per CEFR band. Every exercise includes gist, detail, and inference practice grounded in its transcript.
+- Pronunciation Studio now contains **16 guided phrases**, four per CEFR band, covering word/sentence stress, rhythm, linking, question intonation, contrast, and longer thought groups.
+- The first editorial pass adds contextual practice and concise definitions to **37 high-frequency A1/A2 entries**. Those imported entries remain marked as drafts; the assistant pass is not a substitute for independent human language review.
+
+## Remaining editorial and release work
+
+1. Independently review the 965 imported A–E vocabulary drafts, prioritising high-frequency A1/A2 meanings, parts of speech, examples, and Indonesian translations.
+2. Continue replacing weak or overly generic examples and add contextual variants before expanding the mastery-ready pool.
+3. Keep expanding grammar and listening material based on observed learner needs, while reviewing the new answer keys and linguistic nuance.
+4. Complete responsive, accessibility, persistence, backup/restore, and browser regression checks on the unified preview before merging.
 
 **Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
 
 
 ## Quality checks
 
-- `npm run test:content` validates vocabulary fields and uniqueness, all reading-question answer keys, HABIT passage integrity and word-count metadata, and byte-for-byte synchronization between root and `public/data` JSON copies.
+- `npm run test:content` validates vocabulary fields and uniqueness, Everyday Stories, Everyday English, and Listening Lab level coverage, vocabulary links, response keys, transcript/audio alignment, Speaking Studio links, all reading-question answer keys, HABIT passage integrity and word-count metadata, and byte-for-byte synchronization between root and `public/data` JSON copies.
 - `npm run build` runs TypeScript checks and builds all production entry points.
-- `npm run test:browser` runs Playwright smoke tests for the landing page, navigation, vocabulary lookup, HABIT reading questions, feedback, and answer persistence. Install Playwright and Chromium before running it locally; the `.github/workflows/quality-gates.yml` workflow does that in CI.
+- `npm run test:browser` runs Playwright smoke tests for the landing page, navigation, vocabulary lookup, HABIT reading questions, Everyday Stories A1/B2 reading, Everyday English listening and role-play, staged Listening Lab playback and transcript review, local Pronunciation Studio microphone analysis and fallback, Speaking Studio handoff, cross-device Adventure progress, and answer persistence. Install Playwright and Chromium before running it locally; the `.github/workflows/quality-gates.yml` workflow does that in CI.
 - Automated checks catch structural and regression problems, not every linguistic nuance. The 965 imported A–E entries remain marked as editorial drafts until an independent human review confirms their meanings, examples, and Indonesian translations.
+
+## Everyday English role-play
+
+- The Adventure workspace includes four original situational dialogues across A1–B2, from ordering at a café and asking for directions to evaluating a project proposal.
+- Learners can listen with browser speech synthesis before revealing the transcript, review vocabulary linked to the checked-in corpus, and choose natural responses with explanations.
+- Completed attempts are saved in `dialogueProgress` and merge across devices through the existing CloudBundle v2 path. The final screen links each scenario to its matching Speaking Studio prompt.
+- Audio is generated by the browser; no microphone capture, recording, transcript upload, XP award, or vocabulary mastery change is introduced.
 
 ## HABIT reading library
 
@@ -100,3 +114,36 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 - Each imported row has a headword, part of speech, CEFR level, topic, Indonesian meaning(s), an English example, and Indonesian example translation. The imported 965 entries remain marked as editorial drafts because the source batches flag them for human language review. The import does not invent IPA or extra word forms.
 - The broader compressed Oxford 3000 corpus and existing editorial overlays remain in place; this batch import supplements and overrides matching headwords rather than replacing the corpus.
 - The app's data and script files are mirrored under `public/` where required by Vite's configured `publicDir`. Keep the root data and public static copies synchronized when making future content changes.
+
+
+## Listening Lab
+
+- The Adventure workspace includes four original listening exercises spanning A1–B2. Each exercise follows the same progression: gist, detail, and inference.
+- Audio is generated with browser speech synthesis for each stage, with saved speed preferences (0.75×, 0.9×, and 1×). Learners can reveal the transcript after attempting to listen and review vocabulary linked to the checked-in corpus.
+- Scores, attempts, best results, and first successful completion are saved locally in `listeningProgress` and merged across devices through CloudBundle v2. The activity does not award XP or change vocabulary mastery.
+- The browser voices are synthetic and depend on device/browser support; there are no third-party audio services, microphone recordings, or uploaded voice data.
+
+
+## Pronunciation Studio
+
+- The Adventure workspace includes eight guided phrases across A1–B2, covering word stress, thought groups, connected speech, polite requests, contrast, and sentence intonation.
+- Browser speech synthesis provides a reference voice. Learners can record through `getUserMedia` and inspect signal energy, long pauses, speaking duration, and an approximate pitch contour locally with Web Audio.
+- No speech-recognition service is used. Raw audio is not written to storage or uploaded; only compact practice metrics and timestamps are saved in `pronunciationProgress` and merged across devices through CloudBundle v2.
+- The metrics do not identify phonemes or determine whether a word was pronounced correctly. Microphone gain, background noise, device hardware, and voice characteristics affect the measurements. Stress and intonation correctness remain guided self-practice rather than an automated grade.
+- Microphone access requires browser permission and a secure context (HTTPS or localhost). If access is unavailable, the phrase guide and browser-generated reference voice remain available.
+
+
+## Speaking Studio
+
+- Speaking Studio now includes guided, open-ended roleplay scenarios across A1–B2. Each scenario has three partner turns, a spoken browser-generated partner line, a response goal, and optional phrase hints.
+- Learners answer aloud in their own words and move the conversation forward themselves. A three-part self-review becomes available after the final turn.
+- Conversation turn progress and reflection checkboxes stay in the user-scoped local draft store. CloudBundle v2 receives only a compact completed-session summary; no learner audio, speech transcript, or spoken response text is captured or synced.
+- Browser speech synthesis is optional. If unavailable, the partner's written line remains visible so the activity can still be completed.
+
+
+## Writing Studio
+
+- Writing Studio uses a four-part learning loop: plan ideas, draft freely, revise for clarity, and complete a three-part self-review.
+- Five original tasks span A1–B2: a short introduction, weekend story, study invitation, learning reflection, and balanced proposal.
+- The outline can be moved into the first draft as editable text. Lightweight structure signals count sentences, common connectors, and words; they are not a grammar checker or an AI writing score.
+- Planning notes, first drafts, and revisions stay in the existing user-scoped local browser store. CloudBundle v2 receives only the compact completed-session summary and revised word count; raw writing is never synced or included in progress backup.

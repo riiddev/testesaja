@@ -964,6 +964,32 @@ h1,h2,h3{overflow-wrap:break-word}
 .home-daily-goal .goal-line{font-size:.68rem}
 .home-daily-goal .progress-track{height:6px;border-radius:8px}
 .home-daily-goal .progress-track span{border-radius:8px}
+.home-study-plan{margin-top:30px;padding:clamp(19px,2.7vw,28px);border:1px solid var(--line);border-radius:14px;background:var(--sheet)}
+.home-study-plan-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:22px;margin-bottom:19px}
+.home-study-plan-heading .eyebrow{display:block;margin-bottom:7px;font-size:.52rem}
+.home-study-plan-heading h2{margin:0;font-size:1.7rem;line-height:1.15}
+.home-study-plan-heading p{margin:6px 0 0;color:var(--muted);font-size:.66rem;line-height:1.65}
+.home-study-plan-summary{flex:0 0 78px;display:grid;justify-items:end;gap:3px}
+.home-study-plan-summary strong{color:var(--ink);font:400 1.55rem/1 "Lora",Georgia,serif}
+.home-study-plan-summary>span{color:var(--muted);font-size:.43rem;font-weight:800;letter-spacing:.09em}
+.home-study-plan-track{width:78px;height:4px;overflow:hidden;margin-top:4px;border-radius:5px;background:var(--paper-deep)}
+.home-study-plan-track i{display:block;width:0;height:100%;border-radius:inherit;background:var(--sage-deep);transition:width .2s ease}
+.home-study-plan-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.home-study-plan-step{min-width:0;display:flex;flex-direction:column;align-items:flex-start;padding:15px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.home-study-plan-step.is-complete{border-color:color-mix(in srgb,var(--sage-deep) 36%,var(--line));background:color-mix(in srgb,var(--sage) 18%,var(--paper))}
+.home-study-plan-step-meta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;color:var(--sage-deep);font-size:.45rem;font-weight:800;letter-spacing:.06em}
+.home-study-plan-step-meta small{color:var(--muted);font-size:.43rem;white-space:nowrap}
+.home-study-plan-step h3{margin:0 0 6px;color:var(--ink);font:500 .92rem/1.4 "Lora",Georgia,serif}
+.home-study-plan-step p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.59rem;line-height:1.65}
+.home-study-plan-action{min-height:35px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--sheet);color:var(--sage-deep);font-size:.56rem;font-weight:700;cursor:pointer}
+.home-study-plan-action:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 25%,var(--sheet))}
+.home-study-plan-action:disabled{cursor:default;border-color:transparent;background:transparent;color:var(--sage-deep);padding-left:0}
+.home-study-plan-quest-progress{margin:-5px 0 10px;color:var(--sage-deep);font-size:.5rem}
+.home-study-plan-note{margin:12px 0 0;color:var(--muted);font-size:.53rem;line-height:1.6}
+.home-study-plan-loading{padding:15px;border:1px dashed var(--line);color:var(--muted);font-size:.62rem}
+@media(max-width:850px){.home-study-plan-steps{grid-template-columns:1fr}.home-study-plan-step{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:0 12px}.home-study-plan-step-meta{grid-column:1/-1}.home-study-plan-step h3,.home-study-plan-step p{grid-column:1}.home-study-plan-step p{margin-bottom:0}.home-study-plan-action{grid-column:2;grid-row:2 / span 2;align-self:center}}
+@media(max-width:560px){.home-study-plan{margin-top:23px;padding:17px 14px}.home-study-plan-heading{gap:12px}.home-study-plan-heading h2{font-size:1.42rem}.home-study-plan-heading p{font-size:.59rem}.home-study-plan-summary{flex-basis:55px}.home-study-plan-summary strong{font-size:1.25rem}.home-study-plan-track{width:55px}.home-study-plan-step{padding:13px 11px}.home-study-plan-step h3{font-size:.82rem}.home-study-plan-step p{font-size:.56rem}.home-study-plan-action{max-width:130px;padding-inline:7px;font-size:.52rem}}
+
 .home-practice-choices{margin-top:38px;padding-top:26px;border-top:1px solid var(--line)}
 .home-choice-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
 .home-choice{min-width:0;display:grid;grid-template-columns:34px minmax(0,1fr) 12px;align-items:center;gap:10px;padding:14px 11px;border:1px solid var(--line);border-radius:11px;background:var(--sheet);text-align:left;cursor:pointer;transition:border-color .18s ease,transform .18s ease}
@@ -1341,6 +1367,32 @@ h1,h2,h3{overflow-wrap:break-word}
 .adventure-mistake-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px}
 .adventure-mistake-bottom small,.adventure-mistake-bottom>span{color:var(--muted);font-size:.5rem}
 .adventure-mistake-bottom button{padding:5px 8px;border:1px solid var(--line);background:var(--paper);color:var(--sage-deep);font-size:.53rem;cursor:pointer}
+.adventure-mistake-bottom button:disabled{cursor:not-allowed;opacity:.55;color:var(--muted)}
+.adventure-mistake-row.is-reviewing .adventure-mistake-top span:last-child{color:var(--sage-deep)}
+.adventure-mistake-progress{display:grid;grid-template-columns:auto minmax(42px,1fr);align-items:center;gap:6px 9px;margin-top:9px}
+.adventure-mistake-progress>span{color:var(--muted);font-size:.46rem;font-weight:800;letter-spacing:.08em}
+.adventure-mistake-progress>i{height:4px;overflow:hidden;background:var(--line)}
+.adventure-mistake-progress>i>b{display:block;height:100%;background:var(--sage-deep)}
+.adventure-mistake-progress>small{grid-column:1/-1;color:var(--muted);font-size:.5rem}
+.adventure-journal-summary{margin:10px 0 0;color:var(--muted);font-size:.54rem;line-height:1.6}
+.adventure-mistake-details{margin-top:8px;color:var(--muted);font-size:.55rem}
+.adventure-mistake-details summary{width:max-content;max-width:100%;cursor:pointer;color:var(--sage-deep);font-weight:700}
+.adventure-mistake-details[open]{padding:8px 10px;background:var(--paper)}
+.adventure-mistake-review{margin:13px 0 12px;padding:14px;border:1px solid color-mix(in srgb,var(--sage-deep) 35%,var(--line));background:var(--paper)}
+.adventure-mistake-review-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.adventure-mistake-review-heading>div{display:grid;gap:4px}
+.adventure-mistake-review-heading small,.adventure-mistake-review-context>small{color:var(--sage-deep);font-size:.46rem;font-weight:800;letter-spacing:.1em}
+.adventure-mistake-review-heading strong{color:var(--ink);font:500 .78rem/1.5 "Lora",Georgia,serif}
+.adventure-mistake-review-heading>button,.adventure-mistake-review-listen button{flex:none;padding:6px 9px;border:1px solid var(--line);background:var(--sheet);color:var(--body);font-size:.54rem;cursor:pointer}
+.adventure-mistake-review h4{margin:8px 0 0;color:var(--ink);font:500 .9rem/1.55 "Lora",Georgia,serif}
+.adventure-mistake-review-context{margin:10px 0;padding:10px 12px;background:var(--paper-deep)}
+.adventure-mistake-review-context p,.adventure-mistake-review-listen p{margin:5px 0 0;color:var(--body);font-size:.6rem;line-height:1.7}
+.adventure-mistake-review-listen{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:10px 0;padding:10px 12px;background:var(--paper-deep)}
+.adventure-mistake-review-listen small{flex-basis:100%;color:var(--muted);font-size:.53rem;line-height:1.6}
+.adventure-mistake-review-listen p{flex-basis:100%}
+.adventure-mistake-review-options{margin-top:10px}
+.adventure-mistake-review-correct{font-weight:700}
+@media(max-width:560px){.adventure-mistake-review{padding:11px}.adventure-mistake-review-heading strong{font-size:.72rem}.adventure-mistake-review-listen button{min-height:36px}}
 .adventure-journal-empty{margin:0;padding:17px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.63rem;line-height:1.7}
 .adventure-achievement-next{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:.52rem;line-height:1.6}
 @media(max-width:1000px){.adventure-extras-grid{grid-template-columns:1fr}}
@@ -1395,3 +1447,442 @@ h1,h2,h3{overflow-wrap:break-word}
 .adventure-daily-transcript{margin:0;padding:10px 12px;background:var(--sheet);color:var(--body);font:400 .78rem/1.7 "Lora",Georgia,serif}
 .adventure-daily-listen{display:grid;gap:8px}
 @media(max-width:560px){.adventure-listen-controls{align-items:flex-start;flex-direction:column}.adventure-listen-rates button{min-width:42px}}
+
+
+
+/* Everyday Stories — short graded reading in familiar contexts */
+.adventure-story-library{min-width:0;margin-top:16px;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-story-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:17px}
+.adventure-story-heading .eyebrow{margin-bottom:6px}
+.adventure-story-heading h3{margin:0;font:500 1.4rem "Lora",Georgia,serif}
+.adventure-story-heading p{max-width:650px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+.adventure-story-count{flex:none;min-width:54px;padding-left:12px;border-left:1px solid var(--line);color:var(--ink);font:400 1.55rem/1 "Lora",Georgia,serif;text-align:right}
+.adventure-story-count small{display:block;margin-top:5px;color:var(--muted);font:700 .42rem "Plus Jakarta Sans",sans-serif;letter-spacing:.07em}
+.adventure-story-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.adventure-story-card{min-width:0;display:flex;flex-direction:column;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.adventure-story-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.adventure-story-level{padding:5px 7px;background:color-mix(in srgb,var(--sage) 44%,var(--sheet));color:var(--sage-deep);font-size:.48rem;font-weight:800;letter-spacing:.06em}
+.adventure-story-status{color:var(--muted);font-size:.46rem;font-weight:700;letter-spacing:.05em}
+.adventure-story-card h4{margin:0 0 6px;color:var(--ink);font:500 1.03rem/1.35 "Lora",Georgia,serif}
+.adventure-story-card p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.58rem;line-height:1.7}
+.adventure-story-card-meta{display:flex;justify-content:space-between;gap:8px;margin-bottom:11px;color:var(--muted);font-size:.48rem}
+.adventure-story-card button,.adventure-story-back,.adventure-story-listen,.adventure-story-next,.adventure-story-retry{min-height:36px;padding:8px 11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.56rem;font-weight:700;cursor:pointer}
+.adventure-story-card button:hover,.adventure-story-back:hover,.adventure-story-listen:hover,.adventure-story-next:hover,.adventure-story-retry:hover{border-color:var(--sage-deep);background:var(--sage)}
+.adventure-story-reader{max-width:900px;margin:0 auto}
+.adventure-story-reader-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.adventure-story-reader-meta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.5rem;font-weight:700;letter-spacing:.06em}
+.adventure-story-title{margin:0;color:var(--ink);font:500 clamp(1.6rem,3vw,2.25rem)/1.2 "Lora",Georgia,serif}
+.adventure-story-subtitle{margin:6px 0 17px;color:var(--muted);font-size:.66rem;line-height:1.65}
+.adventure-story-text{display:grid;gap:11px;margin:17px 0;padding:18px 20px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 22%,var(--paper))}
+.adventure-story-text p{margin:0;color:var(--ink);font:400 .86rem/1.9 "Lora",Georgia,serif}
+.adventure-story-audio{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:13px 0}
+.adventure-story-audio small{color:var(--muted);font-size:.53rem;line-height:1.6}
+.adventure-story-vocabulary{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.adventure-story-word{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);background:var(--paper);color:var(--body);font-size:.54rem}
+.adventure-story-word strong{color:var(--ink)}
+.adventure-story-quiz{margin-top:19px;padding-top:17px;border-top:1px solid var(--line)}
+.adventure-story-quiz-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:.48rem;font-weight:800;letter-spacing:.08em}
+.adventure-story-progress{height:4px;margin:9px 0 14px;background:var(--paper-deep)}
+.adventure-story-progress i{display:block;height:100%;background:var(--sage-deep);transition:width .2s ease}
+.adventure-story-quiz h4{margin:0 0 12px;color:var(--ink);font:500 1.05rem/1.5 "Lora",Georgia,serif}
+.adventure-story-options{display:grid;gap:7px}
+.adventure-story-option{display:flex;align-items:flex-start;gap:9px;width:100%;min-height:43px;padding:10px 12px;border:1px solid var(--line);background:var(--paper);color:var(--body);text-align:left;font-size:.61rem;line-height:1.6;cursor:pointer}
+.adventure-story-option>span{width:21px;height:21px;flex:0 0 21px;display:grid;place-items:center;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.52rem;font-weight:700}
+.adventure-story-option:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 25%,var(--paper))}
+.adventure-story-option.is-correct{border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 35%,var(--paper))}
+.adventure-story-option.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 30%,var(--paper))}
+.adventure-story-option:disabled{opacity:1;cursor:default}
+.adventure-story-feedback{margin-top:12px;padding:11px 13px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 24%,var(--sheet));color:var(--body);font-size:.59rem;line-height:1.7}
+.adventure-story-feedback.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 34%,var(--sheet))}
+.adventure-story-feedback strong{display:block;margin-bottom:3px;color:var(--ink)}
+.adventure-story-actions{display:flex;justify-content:flex-end;margin-top:13px}
+.adventure-story-result{text-align:center;padding:30px 15px}
+.adventure-story-result-mark{width:48px;height:48px;display:grid;place-items:center;margin:0 auto 14px;border-radius:50%;background:var(--sage);color:var(--sage-deep);font:500 1.25rem "Lora",serif}
+.adventure-story-result h4{margin:0 0 7px;color:var(--ink);font:500 1.4rem "Lora",serif}
+.adventure-story-result p{max-width:530px;margin:0 auto;color:var(--muted);font-size:.65rem;line-height:1.8}
+.adventure-story-result-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:17px}
+.adventure-story-empty{margin:0;padding:17px 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+@media(max-width:1000px){.adventure-story-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.adventure-story-grid{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .adventure-story-library{padding:17px 15px}
+  .adventure-story-heading h3{font-size:1.2rem}
+  .adventure-story-card{padding:13px}
+  .adventure-story-reader-top{align-items:flex-start}
+  .adventure-story-text{padding:14px 15px}
+  .adventure-story-text p{font-size:.82rem}
+  .adventure-story-reader-meta{font-size:.44rem}
+  .adventure-story-result-actions{display:grid;grid-template-columns:1fr}
+  .adventure-story-result-actions button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.adventure-story-progress i{transition:none}}
+
+
+/* Everyday English — situational listening and response practice */
+.adventure-dialogue-library{min-width:0;margin-top:16px;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.adventure-dialogue-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:17px}
+.adventure-dialogue-heading .eyebrow{margin-bottom:6px}
+.adventure-dialogue-heading h3{margin:0;font:500 1.4rem "Lora",Georgia,serif}
+.adventure-dialogue-heading p{max-width:650px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+.adventure-dialogue-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.adventure-dialogue-card{min-width:0;display:flex;flex-direction:column;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.adventure-dialogue-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.adventure-dialogue-card h4{margin:0 0 6px;color:var(--ink);font:500 1.03rem/1.35 "Lora",Georgia,serif}
+.adventure-dialogue-card p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.58rem;line-height:1.7}
+.adventure-dialogue-card-meta{display:flex;justify-content:space-between;gap:8px;margin-bottom:11px;color:var(--muted);font-size:.48rem}
+.adventure-dialogue-card button,.adventure-dialogue-back,.adventure-dialogue-listen,.adventure-dialogue-transcript-toggle,.adventure-dialogue-next,.adventure-dialogue-retry,.adventure-dialogue-speaking{min-height:36px;padding:8px 11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.56rem;font-weight:700;cursor:pointer}
+.adventure-dialogue-card button:hover,.adventure-dialogue-back:hover,.adventure-dialogue-listen:hover,.adventure-dialogue-transcript-toggle:hover,.adventure-dialogue-next:hover,.adventure-dialogue-retry:hover,.adventure-dialogue-speaking:hover{border-color:var(--sage-deep);background:var(--sage)}
+.adventure-dialogue-reader{max-width:900px;margin:0 auto}
+.adventure-dialogue-reader-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.adventure-dialogue-title{margin:0;color:var(--ink);font:500 clamp(1.6rem,3vw,2.15rem)/1.2 "Lora",Georgia,serif}
+.adventure-dialogue-setting{margin:6px 0 15px;color:var(--muted);font-size:.64rem;line-height:1.7}
+.adventure-dialogue-audio{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 0}
+.adventure-dialogue-audio small{flex:1 1 100%;color:var(--muted);font-size:.53rem;line-height:1.6}
+.adventure-dialogue-transcript{display:grid;gap:0;margin:12px 0;padding:11px 14px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 22%,var(--paper))}
+.adventure-dialogue-transcript p{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;margin:0;padding:7px 0;color:var(--body);font:400 .72rem/1.65 "Lora",Georgia,serif}
+.adventure-dialogue-transcript p+p{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.adventure-dialogue-transcript strong{color:var(--sage-deep);font:700 .49rem "Plus Jakarta Sans",sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.adventure-dialogue-vocabulary{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.adventure-dialogue-word{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);background:var(--paper);color:var(--body);font-size:.54rem}
+.adventure-dialogue-word strong{color:var(--ink)}
+.adventure-dialogue-quiz{margin-top:19px;padding-top:17px;border-top:1px solid var(--line)}
+.adventure-dialogue-quiz-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:.48rem;font-weight:800;letter-spacing:.08em}
+.adventure-dialogue-partner-line{margin:12px 0;padding:12px 14px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 20%,var(--sheet))}
+.adventure-dialogue-partner-line span{color:var(--sage-deep);font-size:.47rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.adventure-dialogue-partner-line p{margin:5px 0 0;color:var(--ink);font:500 .9rem/1.6 "Lora",Georgia,serif}
+.adventure-dialogue-quiz h4{margin:0 0 12px;color:var(--ink);font:500 1.05rem/1.5 "Lora",Georgia,serif}
+.adventure-dialogue-options{display:grid;gap:7px}
+.adventure-dialogue-option{display:flex;align-items:flex-start;gap:9px;width:100%;min-height:43px;padding:10px 12px;border:1px solid var(--line);background:var(--paper);color:var(--body);text-align:left;font-size:.61rem;line-height:1.6;cursor:pointer}
+.adventure-dialogue-option>span{width:21px;height:21px;flex:0 0 21px;display:grid;place-items:center;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.52rem;font-weight:700}
+.adventure-dialogue-option:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 25%,var(--paper))}
+.adventure-dialogue-option.is-correct{border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 35%,var(--paper))}
+.adventure-dialogue-option.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 30%,var(--paper))}
+.adventure-dialogue-option:disabled{opacity:1;cursor:default}
+.adventure-dialogue-feedback{margin-top:12px;padding:11px 13px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 24%,var(--sheet));color:var(--body);font-size:.59rem;line-height:1.7}
+.adventure-dialogue-feedback.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 34%,var(--sheet))}
+.adventure-dialogue-feedback strong{display:block;margin-bottom:3px;color:var(--ink)}
+.adventure-dialogue-actions{display:flex;justify-content:flex-end;margin-top:13px}
+.adventure-dialogue-result{text-align:center;padding:30px 15px}
+.adventure-dialogue-result h4{margin:0 0 7px;color:var(--ink);font:500 1.4rem "Lora",Georgia,serif}
+.adventure-dialogue-result p{max-width:550px;margin:0 auto;color:var(--muted);font-size:.65rem;line-height:1.8}
+.adventure-dialogue-result-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:17px}
+.adventure-dialogue-empty{margin:0;padding:17px 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+@media(max-width:1000px){.adventure-dialogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.adventure-dialogue-grid{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .adventure-dialogue-library{padding:17px 15px}
+  .adventure-dialogue-heading h3{font-size:1.2rem}
+  .adventure-dialogue-card{padding:13px}
+  .adventure-dialogue-reader-top{align-items:flex-start}
+  .adventure-dialogue-transcript{padding:9px 11px}
+  .adventure-dialogue-transcript p{grid-template-columns:62px minmax(0,1fr);font-size:.68rem}
+  .adventure-dialogue-result-actions{display:grid;grid-template-columns:1fr}
+  .adventure-dialogue-result-actions button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.adventure-dialogue-library *{scroll-behavior:auto}}
+
+
+/* Listening Lab — progressive comprehension before transcript review */
+.listening-lab-library{min-width:0;margin-top:16px;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.listening-lab-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.listening-lab-heading .eyebrow{margin-bottom:6px}
+.listening-lab-heading h3{margin:0;color:var(--ink);font:500 1.4rem "Lora",Georgia,serif}
+.listening-lab-heading p{max-width:700px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+.listening-lab-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.listening-lab-card{min-width:0;display:flex;flex-direction:column;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.listening-lab-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.listening-lab-card h4{margin:0 0 6px;color:var(--ink);font:500 1.03rem/1.35 "Lora",Georgia,serif}
+.listening-lab-card p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.58rem;line-height:1.7}
+.listening-lab-card-meta{display:flex;justify-content:space-between;gap:8px;margin-bottom:11px;color:var(--muted);font-size:.48rem}
+.listening-lab-button,.listening-lab-play,.listening-lab-transcript-toggle{min-height:37px;padding:8px 11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.57rem;font-weight:700;cursor:pointer}
+.listening-lab-button:hover,.listening-lab-play:hover,.listening-lab-transcript-toggle:hover{border-color:var(--sage-deep);background:var(--sage)}
+.listening-lab-button.is-secondary{background:transparent;color:var(--body)}
+.listening-lab-reader{max-width:880px;margin:0 auto}
+.listening-lab-reader-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.listening-lab-title{margin:0;color:var(--ink);font:500 clamp(1.55rem,3vw,2.1rem)/1.2 "Lora",Georgia,serif}
+.listening-lab-setting{margin:6px 0 16px;color:var(--muted);font-size:.65rem;line-height:1.7}
+.listening-lab-stage-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:17px;color:var(--sage-deep);font-size:.5rem;font-weight:800;letter-spacing:.09em}
+.listening-lab-stage-top strong{color:var(--muted);font-size:.48rem}
+.listening-lab-stage-track{display:flex;align-items:center;gap:8px;margin:15px 0 7px}
+.listening-lab-stage-track span{width:25px;height:25px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--muted);font-size:.56rem;font-weight:700}
+.listening-lab-stage-track span.is-active{border-color:var(--sage-deep);background:var(--sage);color:var(--ink)}
+.listening-lab-stage-track span.is-done{border-color:var(--sage-deep);background:var(--sage-deep);color:#fff}
+.listening-lab-stage-label{margin:0 0 12px;color:var(--ink);font:500 1rem "Lora",Georgia,serif}
+.listening-lab-player{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;padding:13px;border:1px solid var(--line);background:color-mix(in srgb,var(--sage) 17%,var(--paper))}
+.listening-lab-play{min-width:165px;min-height:44px;background:var(--sheet)}
+.listening-lab-speed{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:5px}
+.listening-lab-speed>span{margin-right:5px;color:var(--muted);font-size:.46rem;font-weight:800;letter-spacing:.09em}
+.listening-lab-speed button{min-width:40px;min-height:30px;padding:5px 7px;border:1px solid var(--line);background:var(--sheet);color:var(--body);font-size:.52rem;cursor:pointer}
+.listening-lab-speed button[aria-pressed="true"]{border-color:var(--sage-deep);background:var(--sage);color:var(--ink);font-weight:800}
+.listening-lab-player small{grid-column:1/-1;color:var(--muted);font-size:.52rem;line-height:1.6}
+.listening-lab-question{margin:18px 0 12px;color:var(--ink);font:500 1.05rem/1.5 "Lora",Georgia,serif}
+.listening-lab-options{display:grid;gap:7px}
+.listening-lab-option{display:flex;align-items:flex-start;gap:9px;width:100%;min-height:43px;padding:10px 12px;border:1px solid var(--line);background:var(--paper);color:var(--body);text-align:left;font-size:.62rem;line-height:1.6;cursor:pointer}
+.listening-lab-option>span{width:21px;height:21px;flex:0 0 21px;display:grid;place-items:center;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.52rem;font-weight:700}
+.listening-lab-option:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 25%,var(--paper))}
+.listening-lab-option.is-correct{border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 35%,var(--paper))}
+.listening-lab-option.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 30%,var(--paper))}
+.listening-lab-option:disabled{opacity:1;cursor:default}
+.listening-lab-feedback{margin-top:12px;padding:11px 13px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 24%,var(--sheet));color:var(--body);font-size:.6rem;line-height:1.7}
+.listening-lab-feedback.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 34%,var(--sheet))}
+.listening-lab-feedback strong{display:block;margin-bottom:3px;color:var(--ink)}
+.listening-lab-actions{display:flex;justify-content:flex-end;margin-top:13px}
+.listening-lab-transcript-tools{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:16px}
+.listening-lab-transcript-tools span{color:var(--muted);font-size:.52rem}
+.listening-lab-transcript{display:grid;gap:0;margin:11px 0;padding:11px 14px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 22%,var(--paper))}
+.listening-lab-transcript p{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;margin:0;padding:7px 0;color:var(--body);font:400 .73rem/1.65 "Lora",Georgia,serif}
+.listening-lab-transcript p+p{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.listening-lab-transcript strong{color:var(--sage-deep);font:700 .49rem "Plus Jakarta Sans",sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.listening-lab-vocabulary{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.listening-lab-word{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);background:var(--paper);color:var(--body);font-size:.54rem}
+.listening-lab-word strong{color:var(--ink)}
+.listening-lab-result{text-align:center;padding:30px 15px}
+.listening-lab-result h4{margin:0 0 7px;color:var(--ink);font:500 1.4rem "Lora",Georgia,serif}
+.listening-lab-result p{max-width:550px;margin:0 auto;color:var(--muted);font-size:.65rem;line-height:1.8}
+.listening-lab-result-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:17px}
+.listening-lab-empty{margin:0;padding:17px 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+@media(max-width:1100px){.listening-lab-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.listening-lab-grid{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .listening-lab-library{padding:17px 15px}
+  .listening-lab-heading h3{font-size:1.2rem}
+  .listening-lab-card{padding:13px}
+  .listening-lab-reader-top{align-items:flex-start}
+  .listening-lab-player{grid-template-columns:1fr}
+  .listening-lab-play{width:100%}
+  .listening-lab-speed{justify-content:flex-start}
+  .listening-lab-transcript{padding:9px 11px}
+  .listening-lab-transcript p{grid-template-columns:66px minmax(0,1fr);font-size:.68rem}
+  .listening-lab-result-actions{display:grid;grid-template-columns:1fr}
+  .listening-lab-result-actions button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.listening-lab-library *{scroll-behavior:auto}}
+
+
+/* Pronunciation Studio — browser-local speaking awareness, not automated phoneme scoring */
+.pronunciation-studio-library{min-width:0;margin-top:16px;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.pronunciation-studio-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:17px}
+.pronunciation-studio-heading .eyebrow{margin-bottom:6px}
+.pronunciation-studio-heading h3{margin:0;color:var(--ink);font:500 1.4rem "Lora",Georgia,serif}
+.pronunciation-studio-heading p{max-width:700px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+.pronunciation-studio-privacy{margin:12px 0 16px;padding:10px 12px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 18%,var(--paper));color:var(--muted);font-size:.55rem;line-height:1.7}
+.pronunciation-studio-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.pronunciation-studio-card{min-width:0;display:flex;flex-direction:column;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.pronunciation-studio-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.pronunciation-studio-card h4{margin:0 0 6px;color:var(--ink);font:500 1.02rem/1.35 "Lora",Georgia,serif}
+.pronunciation-studio-card p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.58rem;line-height:1.7}
+.pronunciation-studio-card-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:7px;margin-bottom:11px;color:var(--muted);font-size:.48rem}
+.pronunciation-studio-button{min-height:37px;padding:8px 11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.57rem;font-weight:700;cursor:pointer}
+.pronunciation-studio-button:hover{border-color:var(--sage-deep);background:var(--sage)}
+.pronunciation-studio-button.is-secondary{background:transparent;color:var(--body)}
+.pronunciation-studio-reader{max-width:900px;margin:0 auto}
+.pronunciation-studio-reader-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.pronunciation-studio-title{margin:0;color:var(--ink);font:500 clamp(1.55rem,3vw,2.1rem)/1.2 "Lora",Georgia,serif}
+.pronunciation-studio-meaning{margin:6px 0 17px;color:var(--muted);font-size:.65rem;line-height:1.7}
+.pronunciation-studio-target-label{margin-bottom:7px;color:var(--sage-deep);font-size:.48rem;font-weight:800;letter-spacing:.1em}
+.pronunciation-studio-target{padding:20px 18px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:500 clamp(1.15rem,2.8vw,1.7rem)/1.55 "Lora",Georgia,serif}
+.pronunciation-studio-reference{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:12px 0 17px}
+.pronunciation-studio-reference span{color:var(--muted);font-size:.53rem}
+.pronunciation-studio-guidance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px;border:1px solid var(--line);background:color-mix(in srgb,var(--sage) 14%,var(--paper))}
+.pronunciation-studio-guidance>div{min-width:0}
+.pronunciation-studio-guidance .eyebrow{display:block;margin-bottom:5px;color:var(--sage-deep);font-size:.45rem}
+.pronunciation-studio-guidance strong{display:block;color:var(--ink);font-size:.63rem;line-height:1.5}
+.pronunciation-studio-guidance p{margin:5px 0 0;color:var(--body);font-size:.59rem;line-height:1.7}
+.pronunciation-studio-stress-words{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.pronunciation-studio-stress-words span{padding:5px 7px;border:1px solid var(--sage-deep);background:var(--sheet);color:var(--sage-deep);font-size:.53rem;font-weight:800;letter-spacing:.04em}
+.pronunciation-studio-phrase-groups{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:8px;color:var(--body);font:500 .72rem/1.6 "Lora",Georgia,serif}
+.pronunciation-studio-phrase-group strong{display:inline;color:var(--sage-deep);font-weight:800;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.pronunciation-studio-group-break{color:var(--muted);font-size:.55rem}
+.pronunciation-studio-guidance ul{grid-column:1/-1;margin:0;padding:12px 0 0 17px;border-top:1px solid var(--line);color:var(--body);font-size:.57rem;line-height:1.8}
+.pronunciation-studio-recorder{margin-top:15px;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.pronunciation-studio-recorder-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.pronunciation-studio-recorder-top strong{color:var(--ink);font:500 1rem "Lora",Georgia,serif}
+.pronunciation-studio-recorder-top p{margin:5px 0 0;color:var(--muted);font-size:.57rem;line-height:1.7}
+.pronunciation-studio-recorder-status{padding:5px 8px;border:1px solid var(--line);background:var(--sheet);color:var(--muted);font-size:.45rem;font-weight:800;letter-spacing:.07em}
+.pronunciation-studio-meter{height:7px;overflow:hidden;margin:14px 0;background:var(--line)}
+.pronunciation-studio-meter i{display:block;width:0;height:100%;background:var(--sage-deep);transition:width .12s linear}
+.pronunciation-studio-recorder-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.pronunciation-studio-recorder-actions>span{color:var(--muted);font-size:.54rem;font-variant-numeric:tabular-nums}
+.pronunciation-studio-capture-note{margin:9px 0 0;color:var(--muted);font-size:.55rem;line-height:1.7}
+.pronunciation-studio-result{margin-top:15px;padding:16px;border:1px solid var(--line);background:var(--paper)}
+.pronunciation-studio-result h4{margin:0 0 5px;color:var(--ink);font:500 1.05rem "Lora",Georgia,serif}
+.pronunciation-studio-disclaimer{margin:0 0 13px;color:var(--muted);font-size:.55rem;line-height:1.7}
+.pronunciation-studio-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pronunciation-studio-metrics>div{display:flex;flex-direction:column;gap:4px;padding:10px;border:1px solid var(--line);background:var(--sheet)}
+.pronunciation-studio-metrics strong{color:var(--ink);font-size:1rem;font-variant-numeric:tabular-nums}
+.pronunciation-studio-metrics span{color:var(--muted);font-size:.48rem;line-height:1.5}
+.pronunciation-studio-contour{margin-top:13px;padding:11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep)}
+.pronunciation-studio-contour>strong{display:block;color:var(--ink);font-size:.58rem}
+.pronunciation-studio-pitch-chart{display:block;width:100%;height:75px;margin-top:5px;overflow:visible}
+.pronunciation-studio-contour small,.pronunciation-studio-no-pitch{display:block;margin:4px 0 0;color:var(--muted);font-size:.5rem;line-height:1.6}
+.pronunciation-studio-feedback{margin:13px 0}
+.pronunciation-studio-feedback>strong{display:block;margin-bottom:6px;color:var(--ink);font-size:.62rem}
+.pronunciation-studio-feedback p{margin:0;padding:7px 0;border-top:1px solid var(--line);color:var(--body);font-size:.57rem;line-height:1.7}
+.pronunciation-studio-empty{margin:0;padding:17px 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+@media(max-width:1100px){.pronunciation-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.pronunciation-studio-grid{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .pronunciation-studio-library{padding:17px 15px}
+  .pronunciation-studio-heading h3{font-size:1.2rem}
+  .pronunciation-studio-card{padding:13px}
+  .pronunciation-studio-reader-top{align-items:flex-start}
+  .pronunciation-studio-guidance{grid-template-columns:1fr;padding:13px}
+  .pronunciation-studio-guidance ul{grid-column:auto}
+  .pronunciation-studio-recorder-top{flex-direction:column}
+  .pronunciation-studio-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pronunciation-studio-result{padding:13px}
+}
+@media(prefers-reduced-motion:reduce){.pronunciation-studio-library *{scroll-behavior:auto;transition:none}}
+
+
+/* Speaking Studio: guided open-ended conversation */
+.speaking-studio-conversation{display:grid;gap:10px;margin-top:13px}
+.speaking-studio-progress{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font:700 .47rem "Plus Jakarta Sans",monospace;letter-spacing:.08em}
+.speaking-studio-partner,.speaking-studio-response,.speaking-studio-finished{min-width:0;padding:13px;border:1px solid var(--line);background:var(--paper)}
+.speaking-studio-partner>span,.speaking-studio-response>span,.speaking-studio-finished>span,.speaking-studio-reflection>span{display:block;color:var(--sage-deep);font:700 .47rem "Plus Jakarta Sans",monospace;letter-spacing:.09em}
+.speaking-studio-partner blockquote{margin:8px 0 11px;color:var(--ink);font:500 .95rem/1.6 "Lora",Georgia,serif}
+.speaking-studio-partner button,.speaking-studio-finished button{min-height:34px;padding:7px 10px;border:1px solid var(--line);background:var(--sheet);color:var(--ink);font-size:.56rem;cursor:pointer}
+.speaking-studio-partner small{display:block;margin-top:7px;color:var(--muted);font-size:.49rem;line-height:1.6}
+.speaking-studio-response{background:color-mix(in srgb,var(--sage) 15%,var(--sheet))}
+.speaking-studio-response>strong{display:block;margin-top:8px;color:var(--ink);font:500 .82rem/1.6 "Lora",Georgia,serif}
+.speaking-studio-response details{margin-top:11px;border-top:1px solid var(--line);padding-top:9px}
+.speaking-studio-response summary{color:var(--sage-deep);font-size:.55rem;font-weight:700;cursor:pointer}
+.speaking-studio-response details p{margin:7px 0;color:var(--body);font-size:.56rem;line-height:1.65}
+.speaking-studio-response details .adventure-studio-phrases{margin-top:8px}
+.speaking-studio-finished{margin-top:13px;background:color-mix(in srgb,var(--sage) 18%,var(--sheet))}
+.speaking-studio-finished>strong{display:block;margin-top:7px;color:var(--ink);font:500 .87rem/1.5 "Lora",Georgia,serif}
+.speaking-studio-finished p,.speaking-studio-reflection p{margin:6px 0 11px;color:var(--muted);font-size:.55rem;line-height:1.65}
+.speaking-studio-finished button{margin-top:4px}
+.speaking-studio-reflection{margin-top:13px}
+.speaking-studio-reflection .adventure-studio-checklist{margin-top:8px}
+.speaking-studio-conversation .adventure-studio-submit{width:100%}
+@media(max-width:560px){
+  .speaking-studio-partner,.speaking-studio-response,.speaking-studio-finished{padding:11px}
+  .speaking-studio-partner blockquote{font-size:.88rem}
+}
+
+
+/* Writing Studio: local planning, drafting, revision, and reflection */
+.writing-studio-stage{margin-top:13px;padding:13px;border:1px solid var(--line);background:var(--paper)}
+.writing-studio-stage-heading{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.writing-studio-stage-heading>span,.writing-studio-reflection>span,.writing-studio-signals>span{color:var(--sage-deep);font:700 .47rem "Plus Jakarta Sans",monospace;letter-spacing:.09em}
+.writing-studio-stage-heading>strong{color:var(--ink);font:500 .83rem "Lora",Georgia,serif}
+.writing-studio-stage>p,.writing-studio-reflection>p{margin:6px 0 10px;color:var(--muted);font-size:.55rem;line-height:1.65}
+.writing-studio-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}
+.writing-studio-plan-field{display:grid;gap:5px;min-width:0}
+.writing-studio-plan-field>span{color:var(--muted);font:700 .44rem "Plus Jakarta Sans",monospace;letter-spacing:.07em}
+.writing-studio-plan-field textarea{width:100%;min-height:74px;padding:8px;border:1px solid var(--line);border-radius:0;background:var(--sheet);color:var(--ink);font:.58rem/1.6 "Plus Jakarta Sans",sans-serif;resize:vertical}
+.writing-studio-outline-button{margin-top:9px;padding:7px 10px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.54rem;font-weight:700;cursor:pointer}
+.writing-studio-signals{margin-top:10px;padding:10px;border:1px solid var(--line);background:var(--sheet)}
+.writing-studio-signals>ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0 0;padding:0;list-style:none}
+.writing-studio-signals li{display:grid;gap:4px;min-width:0;padding:7px;background:var(--paper)}
+.writing-studio-signals li strong{font-size:.52rem}
+.writing-studio-signals li small{color:var(--muted);font-size:.47rem;line-height:1.5;overflow-wrap:anywhere}
+.writing-studio-signals li.is-ready strong{color:var(--sage-deep)}
+.writing-studio-signals li.is-pending strong{color:var(--muted)}
+.writing-studio-reflection{margin-top:13px}
+.writing-studio-reflection .adventure-studio-checklist{margin-top:8px}
+.writing-studio-review-locked{padding:10px;border:1px dashed var(--line);color:var(--muted);font-size:.53rem;line-height:1.6}
+#studio-writing-draft,#studio-writing-revision{width:100%;min-height:126px;padding:12px;border:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--ink);font:.68rem/1.75 "Plus Jakarta Sans",sans-serif;resize:vertical}
+@media(max-width:560px){
+  .writing-studio-plan-grid{grid-template-columns:1fr}
+  .writing-studio-plan-field textarea{min-height:58px}
+  .writing-studio-signals>ul{grid-template-columns:1fr}
+}
+
+
+/* Placement Check */
+.placement-teaser{display:flex;align-items:center;justify-content:space-between;gap:22px;margin:15px 0 0;padding:17px 20px;border:1px solid var(--line);border-radius:13px;background:var(--sheet)}
+.placement-teaser .eyebrow{margin:0 0 5px;font-size:.48rem}
+.placement-teaser h2{margin:0 0 4px;color:var(--ink);font:500 1.08rem/1.35 "Lora",Georgia,serif}
+.placement-teaser p{max-width:620px;margin:0;color:var(--muted);font-size:.63rem;line-height:1.65}
+.placement-teaser-action,.placement-secondary,.placement-retake{min-height:38px;padding:9px 13px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--sage-deep);font-size:.64rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.placement-teaser-action:hover,.placement-secondary:hover,.placement-retake:hover{border-color:var(--sage-deep);background:var(--sage)}
+.placement-page-heading{align-items:flex-start}
+.placement-page-heading .plain-action{margin-top:12px}
+.placement-shell{max-width:850px;margin:0 auto}
+.placement-panel{padding:clamp(21px,4vw,36px);border:1px solid var(--line);border-radius:14px;background:var(--sheet)}
+.placement-overline{display:block;color:var(--sage-deep);font-size:.52rem;font-weight:800;letter-spacing:.12em}
+.placement-intro h2{max-width:590px;margin:14px 0 9px;color:var(--ink);font:500 clamp(1.55rem,3vw,2.2rem)/1.22 "Lora",Georgia,serif}
+.placement-intro>p:not(.placement-disclaimer){max-width:650px;margin:0;color:var(--body);font-size:.76rem;line-height:1.8}
+.placement-facts{display:flex;flex-wrap:wrap;gap:8px;margin:19px 0}
+.placement-facts span{padding:8px 11px;border:1px solid var(--line);border-radius:7px;color:var(--muted);font-size:.6rem}
+.placement-facts strong{color:var(--ink)}
+.placement-disclaimer{margin:18px 0;color:var(--muted);font-size:.59rem;line-height:1.7}
+.placement-primary{min-height:43px;padding:11px 16px;border:1px solid var(--sage-deep);border-radius:8px;background:var(--sage-deep);color:#fff;font-size:.69rem;font-weight:700;cursor:pointer}
+.placement-primary:hover{filter:brightness(.94)}
+.placement-quiz-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:15px}
+.placement-counter{display:block;margin-top:5px;color:var(--muted);font-size:.54rem;font-weight:700;letter-spacing:.05em}
+.placement-kind{padding:6px 8px;border:1px solid var(--line);border-radius:5px;color:var(--muted);font-size:.48rem;font-weight:800;letter-spacing:.09em}
+.placement-progress-track{height:5px;overflow:hidden;margin-bottom:26px;border-radius:6px;background:var(--paper-deep)}
+.placement-progress-track i{display:block;width:5%;height:100%;border-radius:inherit;background:var(--sage-deep);transition:width .2s ease}
+.placement-quiz h2{max-width:700px;margin:0 0 13px;color:var(--ink);font:500 clamp(1.25rem,2.8vw,1.8rem)/1.4 "Lora",Georgia,serif}
+.placement-context{margin:0 0 17px;padding:14px 16px;border-left:3px solid var(--sage-deep);background:var(--paper);color:var(--body);font-size:.73rem;line-height:1.85}
+.placement-options{display:grid;gap:8px}
+.placement-option{display:flex;align-items:flex-start;gap:11px;width:100%;min-height:48px;padding:11px 13px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--body);text-align:left;font-size:.71rem;line-height:1.6;cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.placement-option:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 24%,var(--paper))}
+.placement-option:focus-visible,.placement-primary:focus-visible,.placement-secondary:focus-visible,.placement-retake:focus-visible,.placement-teaser-action:focus-visible{outline:3px solid color-mix(in srgb,var(--sage-deep) 45%,transparent);outline-offset:2px}
+.placement-option-letter{flex:0 0 23px;width:23px;height:23px;display:grid;place-items:center;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:.57rem;font-weight:700}
+.placement-option.is-correct{border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 38%,var(--paper));color:var(--ink)}
+.placement-option.is-correct .placement-option-letter{border-color:var(--sage-deep);background:var(--sage);color:var(--ink)}
+.placement-option.is-incorrect{border-color:#b66c61;background:color-mix(in srgb,#b66c61 10%,var(--paper))}
+.placement-option:disabled{cursor:default;opacity:1}
+.placement-feedback{margin-top:15px;padding:13px 15px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--body);font-size:.67rem;line-height:1.7}
+.placement-feedback strong{display:block;margin-bottom:3px;color:var(--ink)}
+.placement-feedback p{margin:2px 0 0}
+.placement-feedback.is-correct{border-color:color-mix(in srgb,var(--sage-deep) 45%,var(--line))}
+.placement-feedback.is-incorrect{border-color:color-mix(in srgb,#b66c61 48%,var(--line))}
+.placement-correct-answer{font-weight:700}
+.placement-quiz-actions{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:19px}
+.placement-quiz-actions>span{max-width:390px;color:var(--muted);font-size:.56rem;line-height:1.6}
+.placement-result-top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:16px 0}
+.placement-result-caption{display:block;color:var(--muted);font-size:.48rem;font-weight:800;letter-spacing:.11em}
+.placement-result-level{display:block;margin-top:3px;color:var(--ink);font:500 3.2rem/1 "Lora",Georgia,serif}
+.placement-result-score{text-align:right}
+.placement-result-score strong{display:block;color:var(--ink);font:500 1.7rem/1 "Lora",Georgia,serif}
+.placement-result-score span{display:block;margin-top:5px;color:var(--muted);font-size:.53rem}
+.placement-result h2{margin:8px 0;color:var(--ink);font:500 clamp(1.35rem,2.8vw,1.8rem)/1.3 "Lora",Georgia,serif}
+.placement-result>p:not(.placement-disclaimer){margin:0;color:var(--body);font-size:.72rem;line-height:1.8}
+.placement-result-section{margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.placement-result-section h3{margin:0 0 12px;color:var(--ink);font-size:.75rem}
+.placement-level-breakdown,.placement-category-breakdown{display:grid;gap:8px}
+.placement-level-row,.placement-category-row{display:grid;grid-template-columns:55px 55px minmax(0,1fr);align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--paper)}
+.placement-level-row>span,.placement-level-row>strong,.placement-category-row>span,.placement-category-row>strong{font-size:.62rem}
+.placement-level-row>strong,.placement-category-row>strong{color:var(--ink)}
+.placement-level-row small{color:var(--muted);font-size:.55rem;text-align:right}
+.placement-category-row{grid-template-columns:minmax(0,1fr) 55px}
+.placement-focus-note{margin:10px 0 0!important;color:var(--muted)!important;font-size:.61rem!important}
+.placement-result-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.placement-result-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding-top:13px;border-top:1px solid var(--line)}
+.placement-result-footer small{color:var(--muted);font-size:.53rem}
+.placement-retake{background:transparent}
+:root[data-theme="dark"] .placement-option.is-incorrect{background:color-mix(in srgb,#b66c61 17%,var(--paper))}
+@media(max-width:700px){
+  .placement-teaser{align-items:flex-start;flex-direction:column;gap:12px;padding:15px}
+  .placement-teaser-action{width:100%}
+  .placement-page-heading{display:flex;align-items:flex-start}
+  .placement-page-heading .plain-action{margin-top:6px}
+}
+@media(max-width:520px){
+  .placement-panel{padding:19px 15px}
+  .placement-facts{gap:6px}
+  .placement-facts span{font-size:.54rem;padding:7px 8px}
+  .placement-quiz-actions{align-items:stretch;flex-direction:column}
+  .placement-quiz-actions .placement-primary{width:100%}
+  .placement-result-footer{align-items:flex-start;flex-direction:column}
+  .placement-retake{width:100%}
+  .placement-level-row{grid-template-columns:42px 44px minmax(0,1fr);gap:6px;padding:8px}
+  .placement-level-row small{font-size:.49rem}
+  .placement-result-actions{display:grid;grid-template-columns:1fr}
+  .placement-secondary{width:100%}
+}
+
+ 
+.adventure-learning-path{margin-top:18px;padding:14px 15px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.adventure-learning-path>span{display:block;color:var(--sage-deep);font-size:.48rem;font-weight:800;letter-spacing:.1em}
+.adventure-learning-path>p{margin:5px 0 11px;color:var(--muted);font-size:.59rem;line-height:1.6}
+.adventure-learning-path>div{display:flex;flex-wrap:wrap;gap:7px}
+.adventure-learning-path button{min-height:35px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--sheet);color:var(--sage-deep);font-size:.55rem;font-weight:700;cursor:pointer}
+.adventure-learning-path button:hover{border-color:var(--sage-deep);background:var(--sage)}
+.adventure-learning-path button:focus-visible{outline:3px solid color-mix(in srgb,var(--sage-deep) 45%,transparent);outline-offset:2px}
+@media(max-width:560px){.adventure-learning-path{padding:12px}.adventure-learning-path>div{display:grid;grid-template-columns:1fr}.adventure-learning-path button{width:100%;min-height:40px;text-align:left}}

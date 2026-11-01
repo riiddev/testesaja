@@ -1,0 +1,420 @@
+{
+  "schemaVersion": 1,
+  "title": "Everyday English",
+  "note": "Dialog situasional orisinal untuk latihan listening, memilih respons yang alami, dan speaking mandiri. Level adalah panduan editorial, bukan sertifikasi.",
+  "dialogues": [
+    {
+      "id": "at-the-cafe",
+      "level": "A1",
+      "title": "At the Café",
+      "subtitle": "Order a drink and make a simple request politely.",
+      "estimatedMinutes": 5,
+      "setting": "You are ordering at a small café. The barista is ready to help.",
+      "speakingPromptId": "cafe-order",
+      "focusWords": [
+        {
+          "id": "batch-cafe-noun",
+          "word": "cafe",
+          "meaning": "kafe"
+        },
+        {
+          "id": "batch-coffee-noun",
+          "word": "coffee",
+          "meaning": "kopi"
+        },
+        {
+          "id": "batch-drink-verb",
+          "word": "drink",
+          "meaning": "minum"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Barista",
+          "text": "Good morning! What can I get for you?"
+        },
+        {
+          "speaker": "You",
+          "text": "Could I have a cup of coffee, please?"
+        },
+        {
+          "speaker": "Barista",
+          "text": "Of course. Would you like milk or sugar?"
+        },
+        {
+          "speaker": "You",
+          "text": "A little milk, please. No sugar."
+        },
+        {
+          "speaker": "Barista",
+          "text": "Anything else?"
+        },
+        {
+          "speaker": "You",
+          "text": "That's all, thank you."
+        },
+        {
+          "speaker": "Barista",
+          "text": "You're welcome. That will be forty thousand rupiah."
+        }
+      ],
+      "turns": [
+        {
+          "id": "cafe-turn-1",
+          "partnerLine": "Good morning! What can I get for you?",
+          "prompt": "You want a cup of coffee. Which response sounds polite?",
+          "options": [
+            "Could I have a cup of coffee, please?",
+            "I am coffee yesterday.",
+            "Give coffee now."
+          ],
+          "answer": 0,
+          "response": "Could I have a cup of coffee, please?",
+          "explanation": "Could I have …, please? is a polite way to order something."
+        },
+        {
+          "id": "cafe-turn-2",
+          "partnerLine": "Would you like milk or sugar?",
+          "prompt": "You want a little milk and no sugar. What should you say?",
+          "options": [
+            "I little milk no sugar.",
+            "A little milk, please. No sugar.",
+            "I don't want coffee yesterday."
+          ],
+          "answer": 1,
+          "response": "A little milk, please. No sugar.",
+          "explanation": "A little milk describes your preference, and No sugar makes the request clear."
+        },
+        {
+          "id": "cafe-turn-3",
+          "partnerLine": "Anything else?",
+          "prompt": "You do not need anything more. How can you finish naturally?",
+          "options": [
+            "That's all, thank you.",
+            "Where is your birthday?",
+            "I am finish yesterday."
+          ],
+          "answer": 0,
+          "response": "That's all, thank you.",
+          "explanation": "That's all, thank you is a natural, polite way to say your order is complete."
+        }
+      ],
+      "learningPath": {
+        "storyId": "a-rainy-morning",
+        "listeningId": "missed-the-bus",
+        "pronunciationId": "polite-help",
+        "writingPromptId": "short-introduction"
+      }
+    },
+    {
+      "id": "finding-the-bus-station",
+      "level": "A2",
+      "title": "Finding the Bus Station",
+      "subtitle": "Ask for directions and check that you understood.",
+      "estimatedMinutes": 6,
+      "setting": "You are in an unfamiliar part of town and need to find the bus station.",
+      "speakingPromptId": "ask-directions",
+      "focusWords": [
+        {
+          "id": "batch-across-preposition",
+          "word": "across",
+          "meaning": "melintasi; di seberang"
+        },
+        {
+          "id": "batch-corner-noun",
+          "word": "corner",
+          "meaning": "sudut atau tikungan"
+        },
+        {
+          "id": "a1-arrive",
+          "word": "arrive",
+          "meaning": "tiba"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Local",
+          "text": "Hello. Can I help you?"
+        },
+        {
+          "speaker": "You",
+          "text": "Excuse me, could you tell me how to get to the bus station?"
+        },
+        {
+          "speaker": "Local",
+          "text": "Certainly. Go straight and turn left at the second corner."
+        },
+        {
+          "speaker": "You",
+          "text": "Is it across from the post office?"
+        },
+        {
+          "speaker": "Local",
+          "text": "Yes, that's right. You will see it on your right."
+        },
+        {
+          "speaker": "You",
+          "text": "Thank you for your help."
+        },
+        {
+          "speaker": "Local",
+          "text": "No problem. It's about a five-minute walk."
+        }
+      ],
+      "turns": [
+        {
+          "id": "bus-turn-1",
+          "partnerLine": "Hello. Can I help you?",
+          "prompt": "You need to find the bus station. Which question is the clearest?",
+          "options": [
+            "Excuse me, could you tell me how to get to the bus station?",
+            "You bus station now?",
+            "Where you go yesterday?"
+          ],
+          "answer": 0,
+          "response": "Excuse me, could you tell me how to get to the bus station?",
+          "explanation": "Excuse me softens the request, and could you tell me how to get to… clearly asks for directions."
+        },
+        {
+          "id": "bus-turn-2",
+          "partnerLine": "Go straight and turn left at the second corner.",
+          "prompt": "You want to check a landmark. What is a natural follow-up?",
+          "options": [
+            "Is it across from the post office?",
+            "Does the post office eat lunch?",
+            "I arrive the corner yesterday."
+          ],
+          "answer": 0,
+          "response": "Is it across from the post office?",
+          "explanation": "Asking about a nearby landmark is a useful way to confirm that you understood the directions."
+        },
+        {
+          "id": "bus-turn-3",
+          "partnerLine": "Yes, that's right. You will see it on your right.",
+          "prompt": "The directions are clear. How should you close the conversation?",
+          "options": [
+            "Thank you for your help.",
+            "I am the bus station.",
+            "You are welcome me."
+          ],
+          "answer": 0,
+          "response": "Thank you for your help.",
+          "explanation": "Thank you for your help is a polite closing after someone gives you directions."
+        }
+      ],
+      "learningPath": {
+        "storyId": "a-change-of-plan",
+        "listeningId": "booking-a-study-room",
+        "pronunciationId": "book-a-room",
+        "writingPromptId": "weekend-story"
+      }
+    },
+    {
+      "id": "planning-a-study-session",
+      "level": "B1",
+      "title": "Planning a Study Session",
+      "subtitle": "Suggest a plan, explain a delay, and respond cooperatively.",
+      "estimatedMinutes": 7,
+      "setting": "Your group has to finish a presentation by Friday. You are discussing how to share the work.",
+      "speakingPromptId": "discuss-study-plan",
+      "focusWords": [
+        {
+          "id": "a2-suggest",
+          "word": "suggest",
+          "meaning": "mengusulkan ide atau menyarankan sesuatu"
+        },
+        {
+          "id": "a2-available",
+          "word": "available",
+          "meaning": "tersedia atau dapat digunakan"
+        },
+        {
+          "id": "batch-delay-noun",
+          "word": "delay",
+          "meaning": "penundaan atau keterlambatan"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Nadia",
+          "text": "We need to finish our group presentation by Friday. How should we divide the work?"
+        },
+        {
+          "speaker": "You",
+          "text": "I suggest that we each prepare one section and review the slides together."
+        },
+        {
+          "speaker": "Nadia",
+          "text": "That sounds reasonable. Are you available to meet tomorrow?"
+        },
+        {
+          "speaker": "You",
+          "text": "I can meet after class, but I may be ten minutes late because of a bus delay."
+        },
+        {
+          "speaker": "Nadia",
+          "text": "No problem. Could you still review the introduction before then?"
+        },
+        {
+          "speaker": "You",
+          "text": "Of course. I'll read it tonight and share my comments."
+        }
+      ],
+      "turns": [
+        {
+          "id": "study-turn-1",
+          "partnerLine": "How should we divide the work?",
+          "prompt": "You want to propose a fair plan. Which response is the most constructive?",
+          "options": [
+            "I suggest that we each prepare one section and review the slides together.",
+            "You do everything because I am busy.",
+            "The presentation is Friday yesterday."
+          ],
+          "answer": 0,
+          "response": "I suggest that we each prepare one section and review the slides together.",
+          "explanation": "I suggest that… introduces an idea politely, while each prepare one section makes the division of work clear."
+        },
+        {
+          "id": "study-turn-2",
+          "partnerLine": "Are you available to meet tomorrow?",
+          "prompt": "You can meet after class, but your bus may be delayed. What is the clearest response?",
+          "options": [
+            "I can meet after class, but I may be ten minutes late because of a bus delay.",
+            "I available yesterday after class.",
+            "No, I meeting bus."
+          ],
+          "answer": 0,
+          "response": "I can meet after class, but I may be ten minutes late because of a bus delay.",
+          "explanation": "This response confirms when you are available and explains the possible delay without cancelling the meeting."
+        },
+        {
+          "id": "study-turn-3",
+          "partnerLine": "Could you still review the introduction before then?",
+          "prompt": "You agree to help. Which response gives a clear next step?",
+          "options": [
+            "Of course. I'll read it tonight and share my comments.",
+            "Maybe the introduction is a chair.",
+            "You should review yesterday."
+          ],
+          "answer": 0,
+          "response": "Of course. I'll read it tonight and share my comments.",
+          "explanation": "Of course accepts the request, and the second sentence explains exactly what you will do and when."
+        }
+      ],
+      "learningPath": {
+        "storyId": "a-shared-workspace",
+        "listeningId": "changing-an-appointment",
+        "pronunciationId": "reschedule-appointment",
+        "writingPromptId": "study-reflection"
+      }
+    },
+    {
+      "id": "revising-a-project-proposal",
+      "level": "B2",
+      "title": "Revising a Project Proposal",
+      "subtitle": "Challenge an assumption, weigh consequences, and suggest a workable alternative.",
+      "estimatedMinutes": 8,
+      "setting": "Your student team has proposed a campus study-space project. A new cost estimate means the group must revise its plan before presenting it to the student council.",
+      "speakingPromptId": "discuss-study-plan",
+      "focusWords": [
+        {
+          "id": "b2-substantial",
+          "word": "substantial",
+          "meaning": "cukup besar atau penting dalam jumlah, nilai, atau pengaruh"
+        },
+        {
+          "id": "b2-undermine",
+          "word": "undermine",
+          "meaning": "melemahkan secara bertahap; mengurangi kekuatan atau kepercayaan"
+        },
+        {
+          "id": "batch-consequence-noun",
+          "word": "consequence",
+          "meaning": "konsekuensi; akibat"
+        },
+        {
+          "id": "batch-alternative-noun",
+          "word": "alternative",
+          "meaning": "pilihan lain; alternatif"
+        }
+      ],
+      "transcript": [
+        {
+          "speaker": "Maya",
+          "text": "The revised estimate shows a substantial increase in the equipment cost. I am worried that the current proposal is no longer realistic."
+        },
+        {
+          "speaker": "You",
+          "text": "I agree that the increase changes our assumptions. However, removing the quiet study area entirely could undermine the main purpose of the project."
+        },
+        {
+          "speaker": "Maya",
+          "text": "That is a fair point. What alternative would you suggest?"
+        },
+        {
+          "speaker": "You",
+          "text": "We could open the quiet area in phases and use the first month's feedback to decide what equipment is essential."
+        },
+        {
+          "speaker": "Maya",
+          "text": "That would reduce the initial cost, although we should be clear about the consequences of delaying the second phase."
+        },
+        {
+          "speaker": "You",
+          "text": "Absolutely. We can include a review date and explain that the second phase depends on usage and the remaining budget."
+        },
+        {
+          "speaker": "Maya",
+          "text": "Good. Let's revise the proposal and make those conditions explicit before Friday."
+        }
+      ],
+      "turns": [
+        {
+          "id": "proposal-turn-1",
+          "partnerLine": "The revised estimate shows a substantial increase in the equipment cost. I am worried that the current proposal is no longer realistic.",
+          "prompt": "You want to acknowledge the concern without abandoning the project's main purpose. Which response is strongest?",
+          "options": [
+            "I agree the increase changes our assumptions, but removing the quiet area could undermine the project's main purpose.",
+            "The estimate is wrong, so we should ignore it.",
+            "I do not care about the cost because the idea is important."
+          ],
+          "answer": 0,
+          "response": "I agree the increase changes our assumptions, but removing the quiet area could undermine the project's main purpose.",
+          "explanation": "The response recognises the new evidence while explaining why the original objective still matters. Could undermine describes how a decision may weaken the project's purpose."
+        },
+        {
+          "id": "proposal-turn-2",
+          "partnerLine": "That is a fair point. What alternative would you suggest?",
+          "prompt": "You want to reduce the initial cost while keeping the project possible. What is the most practical suggestion?",
+          "options": [
+            "We should buy everything immediately and hope the budget works.",
+            "We could open the quiet area in phases and review feedback before buying the remaining equipment.",
+            "We should cancel the project without discussing any other option."
+          ],
+          "answer": 1,
+          "response": "We could open the quiet area in phases and review feedback before buying the remaining equipment.",
+          "explanation": "A phased approach is a realistic alternative: it limits the initial commitment and uses evidence before the next decision."
+        },
+        {
+          "id": "proposal-turn-3",
+          "partnerLine": "That would reduce the initial cost, although we should be clear about the consequences of delaying the second phase.",
+          "prompt": "How should you respond to make the proposal more accountable?",
+          "options": [
+            "There will be no consequences, so there is nothing to explain.",
+            "Let's leave that detail out of the presentation.",
+            "We can set a review date and explain that the second phase depends on usage and the remaining budget."
+          ],
+          "answer": 2,
+          "response": "We can set a review date and explain that the second phase depends on usage and the remaining budget.",
+          "explanation": "A review date and clear conditions make the consequences visible and give the team a measurable basis for continuing."
+        }
+      ],
+      "learningPath": {
+        "storyId": "the-cost-of-convenience",
+        "listeningId": "reviewing-a-study-proposal",
+        "pronunciationId": "proposal-evidence",
+        "writingPromptId": "balanced-proposal"
+      }
+    }
+  ]
+}

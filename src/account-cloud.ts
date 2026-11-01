@@ -400,6 +400,116 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
     .sort((a, b) => String(a.completedAt || "").localeCompare(String(b.completedAt || "")))
     .slice(-500);
 
+  const localStories = local.storyProgress || {}, remoteStories = remote.storyProgress || {};
+  result.storyProgress = {};
+  for (const storyId of new Set([...Object.keys(localStories), ...Object.keys(remoteStories)])) {
+    const a = localStories[storyId] || {}, b = remoteStories[storyId] || {};
+    const attemptsById = new Map<string, AnyRecord>();
+    for (const attempt of [...(Array.isArray(a.attempts) ? a.attempts : []), ...(Array.isArray(b.attempts) ? b.attempts : [])]) {
+      if (!attempt || typeof attempt.attemptId !== "string" || !Number.isInteger(attempt.score) || !Number.isInteger(attempt.total)) continue;
+      const previous = attemptsById.get(attempt.attemptId);
+      const previousTime = Date.parse(previous?.completedAt || "") || 0;
+      const attemptTime = Date.parse(attempt.completedAt || "") || 0;
+      if (!previous || attemptTime >= previousTime) attemptsById.set(attempt.attemptId, attempt);
+    }
+    const attempts = Array.from(attemptsById.values())
+      .sort((x, y) => String(x.completedAt || "").localeCompare(String(y.completedAt || "")))
+      .slice(-100);
+    const completionDates = [a.completedAt, b.completedAt, ...attempts.filter((attempt) => attempt.passed).map((attempt) => attempt.completedAt)]
+      .filter((value) => typeof value === "string").sort();
+    const updateTimes = [Date.parse(a.updatedAt || "") || 0, Date.parse(b.updatedAt || "") || 0];
+    result.storyProgress[storyId] = {
+      attempts,
+      bestScore: Math.max(Number(a.bestScore) || 0, Number(b.bestScore) || 0, ...attempts.map((attempt) => Number(attempt.score) || 0)),
+      completedAt: completionDates[0] || null,
+      updatedAt: new Date(Math.max(...updateTimes) || Date.now()).toISOString(),
+    };
+  }
+
+
+  const localListening = local.listeningProgress || {}, remoteListening = remote.listeningProgress || {};
+  result.listeningProgress = {};
+  for (const exerciseId of new Set([...Object.keys(localListening), ...Object.keys(remoteListening)])) {
+    const a = localListening[exerciseId] || {}, b = remoteListening[exerciseId] || {};
+    const attemptsById = new Map<string, AnyRecord>();
+    for (const attempt of [...(Array.isArray(a.attempts) ? a.attempts : []), ...(Array.isArray(b.attempts) ? b.attempts : [])]) {
+      if (!attempt || typeof attempt.attemptId !== "string" || !Number.isInteger(attempt.score) || !Number.isInteger(attempt.total)) continue;
+      const previous = attemptsById.get(attempt.attemptId);
+      const previousTime = Date.parse(previous?.completedAt || "") || 0;
+      const attemptTime = Date.parse(attempt.completedAt || "") || 0;
+      if (!previous || attemptTime >= previousTime) attemptsById.set(attempt.attemptId, attempt);
+    }
+    const attempts = Array.from(attemptsById.values())
+      .sort((x, y) => String(x.completedAt || "").localeCompare(String(y.completedAt || "")))
+      .slice(-100);
+    const completionDates = [a.completedAt, b.completedAt, ...attempts.filter((attempt) => attempt.passed).map((attempt) => attempt.completedAt)]
+      .filter((value) => typeof value === "string").sort();
+    const updateTimes = [Date.parse(a.updatedAt || "") || 0, Date.parse(b.updatedAt || "") || 0];
+    result.listeningProgress[exerciseId] = {
+      attempts,
+      bestScore: Math.max(Number(a.bestScore) || 0, Number(b.bestScore) || 0, ...attempts.map((attempt) => Number(attempt.score) || 0)),
+      completedAt: completionDates[0] || null,
+      updatedAt: new Date(Math.max(...updateTimes) || Date.now()).toISOString(),
+    };
+  }
+
+  const localDialogues = local.dialogueProgress || {}, remoteDialogues = remote.dialogueProgress || {};
+  result.dialogueProgress = {};
+  for (const dialogueId of new Set([...Object.keys(localDialogues), ...Object.keys(remoteDialogues)])) {
+    const a = localDialogues[dialogueId] || {}, b = remoteDialogues[dialogueId] || {};
+    const attemptsById = new Map<string, AnyRecord>();
+    for (const attempt of [...(Array.isArray(a.attempts) ? a.attempts : []), ...(Array.isArray(b.attempts) ? b.attempts : [])]) {
+      if (!attempt || typeof attempt.attemptId !== "string" || !Number.isInteger(attempt.score) || !Number.isInteger(attempt.total)) continue;
+      const previous = attemptsById.get(attempt.attemptId);
+      const previousTime = Date.parse(previous?.completedAt || "") || 0;
+      const attemptTime = Date.parse(attempt.completedAt || "") || 0;
+      if (!previous || attemptTime >= previousTime) attemptsById.set(attempt.attemptId, attempt);
+    }
+    const attempts = Array.from(attemptsById.values())
+      .sort((x, y) => String(x.completedAt || "").localeCompare(String(y.completedAt || "")))
+      .slice(-100);
+    const completionDates = [a.completedAt, b.completedAt, ...attempts.filter((attempt) => attempt.passed).map((attempt) => attempt.completedAt)]
+      .filter((value) => typeof value === "string").sort();
+    const updateTimes = [Date.parse(a.updatedAt || "") || 0, Date.parse(b.updatedAt || "") || 0];
+    result.dialogueProgress[dialogueId] = {
+      attempts,
+      bestScore: Math.max(Number(a.bestScore) || 0, Number(b.bestScore) || 0, ...attempts.map((attempt) => Number(attempt.score) || 0)),
+      completedAt: completionDates[0] || null,
+      updatedAt: new Date(Math.max(...updateTimes) || Date.now()).toISOString(),
+    };
+  }
+
+
+  const localPronunciation = local.pronunciationProgress || {}, remotePronunciation = remote.pronunciationProgress || {};
+  result.pronunciationProgress = {};
+  for (const phraseId of new Set([...Object.keys(localPronunciation), ...Object.keys(remotePronunciation)])) {
+    const a = localPronunciation[phraseId] || {}, b = remotePronunciation[phraseId] || {};
+    const attemptsById = new Map<string, AnyRecord>();
+    for (const attempt of [...(Array.isArray(a.attempts) ? a.attempts : []), ...(Array.isArray(b.attempts) ? b.attempts : [])]) {
+      if (!attempt || typeof attempt.attemptId !== "string" || typeof attempt.completedAt !== "string"
+        || !Number.isFinite(attempt.durationMs) || !Number.isFinite(attempt.voiceShare)) continue;
+      attemptsById.set(attempt.attemptId, {
+        attemptId: attempt.attemptId.slice(0, 140),
+        completedAt: attempt.completedAt,
+        durationMs: Math.max(0, Math.min(12000, Number(attempt.durationMs) || 0)),
+        voiceShare: Math.max(0, Math.min(1, Number(attempt.voiceShare) || 0)),
+        voicedFrames: Math.max(0, Math.min(200, Math.trunc(Number(attempt.voicedFrames) || 0))),
+        meanRms: Math.max(0, Math.min(1, Number(attempt.meanRms) || 0)),
+        pauseCount: Math.max(0, Math.min(30, Math.trunc(Number(attempt.pauseCount) || 0))),
+        pitchMedian: Number.isFinite(attempt.pitchMedian) ? Math.max(60, Math.min(400, Number(attempt.pitchMedian))) : null,
+        pitchRangeSemitones: Number.isFinite(attempt.pitchRangeSemitones) ? Math.max(0, Math.min(24, Number(attempt.pitchRangeSemitones))) : null,
+      });
+    }
+    const attempts = Array.from(attemptsById.values())
+      .sort((x, y) => String(x.completedAt || "").localeCompare(String(y.completedAt || "")))
+      .slice(-50);
+    const updateTimes = [Date.parse(a.updatedAt || "") || 0, Date.parse(b.updatedAt || "") || 0];
+    result.pronunciationProgress[phraseId] = {
+      attempts,
+      updatedAt: new Date(Math.max(...updateTimes) || Date.now()).toISOString(),
+    };
+  }
+
   result.achievementIds = Array.from(new Set([...(local.achievementIds || []), ...(remote.achievementIds || [])]));
   result.updatedAt = new Date(Math.max(Date.parse(local.updatedAt || "") || 0, Date.parse(remote.updatedAt || "") || 0) || Date.now()).toISOString();
   return result;

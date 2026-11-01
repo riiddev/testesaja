@@ -8,6 +8,245 @@
   const LEVELS = ["A1", "A2", "B1", "B2", "C1", "UNCLASSIFIED"];
   const LABELS = { A1:"Fondasi", A2:"Sehari-hari", B1:"Intermediate", B2:"Upper-intermediate", C1:"Advanced", UNCLASSIFIED:"Belum diklasifikasikan" };
   const INTERVALS = [1, 3, 8, 16, 30];
+  const PLACEMENT_BANDS = ["A1", "A2", "B1", "B2"];
+  const PLACEMENT_RESULT_KEY = "sinauu-placement-check-v1";
+  const PLACEMENT_BANK = [
+    {id:"a1-grammar-1",level:"A1",category:"grammar",prompt:"Mira ___ English every evening.",context:"",options:["study","studies","is study"],answer:1,explanation:"Untuk he, she, atau it pada present simple, kata kerja positif mendapat akhiran -s atau -es."},
+    {id:"a1-vocabulary-1",level:"A1",category:"vocabulary",prompt:"You need a dictionary for a few minutes. What do you ask?",context:"",options:["Can I borrow your dictionary?","Can I lend your dictionary?","Can I owe your dictionary?"],answer:0,explanation:"Borrow berarti menerima atau meminjam sesuatu dari orang lain untuk sementara. Lend berarti meminjamkan."},
+    {id:"a1-grammar-2",level:"A1",category:"grammar",prompt:"There ___ two pens on the desk.",context:"",options:["is","are","be"],answer:1,explanation:"Gunakan are untuk noun jamak, seperti two pens."},
+    {id:"a1-reading-1",level:"A1",category:"reading",prompt:"How does Nina travel to school?",context:"Nina leaves home at seven. She takes the bus and arrives at school at half past seven.",options:["By bus","On foot","By train"],answer:0,explanation:"Teks menyebutkan secara langsung bahwa Nina naik bus ke sekolah."},
+    {id:"a1-vocabulary-2",level:"A1",category:"vocabulary",prompt:"The lights are on, so the room is ___.",context:"",options:["quiet","bright","narrow"],answer:1,explanation:"Bright berarti terang atau memiliki banyak cahaya."},
+
+    {id:"a2-grammar-1",level:"A2",category:"grammar",prompt:"We ___ the museum last weekend.",context:"",options:["visit","visited","visiting"],answer:1,explanation:"Last weekend menunjukkan waktu lampau. Gunakan bentuk past simple: visited."},
+    {id:"a2-vocabulary-1",level:"A2",category:"vocabulary",prompt:"The train did not arrive on time. It was ___.",context:"",options:["delayed","lately","latest"],answer:0,explanation:"Delayed berarti terlambat atau mengalami penundaan."},
+    {id:"a2-grammar-2",level:"A2",category:"grammar",prompt:"How ___ sugar do you put in your tea?",context:"",options:["many","much","few"],answer:1,explanation:"Sugar adalah uncountable noun, jadi gunakan much untuk menanyakan jumlahnya."},
+    {id:"a2-reading-1",level:"A2",category:"reading",prompt:"Why did Rafi arrive late?",context:"Rafi planned to cycle to class. Heavy rain started just before he left, so he waited for a bus. The bus arrived fifteen minutes later than expected.",options:["He waited for a bus after the rain started.","He forgot where his class was.","He stopped to buy a bicycle."],answer:0,explanation:"Hujan membuat Rafi tidak jadi bersepeda. Ia menunggu bus, dan bus itu datang terlambat."},
+    {id:"a2-vocabulary-2",level:"A2",category:"vocabulary",prompt:"Please ___ the form with your name and address.",context:"",options:["complete","attend","borrow"],answer:0,explanation:"Complete a form berarti mengisi formulir sampai selesai."},
+
+    {id:"b1-grammar-1",level:"B1",category:"grammar",prompt:"I ___ this article twice, so I can explain its main idea.",context:"",options:["read","have read","was reading"],answer:1,explanation:"Present perfect menghubungkan pengalaman atau tindakan sebelumnya dengan keadaan sekarang."},
+    {id:"b1-vocabulary-1",level:"B1",category:"vocabulary",prompt:"Although the task looked difficult, it was ___ once we divided it into smaller steps.",context:"",options:["manageable","accidental","temporary"],answer:0,explanation:"Manageable berarti masih dapat ditangani atau diselesaikan dengan cara yang tepat."},
+    {id:"b1-grammar-2",level:"B1",category:"grammar",prompt:"If I had more free time, I ___ a volunteer group.",context:"",options:["joined","would join","will join"],answer:1,explanation:"Second conditional menggunakan would + base verb untuk situasi hipotetis saat ini atau masa depan."},
+    {id:"b1-reading-1",level:"B1",category:"reading",prompt:"What is the main reason for the library's new schedule?",context:"The city library has extended its weekday opening hours. Staff noticed that many commuters arrived after six in the evening. The change is intended to give them access to books and study spaces without requiring a weekend visit.",options:["To reduce the number of books borrowed.","To support people who finish work late.","To replace the library's weekend service."],answer:1,explanation:"Perubahan jadwal dibuat agar para komuter yang selesai bekerja pada sore hari tetap dapat menggunakan perpustakaan."},
+    {id:"b1-vocabulary-2",level:"B1",category:"vocabulary",prompt:"The event went ___ despite the heavy rain.",context:"",options:["ahead","around","out"],answer:0,explanation:"Go ahead berarti tetap dilaksanakan atau dilanjutkan meskipun ada hambatan."},
+
+    {id:"b2-grammar-1",level:"B2",category:"grammar",prompt:"No sooner ___ the meeting than the fire alarm sounded.",context:"",options:["had we started","we had started","did we start"],answer:0,explanation:"No sooner di awal kalimat memicu inversion: auxiliary had diikuti subject, lalu past participle."},
+    {id:"b2-vocabulary-1",level:"B2",category:"vocabulary",prompt:"The explanation seemed plausible, but the evidence was too ___ to support a firm conclusion.",context:"",options:["limited","inevitable","ordinary"],answer:0,explanation:"Limited berarti terbatas. Bukti yang terbatas belum cukup untuk mendukung kesimpulan yang kuat."},
+    {id:"b2-grammar-2",level:"B2",category:"grammar",prompt:"The committee recommended that the proposal ___ revised before publication.",context:"",options:["be","is","was"],answer:0,explanation:"Dalam pola formal recommend that, bentuk subjunctive memakai base form be."},
+    {id:"b2-reading-1",level:"B2",category:"reading",prompt:"What trade-off does the passage describe?",context:"A company introduced a hybrid-work policy after employees asked for more flexibility. An internal survey found higher satisfaction, but some cross-team handoffs became slower. The company kept the flexible schedule while introducing shared office days for teams that depend on frequent coordination.",options:["Lower satisfaction in exchange for fewer meetings.","More flexibility, but some coordination becomes harder.","Less flexibility, with no change to collaboration."],answer:1,explanation:"Kebijakan meningkatkan kepuasan melalui fleksibilitas, tetapi koordinasi antartim menjadi lebih lambat."},
+    {id:"b2-vocabulary-2",level:"B2",category:"vocabulary",prompt:"The report was criticized for having ___ the benefits while ignoring the costs.",context:"",options:["overstated","postponed","inherited"],answer:0,explanation:"Overstate berarti menyatakan sesuatu secara berlebihan, misalnya menggambarkan manfaat lebih besar daripada kenyataannya."}
+  ];
+  let placementRun = null;
+  let placementResult = readPlacementResult();
+
+  function readPlacementResult() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PLACEMENT_RESULT_KEY) || "null");
+      if (!saved || typeof saved !== "object" || Array.isArray(saved)) return null;
+      const validCount = (correct, total, max) =>
+        Number.isInteger(correct) && Number.isInteger(total) && total > 0 && total <= max && correct >= 0 && correct <= total;
+      if (!PLACEMENT_BANDS.includes(saved.level) ||
+          !validCount(saved.correct, saved.total, 20) ||
+          typeof saved.completedAt !== "string" || !Number.isFinite(Date.parse(saved.completedAt)) ||
+          !Array.isArray(saved.levelScores) || saved.levelScores.length < 1 || saved.levelScores.length > 4 ||
+          !Array.isArray(saved.categoryScores) || saved.categoryScores.length < 1 || saved.categoryScores.length > 3) return null;
+      const expectedBands = PLACEMENT_BANDS.slice(0, saved.levelScores.length);
+      if (!saved.levelScores.every((item, index) =>
+          item && item.level === expectedBands[index] && validCount(item.correct, item.total, 5))) return null;
+      const allowedCategories = ["vocabulary", "grammar", "reading"];
+      if (!saved.categoryScores.every(item =>
+          item && allowedCategories.includes(item.category) &&
+          typeof item.label === "string" && item.label.trim().length > 0 &&
+          validCount(item.correct, item.total, 20))) return null;
+      const summedCorrect = saved.levelScores.reduce((sum, item) => sum + item.correct, 0);
+      const summedTotal = saved.levelScores.reduce((sum, item) => sum + item.total, 0);
+      if (summedCorrect !== saved.correct || summedTotal !== saved.total) return null;
+      const highestPassed = saved.levelScores.filter(item => item.correct >= 3).at(-1)?.level || "A1";
+      if (saved.level !== highestPassed) return null;
+      return saved;
+    } catch (_) { return null; }
+  }
+  function renderPlacementTeaser() {
+    const summary = $("#placement-teaser-summary");
+    const action = $("#placement-teaser-action");
+    if (!summary || !action) return;
+    if (placementResult) {
+      summary.textContent = "Hasil terakhirmu: perkiraan " + placementResult.level + ", dengan " + placementResult.correct + " dari " + placementResult.total + " jawaban tepat. Tes bisa diulang kapan saja.";
+      action.textContent = "Lihat hasil ↗";
+    } else {
+      summary.textContent = "Cek perkiraan level awalmu melalui kosakata, grammar, dan pemahaman konteks.";
+      action.textContent = "Cek level awal ↗";
+    }
+  }
+  function showPlacementPanel(panelId) {
+    ["placement-intro","placement-quiz","placement-result"].forEach(id => {
+      const node = $("#"+id);
+      if (node) node.hidden = id !== panelId;
+    });
+  }
+  function renderPlacementView() {
+    if (placementRun) return;
+    if (placementResult) {
+      renderPlacementResult();
+      return;
+    }
+    showPlacementPanel("placement-intro");
+  }
+  function startPlacement() {
+    placementRun = {levelIndex:0,questionIndex:0,answers:[],locked:false};
+    showPlacementPanel("placement-quiz");
+    renderPlacementQuestion();
+  }
+  function currentPlacementQuestion() {
+    if (!placementRun) return null;
+    return PLACEMENT_BANK.filter(item => item.level === PLACEMENT_BANDS[placementRun.levelIndex])[placementRun.questionIndex] || null;
+  }
+  function renderPlacementQuestion() {
+    const question = currentPlacementQuestion();
+    if (!question) return;
+    const level = PLACEMENT_BANDS[placementRun.levelIndex];
+    const globalNumber = placementRun.levelIndex * 5 + placementRun.questionIndex + 1;
+    $("#placement-step-label").textContent = "BAGIAN " + (placementRun.levelIndex + 1) + " · " + level;
+    $("#placement-counter").textContent = "SOAL " + globalNumber + "/20";
+    $("#placement-kind").textContent = question.category === "vocabulary" ? "VOCABULARY" : question.category === "grammar" ? "GRAMMAR" : "READING";
+    $("#placement-question").textContent = question.prompt;
+    const context = $("#placement-context");
+    context.textContent = question.context || "";
+    context.hidden = !question.context;
+    const progress = $("#placement-progress");
+    const progressValue = Math.round(globalNumber / PLACEMENT_BANK.length * 100);
+    progress.setAttribute("aria-valuenow", String(globalNumber));
+    $("#placement-progress-bar").style.width = progressValue + "%";
+    $("#placement-options").innerHTML = question.options.map((option,index) =>
+      '<button type="button" class="placement-option" data-placement-answer="' + index + '"><span class="placement-option-letter">' + String.fromCharCode(65 + index) + '</span><span>' + esc(option) + '</span></button>'
+    ).join("");
+    const feedback = $("#placement-feedback");
+    feedback.hidden = true;
+    feedback.className = "placement-feedback";
+    feedback.textContent = "";
+    $("#placement-next").hidden = true;
+    $("#placement-next").textContent = placementRun.questionIndex === 4 ? "Selesaikan bagian →" : "Soal berikutnya →";
+  }
+  function answerPlacementQuestion(answerIndex) {
+    const question = currentPlacementQuestion();
+    if (!question || placementRun.locked || !Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= question.options.length) return;
+    const isCorrect = answerIndex === question.answer;
+    placementRun.locked = true;
+    placementRun.answers.push({level:question.level,category:question.category,correct:isCorrect});
+    $$("#placement-options [data-placement-answer]").forEach(button => {
+      const index = Number(button.dataset.placementAnswer);
+      button.disabled = true;
+      if (index === question.answer) button.classList.add("is-correct");
+      if (index === answerIndex && !isCorrect) button.classList.add("is-incorrect");
+      button.setAttribute("aria-pressed", String(index === answerIndex));
+    });
+    const feedback = $("#placement-feedback");
+    feedback.hidden = false;
+    feedback.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+    feedback.innerHTML = '<strong>' + (isCorrect ? "Tepat." : "Belum tepat.") + '</strong><p>' + esc(question.explanation) + '</p>' +
+      (isCorrect ? "" : '<p class="placement-correct-answer">Jawaban yang tepat: ' + esc(question.options[question.answer]) + '</p>');
+    $("#placement-next").hidden = false;
+  }
+  function advancePlacement() {
+    if (!placementRun || !placementRun.locked) return;
+    if (placementRun.questionIndex < 4) {
+      placementRun.questionIndex += 1;
+      placementRun.locked = false;
+      renderPlacementQuestion();
+      return;
+    }
+    const level = PLACEMENT_BANDS[placementRun.levelIndex];
+    const score = placementRun.answers.filter(item => item.level === level && item.correct).length;
+    if (score < 3 || placementRun.levelIndex === PLACEMENT_BANDS.length - 1) {
+      finishPlacement();
+      return;
+    }
+    placementRun.levelIndex += 1;
+    placementRun.questionIndex = 0;
+    placementRun.locked = false;
+    renderPlacementQuestion();
+  }
+  function finishPlacement() {
+    if (!placementRun) return;
+    const levelScores = PLACEMENT_BANDS.slice(0,placementRun.levelIndex + 1).map(level => ({
+      level,
+      correct:placementRun.answers.filter(item => item.level === level && item.correct).length,
+      total:placementRun.answers.filter(item => item.level === level).length
+    }));
+    const passed = levelScores.filter(item => item.correct >= 3);
+    const categoryLabels = {vocabulary:"Kosakata",grammar:"Grammar",reading:"Pemahaman bacaan"};
+    const categoryScores = ["vocabulary","grammar","reading"].map(category => {
+      const items = placementRun.answers.filter(item => item.category === category);
+      return {category,label:categoryLabels[category],correct:items.filter(item => item.correct).length,total:items.length};
+    }).filter(item => item.total > 0);
+    const estimatedLevel = passed.length ? passed[passed.length - 1].level : "A1";
+    const lastBand = levelScores[levelScores.length - 1];
+    const allBandsPassed = levelScores.length === PLACEMENT_BANDS.length && lastBand.correct >= 3;
+    let summary;
+    if (allBandsPassed) {
+      summary = "Jawabanmu cukup konsisten hingga B2. Gunakan hasil ini sebagai titik awal, lalu lanjutkan latihan pada konteks yang lebih beragam.";
+    } else if (passed.length) {
+      summary = "Fondasi " + estimatedLevel + " mulai terlihat. Bagian " + lastBand.level + " masih perlu diperkuat sebelum kamu melangkah lebih jauh.";
+    } else {
+      summary = "Mulai dari materi A1 terlebih dahulu. Bangun kebiasaan memahami kata, menyusun kalimat sederhana, dan membaca konteks pendek.";
+    }
+    const weakAreas = categoryScores.filter(item => item.correct / item.total < 0.6).map(item => item.label);
+    placementResult = {
+      level:estimatedLevel,
+      correct:placementRun.answers.filter(item => item.correct).length,
+      total:placementRun.answers.length,
+      levelScores,
+      categoryScores,
+      completedAt:new Date().toISOString()
+    };
+    try { localStorage.setItem(PLACEMENT_RESULT_KEY,JSON.stringify(placementResult)); } catch (_) { /* Keep the result for this visit. */ }
+    placementRun = null;
+    $("#placement-result-level").textContent = estimatedLevel;
+    $("#placement-score").textContent = placementResult.correct + "/" + placementResult.total;
+    $("#placement-result-title").textContent = passed.length ? "Perkiraan kemampuanmu: " + estimatedLevel : "Mulai dari fondasi A1.";
+    $("#placement-result-summary").textContent = summary;
+    $("#placement-level-breakdown").innerHTML = levelScores.map(item =>
+      '<div class="placement-level-row"><span>' + item.level + '</span><strong>' + item.correct + '/' + item.total + '</strong><small>' + (item.correct >= 3 ? "Cukup kuat untuk lanjut" : "Perlu diperkuat") + '</small></div>'
+    ).join("");
+    $("#placement-category-breakdown").innerHTML = categoryScores.map(item =>
+      '<div class="placement-category-row"><span>' + item.label + '</span><strong>' + item.correct + '/' + item.total + '</strong></div>'
+    ).join("");
+    $("#placement-focus-note").textContent = weakAreas.length
+      ? "Bagian yang bisa kamu latih lebih dulu: " + weakAreas.join(", ") + ". Hasil per kategori berasal dari jumlah soal yang terbatas, jadi gunakan sebagai petunjuk, bukan label kemampuan tetap."
+      : "Belum terlihat satu area yang tertinggal jauh. Pertahankan latihan kosakata, grammar, dan bacaan secara seimbang.";
+    $("#placement-result-date").textContent = "Diselesaikan " + new Intl.DateTimeFormat("id-ID",{dateStyle:"long"}).format(new Date(placementResult.completedAt)) + " · Tersimpan di perangkat ini";
+    showPlacementPanel("placement-result");
+    renderPlacementTeaser();
+  }
+  function renderPlacementResult() {
+    if (!placementResult) {
+      showPlacementPanel("placement-intro");
+      return;
+    }
+    $("#placement-result-level").textContent = placementResult.level;
+    $("#placement-score").textContent = placementResult.correct + "/" + placementResult.total;
+    const latest = placementResult.levelScores[placementResult.levelScores.length - 1];
+    const passed = placementResult.levelScores.filter(item => item.correct >= 3);
+    const allBandsPassed = placementResult.levelScores.length === PLACEMENT_BANDS.length && latest.level === "B2" && latest.correct >= 3;
+    $("#placement-result-title").textContent = passed.length ? "Perkiraan kemampuanmu: " + placementResult.level : "Mulai dari fondasi A1.";
+    $("#placement-result-summary").textContent = allBandsPassed
+      ? "Jawabanmu cukup konsisten hingga B2. Gunakan hasil ini sebagai titik awal, lalu lanjutkan latihan pada konteks yang lebih beragam."
+      : passed.length
+        ? "Fondasi " + placementResult.level + " mulai terlihat. Bagian " + latest.level + " masih perlu diperkuat sebelum kamu melangkah lebih jauh."
+        : "Mulai dari materi A1 terlebih dahulu. Bangun kebiasaan memahami kata, menyusun kalimat sederhana, dan membaca konteks pendek.";
+    $("#placement-level-breakdown").innerHTML = placementResult.levelScores.map(item =>
+      '<div class="placement-level-row"><span>' + item.level + '</span><strong>' + item.correct + '/' + item.total + '</strong><small>' + (item.correct >= 3 ? "Cukup kuat untuk lanjut" : "Perlu diperkuat") + '</small></div>'
+    ).join("");
+    $("#placement-category-breakdown").innerHTML = placementResult.categoryScores.map(item =>
+      '<div class="placement-category-row"><span>' + item.label + '</span><strong>' + item.correct + '/' + item.total + '</strong></div>'
+    ).join("");
+    const weakAreas = placementResult.categoryScores.filter(item => item.correct / item.total < 0.6).map(item => item.label);
+    $("#placement-focus-note").textContent = weakAreas.length
+      ? "Bagian yang bisa kamu latih lebih dulu: " + weakAreas.join(", ") + ". Hasil per kategori berasal dari jumlah soal yang terbatas, jadi gunakan sebagai petunjuk, bukan label kemampuan tetap."
+      : "Belum terlihat satu area yang tertinggal jauh. Pertahankan latihan kosakata, grammar, dan bacaan secara seimbang.";
+    $("#placement-result-date").textContent = "Diselesaikan " + new Intl.DateTimeFormat("id-ID",{dateStyle:"long"}).format(new Date(placementResult.completedAt)) + " · Tersimpan di perangkat ini";
+    showPlacementPanel("placement-result");
+  }
+
   let words = [], topics = [], state, db = null, storageMode = "loading";
   let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100, vocabDetailOpen = false, cloudApplying = false;
   const grammarUI = {};
@@ -201,13 +440,14 @@
       el.classList.toggle("is-active", active);
       el.setAttribute("aria-selected", String(active));
     });
-    const topbarLabels = {overview:"Beranda",vocabulary:"Belajar · Kosakata",grammar:"Belajar · Grammar",matching:"Belajar · Matching",study:"Sesi belajar",reading:"Bacaan",adventure:"Petualangan",review:"Review",progress:"Progres"};
+    const topbarLabels = {overview:"Beranda",vocabulary:"Belajar · Kosakata",grammar:"Belajar · Grammar",matching:"Belajar · Matching",study:"Sesi belajar",reading:"Bacaan",adventure:"Petualangan",review:"Review",placement:"Cek level",progress:"Progres"};
     const topbarCurrent = $("#topbar-current");
     if (topbarCurrent) topbarCurrent.textContent = topbarLabels[next] || "Ruang belajar";
     if (next === "overview") renderOverview();
     if (next === "vocabulary") renderVocabulary();
     if (next === "grammar") renderGrammar();
     if (next === "review") renderReview();
+    if (next === "placement") renderPlacementView();
     if (next === "progress") renderProgress();
     if (next === "adventure") window.sinauuRenderAdventure?.();
     if (window.sinauMotionScrollToTop) window.sinauMotionScrollToTop();
@@ -239,6 +479,146 @@
     const details = b.total + " kata tersedia · " + b.learning + " learning · " + b.due + " review · " + b.weak + " weak";
     return '<div class="level-progress-row"><span class="level-progress-code">'+level+'</span><div class="level-progress-main"><strong>'+esc(LABELS[level])+'<span>'+pct+'%</span></strong><div class="progress-track"><span style="width:'+pct+'%"></span></div>'+(detailed?'<p style="margin:7px 0 0;color:var(--muted);font-size:.62rem">'+esc(details)+'</p>':"")+'</div><span class="level-progress-count">'+b.mastered+'/'+b.total+'</span></div>';
   }
+  function getPlanVocabularyTask(today) {
+    const existing = state.history.slice().reverse().find(item =>
+      item.date === today && item.type === "vocabulary" && item.wordId
+    );
+    let word = existing ? words.find(item => item.id === existing.wordId) : null;
+    let mode = existing && existing.mode === "review" ? "review" : "learn";
+
+    if (!word) {
+      const due = dueWords().slice().sort((a,b) =>
+        new Date(state.wordProgress[a.id].nextReviewAt) - new Date(state.wordProgress[b.id].nextReviewAt)
+      );
+      if (due.length) {
+        word = due[0];
+        mode = "review";
+      } else {
+        word = words.find(item => canStudyWord(item) && statusOf(item) === "new")
+          || words.find(item => canStudyWord(item) && state.favorites.includes(item.id))
+          || words.find(item => canStudyWord(item) && statusOf(item) !== "mastered")
+          || words.find(canStudyWord);
+        mode = "learn";
+      }
+    }
+
+    if (!word) return { word:null, mode:"learn", done:false, title:"Kosakata siap dijelajahi", description:"Pilih satu kata yang menarik untuk mulai berlatih." };
+    const p = state.wordProgress[word.id] || {};
+    let done = false;
+    if (mode === "review") {
+      done = (p.reviewHistory || []).some(item => item.date === today);
+    } else {
+      const skills = new Set(state.events
+        .filter(item => item.wordId === word.id && item.date === today)
+        .map(item => item.skill));
+      done = ["recall","context","production"].every(skill => skills.has(skill));
+    }
+    return {
+      word, mode, done,
+      title: mode === "review" ? "Ingat kembali · " + word.word : "Pelajari kata · " + word.word,
+      description: mode === "review"
+        ? "Satu kata sudah waktunya diulang. Coba ingat makna dan penggunaannya."
+        : "Belum ada review yang jatuh tempo. Pelajari satu kata baru melalui arti, konteks, dan penggunaan."
+    };
+  }
+
+  function getPlanGrammarTask(today) {
+    const previous = state.history.slice().reverse().find(item =>
+      item.date === today && item.type === "grammar" && item.topicId
+    );
+    const candidates = topics.map(topic => {
+      const p = state.grammarProgress[topic.id] || {};
+      const unique = Object.keys(p.answers || {}).length;
+      const attempts = Number(p.attempts) || 0;
+      const accuracy = attempts ? (Number(p.correct) || 0) / attempts : 1;
+      const coverage = unique / Math.max(1, topic.questions.length);
+      const priority = attempts > 0 && accuracy < 0.7
+        ? 0
+        : unique < topic.questions.length ? 1 : 2;
+      const score = priority === 0 ? accuracy : priority === 1 ? coverage : accuracy;
+      return { topic, attempts, unique, accuracy, priority, score };
+    });
+    candidates.sort((a,b) => a.priority - b.priority || a.score - b.score || a.topic.title.localeCompare(b.topic.title));
+    const chosen = previous
+      ? candidates.find(item => item.topic.id === previous.topicId)
+      : candidates[0];
+    const item = chosen || candidates[0];
+    if (!item) return { topic:null, done:false, description:"Materi grammar belum tersedia." };
+    const done = state.history.some(entry =>
+      entry.date === today && entry.type === "grammar" && entry.topicId === item.topic.id
+    );
+    let description = "Belum pernah dicoba. Mulai dari penjelasan dan latihan dasar.";
+    if (item.attempts > 0 && item.accuracy < 0.7) {
+      description = "Akurasi sebelumnya " + Math.round(item.accuracy * 100) + "%. Kembali ke konsep ini dan periksa alasannya.";
+    } else if (item.unique > 0) {
+      description = item.unique + "/" + item.topic.questions.length + " soal unik sudah dicoba. Lanjutkan bagian yang belum selesai.";
+    }
+    return { topic:item.topic, done, description };
+  }
+
+  function getPlanAdventureTask(today) {
+    let snapshot = {};
+    try {
+      snapshot = window.sinauuAdventureBackup?.()
+        || JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
+    } catch (_) { snapshot = {}; }
+    const quest = snapshot.dailyQuests && snapshot.dailyQuests[today];
+    const total = Array.isArray(quest?.stepIds) ? quest.stepIds.length : 3;
+    const completed = Array.isArray(quest?.completedStepIds) ? quest.completedStepIds.length : 0;
+    return {
+      done: Boolean(quest?.completedAt),
+      started: Boolean(quest?.startedAt),
+      progress: quest ? Math.min(completed,total) + "/" + total + " tantangan" : "3 tantangan singkat",
+      description: quest?.completedAt
+        ? "Daily Quest hari ini sudah selesai. Istirahat juga bagian dari belajar."
+        : quest?.startedAt
+          ? "Kamu sudah memulai. Lanjutkan " + Math.min(completed,total) + " dari " + total + " tantangan."
+          : "Gunakan kosakata dan grammar dalam tiga tantangan singkat di First Steps Island."
+    };
+  }
+
+  function renderStudyPlan() {
+    const node = $("#home-study-plan-steps");
+    if (!node || !state) return;
+    const today = dayKey();
+    const vocabulary = getPlanVocabularyTask(today);
+    const grammar = getPlanGrammarTask(today);
+    const adventure = getPlanAdventureTask(today);
+    const steps = [vocabulary, grammar, adventure];
+    const doneCount = steps.filter(item => item.done).length;
+    const count = $("#home-study-plan-count");
+    const bar = $("#home-study-plan-bar");
+    if (count) count.textContent = doneCount + "/3";
+    if (bar) bar.style.width = Math.round(doneCount / 3 * 100) + "%";
+
+    const vocabularyAction = vocabulary.word
+      ? '<button type="button" class="home-study-plan-action" data-plan-vocabulary="' + esc(vocabulary.word.id) + '" data-plan-mode="' + vocabulary.mode + '"' + (vocabulary.done ? ' disabled' : '') + '>' +
+        (vocabulary.done ? 'Selesai ✓' : vocabulary.mode === "review" ? 'Mulai review ↗' : 'Mulai belajar ↗') + '</button>'
+      : '<button type="button" class="home-study-plan-action" data-view-target="vocabulary">Jelajahi kosakata ↗</button>';
+    const grammarAction = grammar.topic
+      ? '<button type="button" class="home-study-plan-action" data-plan-topic="' + esc(grammar.topic.id) + '"' + (grammar.done ? ' disabled' : '') + '>' +
+        (grammar.done ? 'Selesai ✓' : 'Buka latihan ↗') + '</button>'
+      : '<button type="button" class="home-study-plan-action" data-view-target="grammar">Buka grammar ↗</button>';
+    const adventureAction = '<button type="button" class="home-study-plan-action" data-plan-adventure' + (adventure.done ? ' disabled' : '') + '>' +
+      (adventure.done ? 'Selesai ✓' : adventure.started ? 'Lanjutkan quest ↗' : 'Mulai Daily Quest ↗') + '</button>';
+
+    node.innerHTML =
+      '<article class="home-study-plan-step' + (vocabulary.done ? ' is-complete' : '') + '">' +
+        '<div class="home-study-plan-step-meta"><span>01 · INGAT KEMBALI</span><small>5 MENIT</small></div>' +
+        '<h3>' + esc(vocabulary.title) + '</h3><p>' + esc(vocabulary.description) + '</p>' + vocabularyAction +
+      '</article>' +
+      '<article class="home-study-plan-step' + (grammar.done ? ' is-complete' : '') + '">' +
+        '<div class="home-study-plan-step-meta"><span>02 · PAHAMI POLA</span><small>5 MENIT</small></div>' +
+        '<h3>' + esc(grammar.topic?.title || "Grammar") + '</h3><p>' + esc(grammar.description) + '</p>' + grammarAction +
+      '</article>' +
+      '<article class="home-study-plan-step' + (adventure.done ? ' is-complete' : '') + '">' +
+        '<div class="home-study-plan-step-meta"><span>03 · GUNAKAN BAHASA</span><small>5 MENIT</small></div>' +
+        '<h3>Daily Quest · First Steps Island</h3><p>' + esc(adventure.description) + '</p>' +
+        (adventure.started && !adventure.done ? '<small class="home-study-plan-quest-progress">' + esc(adventure.progress) + '</small>' : '') +
+        adventureAction +
+      '</article>';
+  }
+
   function renderOverview() {
     const stats = levelStats(), mastered = words.filter(w=>statusOf(w)==="mastered").length, due=dueWords().length, activities=activityToday(), goal=Number(state.settings.dailyGoal)||10;
     $("#metric-mastered").textContent=mastered;
@@ -255,6 +635,7 @@
     topics.filter(t=>!(state.grammarProgress[t.id]&&state.grammarProgress[t.id].attempts)).slice(0,2).forEach(t=>suggestions.push({type:"GRAMMAR",title:t.title,description:t.summary,topicId:t.id}));
     words.filter(w=>canStudyWord(w)&&statusOf(w)==="new").slice(0,3).forEach(w=>suggestions.push({type:"WORD",title:w.word,description:w.meaning,wordId:w.id}));
     $("#resume-list").innerHTML=suggestions.slice(0,4).map(x=>'<div class="resume-item"><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.description)+'</p></div><button class="resume-action" type="button" '+(x.wordId?'data-study-word="'+esc(x.wordId)+'"':'data-open-topic="'+esc(x.topicId)+'"')+'>Mulai ↗</button></div>').join("") || '<div class="empty-state">Materi yang tersedia sudah pernah dicoba. Pilih topik lain.</div>';
+    renderStudyPlan();
   }
   function renderVocabulary(resetList=true) {
     if(resetList)listLimit=100;
@@ -534,6 +915,9 @@
     finally{$("#import-backup").value="";}
   }
   function bindEvents() {
+    window.addEventListener("sinauu:local-extras-saved",()=>{
+      if(state && view==="overview")renderStudyPlan();
+    });
     document.addEventListener("click",async e=>{
       const readingModeBtn=e.target.closest("[data-reading-mode]");
       if(readingModeBtn){
@@ -550,6 +934,21 @@
       }
       const vocabBack=e.target.closest("[data-vocab-back]");
       if(vocabBack){vocabDetailOpen=false;renderVocabulary(false);return;}
+      const placementStart=e.target.closest("#placement-start");
+      if(placementStart){startPlacement();return;}
+      const placementAnswer=e.target.closest("[data-placement-answer]");
+      if(placementAnswer){answerPlacementQuestion(Number(placementAnswer.dataset.placementAnswer));return;}
+      if(e.target.closest("#placement-next")){advancePlacement();return;}
+      if(e.target.closest("#placement-retake")){startPlacement();return;}
+      const planVocabulary=e.target.closest("[data-plan-vocabulary]");
+      if(planVocabulary){startStudy(planVocabulary.dataset.planVocabulary,planVocabulary.dataset.planMode||"learn");return;}
+      const planTopic=e.target.closest("[data-plan-topic]");
+      if(planTopic){activeTopic=planTopic.dataset.planTopic;setView("grammar");return;}
+      if(e.target.closest("[data-plan-adventure]")){
+        setView("adventure");
+        $("#adventure-daily-quest")?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+        return;
+      }
       const viewBtn=e.target.closest("[data-view-target]");
       if(viewBtn){setView(viewBtn.dataset.viewTarget);return;}
       const wordBtn=e.target.closest("[data-select-word]");

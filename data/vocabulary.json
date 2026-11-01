@@ -1718,12 +1718,26 @@
           "label": "base"
         }
       ],
-      "example": "Are you able to come on Friday?",
-      "translation": "Apakah kamu bisa datang hari Jumat?",
+      "example": "Are you able to join us after class?",
+      "translation": "Apakah kamu bisa bergabung dengan kami sepulang kelas?",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "having the skill, time, or opportunity to do something",
+      "context": {
+        "id": "batch-able-adjective-context-editorial",
+        "prompt": "Are you ___ to join us after class?",
+        "options": [
+          "able",
+          "above",
+          "across"
+        ],
+        "answer": 0,
+        "explanation": "Able means having the skill, time, or opportunity to do something."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-about-preposition",
@@ -1744,12 +1758,26 @@
           "label": "base"
         }
       ],
-      "example": "This book is about animals.",
-      "translation": "Buku ini tentang hewan.",
+      "example": "The documentary is about ocean life.",
+      "translation": "Film dokumenter itu membahas kehidupan laut.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "on the subject of; concerning",
+      "context": {
+        "id": "batch-about-preposition-context-editorial",
+        "prompt": "The documentary is ___ ocean life.",
+        "options": [
+          "about",
+          "above",
+          "along"
+        ],
+        "answer": 0,
+        "explanation": "About introduces the subject being discussed."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-above-preposition",
@@ -1769,12 +1797,26 @@
           "label": "base"
         }
       ],
-      "example": "The picture is above the door.",
-      "translation": "Gambar itu ada di atas pintu.",
+      "example": "The picture hangs above the sofa.",
+      "translation": "Gambar itu tergantung di atas sofa.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "in a higher position than something else",
+      "context": {
+        "id": "batch-above-preposition-context-editorial",
+        "prompt": "The picture hangs ___ the sofa.",
+        "options": [
+          "after",
+          "above",
+          "across"
+        ],
+        "answer": 1,
+        "explanation": "Above describes a position higher than something else."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-abroad-adverb",
@@ -1977,12 +2019,26 @@
           "label": "base"
         }
       ],
-      "example": "There was an accident on the road.",
-      "translation": "Ada kecelakaan di jalan.",
+      "example": "The police arrived after a traffic accident.",
+      "translation": "Polisi tiba setelah terjadi kecelakaan lalu lintas.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "an unexpected event that causes damage or injury",
+      "context": {
+        "id": "batch-accident-noun-context-editorial",
+        "prompt": "The police arrived after a traffic ___.",
+        "options": [
+          "accident",
+          "activity",
+          "address"
+        ],
+        "answer": 0,
+        "explanation": "An accident is an unexpected event, often involving damage or injury."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-accompany-verb",
@@ -2236,12 +2292,26 @@
           "label": "base"
         }
       ],
-      "example": "He walked across the street.",
-      "translation": "Dia berjalan menyeberangi jalan.",
+      "example": "We walked across the bridge to reach the park.",
+      "translation": "Kami berjalan menyeberangi jembatan untuk mencapai taman.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "from one side to the other side of something",
+      "context": {
+        "id": "batch-across-preposition-context-editorial",
+        "prompt": "We walked ___ the bridge to reach the park.",
+        "options": [
+          "above",
+          "across",
+          "between"
+        ],
+        "answer": 1,
+        "explanation": "Across describes movement from one side to the other."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-act-verb",
@@ -2288,12 +2358,26 @@
           "label": "base"
         }
       ],
-      "example": "We need to take action now.",
-      "translation": "Kita perlu mengambil tindakan sekarang.",
+      "example": "The manager asked the team to take action before Friday.",
+      "translation": "Manajer meminta tim mengambil tindakan sebelum hari Jumat.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "something that someone does; a step taken to deal with a situation",
+      "context": {
+        "id": "batch-action-noun-context-editorial",
+        "prompt": "The manager asked the team to take ___ before Friday.",
+        "options": [
+          "action",
+          "age",
+          "air"
+        ],
+        "answer": 0,
+        "explanation": "Take action means to do something to deal with a situation."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-active-adjective",
@@ -2339,12 +2423,26 @@
           "label": "base"
         }
       ],
-      "example": "Swimming is my favorite activity.",
-      "translation": "Berenang adalah kegiatan favorit saya.",
+      "example": "Drawing is a relaxing activity for children.",
+      "translation": "Menggambar adalah kegiatan yang menyenangkan bagi anak-anak.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "something people do for interest, work, or learning",
+      "context": {
+        "id": "batch-activity-noun-context-editorial",
+        "prompt": "Drawing is a relaxing ___ for children.",
+        "options": [
+          "address",
+          "activity",
+          "advice"
+        ],
+        "answer": 1,
+        "explanation": "An activity is something people do, often for enjoyment or a purpose."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-actor-noun",
@@ -2520,12 +2618,26 @@
           "label": "base"
         }
       ],
-      "example": "Add some sugar to the tea.",
-      "translation": "Tambahkan sedikit gula ke dalam teh itu.",
+      "example": "Please add your email address to the form.",
+      "translation": "Tolong tambahkan alamat emailmu pada formulir.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "to put something together with something else",
+      "context": {
+        "id": "batch-add-verb-context-editorial",
+        "prompt": "Please ___ your email address to the form.",
+        "options": [
+          "avoid",
+          "add",
+          "arrive"
+        ],
+        "answer": 1,
+        "explanation": "Add means to put something together with something else."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-addition-noun",
@@ -2596,12 +2708,26 @@
           "label": "base"
         }
       ],
-      "example": "What is your address?",
-      "translation": "Apa alamat kamu?",
+      "example": "Please write your address on the application form.",
+      "translation": "Tolong tuliskan alamatmu pada formulir pendaftaran.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "the details of where someone lives or where a place is",
+      "context": {
+        "id": "batch-address-noun-context-editorial",
+        "prompt": "Please write your ___ on the application form.",
+        "options": [
+          "action",
+          "address",
+          "activity"
+        ],
+        "answer": 1,
+        "explanation": "An address gives the location of a person or place."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-administration-noun",
@@ -2928,12 +3054,26 @@
           "label": "base"
         }
       ],
-      "example": "Can I ask you for advice?",
-      "translation": "Bolehkah saya meminta saran darimu?",
+      "example": "Could you give me some advice about choosing a course?",
+      "translation": "Bisakah kamu memberi saya saran tentang memilih jurusan?",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "an opinion or suggestion about what someone should do",
+      "context": {
+        "id": "batch-advice-noun-context-editorial",
+        "prompt": "Could you give me some ___ about choosing a course?",
+        "options": [
+          "advice",
+          "advices",
+          "an advice"
+        ],
+        "answer": 0,
+        "explanation": "Advice is an uncountable noun; use some advice or a piece of advice."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-advise-verb",
@@ -3058,12 +3198,26 @@
           "label": "base"
         }
       ],
-      "example": "Call me after lunch.",
-      "translation": "Telepon saya setelah makan siang.",
+      "example": "We usually tidy the room after class.",
+      "translation": "Kami biasanya merapikan ruangan setelah kelas.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "at a later time than an event or time",
+      "context": {
+        "id": "batch-after-preposition-context-editorial",
+        "prompt": "We usually tidy the room ___ class.",
+        "options": [
+          "after",
+          "above",
+          "across"
+        ],
+        "answer": 0,
+        "explanation": "After shows that one event happens later than another."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-afternoon-noun",
@@ -3084,12 +3238,26 @@
           "label": "base"
         }
       ],
-      "example": "We play football in the afternoon.",
-      "translation": "Kami bermain sepak bola pada sore hari.",
+      "example": "The workshop starts at two in the afternoon.",
+      "translation": "Lokakarya dimulai pukul dua siang.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "the part of the day between midday and evening",
+      "context": {
+        "id": "batch-afternoon-noun-context-editorial",
+        "prompt": "The workshop starts at two in the ___.",
+        "options": [
+          "morning",
+          "afternoon",
+          "midnight"
+        ],
+        "answer": 1,
+        "explanation": "Afternoon is the period after midday and before evening."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-afterward-adverb",
@@ -3136,12 +3304,26 @@
           "label": "base"
         }
       ],
-      "example": "Please say it again.",
-      "translation": "Tolong katakan sekali lagi.",
+      "example": "I did not hear you. Could you say that again?",
+      "translation": "Saya tidak mendengarmu. Bisakah kamu mengatakannya sekali lagi?",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "one more time; another time",
+      "context": {
+        "id": "batch-again-adverb-context-editorial",
+        "prompt": "I did not hear you. Could you say that ___?",
+        "options": [
+          "already",
+          "again",
+          "almost"
+        ],
+        "answer": 1,
+        "explanation": "Again means one more time."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-against-preposition",
@@ -3344,12 +3526,26 @@
           "label": "base"
         }
       ],
-      "example": "I agree with you.",
-      "translation": "Saya setuju denganmu.",
+      "example": "Both students agree that the library should stay open.",
+      "translation": "Kedua siswa setuju bahwa perpustakaan sebaiknya tetap buka.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "to have the same opinion as another person",
+      "context": {
+        "id": "batch-agree-verb-context-editorial",
+        "prompt": "Both students ___ that the library should stay open.",
+        "options": [
+          "allow",
+          "agree",
+          "avoid"
+        ],
+        "answer": 1,
+        "explanation": "Agree means to have the same opinion."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-agreement-noun",
@@ -3574,12 +3770,26 @@
           "label": "base"
         }
       ],
-      "example": "We arrived at the airport early.",
-      "translation": "Kami tiba di bandara lebih awal.",
+      "example": "We should reach the airport by five.",
+      "translation": "Kita sebaiknya tiba di bandara sebelum pukul lima.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "a place where planes take off and land",
+      "context": {
+        "id": "batch-airport-noun-context-editorial",
+        "prompt": "Our flight leaves at seven, so we should reach the ___ by five.",
+        "options": [
+          "apartment",
+          "airport",
+          "activity"
+        ],
+        "answer": 1,
+        "explanation": "An airport is where passengers catch planes."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-alarm-noun",
@@ -3754,12 +3964,26 @@
           "label": "base"
         }
       ],
-      "example": "They don't allow phones in class.",
-      "translation": "Mereka tidak mengizinkan ponsel di kelas.",
+      "example": "The school does not allow food in the computer room.",
+      "translation": "Sekolah tidak mengizinkan makanan dibawa ke ruang komputer.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "to let someone do something or let something happen",
+      "context": {
+        "id": "batch-allow-verb-context-editorial",
+        "prompt": "The school does not ___ food in the computer room.",
+        "options": [
+          "allow",
+          "appear",
+          "add"
+        ],
+        "answer": 0,
+        "explanation": "Allow means to give permission for something."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-almost-adverb",
@@ -3779,12 +4003,26 @@
           "label": "base"
         }
       ],
-      "example": "It's almost ten o'clock.",
-      "translation": "Sekarang hampir pukul sepuluh.",
+      "example": "The bus is almost here; I can see it at the corner.",
+      "translation": "Busnya hampir tiba; saya bisa melihatnya di tikungan.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "very nearly, but not completely",
+      "context": {
+        "id": "batch-almost-adverb-context-editorial",
+        "prompt": "The bus is ___ here; I can see it at the corner.",
+        "options": [
+          "always",
+          "almost",
+          "alone"
+        ],
+        "answer": 1,
+        "explanation": "Almost means very nearly."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-alone-adjective",
@@ -3804,12 +4042,26 @@
           "label": "base"
         }
       ],
-      "example": "She lives alone.",
-      "translation": "Dia tinggal sendirian.",
+      "example": "Nobody came with Dita, so she went to the museum alone.",
+      "translation": "Tidak ada yang datang bersama Dita, jadi dia pergi ke museum sendirian.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "without other people; by oneself",
+      "context": {
+        "id": "batch-alone-adjective-context-editorial",
+        "prompt": "Nobody came with Dita, so she went to the museum ___.",
+        "options": [
+          "along",
+          "alone",
+          "already"
+        ],
+        "answer": 1,
+        "explanation": "Alone means without another person."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-along-preposition",
@@ -3830,12 +4082,26 @@
           "label": "base"
         }
       ],
-      "example": "We walked along the beach.",
-      "translation": "Kami berjalan menyusuri pantai.",
+      "example": "They cycled along the river for ten minutes.",
+      "translation": "Mereka bersepeda menyusuri sungai selama sepuluh menit.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "moving in or following the length of something",
+      "context": {
+        "id": "batch-along-preposition-context-editorial",
+        "prompt": "They cycled ___ the river for ten minutes.",
+        "options": [
+          "along",
+          "above",
+          "against"
+        ],
+        "answer": 0,
+        "explanation": "Along describes movement following the length of something."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-already-adverb",
@@ -3856,12 +4122,26 @@
           "label": "base"
         }
       ],
-      "example": "I have already eaten.",
-      "translation": "Saya sudah makan.",
+      "example": "It is only eight, but Rina has already finished her homework.",
+      "translation": "Sekarang baru pukul delapan, tetapi Rina sudah menyelesaikan PR-nya.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "before now or before the expected time",
+      "context": {
+        "id": "batch-already-adverb-context-editorial",
+        "prompt": "It is only eight, but Rina has ___ finished her homework.",
+        "options": [
+          "again",
+          "already",
+          "almost"
+        ],
+        "answer": 1,
+        "explanation": "Already shows that something happened before now or earlier than expected."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-also-adverb",
@@ -3881,12 +4161,26 @@
           "label": "base"
         }
       ],
-      "example": "She also speaks Japanese.",
-      "translation": "Dia juga berbicara bahasa Jepang.",
+      "example": "Rafi studies biology. He also enjoys reading history books.",
+      "translation": "Rafi belajar biologi. Dia juga suka membaca buku sejarah.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "in addition; too",
+      "context": {
+        "id": "batch-also-adverb-context-editorial",
+        "prompt": "Rafi studies biology. He ___ enjoys reading history books.",
+        "options": [
+          "always",
+          "also",
+          "again"
+        ],
+        "answer": 1,
+        "explanation": "Also adds another fact or activity."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-alter-verb",
@@ -3957,12 +4251,26 @@
           "label": "base"
         }
       ],
-      "example": "He always arrives on time.",
-      "translation": "Dia selalu tiba tepat waktu.",
+      "example": "Maya always checks her answers before submitting a quiz.",
+      "translation": "Maya selalu memeriksa jawabannya sebelum mengumpulkan kuis.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "every time; on all occasions",
+      "context": {
+        "id": "batch-always-adverb-context-editorial",
+        "prompt": "Maya ___ checks her answers before submitting a quiz.",
+        "options": [
+          "almost",
+          "always",
+          "anywhere"
+        ],
+        "answer": 1,
+        "explanation": "Always describes something that happens every time or very regularly."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-amazed-adjective",
@@ -4087,12 +4395,26 @@
           "label": "base"
         }
       ],
-      "example": "A small amount of salt is enough.",
-      "translation": "Sedikit garam saja sudah cukup.",
+      "example": "Only a small amount of water is left in the bottle.",
+      "translation": "Hanya sedikit air yang tersisa di dalam botol.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "a quantity of something, especially something uncountable",
+      "context": {
+        "id": "batch-amount-noun-context-editorial",
+        "prompt": "Only a small ___ of water is left in the bottle.",
+        "options": [
+          "number",
+          "amount",
+          "piece"
+        ],
+        "answer": 1,
+        "explanation": "Amount is commonly used with uncountable nouns such as water or time."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-analysis-noun",
@@ -4264,12 +4586,26 @@
           "label": "base"
         }
       ],
-      "example": "My mother was angry with me.",
-      "translation": "Ibu saya marah kepada saya.",
+      "example": "The customer was angry because the delivery arrived late.",
+      "translation": "Pelanggan itu marah karena pesanannya datang terlambat.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "having a strong feeling of annoyance",
+      "context": {
+        "id": "batch-angry-adjective-context-editorial",
+        "prompt": "The customer was ___ because the delivery arrived late.",
+        "options": [
+          "angry",
+          "amazing",
+          "alone"
+        ],
+        "answer": 0,
+        "explanation": "Angry describes a strong feeling of annoyance."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-animal-noun",
@@ -4290,12 +4626,26 @@
           "label": "base"
         }
       ],
-      "example": "A cat is a small animal.",
-      "translation": "Kucing adalah hewan kecil.",
+      "example": "A tiger is a wild animal.",
+      "translation": "Harimau adalah hewan liar.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "a living creature such as a dog, bird, or fish",
+      "context": {
+        "id": "batch-animal-noun-context-editorial",
+        "prompt": "A tiger is a wild ___.",
+        "options": [
+          "airport",
+          "animal",
+          "article"
+        ],
+        "answer": 1,
+        "explanation": "An animal is a living creature that is not a plant."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-ankle-noun",
@@ -4520,12 +4870,26 @@
           "label": "base"
         }
       ],
-      "example": "Can I have another cup of tea?",
-      "translation": "Boleh saya minta secangkir teh lagi?",
+      "example": "This pencil is broken. May I borrow another one?",
+      "translation": "Pensil ini patah. Bolehkah saya meminjam satu lagi?",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "one more person or thing of the same kind",
+      "context": {
+        "id": "batch-another-determiner-context-editorial",
+        "prompt": "This pencil is broken. May I borrow ___ one?",
+        "options": [
+          "another",
+          "others",
+          "any"
+        ],
+        "answer": 0,
+        "explanation": "Another means one more or an additional one."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-answer-noun",
@@ -4545,12 +4909,26 @@
           "label": "base"
         }
       ],
-      "example": "I don't know the answer.",
-      "translation": "Saya tidak tahu jawabannya.",
+      "example": "Please write your answer in the box below.",
+      "translation": "Silakan tuliskan jawabanmu pada kotak di bawah.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "a response to a question or problem",
+      "context": {
+        "id": "batch-answer-noun-context-editorial",
+        "prompt": "Please write your ___ in the box below.",
+        "options": [
+          "advice",
+          "answer",
+          "action"
+        ],
+        "answer": 1,
+        "explanation": "An answer is a response to a question."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-anxious-adjective",
@@ -4623,12 +5001,26 @@
           "label": "base"
         }
       ],
-      "example": "Is anybody home?",
-      "translation": "Apakah ada seseorang di rumah?",
+      "example": "Is anybody waiting outside the classroom?",
+      "translation": "Apakah ada seseorang yang menunggu di luar kelas?",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "any person; someone, often used in questions and negatives",
+      "context": {
+        "id": "batch-anybody-pronoun-context-editorial",
+        "prompt": "Is ___ waiting outside the classroom?",
+        "options": [
+          "anything",
+          "anybody",
+          "anywhere"
+        ],
+        "answer": 1,
+        "explanation": "Anybody refers to a person."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-anymore-adverb",
@@ -4700,12 +5092,26 @@
           "label": "base"
         }
       ],
-      "example": "I can't hear anything.",
-      "translation": "Saya tidak bisa mendengar apa pun.",
+      "example": "I did not buy anything at the shop.",
+      "translation": "Saya tidak membeli apa pun di toko.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "any thing or object; often used in questions and negatives",
+      "context": {
+        "id": "batch-anything-pronoun-context-editorial",
+        "prompt": "I did not buy ___ at the shop.",
+        "options": [
+          "anywhere",
+          "anything",
+          "anybody"
+        ],
+        "answer": 1,
+        "explanation": "Anything refers to a thing, not a person or place."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-anyway-adverb",
@@ -4803,12 +5209,26 @@
           "label": "base"
         }
       ],
-      "example": "They live in a small apartment.",
-      "translation": "Mereka tinggal di apartemen kecil.",
+      "example": "My aunt rents an apartment near the train station.",
+      "translation": "Bibi saya menyewa apartemen dekat stasiun kereta.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "a set of rooms for living in, usually within a larger building",
+      "context": {
+        "id": "batch-apartment-noun-context-editorial",
+        "prompt": "My aunt rents an ___ near the train station.",
+        "options": [
+          "airport",
+          "apartment",
+          "activity"
+        ],
+        "answer": 1,
+        "explanation": "An apartment is a home made up of rooms in a larger building."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-apologize-verb",
@@ -5318,12 +5738,26 @@
           "label": "base"
         }
       ],
-      "example": "This is a quiet area.",
-      "translation": "Ini kawasan yang tenang.",
+      "example": "The school has a study area with several tables.",
+      "translation": "Sekolah memiliki area belajar dengan beberapa meja.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "a particular part of a place or region",
+      "context": {
+        "id": "batch-area-noun-context-editorial",
+        "prompt": "The school has a study ___ with several tables.",
+        "options": [
+          "answer",
+          "area",
+          "amount"
+        ],
+        "answer": 1,
+        "explanation": "An area is a particular part of a place."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-argue-verb",
@@ -5857,12 +6291,26 @@
           "label": "base"
         }
       ],
-      "example": "Can I ask you a question?",
-      "translation": "Boleh saya bertanya sesuatu?",
+      "example": "You can ask the librarian where the new books are.",
+      "translation": "Kamu bisa bertanya kepada pustakawan di mana buku-buku baru berada.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "to say or write a question; to request information",
+      "context": {
+        "id": "batch-ask-verb-context-editorial",
+        "prompt": "You can ___ the librarian where the new books are.",
+        "options": [
+          "add",
+          "ask",
+          "arrive"
+        ],
+        "answer": 1,
+        "explanation": "Ask means to request information or say a question."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-asleep-adjective",
@@ -6166,12 +6614,26 @@
           "label": "base"
         }
       ],
-      "example": "I'll meet you at the station.",
-      "translation": "Saya akan menemuimu di stasiun.",
+      "example": "The meeting begins at nine o'clock.",
+      "translation": "Rapat dimulai pukul sembilan.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "used to show a particular time or place",
+      "context": {
+        "id": "batch-at-preposition-context-editorial",
+        "prompt": "The meeting begins ___ nine o'clock.",
+        "options": [
+          "in",
+          "at",
+          "on"
+        ],
+        "answer": 1,
+        "explanation": "At is used with exact clock times."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-athlete-noun",
@@ -6757,12 +7219,26 @@
           "label": "base"
         }
       ],
-      "example": "He lives far away.",
-      "translation": "Dia tinggal jauh dari sini.",
+      "example": "Please put your toys away before dinner.",
+      "translation": "Tolong rapikan mainanmu sebelum makan malam.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "to or at a distance from a place or person",
+      "context": {
+        "id": "batch-away-adverb-context-editorial",
+        "prompt": "Please put your toys ___ before dinner.",
+        "options": [
+          "away",
+          "ago",
+          "again"
+        ],
+        "answer": 0,
+        "explanation": "Away can describe movement to a different place or a distance from here."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-awesome-adjective",
@@ -6860,12 +7336,26 @@
           "label": "base"
         }
       ],
-      "example": "Please come back tomorrow.",
-      "translation": "Tolong kembali besok.",
+      "example": "She came back from school at four.",
+      "translation": "Dia pulang dari sekolah pukul empat.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "to or toward the place where someone or something started",
+      "context": {
+        "id": "batch-back-adverb-context-editorial",
+        "prompt": "She came ___ from school at four.",
+        "options": [
+          "above",
+          "back",
+          "about"
+        ],
+        "answer": 1,
+        "explanation": "Back shows a return to a previous place or position."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-background-noun",
@@ -6963,12 +7453,26 @@
           "label": "base"
         }
       ],
-      "example": "I had a bad day.",
-      "translation": "Saya mengalami hari yang buruk.",
+      "example": "The milk smells bad, so please do not drink it.",
+      "translation": "Susu itu berbau tidak sedap, jadi tolong jangan diminum.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "not good; unpleasant or of poor quality",
+      "context": {
+        "id": "batch-bad-adjective-context-editorial",
+        "prompt": "The milk smells ___, so please do not drink it.",
+        "options": [
+          "bad",
+          "good",
+          "well"
+        ],
+        "answer": 0,
+        "explanation": "Bad is an adjective that describes something unpleasant or poor."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-badly-adverb",
@@ -7015,12 +7519,26 @@
           "label": "base"
         }
       ],
-      "example": "She put the books in her bag.",
-      "translation": "Dia memasukkan buku-buku itu ke dalam tasnya.",
+      "example": "He put his notebook inside his bag.",
+      "translation": "Dia memasukkan buku catatannya ke dalam tas.",
       "collocations": [],
       "translationStatus": "assistant-curated-draft",
       "contentStatus": "assistant-curated-draft",
-      "draft": true
+      "draft": true,
+      "definition": "a container used for carrying or storing things",
+      "context": {
+        "id": "batch-bag-noun-context-editorial",
+        "prompt": "He put his notebook inside his ___.",
+        "options": [
+          "bank",
+          "bag",
+          "band"
+        ],
+        "answer": 1,
+        "explanation": "A bag is used for carrying or storing things."
+      },
+      "editorialPass": "assistant-editorial-pass-2026-11",
+      "editorialNote": "Assistant language pass; retain the independent human-review flag."
     },
     {
       "id": "batch-bake-verb",
