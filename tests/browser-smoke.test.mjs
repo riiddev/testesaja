@@ -376,6 +376,14 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
           updatedAt: "2026-10-31T09:59:00.000Z",
         },
       },
+      dialogueProgress: {
+        "at-the-cafe": {
+          attempts: [{ attemptId: "dialogue-device-a", score: 2, total: 3, passed: true, completedAt: "2026-10-31T09:57:00.000Z" }],
+          bestScore: 2,
+          completedAt: "2026-10-31T09:57:00.000Z",
+          updatedAt: "2026-10-31T09:57:00.000Z",
+        },
+      },
       studioSessions: [{ sessionId: "speaking:ask-directions:2026-10-31", studioType: "speaking", promptId: "ask-directions", wordCount: 0, checklistCompleted: 3, completedAt: "2026-10-31T09:58:00.000Z", updatedAt: "2026-10-31T09:58:00.000Z" }],
       achievementIds: ["first-mission"],
       updatedAt: "2026-10-31T10:00:00.000Z",
@@ -407,6 +415,8 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   assert.equal(restored?.mistakeJournal?.["device-a-mistake"]?.status, "open", "Mistake Journal entries should restore on the second profile");
   assert.equal(restored?.storyProgress?.["a-helpful-neighbor"]?.attempts?.length, 1, "the first device's story attempt should restore on the second profile");
   assert.equal(restored?.storyProgress?.["a-helpful-neighbor"]?.bestScore, 2, "the first story best score should be retained");
+  assert.equal(restored?.dialogueProgress?.["at-the-cafe"]?.attempts?.length, 1, "the first device's dialogue attempt should restore on the second profile");
+  assert.equal(restored?.dialogueProgress?.["at-the-cafe"]?.bestScore, 2, "the first dialogue best score should be retained");
 
   await second.evaluate(() => {
     const snapshot = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
@@ -420,6 +430,10 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
     story.attempts.push({ attemptId: "story-device-b", score: 3, total: 3, passed: true, completedAt: new Date(Date.now() + 1000).toISOString() });
     story.bestScore = 3;
     story.updatedAt = new Date(Date.now() + 1000).toISOString();
+    const dialogue = snapshot.dialogueProgress["at-the-cafe"];
+    dialogue.attempts.push({ attemptId: "dialogue-device-b", score: 3, total: 3, passed: true, completedAt: new Date(Date.now() + 1000).toISOString() });
+    dialogue.bestScore = 3;
+    dialogue.updatedAt = new Date(Date.now() + 1000).toISOString();
     localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(snapshot));
     window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
   });
@@ -430,6 +444,10 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   assert.equal(mergedStory?.attempts?.length, 2, "story attempts from both devices should be merged, not overwritten");
   assert.equal(mergedStory?.bestScore, 3, "the higher story score should become the merged best score");
   assert.ok(mergedStory?.completedAt, "the story completion should remain recorded after merging");
+  const mergedDialogue = remoteState?.extras?.adventureProgress?.dialogueProgress?.["at-the-cafe"];
+  assert.equal(mergedDialogue?.attempts?.length, 2, "dialogue attempts from both devices should be merged, not overwritten");
+  assert.equal(mergedDialogue?.bestScore, 3, "the higher dialogue score should become the merged best score");
+  assert.ok(mergedDialogue?.completedAt, "the dialogue completion should remain recorded after merging");
   assert.deepEqual(pageErrors, [], "cross-device merge should not throw browser JavaScript errors");
   await firstContext.close();
   await secondContext.close();
@@ -679,6 +697,7 @@ test("Adventure workspace stays within mobile, tablet, and desktop viewport widt
     assert.ok(measurements.document <= measurements.viewport + 1, "no horizontal document overflow at width " + width + ": " + JSON.stringify(measurements));
     assert.ok(measurements.daily > 0 && measurements.journal > 0, "both new panels should remain visible at width " + width);
     assert.ok(await page.locator("#adventure-story-library").count(), "the story shelf should mount without delaying Adventure startup");
+    assert.ok(await page.locator("#adventure-everyday-english").count(), "Everyday English should mount without delaying Adventure startup");
     assert.ok(measurements.daily <= measurements.viewport && measurements.journal <= measurements.viewport, "panels should fit the viewport at width " + width);
     await page.close();
   }
@@ -783,5 +802,77 @@ test("Everyday Stories includes a B2 reading with inference-based comprehension 
   assert.equal(saved?.storyProgress?.["the-library-after-hours"]?.bestScore, 3);
   assert.ok(saved?.storyProgress?.["the-library-after-hours"]?.completedAt);
   assert.deepEqual(pageErrors, [], "B2 Everyday Stories should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("Everyday English supports listening, natural responses, local progress, and Speaking Studio handoff", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "dialogue-preview-access",
+      refresh_token: "dialogue-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "dialogue-preview-user", email: "dialogue-preview@example.com" },
+    }));
+    window.__spokenDialogueTexts = [];
+    window.SpeechSynthesisUtterance = class {
+      constructor(text) { this.text = text; }
+    };
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: { cancel() {}, speak(utterance) { window.__spokenDialogueTexts.push(utterance.text); } },
+    });
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  const card = page.locator('[data-dialogue-open="at-the-cafe"]');
+  await card.waitFor({ state: "visible" });
+  assert.match(await card.innerText(), /A1/);
+  await card.click();
+
+  const reader = page.locator("#adventure-dialogue-reader");
+  await reader.waitFor({ state: "visible" });
+  assert.match(await reader.innerText(), /At the Café/);
+  assert.equal(await page.locator("#adventure-dialogue-transcript").count(), 0, "transcript should start hidden for listening practice");
+  await page.locator("[data-dialogue-listen]").click();
+  const spoken = await page.evaluate(() => window.__spokenDialogueTexts);
+  assert.ok(spoken.length === 1 && spoken[0].includes("Barista:"), "the browser should read the scripted conversation");
+  await page.locator("[data-dialogue-transcript]").click();
+  await page.locator("#adventure-dialogue-transcript").waitFor({ state: "visible" });
+  assert.match(await page.locator("#adventure-dialogue-transcript").innerText(), /Could I have a cup of coffee/);
+  assert.equal(await page.locator("[data-dialogue-answer]").count(), 3);
+
+  for (const answer of [0, 1, 0]) {
+    await page.locator('[data-dialogue-answer="' + answer + '"]').click();
+    await page.locator(".adventure-dialogue-feedback").waitFor({ state: "visible" });
+    await page.locator("[data-dialogue-next]").click();
+  }
+
+  const result = page.locator("#adventure-dialogue-result");
+  await result.waitFor({ state: "visible" });
+  assert.match(await result.innerText(), /3\/3/);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.equal(saved?.dialogueProgress?.["at-the-cafe"]?.bestScore, 3);
+  assert.ok(saved?.dialogueProgress?.["at-the-cafe"]?.completedAt);
+  const bundle = await page.evaluate(() => window.sinauuExportLocalBundle());
+  assert.ok(bundle.extras.adventureProgress.dialogueProgress["at-the-cafe"], "dialogue progress should be included in CloudBundle v2");
+
+  await page.locator('[data-dialogue-speaking="at-the-cafe"]').click();
+  await page.locator('#adventure-speaking-studio [data-studio-prompt="cafe-order"].is-active').waitFor({ state: "visible" });
+  assert.match(await page.locator("#adventure-speaking-studio").innerText(), /Order something politely/);
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  const restored = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  assert.equal(restored?.dialogueProgress?.["at-the-cafe"]?.attempts?.length, 1, "dialogue progress should survive reloading");
+  assert.deepEqual(pageErrors, [], "Everyday English should not throw browser JavaScript errors");
   await page.close();
 });
