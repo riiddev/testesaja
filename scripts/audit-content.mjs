@@ -178,7 +178,7 @@ assert.equal(dialogueLibrary.schemaVersion, 1, "Everyday English schema version 
 assert.ok(Array.isArray(dialogueLibrary.dialogues) && dialogueLibrary.dialogues.length >= 4, "Expected at least four Everyday English scenarios");
 const dialogueIds = new Set();
 const dialogueTurnIds = new Set();
-const allowedSpeakingPrompts = new Set(["first-introduction", "ask-directions", "cafe-order", "discuss-study-plan"]);
+const allowedSpeakingPrompts = new Set(["first-introduction", "ask-directions", "cafe-order", "discuss-study-plan", "present-study-proposal"]);
 const dialogueLevels = new Set();
 for (const dialogue of dialogueLibrary.dialogues) {
   assert.ok(dialogue.id && dialogue.title && dialogue.subtitle && dialogue.setting, "Every dialogue needs an id, title, subtitle, and setting");
