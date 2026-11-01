@@ -2054,7 +2054,8 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
   page.on("dialog", (dialog) => dialog.accept());
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="grammar"]').first().click();
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   const topicButtons = page.locator("#grammar-topic-list .topic-button");
   await topicButtons.first().waitFor({ state: "visible" });
   await topicButtons.first().click();
@@ -2070,7 +2071,8 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
   assert.ok(backupPath, "backup export should create a JSON download");
   const backupBytes = await readFile(backupPath);
 
-  await page.locator("[data-view-target=\"grammar\"]").first().click();
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   await topicButtons.nth(1).click();
   await page.locator("#lesson-panel .lesson-answer").first().click();
   await page.locator("#lesson-panel .lesson-feedback").waitFor({ state: "visible" });
@@ -2083,7 +2085,8 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
     buffer: backupBytes,
   });
   await page.waitForFunction(() => document.querySelector("#backup-status")?.textContent.includes("berhasil dipulihkan"));
-  await page.locator('[data-view-target="grammar"]').first().click();
+  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   assert.match(await topicButtons.first().innerText(), /1\/3 soal dicoba/,
     "progress included in the exported backup should be restored");
   assert.match(await topicButtons.nth(1).innerText(), /0\/3 soal dicoba/,
