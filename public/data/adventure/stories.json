@@ -204,6 +204,71 @@
           "explanation": "The students improved a shared resource by communicating and organizing their time."
         }
       ]
+    },
+    {
+      "id": "the-library-after-hours",
+      "level": "B2",
+      "title": "The Library After Hours",
+      "subtitle": "A successful change still needs careful evaluation.",
+      "estimatedMinutes": 8,
+      "paragraphs": [
+        "The public library in Westbridge had always closed at six, even though many residents were still travelling home from work. After a local survey revealed substantial demand for later access, the council approved a three-month trial in which the library would remain open until eight on Tuesdays and Thursdays.",
+        "During the first few weeks, attendance rose sharply. However, the figures were more complicated than the headline suggested: the number of visitors increased, whereas the number of books borrowed changed very little. Many people were using the extra time to study, attend short workshops, or ask staff for help with online forms. The library had become more than a place to collect books, although its original purpose remained important.",
+        "Not everyone welcomed the change. A few staff members worried that evening activities might undermine the quiet atmosphere that regular readers valued. The librarian acknowledged that the concern was reasonable. Rather than cancelling the programme or ignoring the criticism, the team introduced separate zones: silent study areas stayed open, while group activities moved to a meeting room.",
+        "At the end of the trial, the council did not treat higher attendance as proof that every decision had been successful. Staff reviewed visitor feedback, borrowing figures, and the extra cost of evening shifts. They recommended keeping the new hours but adjusting the workshop schedule. The experience showed that a substantial change is not necessarily a complete solution; its value depends on whether an organization learns from the consequences and listens to the people it serves."
+      ],
+      "focusWords": [
+        {
+          "id": "b2-substantial",
+          "word": "substantial",
+          "meaning": "cukup besar atau penting dalam jumlah, nilai, atau pengaruh"
+        },
+        {
+          "id": "b2-whereas",
+          "word": "whereas",
+          "meaning": "sedangkan; menghubungkan dua fakta yang berbeda atau berlawanan"
+        },
+        {
+          "id": "b2-undermine",
+          "word": "undermine",
+          "meaning": "melemahkan secara bertahap, sering kali kepercayaan, otoritas, atau argumen"
+        }
+      ],
+      "questions": [
+        {
+          "id": "la-q1",
+          "prompt": "What did the early attendance figures fail to show on their own?",
+          "options": [
+            "Whether staff members had received training.",
+            "Whether extra visits also meant more books were borrowed.",
+            "Whether residents knew the library existed."
+          ],
+          "answer": 1,
+          "explanation": "Attendance increased, whereas the number of books borrowed changed very little. Visitor numbers alone did not show how people were using the service."
+        },
+        {
+          "id": "la-q2",
+          "prompt": "Why did the librarian introduce separate zones?",
+          "options": [
+            "To respond to concerns without abandoning the trial.",
+            "To prevent visitors from borrowing books.",
+            "To move all readers to evening workshops."
+          ],
+          "answer": 0,
+          "explanation": "The librarian accepted that the concern about noise was reasonable, then separated quiet study from group activities instead of cancelling the programme."
+        },
+        {
+          "id": "la-q3",
+          "prompt": "Which conclusion best reflects the writer's view?",
+          "options": [
+            "Visitor numbers are the only useful measure of success.",
+            "Libraries should avoid all changes to established services.",
+            "A useful change must be evaluated and adjusted in response to people's needs."
+          ],
+          "answer": 2,
+          "explanation": "The council reviewed several kinds of evidence and adjusted the schedule rather than treating higher attendance as proof that everything was working."
+        }
+      ]
     }
   ]
 }
