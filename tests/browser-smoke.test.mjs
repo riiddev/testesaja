@@ -833,10 +833,11 @@ test("Everyday English supports listening, natural responses, local progress, an
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
   await page.locator('[data-view-target="adventure"]').click();
-  const card = page.locator('[data-dialogue-open="at-the-cafe"]');
-  await card.waitFor({ state: "visible" });
+  const cardButton = page.locator('[data-dialogue-open="at-the-cafe"]');
+  const card = cardButton.locator("xpath=ancestor::article");
+  await cardButton.waitFor({ state: "visible" });
   assert.match(await card.innerText(), /A1/);
-  await card.click();
+  await cardButton.click();
 
   const reader = page.locator("#adventure-dialogue-reader");
   await reader.waitFor({ state: "visible" });
