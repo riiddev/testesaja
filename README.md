@@ -74,7 +74,7 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 1. Human-review high-frequency meanings, parts of speech, examples, and Indonesian translations, starting with A1/A2.
 2. Replace unreliable or fragmentary examples and improve context variants before expanding the mastery-ready pool.
 3. Expand grammar lessons and validated question banks topic by topic.
-4. Expand Listening Lab with reviewed A1–B2 audio comprehension, then keep connecting reading, dialogue, listening, speaking, and writing through shared learning goals.
+4. Expand Listening Lab and Pronunciation Studio with reviewed A1–B2 listening, stress, connected speech, and intonation practice; keep connecting reading, dialogue, listening, speaking, and writing through shared learning goals.
 5. Continue responsive, accessibility, persistence, backup/restore, and regression checks.
 
 **Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
@@ -84,7 +84,7 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 
 - `npm run test:content` validates vocabulary fields and uniqueness, Everyday Stories, Everyday English, and Listening Lab level coverage, vocabulary links, response keys, transcript/audio alignment, Speaking Studio links, all reading-question answer keys, HABIT passage integrity and word-count metadata, and byte-for-byte synchronization between root and `public/data` JSON copies.
 - `npm run build` runs TypeScript checks and builds all production entry points.
-- `npm run test:browser` runs Playwright smoke tests for the landing page, navigation, vocabulary lookup, HABIT reading questions, Everyday Stories A1/B2 reading, Everyday English listening and role-play, staged Listening Lab playback and transcript review, Speaking Studio handoff, cross-device Adventure progress, and answer persistence. Install Playwright and Chromium before running it locally; the `.github/workflows/quality-gates.yml` workflow does that in CI.
+- `npm run test:browser` runs Playwright smoke tests for the landing page, navigation, vocabulary lookup, HABIT reading questions, Everyday Stories A1/B2 reading, Everyday English listening and role-play, staged Listening Lab playback and transcript review, local Pronunciation Studio microphone analysis and fallback, Speaking Studio handoff, cross-device Adventure progress, and answer persistence. Install Playwright and Chromium before running it locally; the `.github/workflows/quality-gates.yml` workflow does that in CI.
 - Automated checks catch structural and regression problems, not every linguistic nuance. The 965 imported A–E entries remain marked as editorial drafts until an independent human review confirms their meanings, examples, and Indonesian translations.
 
 ## Everyday English role-play
@@ -115,3 +115,12 @@ The grammar curriculum currently contains **6 lessons and 18 topic-specific ques
 - Audio is generated with browser speech synthesis for each stage, with saved speed preferences (0.75×, 0.9×, and 1×). Learners can reveal the transcript after attempting to listen and review vocabulary linked to the checked-in corpus.
 - Scores, attempts, best results, and first successful completion are saved locally in `listeningProgress` and merged across devices through CloudBundle v2. The activity does not award XP or change vocabulary mastery.
 - The browser voices are synthetic and depend on device/browser support; there are no third-party audio services, microphone recordings, or uploaded voice data.
+
+
+## Pronunciation Studio
+
+- The Adventure workspace includes eight guided phrases across A1–B2, covering word stress, thought groups, connected speech, polite requests, contrast, and sentence intonation.
+- Browser speech synthesis provides a reference voice. Learners can record through `getUserMedia` and inspect signal energy, long pauses, speaking duration, and an approximate pitch contour locally with Web Audio.
+- No speech-recognition service is used. Raw audio is not written to storage or uploaded; only compact practice metrics and timestamps are saved in `pronunciationProgress` and merged across devices through CloudBundle v2.
+- The metrics do not identify phonemes or determine whether a word was pronounced correctly. Microphone gain, background noise, device hardware, and voice characteristics affect the measurements. Stress and intonation correctness remain guided self-practice rather than an automated grade.
+- Microphone access requires browser permission and a secure context (HTTPS or localhost). If access is unavailable, the phrase guide and browser-generated reference voice remain available.
