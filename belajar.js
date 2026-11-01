@@ -852,7 +852,7 @@
     $("#grammar-answer-form")?.addEventListener("submit",async e=>{
       e.preventDefault();if(ui.result)return;const q=t.questions[ui.index],ans=$("#grammar-typed-answer").value.trim(),accepted=q.accepted||[],correct=accepted.some(x=>norm(x)===norm(ans));
       await recordGrammar(t,q,correct,ans,accepted.join(" / "));if(correct)ui.sessionCorrect++;
-      ui.result={correct,explanation:q.explanation,expected:accepted.join(" / ")};renderLesson(t.id);renderTopicList();
+      ui.result={correct,explanation:q.explanation,expected:accepted.join(" / ")};renderLesson(t.id);renderTopicList();renderTopicList();
     });
     $("#grammar-next")?.addEventListener("click",()=>{ui.index++;ui.result=null;renderLesson(t.id);renderTopicList();});
     $("#restart-topic")?.addEventListener("click",()=>{ui.index=0;ui.result=null;ui.sessionCorrect=0;renderLesson(t.id);});
