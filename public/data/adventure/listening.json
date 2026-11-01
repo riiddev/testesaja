@@ -488,7 +488,7 @@
           "id": "lunchbox-inference",
           "kind": "inference",
           "label": "Understand the reason",
-          "audioText": "Mia: I usually put it in my bag, but today I was in a hurry.",
+          "audioText": "Mia: Thank you. I usually put it in my bag, but today I was in a hurry.",
           "prompt": "Why did Mia probably leave the lunchbox behind?",
           "options": [
             "She was in a hurry.",

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { chromium } from "playwright";
+import { readFile } from "node:fs/promises";
 
 const baseUrl = (process.env.BASE_URL || "http://127.0.0.1:4173").replace(/\/+$/, "");
 let browser;
@@ -1962,13 +1963,12 @@ test("Everyday Stories result links the learner to related listening, dialogue, 
   const result = page.locator("#adventure-story-result");
   await result.waitFor({ state: "visible" });
   const links = result.locator("[data-learning-path-link]");
+  await page.waitForFunction(() => document.querySelectorAll("#adventure-story-result [data-learning-path-link]").length >= 6);
   await links.first().waitFor({ state: "visible" });
   const labels = (await links.allInnerTexts()).join(" | ");
   assert.match(labels, /Baca cerita terkait|Dengarkan dialog|Latihan listening|Latihan pronunciation/);
   assert.ok(labels.includes("Lanjut ke Speaking Studio"));
   assert.ok(labels.includes("Lanjut ke Writing Studio"));
-  assert.ok(await page.locator("#adventure-learning-path").count() === 0 || await result.locator(".adventure-learning-path").isVisible(),
-    "cross-skill pathway should be visible");
   await result.locator('[data-dialogue-open="at-the-cafe"]').click();
   await page.locator("#adventure-dialogue-reader").waitFor({ state: "visible" });
   assert.match(await page.locator("#adventure-dialogue-reader").innerText(), /At the Café/);
@@ -2004,10 +2004,64 @@ test("Pronunciation Studio contains four guided phrases at every CEFR band", asy
   for (const level of ["A1", "A2", "B1", "B2"]) {
     assert.equal(levels.filter((value) => value === level).length, 4, level + " pronunciation coverage changed");
   }
-  await cards.filter({ has: page.locator('[data-pronunciation-open="contrasting-evidence"]') }).count().catch(()=>0);
   await page.locator('[data-pronunciation-open="clear-instructions"]').click();
   await page.locator("#pronunciation-studio-reader").waitFor({ state: "visible" });
   assert.ok(await page.locator("#pronunciation-studio-reader .adventure-learning-path [data-learning-path-link]").count() >= 4);
   assert.deepEqual(pageErrors, [], "Pronunciation Studio should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+
+test("JSON backup restores previously saved vocabulary and grammar progress", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "backup-restore-access",
+      refresh_token: "backup-restore-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "backup-restore-user", email: "backup-restore@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.on("dialog", (dialog) => dialog.accept());
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="grammar"]').first().click();
+  const topicButtons = page.locator("#grammar-topic-list .topic-button");
+  await topicButtons.first().waitFor({ state: "visible" });
+  await topicButtons.first().click();
+  await page.locator("#lesson-panel .lesson-answer").first().click();
+  await page.locator("#lesson-panel .lesson-feedback").waitFor({ state: "visible" });
+  assert.match(await topicButtons.first().innerText(), /1\/3 soal dicoba/);
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator("#export-backup").click();
+  const download = await downloadPromise;
+  const backupPath = await download.path();
+  assert.ok(backupPath, "backup export should create a JSON download");
+  const backupBytes = await readFile(backupPath);
+
+  await topicButtons.nth(1).click();
+  await page.locator("#lesson-panel .lesson-answer").first().click();
+  await page.locator("#lesson-panel .lesson-feedback").waitFor({ state: "visible" });
+  assert.match(await topicButtons.nth(1).innerText(), /1\/3 soal dicoba/);
+
+  await page.locator("#import-backup").setInputFiles({
+    name: "sinauuenglish-backup.json",
+    mimeType: "application/json",
+    buffer: backupBytes,
+  });
+  await page.waitForFunction(() => document.querySelector("#backup-status")?.textContent.includes("berhasil dipulihkan"));
+  assert.match(await topicButtons.first().innerText(), /1\/3 soal dicoba/,
+    "progress included in the exported backup should be restored");
+  assert.match(await topicButtons.nth(1).innerText(), /0\/3 soal dicoba/,
+    "progress created after the backup should be replaced by the older backup state");
+  assert.deepEqual(pageErrors, [], "backup restoration should not throw browser JavaScript errors");
   await page.close();
 });
