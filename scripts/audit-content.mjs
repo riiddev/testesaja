@@ -136,9 +136,49 @@ for (const story of storyLibrary.stories) {
 }
 assert.ok(storyLevels.has("A1") && storyLevels.has("A2") && storyLevels.has("B1") && storyLevels.has("B2"), "Everyday Stories should cover A1 through B2");
 
+
+const dialogueLibrary = json("public/data/adventure/dialogues.json");
+assert.equal(dialogueLibrary.schemaVersion, 1, "Everyday English schema version changed");
+assert.ok(Array.isArray(dialogueLibrary.dialogues) && dialogueLibrary.dialogues.length >= 3, "Expected at least three Everyday English scenarios");
+const dialogueIds = new Set();
+const dialogueTurnIds = new Set();
+const allowedSpeakingPrompts = new Set(["first-introduction", "ask-directions", "cafe-order", "discuss-study-plan"]);
+const dialogueLevels = new Set();
+for (const dialogue of dialogueLibrary.dialogues) {
+  assert.ok(dialogue.id && dialogue.title && dialogue.subtitle && dialogue.setting, "Every dialogue needs an id, title, subtitle, and setting");
+  assert.ok(!dialogueIds.has(dialogue.id), `Duplicate dialogue id: ${dialogue.id}`);
+  dialogueIds.add(dialogue.id);
+  assert.ok(["A1", "A2", "B1", "B2"].includes(dialogue.level), `${dialogue.title}: invalid CEFR guide level`);
+  dialogueLevels.add(dialogue.level);
+  assert.ok(Number.isInteger(dialogue.estimatedMinutes) && dialogue.estimatedMinutes > 0, `${dialogue.title}: invalid time estimate`);
+  assert.ok(allowedSpeakingPrompts.has(dialogue.speakingPromptId), `${dialogue.title}: missing matching Speaking Studio prompt`);
+  assert.ok(Array.isArray(dialogue.transcript) && dialogue.transcript.length >= 4, `${dialogue.title}: transcript is missing`);
+  for (const line of dialogue.transcript) assert.ok(line.speaker && line.text, `${dialogue.title}: transcript line needs speaker and text`);
+  assert.ok(Array.isArray(dialogue.focusWords) && dialogue.focusWords.length >= 3, `${dialogue.title}: at least three focus words are required`);
+  for (const focus of dialogue.focusWords) {
+    const entry = vocabularyById.get(focus.id);
+    assert.ok(entry, `${dialogue.title}: unknown vocabulary id ${focus.id}`);
+    assert.equal(String(focus.word).toLocaleLowerCase("en"), entry.word.toLocaleLowerCase("en"), `${dialogue.title}: focus word does not match ${focus.id}`);
+    assert.ok(typeof focus.meaning === "string" && focus.meaning.trim(), `${dialogue.title}: missing Indonesian gloss for ${focus.word}`);
+  }
+  assert.ok(Array.isArray(dialogue.turns) && dialogue.turns.length >= 3, `${dialogue.title}: at least three conversation turns are required`);
+  for (const turn of dialogue.turns) {
+    assert.ok(turn.id && turn.partnerLine && turn.prompt && turn.explanation && turn.response, `${dialogue.title}: incomplete roleplay turn`);
+    assert.ok(!dialogueTurnIds.has(turn.id), `Duplicate dialogue turn id: ${turn.id}`);
+    dialogueTurnIds.add(turn.id);
+    assert.ok(dialogue.transcript.some((line) => line.text === turn.partnerLine), `${dialogue.title}: partner line is not in the transcript`);
+    assert.ok(Array.isArray(turn.options) && turn.options.length >= 3, `${dialogue.title}: turn needs at least three answer options`);
+    assert.equal(new Set(turn.options).size, turn.options.length, `${dialogue.title}: duplicate answer options`);
+    assert.ok(Number.isInteger(turn.answer) && turn.answer >= 0 && turn.answer < turn.options.length, `${dialogue.title}: invalid answer key`);
+    assert.equal(turn.response, turn.options[turn.answer], `${dialogue.title}: recommended response must match the answer key`);
+  }
+}
+assert.ok(dialogueLevels.has("A1") && dialogueLevels.has("A2") && dialogueLevels.has("B1"), "Everyday English should cover A1, A2, and B1");
+
 console.log("Content audit passed.");
 console.log(`- Vocabulary: ${vocabulary.entries.length} unique headwords; ${importedDraftCount} imported rows stay explicitly flagged for human review.`);
 console.log(`- HABIT library: ${habit.passages.length} unique passages; ${storedWordCount.toLocaleString("en-US")} words; 175 physical PDF pages / 174 numbered content pages.`);
 console.log(`- Reading skills: ${reading.skills.length} skills and ${questionCount} checked questions.`);
 console.log(`- Everyday Stories: ${storyLibrary.stories.length} stories across A1–B2; focus words link to checked vocabulary IDs and all question keys are valid.`);
+console.log(`- Everyday English: ${dialogueLibrary.dialogues.length} situational scenarios across A1–B1; response keys, transcript lines, vocabulary IDs, and Speaking Studio links are valid.`);
 console.log("- Root/public JSON mirrors match byte-for-byte.");
