@@ -638,7 +638,7 @@
       Object.keys(state.wordProgress).length > 0 ||
       Object.values(state.grammarProgress).some(item => Number(item.attempts) > 0);
     let action = {type:"vocabulary"};
-    if (activeStudy) action = {type:"active-study"};
+    if (activeStudy && activeStudy.stage < 3) action = {type:"active-study"};
     else if (vocabulary.word && !vocabulary.done) action = {type:"word",wordId:vocabulary.word.id,mode:vocabulary.mode};
     else if (grammar.topic && !grammar.done) action = {type:"grammar",topicId:grammar.topic.id};
     else if (adventure.started && !adventure.done) action = {type:"adventure"};
