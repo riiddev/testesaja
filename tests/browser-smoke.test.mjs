@@ -1624,3 +1624,273 @@ test("Writing Studio includes B1 and B2 tasks with appropriate targets and refle
   assert.deepEqual(pageErrors, [], "B2 Writing Studio task should not throw browser JavaScript errors");
   await page.close();
 });
+
+
+test("Daily study plan adapts to due vocabulary, a weak grammar topic, and an in-progress Adventure quest", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    const now = new Date();
+    const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
+    const nowIso = now.toISOString();
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "study-plan-access",
+      refresh_token: "study-plan-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "study-plan-user", email: "study-plan@example.com" },
+    }));
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify({
+      schemaVersion: 1,
+      dailyQuests: {
+        [today]: {
+          dateKey: today,
+          missionId: "meet-your-new-neighbors",
+          stepIds: ["word-neighbor", "listen-greeting", "grammar-article"],
+          completedStepIds: ["word-neighbor"],
+          wrongAttempts: {},
+          startedAt: nowIso,
+          completedAt: null,
+          updatedAt: nowIso,
+        },
+      },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    const now = new Date();
+    const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
+    const yesterday = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const state = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "old-attempt" }],
+          skillEvidence: { recall: true, context: true, production: true },
+          firstSeenDate: yesterday,
+          studiedDates: [yesterday],
+          nextReviewAt: new Date(now.getTime() - 3600000).toISOString(),
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [{ date: today, at: now.toISOString(), correct: true, sessionId: "review-today" }],
+          weak: true,
+          consecutiveErrors: 2,
+        },
+      },
+      favorites: [],
+      grammarProgress: {
+        "present-simple": {
+          attempts: 10,
+          correct: 2,
+          answers: { "present-simple-q1": { correct: false, response: "wrong", at: now.toISOString() } },
+          history: [],
+        },
+      },
+      events: [],
+      history: [{
+        id: "today-review",
+        at: now.toISOString(),
+        date: today,
+        type: "vocabulary",
+        title: "hello",
+        detail: "Review arti",
+        correct: true,
+        wordId: "a1-hello",
+        skill: "recall",
+        mode: "review",
+      }],
+      updatedAt: now.toISOString(),
+    };
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.open("sinauu-local-v1", 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains("state")) request.result.createObjectStore("state", { keyPath: "key" });
+      };
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction("state", "readwrite");
+        transaction.objectStore("state").put({ key: "main", value: state });
+        transaction.oncomplete = () => { db.close(); resolve(); };
+        transaction.onerror = () => { db.close(); reject(transaction.error); };
+      };
+    });
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.waitForFunction(() => document.querySelector("#home-study-plan-steps .home-study-plan-step"));
+  assert.equal(await page.locator("#home-study-plan-count").innerText(), "1/3",
+    "the due-word review should count as completed from saved review history");
+  const wordStep = page.locator("#home-study-plan-steps .home-study-plan-step").nth(0);
+  assert.match(await wordStep.getAttribute("class"), /is-complete/);
+  assert.equal(await wordStep.locator("h3").innerText(), "Ingat kembali · hello");
+  const grammarStep = page.locator("#home-study-plan-steps .home-study-plan-step").nth(1);
+  assert.match(await grammarStep.locator("h3").innerText(), /Present simple/i,
+    "the lowest-accuracy grammar topic should be recommended first");
+  assert.equal(await grammarStep.locator("[data-plan-topic]").getAttribute("data-plan-topic"), "present-simple");
+  assert.ok((await page.locator("#home-study-plan-steps .home-study-plan-step").nth(2).innerText()).includes("1/3 tantangan"));
+  assert.match(await page.locator("[data-plan-adventure]").innerText(), /Lanjutkan quest/);
+
+  await grammarStep.locator("[data-plan-topic]").click();
+  await page.locator("#view-grammar.is-visible").waitFor({ state: "visible" });
+  assert.match(await page.locator("#lesson-panel").innerText(), /Present simple/i);
+  await page.locator('[data-view-target="overview"]').click();
+  await page.locator("[data-plan-adventure]").click();
+  await page.locator("#view-adventure.is-visible").waitFor({ state: "visible" });
+  await page.locator("#adventure-daily-quest .adventure-extra-heading").waitFor({ state: "visible" });
+  assert.deepEqual(pageErrors, [], "adaptive study plan navigation should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Daily study plan starts with a new word when no vocabulary review is due", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "study-plan-new-word-access",
+      refresh_token: "study-plan-new-word-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "study-plan-new-word-user", email: "new-word@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  const action = page.locator("#home-study-plan-steps .home-study-plan-step").first().locator("[data-plan-vocabulary]");
+  await action.waitFor({ state: "visible" });
+  assert.equal(await action.getAttribute("data-plan-mode"), "learn");
+  const selectedWordId = await action.getAttribute("data-plan-vocabulary");
+  assert.ok(selectedWordId, "a study-ready new word should be suggested");
+  await action.click();
+  await page.locator("#view-study.is-visible").waitFor({ state: "visible" });
+  assert.ok((await page.locator("#study-container h1").innerText()).length > 0,
+    "the plan should open the three-stage word learning session");
+  assert.deepEqual(pageErrors, [], "new-word study plan should not throw browser JavaScript errors");
+  await page.close();
+});
+
+
+test("Placement Check adapts to a learner's answers and saves a local estimate", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "placement-preview-access",
+      refresh_token: "placement-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "placement-preview-user", email: "placement-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.locator("#placement-teaser-action").click();
+  await page.locator("#view-placement.is-visible").waitFor({ state: "visible" });
+  await page.locator("#placement-start").click();
+
+  const answers = [1, 1, 1, 1, 0];
+  for (let index = 0; index < answers.length; index += 1) {
+    await page.locator('[data-placement-answer="' + answers[index] + '"]').click();
+    await page.locator("#placement-feedback").waitFor({ state: "visible" });
+    if (index === 1) assert.match(await page.locator("#placement-feedback").innerText(), /borrow/i,
+      "a wrong answer should reveal the correct choice after the attempt");
+    await page.locator("#placement-next").click();
+  }
+
+  await page.locator("#placement-result").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#placement-result-level").innerText(), "A1");
+  assert.equal(await page.locator("#placement-score").innerText(), "2/5");
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("sinauu-placement-check-v1") || "null"));
+  assert.equal(saved?.level, "A1");
+  assert.equal(saved?.total, 5);
+  assert.equal(saved?.correct, 2);
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  assert.match(await page.locator("#placement-teaser-summary").innerText(), /A1/);
+  await page.locator("#placement-teaser-action").click();
+  await page.locator("#placement-result").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#placement-result-level").innerText(), "A1");
+  assert.deepEqual(pageErrors, [], "Placement Check should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Placement Check progresses through all four bands when answers are consistently correct", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "placement-preview-access",
+      refresh_token: "placement-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "placement-preview-user", email: "placement-preview@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.locator("#placement-teaser-action").click();
+  await page.locator("#placement-start").click();
+  const correctAnswers = [1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0];
+  for (const answer of correctAnswers) {
+    await page.locator('[data-placement-answer="' + answer + '"]').click();
+    await page.locator("#placement-next").click();
+  }
+
+  await page.locator("#placement-result").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#placement-result-level").innerText(), "B2");
+  assert.equal(await page.locator("#placement-score").innerText(), "20/20");
+  assert.equal(await page.locator("#placement-level-breakdown .placement-level-row").count(), 4);
+  assert.deepEqual(pageErrors, [], "the full adaptive assessment should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Placement Check ignores malformed saved results and starts with a clean assessment", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "placement-corrupt-access",
+      refresh_token: "placement-corrupt-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "placement-corrupt-user", email: "placement-corrupt@example.com" },
+    }));
+    localStorage.setItem("sinauu-placement-check-v1", JSON.stringify({
+      level: "B2", correct: 20, total: 20, levelScores: [], categoryScores: [], completedAt: "not-a-date",
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator("#placement-teaser-action").click();
+  await page.locator("#placement-intro").waitFor({ state: "visible" });
+  await page.locator("#placement-start").click();
+  await page.locator("#placement-quiz").waitFor({ state: "visible" });
+  assert.ok((await page.locator("#placement-question").innerText()).length > 0);
+  assert.deepEqual(pageErrors, [], "corrupt placement storage should not break the workspace");
+  await page.close();
+});
