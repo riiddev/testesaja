@@ -1528,3 +1528,80 @@ h1,h2,h3{overflow-wrap:break-word}
   .adventure-dialogue-result-actions button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.adventure-dialogue-library *{scroll-behavior:auto}}
+
+
+/* Listening Lab — progressive comprehension before transcript review */
+.listening-lab-library{min-width:0;margin-top:16px;padding:22px;border:1px solid var(--line);background:var(--sheet)}
+.listening-lab-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.listening-lab-heading .eyebrow{margin-bottom:6px}
+.listening-lab-heading h3{margin:0;color:var(--ink);font:500 1.4rem "Lora",Georgia,serif}
+.listening-lab-heading p{max-width:700px;margin:6px 0 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+.listening-lab-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.listening-lab-card{min-width:0;display:flex;flex-direction:column;padding:15px;border:1px solid var(--line);background:var(--paper)}
+.listening-lab-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.listening-lab-card h4{margin:0 0 6px;color:var(--ink);font:500 1.03rem/1.35 "Lora",Georgia,serif}
+.listening-lab-card p{flex:1;margin:0 0 13px;color:var(--muted);font-size:.58rem;line-height:1.7}
+.listening-lab-card-meta{display:flex;justify-content:space-between;gap:8px;margin-bottom:11px;color:var(--muted);font-size:.48rem}
+.listening-lab-button,.listening-lab-play,.listening-lab-transcript-toggle{min-height:37px;padding:8px 11px;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.57rem;font-weight:700;cursor:pointer}
+.listening-lab-button:hover,.listening-lab-play:hover,.listening-lab-transcript-toggle:hover{border-color:var(--sage-deep);background:var(--sage)}
+.listening-lab-button.is-secondary{background:transparent;color:var(--body)}
+.listening-lab-reader{max-width:880px;margin:0 auto}
+.listening-lab-reader-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.listening-lab-title{margin:0;color:var(--ink);font:500 clamp(1.55rem,3vw,2.1rem)/1.2 "Lora",Georgia,serif}
+.listening-lab-setting{margin:6px 0 16px;color:var(--muted);font-size:.65rem;line-height:1.7}
+.listening-lab-stage-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:17px;color:var(--sage-deep);font-size:.5rem;font-weight:800;letter-spacing:.09em}
+.listening-lab-stage-top strong{color:var(--muted);font-size:.48rem}
+.listening-lab-stage-track{display:flex;align-items:center;gap:8px;margin:15px 0 7px}
+.listening-lab-stage-track span{width:25px;height:25px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--muted);font-size:.56rem;font-weight:700}
+.listening-lab-stage-track span.is-active{border-color:var(--sage-deep);background:var(--sage);color:var(--ink)}
+.listening-lab-stage-track span.is-done{border-color:var(--sage-deep);background:var(--sage-deep);color:#fff}
+.listening-lab-stage-label{margin:0 0 12px;color:var(--ink);font:500 1rem "Lora",Georgia,serif}
+.listening-lab-player{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;padding:13px;border:1px solid var(--line);background:color-mix(in srgb,var(--sage) 17%,var(--paper))}
+.listening-lab-play{min-width:165px;min-height:44px;background:var(--sheet)}
+.listening-lab-speed{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:5px}
+.listening-lab-speed>span{margin-right:5px;color:var(--muted);font-size:.46rem;font-weight:800;letter-spacing:.09em}
+.listening-lab-speed button{min-width:40px;min-height:30px;padding:5px 7px;border:1px solid var(--line);background:var(--sheet);color:var(--body);font-size:.52rem;cursor:pointer}
+.listening-lab-speed button[aria-pressed="true"]{border-color:var(--sage-deep);background:var(--sage);color:var(--ink);font-weight:800}
+.listening-lab-player small{grid-column:1/-1;color:var(--muted);font-size:.52rem;line-height:1.6}
+.listening-lab-question{margin:18px 0 12px;color:var(--ink);font:500 1.05rem/1.5 "Lora",Georgia,serif}
+.listening-lab-options{display:grid;gap:7px}
+.listening-lab-option{display:flex;align-items:flex-start;gap:9px;width:100%;min-height:43px;padding:10px 12px;border:1px solid var(--line);background:var(--paper);color:var(--body);text-align:left;font-size:.62rem;line-height:1.6;cursor:pointer}
+.listening-lab-option>span{width:21px;height:21px;flex:0 0 21px;display:grid;place-items:center;border:1px solid var(--line);background:var(--sheet);color:var(--sage-deep);font-size:.52rem;font-weight:700}
+.listening-lab-option:hover:not(:disabled){border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 25%,var(--paper))}
+.listening-lab-option.is-correct{border-color:var(--sage-deep);background:color-mix(in srgb,var(--sage) 35%,var(--paper))}
+.listening-lab-option.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 30%,var(--paper))}
+.listening-lab-option:disabled{opacity:1;cursor:default}
+.listening-lab-feedback{margin-top:12px;padding:11px 13px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 24%,var(--sheet));color:var(--body);font-size:.6rem;line-height:1.7}
+.listening-lab-feedback.is-wrong{border-color:var(--peach-ink);background:color-mix(in srgb,var(--peach) 34%,var(--sheet))}
+.listening-lab-feedback strong{display:block;margin-bottom:3px;color:var(--ink)}
+.listening-lab-actions{display:flex;justify-content:flex-end;margin-top:13px}
+.listening-lab-transcript-tools{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:16px}
+.listening-lab-transcript-tools span{color:var(--muted);font-size:.52rem}
+.listening-lab-transcript{display:grid;gap:0;margin:11px 0;padding:11px 14px;border-left:2px solid var(--sage-deep);background:color-mix(in srgb,var(--sage) 22%,var(--paper))}
+.listening-lab-transcript p{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;margin:0;padding:7px 0;color:var(--body);font:400 .73rem/1.65 "Lora",Georgia,serif}
+.listening-lab-transcript p+p{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.listening-lab-transcript strong{color:var(--sage-deep);font:700 .49rem "Plus Jakarta Sans",sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.listening-lab-vocabulary{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.listening-lab-word{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);background:var(--paper);color:var(--body);font-size:.54rem}
+.listening-lab-word strong{color:var(--ink)}
+.listening-lab-result{text-align:center;padding:30px 15px}
+.listening-lab-result h4{margin:0 0 7px;color:var(--ink);font:500 1.4rem "Lora",Georgia,serif}
+.listening-lab-result p{max-width:550px;margin:0 auto;color:var(--muted);font-size:.65rem;line-height:1.8}
+.listening-lab-result-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:17px}
+.listening-lab-empty{margin:0;padding:17px 0;color:var(--muted);font-size:.62rem;line-height:1.7}
+@media(max-width:1100px){.listening-lab-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.listening-lab-grid{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .listening-lab-library{padding:17px 15px}
+  .listening-lab-heading h3{font-size:1.2rem}
+  .listening-lab-card{padding:13px}
+  .listening-lab-reader-top{align-items:flex-start}
+  .listening-lab-player{grid-template-columns:1fr}
+  .listening-lab-play{width:100%}
+  .listening-lab-speed{justify-content:flex-start}
+  .listening-lab-transcript{padding:9px 11px}
+  .listening-lab-transcript p{grid-template-columns:66px minmax(0,1fr);font-size:.68rem}
+  .listening-lab-result-actions{display:grid;grid-template-columns:1fr}
+  .listening-lab-result-actions button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.listening-lab-library *{scroll-behavior:auto}}
