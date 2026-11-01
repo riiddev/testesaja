@@ -625,6 +625,36 @@
       '</article>';
   }
 
+  function renderHomePrimaryAction() {
+    const button = $("#home-primary-action");
+    const label = $("#home-primary-label");
+    if (!button || !label || !state) return;
+    const today = dayKey();
+    const vocabulary = getPlanVocabularyTask(today);
+    const grammar = getPlanGrammarTask(today);
+    const adventure = getPlanAdventureTask(today);
+    const hasProgress = state.history.length > 0 ||
+      state.events.length > 0 ||
+      Object.keys(state.wordProgress).length > 0 ||
+      Object.values(state.grammarProgress).some(item => Number(item.attempts) > 0);
+    let action = {type:"vocabulary"};
+    if (activeStudy) action = {type:"active-study"};
+    else if (vocabulary.word && !vocabulary.done) action = {type:"word",wordId:vocabulary.word.id,mode:vocabulary.mode};
+    else if (grammar.topic && !grammar.done) action = {type:"grammar",topicId:grammar.topic.id};
+    else if (adventure.started && !adventure.done) action = {type:"adventure"};
+    else if (!adventure.done) action = {type:"adventure"};
+    else if (vocabulary.word) action = {type:"word",wordId:vocabulary.word.id,mode:vocabulary.mode};
+    button.dataset.homeAction = action.type;
+    if (action.wordId) button.dataset.homeWord = action.wordId;
+    else delete button.dataset.homeWord;
+    if (action.mode) button.dataset.homeMode = action.mode;
+    else delete button.dataset.homeMode;
+    if (action.topicId) button.dataset.homeTopic = action.topicId;
+    else delete button.dataset.homeTopic;
+    label.textContent = hasProgress ? "Lanjutkan belajar" : "Mulai sesi pertama";
+    button.setAttribute("aria-label",hasProgress ? "Lanjutkan belajar dari rekomendasi berikutnya" : "Mulai sesi belajar pertamamu");
+  }
+
   function renderOverview() {
     const stats = levelStats(), mastered = words.filter(w=>statusOf(w)==="mastered").length, due=dueWords().length, activities=activityToday(), goal=Number(state.settings.dailyGoal)||10;
     $("#metric-mastered").textContent=mastered;
@@ -641,6 +671,7 @@
     topics.filter(t=>!(state.grammarProgress[t.id]&&state.grammarProgress[t.id].attempts)).slice(0,2).forEach(t=>suggestions.push({type:"GRAMMAR",title:t.title,description:t.summary,topicId:t.id}));
     words.filter(w=>canStudyWord(w)&&statusOf(w)==="new").slice(0,3).forEach(w=>suggestions.push({type:"WORD",title:w.word,description:w.meaning,wordId:w.id}));
     $("#resume-list").innerHTML=suggestions.slice(0,4).map(x=>'<div class="resume-item"><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.description)+'</p></div><button class="resume-action" type="button" '+(x.wordId?'data-study-word="'+esc(x.wordId)+'"':'data-open-topic="'+esc(x.topicId)+'"')+'>Mulai ↗</button></div>').join("") || '<div class="empty-state">Materi yang tersedia sudah pernah dicoba. Pilih topik lain.</div>';
+    renderHomePrimaryAction();
     renderPlacementTeaser();
     renderStudyPlan();
   }
@@ -962,6 +993,20 @@
       if(placementAnswer){answerPlacementQuestion(Number(placementAnswer.dataset.placementAnswer));return;}
       if(e.target.closest("#placement-next")){advancePlacement();return;}
       if(e.target.closest("#placement-retake")){startPlacement();return;}
+      const homePrimary=e.target.closest("#home-primary-action");
+      if(homePrimary){
+        const action=homePrimary.dataset.homeAction;
+        if(action==="active-study"&&activeStudy){setView("study");renderStudy();return;}
+        if(action==="word"&&homePrimary.dataset.homeWord){startStudy(homePrimary.dataset.homeWord,homePrimary.dataset.homeMode||"learn");return;}
+        if(action==="grammar"&&homePrimary.dataset.homeTopic){activeTopic=homePrimary.dataset.homeTopic;grammarDetailOpen=true;setView("grammar");return;}
+        if(action==="adventure"){
+          setView("adventure");
+          $("#adventure-daily-quest")?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+          return;
+        }
+        setView("vocabulary");
+        return;
+      }
       const planVocabulary=e.target.closest("[data-plan-vocabulary]");
       if(planVocabulary){startStudy(planVocabulary.dataset.planVocabulary,planVocabulary.dataset.planMode||"learn");return;}
       const planTopic=e.target.closest("[data-plan-topic]");
