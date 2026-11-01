@@ -1147,6 +1147,9 @@ test("Listening Lab teaches gist, detail, and inference with optional transcript
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
   await page.locator('[data-view-target="adventure"]').click();
 
+  const listeningCards = page.locator("#adventure-listening-lab .listening-lab-card");
+  await listeningCards.first().waitFor({ state: "visible" });
+  assert.equal(await listeningCards.count(), 8, "Listening Lab should contain eight graded exercises");
   const open = page.locator('[data-listening-open="missed-the-bus"]');
   const card = open.locator("xpath=ancestor::article");
   await open.waitFor({ state: "visible" });
@@ -1935,7 +1938,7 @@ test("Grammar curriculum covers A1-B2 with the expanded topic bank", async () =>
 
 
 test("Everyday Stories result links the learner to related listening, dialogue, pronunciation, speaking, and writing", async () => {
-  const page = await browser.newPage();
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.addInitScript(() => {
@@ -1969,7 +1972,16 @@ test("Everyday Stories result links the learner to related listening, dialogue, 
   assert.match(labels, /Baca cerita terkait|Dengarkan dialog|Latihan listening|Latihan pronunciation/);
   assert.ok(labels.includes("Lanjut ke Speaking Studio"));
   assert.ok(labels.includes("Lanjut ke Writing Studio"));
-  await result.locator('[data-dialogue-open="at-the-cafe"]').click();
+  const measurements = await page.evaluate(() => ({
+    viewport: innerWidth,
+    document: document.documentElement.scrollWidth,
+    path: document.querySelector(".adventure-learning-path")?.getBoundingClientRect().width || 0,
+  }));
+  assert.ok(measurements.path > 0 && measurements.document <= measurements.viewport + 1,
+    "the cross-skill handoff should fit a 390px screen");
+  const dialogueLink = result.locator('[data-dialogue-open="at-the-cafe"]');
+  await dialogueLink.focus();
+  await dialogueLink.press("Enter");
   await page.locator("#adventure-dialogue-reader").waitFor({ state: "visible" });
   assert.match(await page.locator("#adventure-dialogue-reader").innerText(), /At the Café/);
   assert.deepEqual(pageErrors, [], "cross-skill handoff should not throw browser JavaScript errors");
@@ -2029,7 +2041,7 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
   await page.route("**/api/account**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
   });
-  await page.on("dialog", (dialog) => dialog.accept());
+  page.on("dialog", (dialog) => dialog.accept());
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
   await page.locator('[data-view-target="grammar"]').first().click();
@@ -2040,6 +2052,7 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
   await page.locator("#lesson-panel .lesson-feedback").waitFor({ state: "visible" });
   assert.match(await topicButtons.first().innerText(), /1\/3 soal dicoba/);
 
+  await page.locator('[data-view-target="progress"]').first().click();
   const downloadPromise = page.waitForEvent("download");
   await page.locator("#export-backup").click();
   const download = await downloadPromise;
@@ -2047,11 +2060,13 @@ test("JSON backup restores previously saved vocabulary and grammar progress", as
   assert.ok(backupPath, "backup export should create a JSON download");
   const backupBytes = await readFile(backupPath);
 
+  await page.locator("[data-view-target=\"grammar\"]").first().click();
   await topicButtons.nth(1).click();
   await page.locator("#lesson-panel .lesson-answer").first().click();
   await page.locator("#lesson-panel .lesson-feedback").waitFor({ state: "visible" });
   assert.match(await topicButtons.nth(1).innerText(), /1\/3 soal dicoba/);
 
+  await page.locator("[data-view-target=\"progress\"]").first().click();
   await page.locator("#import-backup").setInputFiles({
     name: "sinauuenglish-backup.json",
     mimeType: "application/json",
