@@ -434,13 +434,13 @@
     view = next;
     $$(".view").forEach(el => el.classList.toggle("is-visible",el.dataset.view === next));
     const activeTopView = ["grammar","matching","study"].includes(next) ? "vocabulary" : ["adventure","placement"].includes(next) ? "overview" : next;
-    $(".side-link").forEach(el => {
+    $$(".side-link").forEach(el => {
       const active = el.dataset.viewTarget === activeTopView;
       el.classList.toggle("is-active", active);
       if (active) el.setAttribute("aria-current", "page");
       else el.removeAttribute("aria-current");
     });
-    $(".learning-tab").forEach(el => {
+    $$(".learning-tab").forEach(el => {
       const active = el.dataset.viewTarget === next;
       el.classList.toggle("is-active", active);
       el.setAttribute("aria-selected", String(active));
@@ -937,7 +937,7 @@
       const readingModeBtn=e.target.closest("[data-reading-mode]");
       if(readingModeBtn){
         const mode=readingModeBtn.dataset.readingMode==="skills"?"skills":"habit";
-        $(".reading-mode-button").forEach(button=>{
+        $$(".reading-mode-button").forEach(button=>{
           const active=button.dataset.readingMode===mode;
           button.classList.toggle("is-active",active);
           button.setAttribute("aria-selected",String(active));
@@ -977,7 +977,7 @@
       if(e.target.closest("[data-grammar-back]")){
         grammarDetailOpen=false;
         renderGrammar();
-        $("#grammar-topic-list [data-topic-id]").find(button=>button.dataset.topicId===activeTopic)?.focus();
+        $$("#grammar-topic-list [data-topic-id]").find(button=>button.dataset.topicId===activeTopic)?.focus();
         return;
       }
       if(topic){activeTopic=topic.dataset.topicId;grammarDetailOpen=true;renderGrammar();return;}
