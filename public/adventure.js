@@ -734,10 +734,66 @@
   // Standalone studios: raw drafts/checklists are device-local and never enter CloudBundle.
   const STUDIO_PROMPTS = {
     speaking: [
-      { id: "first-introduction", title: "Introduce yourself", level: "A1", context: "You meet a new classmate before the lesson starts.", prompt: "Introduce yourself, share one thing you enjoy, and explain why you are learning English.", starters: ["Hi, my name is …", "I enjoy … because …", "I’m learning English to …"], checks: ["Open with a greeting and your name.", "Share at least two relevant details.", "Finish naturally and invite a response."] },
-      { id: "ask-directions", title: "Ask for directions", level: "A1–A2", context: "You are in town and need to find the nearest bus stop.", prompt: "Ask someone for directions. Mention where you want to go and clarify one landmark.", starters: ["Excuse me, could you tell me …?", "Should I turn …?", "Thank you for your help."], checks: ["Explain where you want to go.", "Ask one clear follow-up question.", "Thank the person politely."] },
-      { id: "cafe-order", title: "Order at a café", level: "A1–A2", context: "You are ordering a drink and a snack at a small café.", prompt: "Order something politely, mention one preference, and ask about the price.", starters: ["Could I have …, please?", "Can I get it without …?", "How much is it altogether?"], checks: ["Greet the staff and order clearly.", "Mention a preference or request.", "Check the price and close politely."] },
-      { id: "discuss-study-plan", title: "Discuss a study plan", level: "B1", context: "Your group needs to finish a presentation by Friday.", prompt: "Suggest a fair division of tasks, explain one scheduling constraint, and agree on a next step.", starters: ["I suggest that we …", "I am available …, but …", "I can review … before …"], checks: ["Make a clear suggestion and give a reason.", "Explain your availability or a possible delay.", "Confirm one practical next step."] }
+      {
+        id: "first-introduction", title: "Introduce yourself", level: "A1",
+        context: "You meet a new classmate before the lesson starts.",
+        prompt: "Introduce yourself, build a little connection, and ask your classmate a question.",
+        starters: ["Hi, my name is …", "I enjoy … because …", "What about you?"],
+        checks: ["I answered the partner's main question clearly.", "I added a relevant detail about myself.", "I responded naturally and invited the partner to continue."],
+        turns: [
+          { partnerLine: "Hi! I'm Alex. Is this your first class here?", prompt: "Say hello, tell Alex your name, and say whether this is your first class.", hint: "A simple greeting and one short sentence are enough.", starters: ["Hi, Alex. I'm …", "Yes, it is. / No, it isn't."] },
+          { partnerLine: "Nice to meet you. What do you like doing after class?", prompt: "Share one activity you enjoy and add a little detail about it.", hint: "Mention when you do it or why you enjoy it.", starters: ["I enjoy …", "I usually do it …", "I like it because …"] },
+          { partnerLine: "That sounds fun. What made you decide to learn English?", prompt: "Explain one reason for learning English, then ask Alex a question.", hint: "Connect English to a real goal, such as study, work, travel, or meeting people.", starters: ["I'm learning English because …", "What about you?"] }
+        ]
+      },
+      {
+        id: "ask-directions", title: "Ask for directions", level: "A1–A2",
+        context: "You are in town and need to find the nearest bus stop.",
+        prompt: "Ask for directions, clarify a landmark, and make sure you know where to go.",
+        starters: ["Excuse me, could you tell me …?", "Should I turn …?", "Thank you for your help."],
+        checks: ["I explained where I wanted to go.", "I asked a useful follow-up question.", "I confirmed the direction and thanked the partner."],
+        turns: [
+          { partnerLine: "Hello! You look like you're trying to find somewhere. Can I help?", prompt: "Ask where the nearest bus stop is.", hint: "Start politely and name the place you need.", starters: ["Excuse me, could you tell me where …?", "I'm looking for …"] },
+          { partnerLine: "Of course. Walk straight for two blocks. It's beside the library.", prompt: "Check that you understood the landmark or distance.", hint: "Repeat one detail as a question to confirm it.", starters: ["So I should walk …?", "Is it next to …?"] },
+          { partnerLine: "That's right. You can't miss it. Is there anything else you need?", prompt: "Ask one final practical question, then close the conversation politely.", hint: "You could ask how long the walk takes or thank the person.", starters: ["How long does it take to …?", "That's very helpful. Thank you."] }
+        ]
+      },
+      {
+        id: "cafe-order", title: "Order at a café", level: "A1–A2",
+        context: "You are ordering a drink and a snack at a small café.",
+        prompt: "Order politely, explain one preference, and check the price.",
+        starters: ["Could I have …, please?", "Can I get it without …?", "How much is it altogether?"],
+        checks: ["I placed my order politely and clearly.", "I explained a preference or made a request.", "I checked the price and closed the conversation."],
+        turns: [
+          { partnerLine: "Good afternoon! Welcome in. What would you like today?", prompt: "Order one drink and one snack.", hint: "You can use 'Could I have …, please?' for a polite order.", starters: ["Could I have …, please?", "I'd like … and …"] },
+          { partnerLine: "Certainly. Would you like anything changed or added to your order?", prompt: "Mention one preference, such as less sugar or no ice.", hint: "Keep the request simple and polite.", starters: ["Could you make it …?", "Could I have it without …?"] },
+          { partnerLine: "No problem. Your total is five dollars. Would you like a receipt?", prompt: "Respond to the total, answer the receipt question, and thank the staff member.", hint: "You can confirm the price before closing.", starters: ["That's fine, thank you.", "Yes, please. / No, thank you."] }
+        ]
+      },
+      {
+        id: "discuss-study-plan", title: "Discuss a study plan", level: "B1",
+        context: "Your group needs to finish a presentation by Friday.",
+        prompt: "Negotiate a fair plan, explain a scheduling constraint, and agree on next steps.",
+        starters: ["I suggest that we …", "I am available …, but …", "I can review … before …"],
+        checks: ["I made a clear suggestion and supported it with a reason.", "I acknowledged a constraint and responded constructively.", "I confirmed a realistic next step with the group."],
+        turns: [
+          { partnerLine: "We need to finish the presentation by Friday. How should we divide the work?", prompt: "Suggest a fair division of the tasks and explain why it would work.", hint: "Give a practical proposal, then connect it to the group's strengths or time.", starters: ["I suggest that we …", "That would help because …"] },
+          { partnerLine: "I can prepare the slides, but I have an exam on Thursday. Could we adjust the deadline?", prompt: "Acknowledge the concern and negotiate a realistic adjustment.", hint: "Show that you heard the concern before offering an alternative.", starters: ["That makes sense. We could …", "Would it help if …?"] },
+          { partnerLine: "That works for me. How about we review everything together on Friday morning?", prompt: "Confirm or refine the plan, including one concrete action.", hint: "Make the next step specific: who will do what, and by when?", starters: ["Agreed. I'll … by …", "Let's check in at …"] }
+        ]
+      },
+      {
+        id: "present-study-proposal", title: "Present a study proposal", level: "B2",
+        context: "You are discussing a proposal for a quieter study zone with a student committee.",
+        prompt: "Defend a proposal thoughtfully, respond to a concern, and suggest how to evaluate the result.",
+        starters: ["I understand that concern. However, …", "The strongest evidence is …", "We could review the impact by …"],
+        checks: ["I presented a clear position and supported it with evidence or reasoning.", "I addressed a different viewpoint fairly before responding.", "I proposed a measurable and realistic next step."],
+        turns: [
+          { partnerLine: "I like the idea of a quieter study zone, but how would it help students who prefer group study?", prompt: "Acknowledge the concern and explain how the proposal could serve different study needs.", hint: "Avoid treating the other view as wrong. Consider separate zones, schedules, or flexible use.", starters: ["That's a fair concern. One option is …", "The aim isn't to …, but to …"] },
+          { partnerLine: "Space and funding are limited. Which changes would you prioritise first?", prompt: "Prioritise one or two changes and justify your choice.", hint: "Explain the likely benefit, cost, and what can reasonably be done first.", starters: ["I'd prioritise … because …", "A low-cost first step would be …"] },
+          { partnerLine: "How would we know whether the proposal is working after one month?", prompt: "Suggest a simple way to evaluate the proposal and decide what happens next.", hint: "Choose evidence that could actually be collected, then explain how it would guide a decision.", starters: ["We could compare …", "If the results show …, we should …"] }
+        ]
+      }
     ],
     writing: [
       { id: "short-introduction", title: "A short introduction", level: "A1", context: "Write a short profile for a new class discussion board.", prompt: "Introduce yourself, mention an interest, and explain one goal you have for learning English.", target: "50–80 words", starters: ["My name is …", "In my free time, I …", "One of my goals is …"], checks: ["My purpose is clear from the beginning.", "I included specific details, not only general claims.", "I checked spelling, punctuation, and sentence endings."] },
@@ -771,9 +827,11 @@
           for (const prompt of allowed) {
             const state = saved.prompts[prompt.id];
             if (!state || typeof state !== "object") continue;
+            const hasTurnProgress = kind !== "speaking" || Number.isInteger(state.turnIndex);
             empty[kind].prompts[prompt.id] = {
               text: kind === "writing" && typeof state.text === "string" ? state.text.slice(0, 12000) : "",
-              checked: Array.isArray(state.checked) ? Array.from(new Set(state.checked.filter((value) => Number.isInteger(value) && value >= 0 && value < 3))) : []
+              checked: kind === "speaking" && !hasTurnProgress ? [] : Array.isArray(state.checked) ? Array.from(new Set(state.checked.filter((value) => Number.isInteger(value) && value >= 0 && value < 3))) : [],
+              turnIndex: kind === "speaking" && hasTurnProgress ? Math.max(0, Math.min(prompt.turns.length, state.turnIndex)) : 0
             };
           }
         }
@@ -793,7 +851,8 @@
   }
   function studioState(kind, promptId) {
     const group = studioDrafts[kind];
-    if (!group.prompts[promptId]) group.prompts[promptId] = { text: "", checked: [] };
+    if (!group.prompts[promptId]) group.prompts[promptId] = { text: "", checked: [], turnIndex: 0 };
+    if (!Number.isInteger(group.prompts[promptId].turnIndex)) group.prompts[promptId].turnIndex = 0;
     return group.prompts[promptId];
   }
   function studioWordCount(value) {
@@ -819,14 +878,30 @@
       const prompt = STUDIO_PROMPTS.speaking.find((item) => item.id === group.selectedPromptId) || STUDIO_PROMPTS.speaking[0];
       const state = studioState("speaking", prompt.id);
       const done = progress.studioSessions.filter((item) => item.studioType === "speaking").length;
+      const turns = Array.isArray(prompt.turns) ? prompt.turns : [];
+      const turnIndex = Math.max(0, Math.min(turns.length, state.turnIndex || 0));
+      const conversationFinished = turns.length > 0 && turnIndex >= turns.length;
+      const activeTurn = turns[turnIndex];
+      const conversationPanel = conversationFinished
+        ? '<div class="speaking-studio-finished" role="status"><span>CONVERSATION COMPLETE</span><strong>Great work. You carried the conversation through ' + turns.length + ' turns.</strong><p>Sekarang tinjau cara kamu menjawab. Tidak ada jawaban tunggal yang harus dihafalkan.</p><button type="button" data-speaking-restart>Ulangi percakapan</button></div>'
+        : activeTurn
+          ? '<div class="speaking-studio-conversation" aria-live="polite">' +
+            '<div class="speaking-studio-progress"><span>TURN ' + (turnIndex + 1) + ' / ' + turns.length + '</span><span>YOUR CONVERSATION</span></div>' +
+            '<div class="speaking-studio-partner"><span>YOUR PARTNER SAYS</span><blockquote>' + escapeHtml(activeTurn.partnerLine) + '</blockquote><button type="button" data-speaking-play-partner>▶ Dengarkan partner</button><small id="speaking-partner-audio-note">Dengarkan, lalu jawab dengan suara sendiri. Kamu boleh memutar ulang.</small></div>' +
+            '<div class="speaking-studio-response"><span>YOUR TURN</span><strong>' + escapeHtml(activeTurn.prompt) + '</strong><details><summary>Butuh sedikit bantuan?</summary><p>' + escapeHtml(activeTurn.hint) + '</p><div class="adventure-studio-phrases">' + activeTurn.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></details></div>' +
+            '<button type="button" class="primary-action adventure-studio-submit" data-speaking-next-turn>Saya sudah menjawab · lanjut ↗</button>' +
+          '</div>'
+          : '<p class="adventure-studio-instruction">Skenario ini belum memiliki giliran percakapan.</p>';
+      const reflectionPanel = conversationFinished
+        ? '<div class="speaking-studio-reflection"><span>SELF-REVIEW / CHECK YOUR RESPONSE</span><p>Centang dengan jujur setelah mengucapkan semua jawaban.</p>' + renderStudioChecklist("speaking", prompt, state) + '</div>'
+        : '<p class="adventure-studio-instruction">Ikuti giliran partner satu per satu. Jawab dengan kalimatmu sendiri; petunjuk hanya bantuan, bukan naskah wajib.</p>';
       speakingNode.innerHTML =
-        '<div class="adventure-studio-heading"><div><span class="eyebrow">SPEAKING / SAY IT YOUR WAY</span><h3>Speaking Studio</h3><p>Latihan bicara dengan suara sendiri. Tidak ada rekaman atau penilaian aksen otomatis.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
+        '<div class="adventure-studio-heading"><div><span class="eyebrow">SPEAKING / SAY IT YOUR WAY</span><h3>Speaking Studio</h3><p>Latihan percakapan dua arah. Suara partner dibuat oleh browser; jawabanmu tidak direkam atau dinilai otomatis.</p></div><span class="adventure-studio-count">' + done + '<small>SESI</small></span></div>' +
         '<div class="adventure-studio-scenarios">' + renderStudioPromptButtons("speaking", prompt.id) + '</div>' +
         '<div class="adventure-studio-prompt"><span>' + prompt.level + ' · SITUATION</span><p>' + escapeHtml(prompt.context) + '</p><strong>' + escapeHtml(prompt.prompt) + '</strong><div class="adventure-studio-phrases">' + prompt.starters.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") + '</div></div>' +
-        '<p class="adventure-studio-instruction">Coba ucapkan jawabanmu dengan suara jelas. Tidak perlu menghafal kalimat contoh.</p>' +
-        renderStudioChecklist("speaking", prompt, state) +
-        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="speaking" data-studio-complete' + (state.checked.length === 3 ? '' : ' disabled') + '>Saya sudah berlatih ↗</button>' +
-        '<small class="adventure-studio-local-note">Yang disimpan ke akun hanya bukti sesi latihan, bukan suara atau transkrip.</small>';
+        conversationPanel + reflectionPanel +
+        '<button type="button" class="primary-action adventure-studio-submit" data-studio-kind="speaking" data-studio-complete' + (conversationFinished && state.checked.length === prompt.checks.length ? '' : ' disabled') + '>Selesaikan dan simpan sesi ↗</button>' +
+        '<small class="adventure-studio-local-note">Yang disimpan ke akun hanya bukti sesi latihan dan hasil checklist. Tidak ada suara, transkrip, atau draft jawaban yang disimpan ke cloud.</small>';
     }
     const writingNode = $("#adventure-writing-studio");
     if (writingNode) {
@@ -855,7 +930,8 @@
     const state = studioState(kind, promptId);
     const button = $("[data-studio-complete]", node);
     if (!button || !prompt) return;
-    const ready = state.checked.length === prompt.checks.length && (kind !== "writing" || studioWordCount(state.text) >= 25);
+    const conversationReady = kind !== "speaking" || state.turnIndex >= (prompt.turns?.length || 0);
+    const ready = state.checked.length === prompt.checks.length && conversationReady && (kind !== "writing" || studioWordCount(state.text) >= 25);
     button.disabled = !ready;
   }
   function completeStudioPractice(kind) {
@@ -864,7 +940,7 @@
     const prompt = STUDIO_PROMPTS[kind].find((item) => item.id === promptId);
     const state = studioState(kind, promptId);
     const words = studioWordCount(state.text);
-    if (!prompt || state.checked.length !== prompt.checks.length || (kind === "writing" && words < 25)) return;
+    if (!prompt || state.checked.length !== prompt.checks.length || (kind === "speaking" && state.turnIndex < (prompt.turns?.length || 0)) || (kind === "writing" && words < 25)) return;
     const dateKey = localDateKey();
     const sessionId = kind + ":" + promptId + ":" + dateKey;
     const now = new Date().toISOString();
@@ -917,6 +993,41 @@
     updateStudioCompleteButton("writing");
   }
 
+
+  function playSpeakingPartner() {
+    if (!studioDrafts) return;
+    const promptId = studioDrafts.speaking.selectedPromptId;
+    const prompt = STUDIO_PROMPTS.speaking.find((item) => item.id === promptId);
+    const state = prompt && studioState("speaking", promptId);
+    const turn = prompt && prompt.turns && prompt.turns[state.turnIndex];
+    if (!turn) return;
+    const played = playText(turn.partnerLine);
+    const note = $("#speaking-partner-audio-note", $("#adventure-speaking-studio"));
+    if (note) note.textContent = played
+      ? "Suara partner diputar oleh browser. Kamu boleh mendengarkan lagi sebelum menjawab."
+      : "Suara browser tidak tersedia. Baca kalimat partner di atas, lalu jawab dengan suara sendiri.";
+  }
+  function advanceSpeakingTurn() {
+    if (!studioDrafts) return;
+    const promptId = studioDrafts.speaking.selectedPromptId;
+    const prompt = STUDIO_PROMPTS.speaking.find((item) => item.id === promptId);
+    if (!prompt || !Array.isArray(prompt.turns)) return;
+    const state = studioState("speaking", promptId);
+    if (state.turnIndex >= prompt.turns.length) return;
+    state.turnIndex += 1;
+    saveStudioDrafts();
+    renderStudios();
+  }
+  function restartSpeakingPractice() {
+    if (!studioDrafts) return;
+    const promptId = studioDrafts.speaking.selectedPromptId;
+    const state = studioState("speaking", promptId);
+    state.turnIndex = 0;
+    state.checked = [];
+    if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+    saveStudioDrafts();
+    renderStudios();
+  }
 
   function storyEntry(storyId) {
     return progress.storyProgress[storyId] && typeof progress.storyProgress[storyId] === "object"
@@ -1863,6 +1974,9 @@
       }
       if (event.target.closest("[data-pronunciation-toggle]")) { if (pronunciationCapture) stopPronunciationCapture(true); else void startPronunciationCapture(); return; }
       if (event.target.closest("[data-pronunciation-record-again]")) { pronunciationRun.metrics = null; pronunciationRun.samples = []; pronunciationRun.feedback = []; pronunciationRun.captureError = ""; renderPronunciationStudio(); return; }
+      if (event.target.closest("[data-speaking-play-partner]")) { playSpeakingPartner(); return; }
+      if (event.target.closest("[data-speaking-next-turn]")) { advanceSpeakingTurn(); return; }
+      if (event.target.closest("[data-speaking-restart]")) { restartSpeakingPractice(); return; }
       const studioPrompt = event.target.closest("[data-studio-prompt]");
       if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
       const studioComplete = event.target.closest("[data-studio-complete]");
