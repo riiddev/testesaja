@@ -619,6 +619,9 @@ test("Speaking and Writing Studios persist local drafts but export only privacy-
   await page.locator('[data-view-target="adventure"]').click();
   await page.locator("#adventure-speaking-studio").waitFor({ state: "visible" });
   await page.locator('#adventure-speaking-studio [data-studio-prompt="ask-directions"]').click();
+  for (let turn = 0; turn < 3; turn += 1) {
+    await page.locator('#adventure-speaking-studio [data-speaking-next-turn]').click();
+  }
   await page.locator('#adventure-speaking-studio [data-studio-check="0"]').check();
   await page.locator('#adventure-speaking-studio [data-studio-check="1"]').check();
   await page.locator('#adventure-speaking-studio [data-studio-check="2"]').check();
@@ -900,7 +903,7 @@ test("Everyday English supports listening, natural responses, local progress, an
 
   await page.locator('[data-dialogue-speaking="at-the-cafe"]').click();
   await page.locator('#adventure-speaking-studio [data-studio-prompt="cafe-order"].is-active').waitFor({ state: "visible" });
-  assert.match(await page.locator("#adventure-speaking-studio").innerText(), /Order something politely/);
+  assert.match(await page.locator("#adventure-speaking-studio").innerText(), /Order one drink and one snack/);
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
@@ -1344,6 +1347,15 @@ test("Speaking Studio includes a B2 discussion with counterarguments and an evid
   const page = await browser.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "speaking-b2-preview-access",
+      refresh_token: "speaking-b2-preview-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "speaking-b2-preview-user", email: "speaking-b2-preview@example.com" },
+    }));
+  });
   await page.route("**/api/account**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
   });
