@@ -72,6 +72,11 @@ function doPost(e) {
         return jsonResponse({ ok: false, error: "Server sibuk memproses antrean sinkronisasi. Coba lagi." });
       }
       return handleCollectionsUpsertBatch(payload);
+    } else if (action === "snapshot.commit") {
+      if (!lock.tryLock(CONFIG.MAX_LOCK_WAIT_MS)) {
+        return jsonResponse({ ok: false, code: "LOCK_BUSY", error: "Server sibuk. Gagal mendapatkan lock untuk snapshot commit." });
+      }
+      return handleSnapshotCommit(payload);
     } else if (action === "progress.get") {
       return handleProgressGet(payload);
     } else if (action === "progress.save") {
@@ -394,6 +399,141 @@ function handleCollectionsUpsertBatch(payload) {
   }
 
   return jsonResponse({ ok: true, data: { updated: records.length } });
+}
+
+function handleSnapshotCommit(payload) {
+  var userId = String(payload.userId || "").trim();
+  var snapshotId = String(payload.snapshotId || "").trim();
+  var collectionName = String(payload.collection || "lists").trim();
+  var partCount = Math.floor(Number(payload.partCount || 0));
+  var expectedRevision = Number(payload.expectedRevision !== undefined && payload.expectedRevision !== null ? payload.expectedRevision : 0);
+  var newRevision = Number(payload.newRevision !== undefined && payload.newRevision !== null ? payload.newRevision : (expectedRevision + 1));
+  var updatedAt = String(payload.updatedAt || new Date().toISOString());
+
+  if (!userId || !snapshotId || partCount < 1) {
+    return jsonResponse({
+      ok: false,
+      code: "INVALID_PAYLOAD",
+      error: "userId, snapshotId, dan partCount valid wajib disertakan."
+    });
+  }
+
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.COLLECTIONS, [
+    "collection", "record_id", "user_id", "updated_at", "payload"
+  ]);
+
+  var data = sheet.getDataRange().getValues();
+  var currentManifest = null;
+  var manifestRowIndex = -1;
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (String(row[2] || "") === userId &&
+        String(row[0] || "") === collectionName &&
+        String(row[1] || "") === "sinau_state_v1_manifest") {
+      manifestRowIndex = i + 1;
+      try {
+        currentManifest = JSON.parse(String(row[4] || "{}"));
+      } catch (_) {
+        currentManifest = {};
+      }
+      break;
+    }
+  }
+
+  var currentRevision = 0;
+  if (currentManifest && typeof currentManifest.revision === "number") {
+    currentRevision = currentManifest.revision;
+  }
+
+  // Idempotency check: exact same snapshotId and newRevision already committed
+  if (currentManifest &&
+      String(currentManifest.snapshotId || "") === snapshotId &&
+      currentRevision === newRevision) {
+    return jsonResponse({
+      ok: true,
+      data: {
+        committed: true,
+        idempotent: true,
+        snapshotId: snapshotId,
+        revision: newRevision,
+        partCount: Number(currentManifest.partCount || partCount),
+        updatedAt: String(currentManifest.updatedAt || updatedAt)
+      }
+    });
+  }
+
+  // Revision conflict check (CAS validation)
+  if (currentRevision !== expectedRevision) {
+    return jsonResponse({
+      ok: false,
+      code: "REVISION_CONFLICT",
+      currentRevision: currentRevision,
+      error: "Snapshot sudah diperbarui dari perangkat lain."
+    });
+  }
+
+  // Verify that every expected immutable chunk exists for authenticated userId, collection, and snapshotId
+  var chunkPrefix = "sinau_state_v1_" + snapshotId + "_";
+  var chunksFound = {};
+
+  for (var j = 1; j < data.length; j++) {
+    var chunkRow = data[j];
+    if (String(chunkRow[2] || "") === userId && String(chunkRow[0] || "") === collectionName) {
+      var recId = String(chunkRow[1] || "");
+      if (recId.indexOf(chunkPrefix) === 0) {
+        var rawData = String(chunkRow[4] || "");
+        try {
+          var parsedChunk = JSON.parse(rawData);
+          if (parsedChunk && parsedChunk.snapshotId === snapshotId && typeof parsedChunk.chunkIndex === "number") {
+            chunksFound[parsedChunk.chunkIndex] = (chunksFound[parsedChunk.chunkIndex] || 0) + 1;
+          }
+        } catch (_) {}
+      }
+    }
+  }
+
+  for (var c = 0; c < partCount; c++) {
+    if (!chunksFound[c] || chunksFound[c] !== 1) {
+      return jsonResponse({
+        ok: false,
+        code: "INCOMPLETE_SNAPSHOT",
+        error: "Snapshot tidak lengkap atau terdapat duplikasi chunk pada index " + c + "."
+      });
+    }
+  }
+
+  var manifestDataObj = {
+    snapshotId: snapshotId,
+    partCount: partCount,
+    revision: newRevision,
+    updatedAt: updatedAt
+  };
+
+  var manifestRow = [
+    collectionName,
+    "sinau_state_v1_manifest",
+    userId,
+    updatedAt,
+    JSON.stringify(manifestDataObj)
+  ];
+
+  if (manifestRowIndex > 0) {
+    sheet.getRange(manifestRowIndex, 1, 1, 5).setValues([manifestRow]);
+  } else {
+    sheet.appendRow(manifestRow);
+  }
+
+  return jsonResponse({
+    ok: true,
+    data: {
+      committed: true,
+      snapshotId: snapshotId,
+      revision: newRevision,
+      partCount: partCount,
+      updatedAt: updatedAt
+    }
+  });
 }
 
 function handleProgressGet(payload) {
