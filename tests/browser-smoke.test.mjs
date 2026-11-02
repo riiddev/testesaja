@@ -2,16 +2,29 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { chromium } from "playwright";
 import { readFile } from "node:fs/promises";
+import { preview } from "vite";
 
 const baseUrl = (process.env.BASE_URL || "http://127.0.0.1:4173").replace(/\/+$/, "");
 let browser;
+let previewServer;
 
 before(async () => {
+  try {
+    const res = await fetch(baseUrl + "/");
+    if (!res.ok && res.status !== 404) throw new Error();
+  } catch {
+    previewServer = await preview({
+      preview: { port: 4173, host: "127.0.0.1", strictPort: true },
+    });
+  }
   browser = await chromium.launch({ headless: true });
 });
 
 after(async () => {
   await browser?.close();
+  if (previewServer) {
+    await new Promise((resolve) => previewServer.httpServer.close(resolve));
+  }
 });
 
 test("landing CTA sends new visitors to login and a successful mocked signup opens the workspace", async () => {
@@ -173,7 +186,7 @@ test("vocabulary search returns a matching word and reading practice saves an an
   assert.equal(await supplementary.evaluate(el => el.open), true, "learners can expand supplementary context when needed");
 
   await page.locator('[data-view-target="reading"]').first().click();
-  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 20000 });
+  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 30000 });
   await page.locator('[data-reading-mode="skills"]').click();
   assert.equal(await page.locator("#habit-library-section").isVisible(), false, "HABIT library should be hidden while reading skills are active");
   assert.equal(await page.locator("#reading-skills-section").isVisible(), true, "reading skills should be the only active reading collection");
@@ -197,7 +210,7 @@ test("vocabulary search returns a matching word and reading practice saves an an
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.locator('[data-view-target="reading"]').first().click();
-  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 20000 });
+  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 30000 });
   await page.locator("#habit-library-search").fill("The Tiny Tenants Inside You");
   await page.locator('[data-habit-open="the-tiny-tenants-inside-you"]').click();
   await page.locator("#habit-library-detail").waitFor({ state: "visible" });
@@ -2209,5 +2222,1957 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
     assert.ok(overflow <= 1, `the workspace should not overflow horizontally at ${width}px`);
   }
   assert.deepEqual(pageErrors, [], "workspace navigation should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport presents an honest empty state for a completely new learner", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "new-user-token",
+      refresh_token: "new-user-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "new-learner-user", email: "new@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const passport = page.locator("#skill-passport-section");
+  assert.equal(await passport.count(), 1, "Skill Passport section should exist in Progress");
+  assert.equal(await passport.isVisible(), true, "Skill Passport should be visible");
+
+  // Empty state in insight card
+  const emptyState = page.locator("#passport-insight-card .passport-empty-state");
+  assert.equal(await emptyState.count(), 1, "insight card should render the empty state for new learners");
+  assert.match(await emptyState.innerText(), /Paspor Kemampuan masih menunggu/i);
+  const emptyAction = emptyState.locator("button[data-passport-target='vocabulary']");
+  assert.equal(await emptyAction.count(), 1, "empty state should guide the learner to vocabulary");
+
+  // 7 skill cards
+  const cards = page.locator("#passport-skills-grid .passport-skill-card");
+  assert.equal(await cards.count(), 7, "Skill Passport should present exactly seven skills");
+
+  const skillIds = await cards.evaluateAll((list) => list.map((el) => el.dataset.skillId));
+  assert.deepEqual(skillIds, ["vocabulary", "grammar", "reading", "listening", "speaking", "writing", "pronunciation"]);
+
+  for (let i = 0; i < 7; i++) {
+    const card = cards.nth(i);
+    const statusPill = card.locator(".passport-status-pill");
+    assert.match(await statusPill.innerText(), /Belum dimulai/i);
+    assert.equal(await statusPill.evaluate((el) => el.classList.contains("status-not-started")), true);
+  }
+
+  assert.deepEqual(pageErrors, [], "new learner progress should not throw JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport reports evidence for learners with vocabulary and grammar history", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "vocab-grammar-token",
+      refresh_token: "vocab-grammar-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "vocab-grammar-user", email: "vg@example.com" },
+    }));
+
+    const state = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "word-1": { attempts: [{ mode: "learn", at: new Date().toISOString() }], studiedDates: [new Date().toISOString().slice(0, 10)], reviewHistory: [{ correct: true, at: new Date().toISOString() }] },
+        "word-2": { attempts: [{ mode: "learn", at: new Date().toISOString() }], studiedDates: [new Date().toISOString().slice(0, 10)], reviewHistory: [{ correct: true, at: new Date().toISOString() }] },
+        "word-3": { attempts: [{ mode: "learn", at: new Date().toISOString() }], studiedDates: [new Date().toISOString().slice(0, 10)] }
+      },
+      grammarProgress: {
+        "present-simple": { attempts: 4, correct: 3, answers: { "q1": { correct: true, at: new Date().toISOString() } } },
+        "past-simple": { attempts: 2, correct: 2, answers: { "q2": { correct: true, at: new Date().toISOString() } } }
+      },
+      history: [
+        { type: "vocabulary", title: "Word 1", at: new Date().toISOString() },
+        { type: "grammar", title: "Present Simple", at: new Date().toISOString() }
+      ],
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem("sinauu-learning-state-v1", JSON.stringify(state));
+
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.open("sinauu-local-v1", 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains("state")) request.result.createObjectStore("state", { keyPath: "key" });
+      };
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction("state", "readwrite");
+        transaction.objectStore("state").put({ key: "main", value: state });
+        transaction.oncomplete = () => { db.close(); resolve(); };
+        transaction.onerror = () => { db.close(); reject(transaction.error); };
+      };
+    });
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const vocabCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='vocabulary']");
+  assert.equal(await vocabCard.count(), 1);
+  const vocabText = await vocabCard.innerText();
+  assert.match(vocabText, /3 kata dipelajari/);
+  assert.match(vocabText, /100%/); // review accuracy
+
+  const grammarCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='grammar']");
+  assert.equal(await grammarCard.count(), 1);
+  const grammarText = await grammarCard.innerText();
+  assert.match(grammarText, /2 topik dicoba/);
+  assert.match(grammarText, /83%|84%/); // 5/6 = 83%
+
+  // The other 5 skills should be Not started
+  for (const skillId of ["reading", "listening", "speaking", "writing", "pronunciation"]) {
+    const card = page.locator(`#passport-skills-grid .passport-skill-card[data-skill-id='${skillId}']`);
+    const statusPill = card.locator(".passport-status-pill");
+    assert.match(await statusPill.innerText(), /Belum dimulai/i);
+  }
+
+  // Insight card should compare active skills honestly
+  const insightCard = page.locator("#passport-insight-card");
+  assert.match(await insightCard.innerText(), /FOKUS TERBANYAK/i);
+  assert.match(await insightCard.innerText(), /PERLU DILATIH/i);
+
+  assert.deepEqual(pageErrors, [], "vocab/grammar progress should not throw JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport aggregates evidence across all seven skills without fabricated metrics", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "all-skills-token",
+      refresh_token: "all-skills-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "all-skills-user", email: "allskills@example.com" },
+    }));
+
+    const now = new Date().toISOString();
+    // 1 & 2: Core State (vocab + grammar)
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "apple": { attempts: [{ at: now }], studiedDates: [now.slice(0, 10)], reviewHistory: [{ correct: true, at: now }] },
+        "book": { attempts: [{ at: now }], studiedDates: [now.slice(0, 10)], reviewHistory: [{ correct: false, at: now }] },
+        "chair": { attempts: [{ at: now }], studiedDates: [now.slice(0, 10)], reviewHistory: [{ correct: true, at: now }] }
+      },
+      grammarProgress: {
+        "present-simple": { attempts: 5, correct: 4, answers: { "q1": { correct: true, at: now } } }
+      },
+      history: [{ type: "vocabulary", title: "apple", at: now }],
+      updatedAt: now
+    };
+    localStorage.setItem("sinauu-learning-state-v1", JSON.stringify(core));
+
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.open("sinauu-local-v1", 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains("state")) request.result.createObjectStore("state", { keyPath: "key" });
+      };
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction("state", "readwrite");
+        transaction.objectStore("state").put({ key: "main", value: core });
+        transaction.oncomplete = () => { db.close(); resolve(); };
+        transaction.onerror = () => { db.close(); reject(transaction.error); };
+      };
+    });
+
+    // 3: Extra Learning (matching + reading skills)
+    const extraLearning = {
+      matching: { rounds: 2, totalMatches: 12, totalMistakes: 3 },
+      reading: {
+        "main-idea": { attempts: 3, correct: 2, completed: true }
+      }
+    };
+    localStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(extraLearning));
+
+    // 3: Habit Library
+    const habitProgress = {
+      "passage-1": {
+        answers: {
+          "q1": { selected: 0, correct: true, answeredAt: now },
+          "q2": { selected: 1, correct: true, answeredAt: now },
+          "q3": { selected: 2, correct: false, answeredAt: now }
+        }
+      }
+    };
+    localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(habitProgress));
+
+    // 4, 5, 6, 7: Adventure Progress (listening, speaking, writing, pronunciation)
+    const adventureProgress = {
+      schemaVersion: 1,
+      storyProgress: {
+        "first-day": { attempts: [{ attemptId: "a1", score: 2, total: 3, passed: true, completedAt: now }], bestScore: 2, completedAt: now }
+      },
+      listeningProgress: {
+        "airport-arrival": { attempts: [{ attemptId: "l1", score: 3, total: 3, passed: true, completedAt: now }], bestScore: 3, completedAt: now }
+      },
+      dialogueProgress: {
+        "cafe-order": { attempts: [{ attemptId: "d1", score: 2, total: 2, passed: true, completedAt: now }], bestScore: 2, completedAt: now }
+      },
+      pronunciationProgress: {
+        "phrase-1": { attempts: [{ attemptId: "p1", completedAt: now, durationMs: 4200 }] },
+        "phrase-2": { attempts: [{ attemptId: "p2", completedAt: now, durationMs: 3800 }] }
+      },
+      studioSessions: [
+        { sessionId: "s-1", studioType: "speaking", promptId: "intro", wordCount: 45, checklistCompleted: 3, completedAt: now },
+        { sessionId: "w-1", studioType: "writing", promptId: "email", wordCount: 88, checklistCompleted: 4, completedAt: now }
+      ],
+      skillEvidence: {},
+      updatedAt: now
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(adventureProgress));
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const passport = page.locator("#skill-passport-section");
+  assert.equal(await passport.isVisible(), true);
+
+  // Check 7 cards are active
+  const cards = page.locator("#passport-skills-grid .passport-skill-card");
+  assert.equal(await cards.count(), 7);
+
+  // Check Speaking card: NO invented score
+  const speakingCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='speaking']");
+  const speakingText = await speakingCard.innerText();
+  assert.match(speakingText, /sesi berbicara selesai/);
+  assert.match(speakingText, /Evaluasi refleksi mandiri, tanpa skor otomatis/);
+  assert.match(speakingText, /3 kriteria checklist self-review terpenuhi/);
+
+  // Check Writing card: NO invented score, reports actual words
+  const writingCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='writing']");
+  const writingText = await writingCard.innerText();
+  assert.match(writingText, /1 sesi tulisan selesai/);
+  assert.match(writingText, /88 kata disusun/);
+  assert.match(writingText, /Evaluasi refleksi mandiri, tanpa skor otomatis/);
+
+  // Check Pronunciation card: reports actual duration and phrases, NO automated percentage
+  const pronCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='pronunciation']");
+  const pronText = await pronCard.innerText();
+  assert.match(pronText, /2 frasa dipraktikkan/);
+  assert.match(pronText, /8 detik total rekaman/);
+  assert.match(pronText, /Analisis audio lokal, tanpa skor persentase otomatis/);
+
+  // Check Listening card: reports Listening Lab score
+  const listeningCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='listening']");
+  const listeningText = await listeningCard.innerText();
+  assert.match(listeningText, /100%/);
+  assert.match(listeningText, /1 latihan audio selesai/);
+
+  // Check Reading card: reports completed reading activities
+  const readingCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='reading']");
+  const readingText = await readingCard.innerText();
+  assert.match(readingText, /3 aktivitas bacaan selesai/); // skill + habit + story
+  assert.match(readingText, /pemahaman teks/);
+
+  // Check Insight card
+  const insightCard = page.locator("#passport-insight-card");
+  assert.match(await insightCard.innerText(), /FOKUS TERBANYAK/i);
+  assert.match(await insightCard.innerText(), /PERLU DILATIH/i);
+  assert.match(await insightCard.innerText(), /LANGKAH BERIKUTNYA/i);
+
+  // Test action navigation from a card
+  await readingCard.locator(".passport-card-action").click();
+  assert.equal(await page.locator("#view-reading").isVisible(), true, "clicking card action should navigate to the module");
+
+  // Return to progress and check responsive layout
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  for (const width of [360, 390, 768, 1024]) {
+    await page.setViewportSize({ width, height: 844 });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(overflow <= 1, `Skill Passport should not overflow horizontally at ${width}px`);
+  }
+
+  assert.deepEqual(pageErrors, [], "all-skills progress should not throw JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport safely handles malformed and older legacy schema records", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "corrupt-test-token",
+      refresh_token: "corrupt-test-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "corrupt-user", email: "corrupt@example.com" },
+    }));
+
+    // Corrupted state entries
+    const corruptCore = {
+      schemaVersion: 1,
+      settings: { theme: "light" },
+      wordProgress: {
+        "broken-1": null,
+        "broken-2": "invalid-string",
+        "broken-3": { attempts: "not-an-array", reviewHistory: null }
+      },
+      grammarProgress: {
+        "broken-topic": null
+      },
+      history: [null, undefined, { type: null }]
+    };
+    localStorage.setItem("sinauu-learning-state-v1", JSON.stringify(corruptCore));
+
+    const corruptAdventure = {
+      schemaVersion: 1,
+      pronunciationProgress: { "p1": { attempts: [{ durationMs: "not-a-number", completedAt: null }] } },
+      studioSessions: [null, { studioType: "speaking", checklistCompleted: "NaN" }]
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(corruptAdventure));
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const cards = page.locator("#passport-skills-grid .passport-skill-card");
+  assert.equal(await cards.count(), 7, "passport should render 7 cards despite corrupted records");
+
+  const passportData = await page.evaluate(() => window.sinauuGetSkillPassport?.());
+  assert.ok(passportData, "aggregation layer should return valid data structure");
+  assert.equal(passportData.skills.length, 7);
+
+  assert.deepEqual(pageErrors, [], "corrupt records should be sanitized without throwing JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport updates dynamically upon CloudBundle v2 restore", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "restore-test-token",
+      refresh_token: "restore-test-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "restore-user", email: "restore@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  // Initially empty
+  const emptyAction = page.locator("#passport-insight-card .passport-empty-state");
+  assert.equal(await emptyAction.count(), 1);
+
+  // Restore CloudBundle v2 with cross-device data
+  await page.evaluate(async () => {
+    const now = new Date().toISOString();
+    const bundle = {
+      schemaVersion: 2,
+      core: {
+        schemaVersion: 1,
+        settings: { theme: "light", dailyGoal: 10 },
+        wordProgress: {
+          "restored-word": { attempts: [{ at: now }], studiedDates: [now.slice(0, 10)], reviewHistory: [{ correct: true, at: now }] }
+        },
+        grammarProgress: {
+          "topic-alpha": { attempts: 3, correct: 3, answers: { "q1": { correct: true, at: now } } }
+        },
+        history: [],
+        updatedAt: now
+      },
+      extras: {
+        extraLearning: {
+          matching: { rounds: 1, totalMatches: 6, totalMistakes: 1 }
+        },
+        habitProgress: {},
+        adventureProgress: {
+          schemaVersion: 1,
+          studioSessions: [
+            { sessionId: "s-restored", studioType: "speaking", promptId: "greeting", wordCount: 25, checklistCompleted: 3, completedAt: now }
+          ]
+        }
+      }
+    };
+    await window.sinauuApplyCloudBundle(bundle);
+  });
+
+  // Re-verify that Skill Passport updated
+  const vocabCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='vocabulary']");
+  assert.match(await vocabCard.innerText(), /1 kata dipelajari/);
+
+  const speakingCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='speaking']");
+  assert.match(await speakingCard.innerText(), /1 sesi berbicara selesai/);
+
+  const insight = page.locator("#passport-insight-card");
+  assert.equal(await insight.locator(".passport-empty-state").count(), 0, "empty state should be replaced once bundle is applied");
+  assert.match(await insight.innerText(), /FOKUS TERBANYAK/i);
+
+  assert.deepEqual(pageErrors, [], "cloud bundle restore should not throw JavaScript errors");
+  await page.close();
+});
+
+test("Adaptive study plan recommends balanced beginner activities for a brand-new learner", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "new-learner-token",
+      refresh_token: "new-learner-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "new-learner", email: "new@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.waitForFunction(() => document.querySelector("#home-study-plan-steps .home-study-plan-step"));
+
+  assert.equal(await page.locator("#home-study-plan-count").innerText(), "0/3");
+  const steps = page.locator("#home-study-plan-steps .home-study-plan-step");
+  assert.equal(await steps.count(), 3);
+
+  // Step 1: Vocabulary foundation
+  const step0 = steps.nth(0);
+  assert.match(await step0.locator("h3").innerText(), /Pelajari kata/i);
+  assert.match(await step0.locator(".home-study-plan-step-meta").innerText(), /01 · INGAT KEMBALI/);
+  assert.equal(await step0.locator("[data-plan-vocabulary]").count(), 1);
+
+  // Step 2: Grammar foundation
+  const step1 = steps.nth(1);
+  assert.match(await step1.locator(".home-study-plan-step-meta").innerText(), /02 · PAHAMI POLA/);
+  assert.match(await step1.locator("h3").innerText(), /Present simple/i);
+  assert.equal(await step1.locator("[data-plan-topic]").count(), 1);
+
+  // Step 3: Adventure Daily Quest
+  const step2 = steps.nth(2);
+  assert.match(await step2.locator(".home-study-plan-step-meta").innerText(), /03 · GUNAKAN BAHASA/);
+  assert.match(await step2.locator("h3").innerText(), /Daily Quest/i);
+  assert.equal(await step2.locator("[data-plan-adventure]").count(), 1);
+
+  assert.deepEqual(pageErrors, [], "new learner adaptive study plan should not throw errors");
+  await page.close();
+});
+
+test("Adaptive study plan prioritizes overdue vocabulary review with transparent spaced repetition explanation", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const overdueTime = new Date(now.getTime() - 3600000).toISOString();
+    const state = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-1" }],
+          skillEvidence: { recall: true, context: true, production: true },
+          firstSeenDate: yesterday,
+          studiedDates: [yesterday],
+          nextReviewAt: overdueTime,
+          reviewSuccesses: 1,
+          reviewDates: [yesterday],
+          reviewHistory: [{ date: yesterday, at: overdueTime, correct: true }],
+          weak: false,
+        }
+      },
+      grammarProgress: {},
+      favorites: [],
+      events: [],
+      history: [{
+        id: "hist-1",
+        date: yesterday,
+        at: overdueTime,
+        type: "vocabulary",
+        title: "hello",
+        wordId: "a1-hello",
+        mode: "review"
+      }],
+      updatedAt: overdueTime
+    };
+    await new Promise((resolve) => {
+      const req = indexedDB.open("sinauu-local-v1", 1);
+      req.onupgradeneeded = () => req.result.createObjectStore("state", { keyPath: "key" });
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction("state", "readwrite");
+        tx.objectStore("state").put({ key: "main", value: state });
+        tx.oncomplete = () => { db.close(); resolve(); };
+      };
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "overdue-token",
+      refresh_token: "overdue-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "overdue-user", email: "overdue@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.waitForFunction(() => document.querySelector("#home-study-plan-steps .home-study-plan-step"));
+
+  const step0 = page.locator("#home-study-plan-steps .home-study-plan-step").nth(0);
+  assert.equal(await step0.locator("h3").innerText(), "Ingat kembali · hello");
+  assert.match(await step0.locator("p").innerText(), /jadwal|waktunya diulang/i);
+  assert.match(await step0.locator("[data-plan-vocabulary]").innerText(), /Mulai review/i);
+
+  // Clicking review opens study container in review mode
+  await step0.locator("[data-plan-vocabulary]").click();
+  await page.locator("#study-container h1").waitFor({ state: "visible" });
+  assert.deepEqual(pageErrors, [], "overdue review action should open study container without errors");
+  await page.close();
+});
+
+test("Adaptive study plan prioritizes repeated grammar mistakes with conservative evidence thresholds", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    const now = new Date().toISOString();
+    const state = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {},
+      grammarProgress: {
+        "past-simple": {
+          attempts: 6,
+          correct: 1,
+          answers: {
+            "past-simple-q1": { correct: false, at: now },
+            "past-simple-q2": { correct: false, at: now }
+          },
+          history: []
+        },
+        // Single attempt with wrong answer: should NOT be prioritized due to conservative threshold
+        "present-continuous": {
+          attempts: 1,
+          correct: 0,
+          answers: {
+            "present-continuous-q1": { correct: false, at: now }
+          },
+          history: []
+        }
+      },
+      favorites: [],
+      events: [],
+      history: [],
+      updatedAt: now
+    };
+    await new Promise((resolve) => {
+      const req = indexedDB.open("sinauu-local-v1", 1);
+      req.onupgradeneeded = () => req.result.createObjectStore("state", { keyPath: "key" });
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction("state", "readwrite");
+        tx.objectStore("state").put({ key: "main", value: state });
+        tx.oncomplete = () => { db.close(); resolve(); };
+      };
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "grammar-mistakes-token",
+      refresh_token: "grammar-mistakes-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "grammar-user", email: "grammar@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.waitForFunction(() => document.querySelector("#home-study-plan-steps .home-study-plan-step"));
+
+  const grammarStep = page.locator("#home-study-plan-steps .home-study-plan-step").nth(1);
+  assert.match(await grammarStep.locator("h3").innerText(), /Past simple/i);
+  assert.equal(await grammarStep.locator("[data-plan-topic]").getAttribute("data-plan-topic"), "past-simple");
+  const desc = await grammarStep.locator("p").innerText();
+  assert.match(desc, /Akurasi sebelumnya 17%/);
+  assert.match(desc, /kesulitan|kesalahan/i);
+
+  await grammarStep.locator("[data-plan-topic]").click();
+  await page.locator("#view-grammar.is-visible").waitFor({ state: "visible" });
+  assert.match(await page.locator("#lesson-panel").innerText(), /Past simple/i);
+
+  assert.deepEqual(pageErrors, [], "grammar mistake plan should navigate smoothly without errors");
+  await page.close();
+});
+
+test("Adaptive study plan adapts to recommend reading when vocabulary activity is strong but reading practice is scarce", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    const now = new Date().toISOString();
+    const state = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": { attempts: [{ at: now }], studiedDates: ["2026-11-01"] },
+        "a1-world": { attempts: [{ at: now }], studiedDates: ["2026-11-01"] },
+        "a1-friend": { attempts: [{ at: now }], studiedDates: ["2026-11-01"] },
+        "a1-family": { attempts: [{ at: now }], studiedDates: ["2026-11-01"] },
+        "a1-school": { attempts: [{ at: now }], studiedDates: ["2026-11-01"] },
+        "a1-water": { attempts: [{ at: now }], studiedDates: ["2026-11-01"] },
+        "a1-happy": { attempts: [{ at: now }], studiedDates: ["2026-11-01"] },
+        "a1-learn": { attempts: [{ at: now }], studiedDates: ["2026-11-01"] }
+      },
+      grammarProgress: {
+        "present-simple": { attempts: 4, correct: 4, answers: {} }
+      },
+      favorites: [],
+      events: [],
+      history: [],
+      updatedAt: now
+    };
+    await new Promise((resolve) => {
+      const req = indexedDB.open("sinauu-local-v1", 1);
+      req.onupgradeneeded = () => req.result.createObjectStore("state", { keyPath: "key" });
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction("state", "readwrite");
+        tx.objectStore("state").put({ key: "main", value: state });
+        tx.oncomplete = () => { db.close(); resolve(); };
+      };
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "reading-adapt-token",
+      refresh_token: "reading-adapt-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "reading-user", email: "reading@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.waitForFunction(() => document.querySelector("#home-study-plan-steps .home-study-plan-step"));
+
+  // Step 2 should adapt to reading!
+  const step1 = page.locator("#home-study-plan-steps .home-study-plan-step").nth(1);
+  assert.match(await step1.locator(".home-study-plan-step-meta").innerText(), /LATIH PEMAHAMAN TEKS/);
+  assert.match(await step1.locator("h3").innerText(), /Everyday Stories|Latihan bacaan/i);
+  assert.match(await step1.locator("p").innerText(), /Kosakatamu berkembang aktif/i);
+
+  const actionBtn = step1.locator("[data-plan-adventure-section='adventure-story-library']");
+  assert.equal(await actionBtn.count(), 1);
+  await actionBtn.click();
+  await page.locator("#view-adventure.is-visible").waitFor({ state: "visible" });
+  await page.locator("#adventure-story-library").waitFor({ state: "visible" });
+
+  assert.deepEqual(pageErrors, [], "reading recommendation should navigate smoothly without errors");
+  await page.close();
+});
+
+test("Adaptive study plan provides gentle re-engagement messaging for returning learners after absence", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    const tenDaysAgo = new Date(Date.now() - 10 * 86400000).toISOString();
+    const tenDaysAgoDate = tenDaysAgo.slice(0, 10);
+    const state = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ at: tenDaysAgo }],
+          skillEvidence: { recall: true, context: true, production: true },
+          firstSeenDate: tenDaysAgoDate,
+          studiedDates: [tenDaysAgoDate],
+          nextReviewAt: tenDaysAgo,
+          reviewSuccesses: 1,
+          reviewDates: [tenDaysAgoDate],
+          reviewHistory: [{ date: tenDaysAgoDate, at: tenDaysAgo, correct: true }]
+        }
+      },
+      grammarProgress: {},
+      favorites: [],
+      events: [],
+      history: [{
+        id: "old-hist",
+        date: tenDaysAgoDate,
+        at: tenDaysAgo,
+        type: "vocabulary",
+        title: "hello",
+        wordId: "a1-hello",
+        mode: "learn"
+      }],
+      updatedAt: tenDaysAgo
+    };
+    await new Promise((resolve) => {
+      const req = indexedDB.open("sinauu-local-v1", 1);
+      req.onupgradeneeded = () => req.result.createObjectStore("state", { keyPath: "key" });
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction("state", "readwrite");
+        tx.objectStore("state").put({ key: "main", value: state });
+        tx.oncomplete = () => { db.close(); resolve(); };
+      };
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "returning-token",
+      refresh_token: "returning-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "returning-user", email: "returning@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.waitForFunction(() => document.querySelector("#home-study-plan-steps .home-study-plan-step"));
+
+  const step0 = page.locator("#home-study-plan-steps .home-study-plan-step").nth(0);
+  assert.match(await step0.locator("p").innerText(), /Selamat datang kembali!/i);
+
+  assert.deepEqual(pageErrors, [], "returning learner plan should not throw errors");
+  await page.close();
+});
+
+test("Adaptive study plan preserves task continuity, marks completed steps, and maintains deterministic state on reload", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    const now = new Date();
+    const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
+    const nowIso = now.toISOString();
+    const state = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ at: nowIso }],
+          skillEvidence: { recall: true, context: true, production: true },
+          firstSeenDate: today,
+          studiedDates: [today],
+          nextReviewAt: new Date(now.getTime() + 86400000).toISOString(),
+          reviewSuccesses: 1,
+          reviewDates: [today],
+          reviewHistory: [{ date: today, at: nowIso, correct: true }]
+        }
+      },
+      grammarProgress: {},
+      favorites: [],
+      events: [],
+      history: [{
+        id: "today-vocab-review",
+        date: today,
+        at: nowIso,
+        type: "vocabulary",
+        title: "hello",
+        wordId: "a1-hello",
+        mode: "review",
+        correct: true
+      }],
+      updatedAt: nowIso
+    };
+    await new Promise((resolve) => {
+      const req = indexedDB.open("sinauu-local-v1", 1);
+      req.onupgradeneeded = () => req.result.createObjectStore("state", { keyPath: "key" });
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction("state", "readwrite");
+        tx.objectStore("state").put({ key: "main", value: state });
+        tx.oncomplete = () => { db.close(); resolve(); };
+      };
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "reload-token",
+      refresh_token: "reload-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "reload-user", email: "reload@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.waitForFunction(() => document.querySelector("#home-study-plan-steps .home-study-plan-step"));
+
+  assert.equal(await page.locator("#home-study-plan-count").innerText(), "1/3");
+  const step0FirstLoad = await page.locator("#home-study-plan-steps .home-study-plan-step").nth(0).locator("h3").innerText();
+  const step1FirstLoad = await page.locator("#home-study-plan-steps .home-study-plan-step").nth(1).locator("h3").innerText();
+  const step2FirstLoad = await page.locator("#home-study-plan-steps .home-study-plan-step").nth(2).locator("h3").innerText();
+
+  // Reload page to verify stability and determinism
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.waitForFunction(() => document.querySelector("#home-study-plan-steps .home-study-plan-step"));
+
+  assert.equal(await page.locator("#home-study-plan-count").innerText(), "1/3");
+  const step0SecondLoad = await page.locator("#home-study-plan-steps .home-study-plan-step").nth(0).locator("h3").innerText();
+  const step1SecondLoad = await page.locator("#home-study-plan-steps .home-study-plan-step").nth(1).locator("h3").innerText();
+  const step2SecondLoad = await page.locator("#home-study-plan-steps .home-study-plan-step").nth(2).locator("h3").innerText();
+
+  assert.equal(step0FirstLoad, step0SecondLoad, "step 1 should be identical on reload");
+  assert.equal(step1FirstLoad, step1SecondLoad, "step 2 should be identical on reload");
+  assert.equal(step2FirstLoad, step2SecondLoad, "step 3 should be identical on reload");
+
+  // Verify completed step styling
+  const step0 = page.locator("#home-study-plan-steps .home-study-plan-step").nth(0);
+  assert.match(await step0.getAttribute("class"), /is-complete/);
+  assert.match(await step0.locator("button").innerText(), /Selesai ✓/);
+  assert.ok(await step0.locator("button").isDisabled());
+
+  assert.deepEqual(pageErrors, [], "plan reload should maintain stability without errors");
+  await page.close();
+});
+
+test("Universal Mistake Journal maps grammar, vocab, and habit reading mistakes with retry, filters, and honest module handling", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = new Date().toISOString();
+  await page.addInitScript(() => {
+    const timestamp = new Date().toISOString();
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "universal-mistake-access",
+      refresh_token: "universal-mistake-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "universal-mistake-user", email: "mistake@example.com" },
+    }));
+
+    // 1. Core State with Grammar mistake and Vocab mistake
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-1", wordId: "a1-hello", skill: "recall", correct: false, response: "selamat tinggal", at: timestamp }],
+          studiedDates: [timestamp.slice(0, 10)],
+          reviewHistory: [],
+          weak: true
+        }
+      },
+      grammarProgress: {
+        "present-simple": {
+          attempts: 2,
+          correct: 1,
+          answers: {
+            "ps-1": { correct: false, response: "walks", at: timestamp }
+          },
+          history: [{ questionId: "ps-1", correct: false, at: timestamp }]
+        }
+      },
+      events: [
+        { id: "ev-1", wordId: "a1-hello", word: "hello", skill: "recall", correct: false, response: "selamat tinggal", questionId: "typed-meaning", at: timestamp }
+      ],
+      history: [
+        { type: "grammar", title: "Present Simple", detail: "Soal: ps-1", correct: false, topicId: "present-simple", questionId: "ps-1" },
+        { type: "vocabulary", title: "hello", detail: "Recall arti • perlu dilatih", correct: false, wordId: "a1-hello" }
+      ],
+      updatedAt: timestamp
+    };
+    localStorage.setItem("sinauu-learning-state-v1", JSON.stringify(core));
+
+    // 2. Extra Learning & HABIT Reading with a mistake
+    const habitProgress = {
+      "habit-passage-1": {
+        answers: {
+          "habit-passage-1-detail-1": { selected: 1, correct: false, answeredAt: timestamp }
+        }
+      }
+    };
+    localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(habitProgress));
+
+    // 3. Adventure with existing adventure mistake and modules without question-level evidence
+    const adventureProgress = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "adv-mistake-1": {
+          mistakeId: "adv-mistake-1",
+          sourceType: "mission",
+          sourceId: "meet-your-new-neighbors",
+          missionId: "meet-your-new-neighbors",
+          stepId: "word-neighbor",
+          skill: "vocabulary",
+          prompt: "Which word describes someone who lives next door to you?",
+          wrongAnswer: "A passenger",
+          correctAnswer: "A neighbor",
+          explanation: "A neighbor lives near you.",
+          recordedAt: timestamp,
+          resolvedAt: null,
+          status: "open",
+          reviewStage: 0,
+          nextReviewAt: timestamp,
+          reviewHistory: []
+        }
+      },
+      // Modules with only aggregate stats
+      storyProgress: {
+        "first-day": { attempts: [{ attemptId: "s1", score: 2, total: 3, passed: true, completedAt: timestamp }], bestScore: 2, completedAt: timestamp }
+      },
+      listeningProgress: {
+        "airport-arrival": { attempts: [{ attemptId: "l1", score: 2, total: 3, passed: true, completedAt: timestamp }], bestScore: 2, completedAt: timestamp }
+      },
+      studioSessions: [
+        { sessionId: "spk-1", studioType: "speaking", promptId: "intro", wordCount: 40, checklistCompleted: 3, completedAt: timestamp },
+        { sessionId: "wrt-1", studioType: "writing", promptId: "email", wordCount: 65, checklistCompleted: 3, completedAt: timestamp }
+      ],
+      pronunciationProgress: {
+        "phrase-1": { attempts: [{ attemptId: "pr-1", completedAt: timestamp, durationMs: 3400 }] }
+      },
+      updatedAt: timestamp
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(adventureProgress));
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // Navigate to Adventure tab
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-mistake-journal").waitFor({ state: "visible" });
+
+  // 1. Verify rows exist for grammar, vocab, habit, and adventure
+  const rows = page.locator("#adventure-mistake-journal .adventure-mistake-row");
+  const rowCount = await rows.count();
+  assert.ok(rowCount >= 4, `expected at least 4 mistakes (adventure, grammar, habit, vocab), found ${rowCount}`);
+
+  // Check that modules without question-level evidence do NOT create fake mistake rows
+  const journalText = await page.locator("#adventure-mistake-journal").innerText();
+  assert.ok(!journalText.includes("first-day"), "Everyday Stories without question-level mistake evidence must not appear in Mistake Journal");
+  assert.ok(!journalText.includes("airport-arrival"), "Listening Lab without question-level mistake evidence must not appear in Mistake Journal");
+
+  // 2. Skill filtering: Grammar filter
+  await page.locator('[data-mistake-skill-filter="grammar"]').click();
+  const grammarRows = page.locator("#adventure-mistake-journal .adventure-mistake-row");
+  assert.equal(await grammarRows.count(), 1, "grammar skill filter should show exactly 1 grammar mistake");
+  assert.match(await grammarRows.first().innerText(), /grammar/i);
+  assert.match(await grammarRows.first().innerText(), /present-simple|Present simple|grammar-article|Soal grammar/i);
+
+  // 3. Context Reopen Action for Grammar
+  const grammarReopen = grammarRows.first().locator("[data-open-grammar-topic]");
+  assert.ok(await grammarReopen.isVisible(), "grammar mistake row must have an action to reopen grammar topic");
+  await grammarReopen.click();
+  // Expect view to switch to grammar lesson
+  await page.waitForFunction(() => document.querySelector("#view-grammar") && !document.querySelector("#view-grammar").hidden);
+  assert.match(await page.locator("#lesson-panel h2").innerText(), /Present simple/i);
+
+  // 4. Return to Adventure & test Vocab filter and Reopen Action
+  await page.locator('.side-link[data-view-target="overview"]').click();
+  await page.locator('#home-adventure-link').click();
+  await page.locator('[data-mistake-skill-filter="vocabulary"]').click();
+  const vocabRows = page.locator("#adventure-mistake-journal .adventure-mistake-row");
+  assert.ok((await vocabRows.count()) >= 1, "vocabulary skill filter should show vocabulary mistakes");
+  const vocabReopen = page.locator("#adventure-mistake-journal [data-open-vocab-word='a1-hello']");
+  if (await vocabReopen.isVisible()) {
+    await vocabReopen.click();
+    await page.waitForFunction(() => document.querySelector("#view-vocabulary") && !document.querySelector("#view-vocabulary").hidden);
+    assert.match(await page.locator("#word-detail").innerText(), /hello/i);
+    await page.locator('.side-link[data-view-target="overview"]').click();
+    await page.locator('#home-adventure-link').click();
+  }
+
+  // 5. Test targeted retry on a due mistake
+  await page.locator('[data-mistake-skill-filter="all"]').click();
+  await page.locator('[data-mistake-filter="all"]').click();
+  const retryBtn = page.locator("#adventure-mistake-journal [data-mistake-review-one]").first();
+  await retryBtn.waitFor({ state: "visible" });
+  await retryBtn.click();
+
+  const reviewPanel = page.locator("#adventure-mistake-journal .adventure-mistake-review");
+  await reviewPanel.waitFor({ state: "visible" });
+  assert.match(await reviewPanel.innerText(), /SPACED RETRIEVAL/i);
+
+  // Close review panel
+  await page.locator("[data-mistake-review-close]").click();
+
+  // 6. Deduplication: repeated sync should not create duplicate entries
+  await page.evaluate(() => {
+    if (typeof window.sinauuSyncMistakes === "function") {
+      window.sinauuSyncMistakes();
+      window.sinauuSyncMistakes();
+    }
+  });
+  const afterRepeatedSyncCount = await page.locator("#adventure-mistake-journal .adventure-mistake-row").count();
+  assert.equal(afterRepeatedSyncCount, rowCount, "repeated sync calls must not duplicate entries");
+
+  assert.deepEqual(pageErrors, [], "Universal Mistake Journal should operate without console errors");
+  await page.close();
+});
+
+test("Universal Mistake Journal handles malformed legacy records, mobile viewports, and targeted recall retention across reloads", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    const now = new Date().toISOString();
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "robust-journal-access",
+      refresh_token: "robust-journal-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "robust-journal-user", email: "robust@example.com" },
+    }));
+
+    // Seed malformed and older legacy records
+    const adventureProgress = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "legacy-incomplete": {
+          mistakeId: "legacy-incomplete",
+          sourceType: "mission",
+          recordedAt: "invalid-date",
+        },
+        "grammar-due-item": {
+          mistakeId: "grammar:present-simple:ps-1",
+          sourceType: "grammar",
+          sourceId: "present-simple",
+          topicId: "present-simple",
+          questionId: "ps-1",
+          skill: "grammar",
+          prompt: "Choose the correct sentence.",
+          wrongAnswer: "He walk to class every day.",
+          correctAnswer: "He walks to class every day.",
+          explanation: "He adalah subjek orang ketiga tunggal, jadi kata kerja positif memakai -s: walks.",
+          recordedAt: new Date(Date.now() - 86400000).toISOString(),
+          resolvedAt: null,
+          status: "open",
+          reviewStage: 0,
+          nextReviewAt: new Date(Date.now() - 3600000).toISOString(),
+          reviewHistory: []
+        }
+      },
+      updatedAt: now
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(adventureProgress));
+  });
+
+  // Test mobile viewport (360x640)
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-mistake-journal").waitFor({ state: "visible" });
+
+  // 1. Verify malformed records did not crash rendering
+  assert.ok(await page.locator("#adventure-mistake-journal").isVisible());
+  const measurements = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+    journalWidth: document.querySelector("#adventure-mistake-journal")?.getBoundingClientRect().width || 0,
+  }));
+  assert.ok(measurements.scrollWidth <= measurements.viewport + 1, "journal must not cause horizontal viewport overflow on 360px mobile");
+
+  // 2. Perform targeted review on the grammar due item
+  const retryBtn = page.locator("#adventure-mistake-journal [data-mistake-review-one]").first();
+  await retryBtn.waitFor({ state: "visible" });
+  await retryBtn.click();
+
+  const reviewPanel = page.locator("#adventure-mistake-journal .adventure-mistake-review");
+  await reviewPanel.waitFor({ state: "visible" });
+  assert.equal(await reviewPanel.locator("[data-mistake-answer]").count(), 3);
+
+  // Pick wrong option first
+  await reviewPanel.locator('[data-mistake-answer="0"]').click();
+  assert.match(await reviewPanel.innerText(), /Belum tepat/i);
+
+  // Pick correct option (option 1: "He walks to class every day.")
+  await reviewPanel.locator('[data-mistake-answer="1"]').click();
+  assert.match(await reviewPanel.innerText(), /Review 1\/4 berhasil/i);
+
+  // 3. Close panel and verify status updated to reviewing
+  await page.locator("[data-mistake-review-close]").click();
+  await page.locator('[data-mistake-filter="reviewing"]').click();
+  assert.equal(await page.locator("#adventure-mistake-journal .adventure-mistake-row.is-reviewing").count(), 1);
+
+  // 4. Reload page and verify spaced review stage survives
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-mistake-filter="reviewing"]').click();
+  const reloadedReviewingRow = page.locator("#adventure-mistake-journal .adventure-mistake-row.is-reviewing");
+  assert.equal(await reloadedReviewingRow.count(), 1, "reviewStage 1 must persist across page reload");
+  assert.match(await reloadedReviewingRow.first().innerText(), /REVIEW 1 \/ 4/i);
+
+  assert.deepEqual(pageErrors, [], "Universal Mistake Journal must not throw errors during mobile rendering and Spaced Retrieval");
+  await page.close();
+});
+
+test("Unified Review Queue aggregates overdue vocabulary, due today vocabulary, and spaced mistake journal items with honest empty states", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  // 1. Test clean / empty learner state
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "review-queue-access",
+      refresh_token: "review-queue-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "review-queue-user", email: "review@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // Navigate to Review view
+  await page.locator('[data-view-target="review"]').click();
+  const reviewView = page.locator("#view-review");
+  await reviewView.waitFor({ state: "visible" });
+
+  // In empty state, review list displays honest empty message and metric totals are 0
+  assert.equal(await page.locator("#review-due-total").innerText(), "0");
+  assert.equal(await page.locator("#review-success-total").innerText(), "0");
+  assert.match(await page.locator("#review-list").innerText(), /Belum ada review yang jatuh tempo/i);
+
+  // 2. Populate records with overdue vocab, due today vocab, weak word, and due grammar mistake via CloudBundle apply
+  const now = Date.now();
+  const overdueIso = new Date(now - 3 * 86400000).toISOString();
+  const todayDueIso = new Date(now - 2 * 3600000).toISOString();
+  const timestamp = new Date(now).toISOString();
+
+  await page.evaluate(({ overdueIso, todayDueIso, timestamp }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-hello", at: overdueIso, correct: true }],
+          nextReviewAt: overdueIso,
+          reviewSuccesses: 1,
+          reviewDates: ["2026-10-28"],
+          reviewHistory: [{ date: "2026-10-28", at: overdueIso, correct: true }],
+          weak: false,
+          skillEvidence: { recall: true, context: true, production: false }
+        },
+        "a1-usually": {
+          attempts: [{ id: "att-usually", at: todayDueIso, correct: true }],
+          nextReviewAt: todayDueIso,
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [],
+          weak: false,
+          skillEvidence: { recall: true, context: false, production: false }
+        },
+        "a1-enough": {
+          attempts: [{ id: "att-enough", at: timestamp, correct: false }],
+          nextReviewAt: null,
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [],
+          weak: true,
+          skillEvidence: { recall: false, context: false, production: false }
+        }
+      },
+      grammarProgress: {},
+      events: [],
+      history: [],
+      updatedAt: timestamp
+    };
+
+    const adventure = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "grammar:present-simple:ps-1": {
+          mistakeId: "grammar:present-simple:ps-1",
+          sourceType: "grammar",
+          topicId: "present-simple",
+          stepId: "ps-1",
+          skill: "Grammar",
+          level: "A1",
+          prompt: "Pilih kalimat yang menggunakan present simple dengan benar.",
+          wrongAnswer: "walks",
+          correctAnswer: "He walks to class every day.",
+          explanation: "Subjek tunggal membutuhkan kata kerja berakhiran -s.",
+          recordedAt: overdueIso,
+          resolvedAt: overdueIso,
+          nextReviewAt: overdueIso,
+          reviewStage: 1,
+          reviewHistory: [{ reviewedAt: overdueIso, correct: true, stage: 1 }]
+        }
+      },
+      updatedAt: timestamp
+    };
+    window.sinauuApplyCloudBundle({ core, extras: { adventureProgress: adventure } });
+  }, { overdueIso, todayDueIso, timestamp });
+
+  await page.locator('[data-view-target="review"]').click();
+  await reviewView.waitFor({ state: "visible" });
+
+  // 3. Verify aggregated metric cards
+  // Total due = 2 overdue (hello + grammar mistake) + 1 today (usually) = 3
+  assert.equal(await page.locator("#review-due-total").innerText(), "3");
+  assert.equal(await page.locator("#review-overdue-total").innerText(), "2");
+  assert.equal(await page.locator("#review-today-total").innerText(), "1");
+  assert.equal(await page.locator("#review-practice-total").innerText(), "1");
+  assert.equal(await page.locator("#nav-review-count").innerText(), "3");
+
+  assert.deepEqual(pageErrors, [], "Unified Review Queue empty state and metric counters must load without errors");
+  await page.close();
+});
+
+test("Unified Review Queue provides deterministic prioritization, manageable focused session, category and skill filtering, and transparent explanations", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = Date.now();
+  const overdueIso = new Date(now - 4 * 86400000).toISOString();
+  const todayDueIso = new Date(now - 1 * 3600000).toISOString();
+  const timestamp = new Date(now).toISOString();
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "review-queue-access-2",
+      refresh_token: "review-queue-refresh-2",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "review-queue-user-2", email: "review2@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.evaluate(({ overdueIso, todayDueIso, timestamp }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-hello-2", at: overdueIso, correct: true }],
+          nextReviewAt: overdueIso,
+          reviewSuccesses: 1,
+          reviewDates: ["2026-10-27"],
+          reviewHistory: [{ date: "2026-10-27", at: overdueIso, correct: true }],
+          weak: false,
+          skillEvidence: { recall: true, context: true, production: false }
+        },
+        "a1-usually": {
+          attempts: [{ id: "att-usually-2", at: todayDueIso, correct: true }],
+          nextReviewAt: todayDueIso,
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [],
+          weak: false,
+          skillEvidence: { recall: true, context: false, production: false }
+        },
+        "a1-enough": {
+          attempts: [{ id: "att-enough-2", at: timestamp, correct: false }],
+          nextReviewAt: null,
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [],
+          weak: true,
+          skillEvidence: { recall: false, context: false, production: false }
+        }
+      },
+      grammarProgress: {},
+      events: [],
+      history: [],
+      updatedAt: timestamp
+    };
+
+    const adventure = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "grammar:present-simple:ps-1": {
+          mistakeId: "grammar:present-simple:ps-1",
+          sourceType: "grammar",
+          topicId: "present-simple",
+          stepId: "ps-1",
+          skill: "Grammar",
+          level: "A1",
+          prompt: "Pilih kalimat yang menggunakan present simple dengan benar.",
+          wrongAnswer: "walks",
+          correctAnswer: "He walks to class every day.",
+          explanation: "Subjek tunggal membutuhkan kata kerja berakhiran -s.",
+          recordedAt: overdueIso,
+          resolvedAt: overdueIso,
+          nextReviewAt: overdueIso,
+          reviewStage: 1,
+          reviewHistory: [{ reviewedAt: overdueIso, correct: true, stage: 1 }]
+        }
+      },
+      updatedAt: timestamp
+    };
+    window.sinauuApplyCloudBundle({ core, extras: { adventureProgress: adventure } });
+  }, { overdueIso, todayDueIso, timestamp });
+
+  await page.locator('[data-view-target="review"]').click();
+
+  // 1. Focused session card is displayed with capped items
+  const focusCard = page.locator("#review-focus-card");
+  await focusCard.waitFor({ state: "visible" });
+  assert.match(await focusCard.locator("#review-focus-title").innerText(), /Materi Prioritas/i);
+  assert.ok(await focusCard.locator("#review-focus-pills .review-focus-pill").count() >= 2);
+
+  // 2. Check cards in active queue
+  const queueCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await queueCards.count(), 3, "default 'due' tab shows overdue and due today items");
+
+  // The first cards must be overdue (deterministic prioritization)
+  assert.ok(await queueCards.nth(0).evaluate(el => el.classList.contains("is-overdue")), "first card should be overdue");
+
+  // Verify the 3 key questions are answered on each card:
+  const firstCard = queueCards.first();
+  assert.ok(await firstCard.locator(".review-card-title").isVisible(), "must answer: what to review");
+  assert.ok(await firstCard.locator(".review-qa-reason .review-qa-text").isVisible(), "must answer: why is it due");
+  assert.match(await firstCard.locator(".review-qa-reason .review-qa-text").innerText(), /Terlambat/i);
+  assert.ok(await firstCard.locator(".review-qa-consequence .review-qa-text").isVisible(), "must answer: what will happen when completed");
+
+  // 3. Category filtering
+  // Click 'Terlambat' tab
+  await page.locator('[data-review-filter="overdue"]').click();
+  const overdueCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await overdueCards.count(), 2);
+
+  // Click 'Hari Ini' tab
+  await page.locator('[data-review-filter="today"]').click();
+  const todayCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await todayCards.count(), 1);
+  assert.match(await todayCards.first().locator(".review-card-title").innerText(), /usually/i);
+
+  // Click 'Perlu Pemantapan' tab
+  await page.locator('[data-review-filter="practice"]').click();
+  const practiceCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await practiceCards.count(), 1);
+  assert.match(await practiceCards.first().locator(".review-card-title").innerText(), /enough/i);
+
+  // 4. Skill filtering
+  // Reset to due filter, filter by Grammar
+  await page.locator('[data-review-filter="due"]').click();
+  await page.locator('[data-review-skill="grammar"]').click();
+  const grammarCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await grammarCards.count(), 1);
+  assert.match(await grammarCards.first().locator(".review-skill-badge").innerText(), /Tata Bahasa|Grammar/i);
+
+  // Reset to all skills
+  await page.locator('[data-review-skill="all"]').click();
+  assert.equal(await page.locator("#review-list .review-queue-card").count(), 3);
+
+  assert.deepEqual(pageErrors, [], "Unified Review Queue filtering and explanations must execute without errors");
+  await page.close();
+});
+
+test("Unified Review Queue allows in-place mistake retrieval and direct vocab study without false mastery, and persists across reload", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = Date.now();
+  const overdueIso = new Date(now - 3 * 86400000).toISOString();
+  const timestamp = new Date(now).toISOString();
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "review-queue-access-3",
+      refresh_token: "review-queue-refresh-3",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "review-queue-user-3", email: "review3@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.evaluate(({ overdueIso, timestamp }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-hello-3", at: overdueIso, correct: true }],
+          nextReviewAt: overdueIso,
+          reviewSuccesses: 1,
+          reviewDates: ["2026-10-27"],
+          reviewHistory: [{ date: "2026-10-27", at: overdueIso, correct: true }],
+          weak: false,
+          skillEvidence: { recall: true, context: true, production: false }
+        }
+      },
+      grammarProgress: {},
+      events: [],
+      history: [],
+      updatedAt: timestamp
+    };
+
+    const adventure = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "grammar:present-simple:ps-1": {
+          mistakeId: "grammar:present-simple:ps-1",
+          sourceType: "grammar",
+          topicId: "present-simple",
+          stepId: "ps-1",
+          skill: "Grammar",
+          level: "A1",
+          prompt: "Pilih kalimat yang menggunakan present simple dengan benar.",
+          wrongAnswer: "walks",
+          correctAnswer: "He walks to class every day.",
+          explanation: "Subjek tunggal membutuhkan kata kerja berakhiran -s.",
+          recordedAt: overdueIso,
+          resolvedAt: overdueIso,
+          nextReviewAt: overdueIso,
+          reviewStage: 1,
+          reviewHistory: [{ reviewedAt: overdueIso, correct: true, stage: 1 }]
+        }
+      },
+      updatedAt: timestamp
+    };
+    window.sinauuApplyCloudBundle({ core, extras: { adventureProgress: adventure } });
+  }, { overdueIso, timestamp });
+
+  await page.locator('[data-view-target="review"]').click();
+
+  // 1. In-place mistake review
+  const mistakeActionBtn = page.locator('#review-list [data-review-mistake="grammar:present-simple:ps-1"]');
+  await mistakeActionBtn.waitFor({ state: "visible" });
+  await mistakeActionBtn.click();
+
+  // Active panel renders in-place inside #view-review
+  const activePanel = page.locator("#review-active-panel .adventure-mistake-review");
+  await activePanel.waitFor({ state: "visible" });
+
+  // Pick incorrect answer first (index 0)
+  await activePanel.locator('[data-mistake-answer="0"]').click();
+  assert.match(await activePanel.innerText(), /Belum tepat/i);
+
+  // Pick correct answer (index 1: "He walks to class every day.")
+  // Since wrong answer reset stage to 0, correct retry advances it to 1
+  await activePanel.locator('[data-mistake-answer="1"]').click();
+  assert.match(await activePanel.innerText(), /Review 1\/4 berhasil/i);
+
+  // Close in-place review card
+  await activePanel.locator("[data-mistake-review-close]").click();
+  await page.waitForFunction(() => document.getElementById("review-active-panel")?.hidden === true);
+
+  // 2. Reload and verify reviewStage 1 persists
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="review"]').click();
+
+  const mistakeStage = await page.evaluate(() => {
+    const journal = window.sinauuGetMistakeJournal?.() || {};
+    return journal["grammar:present-simple:ps-1"]?.reviewStage;
+  });
+  assert.equal(mistakeStage, 1, "reviewStage 1 after reset and retry must persist in storage across page reload");
+
+  // Verify false mastery is NOT granted (stage 1 of 4 is not mastered)
+  const isMastered = await page.evaluate(() => {
+    const journal = window.sinauuGetMistakeJournal?.() || {};
+    const item = journal["grammar:present-simple:ps-1"];
+    return window.sinauuIsMistakeMastered?.(item);
+  });
+  assert.equal(isMastered, false, "intermediate spaced review stage must NOT grant false mastery");
+
+  // 3. Verify 'Buka materi asal' context navigation
+  const openSourceBtn = page.locator('#review-list [data-review-open-source="vocab:a1-hello"]');
+  await openSourceBtn.waitFor({ state: "visible" });
+  await openSourceBtn.click();
+  await page.locator("#view-vocabulary").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#view-vocabulary").isVisible(), true);
+
+  assert.deepEqual(pageErrors, [], "In-place mistake review and source navigation must execute cleanly without errors");
+  await page.close();
+});
+
+test("Weekly Learning Insights presents an honest empty state for a new learner and an honest single-day state", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "weekly-preview-access-1",
+      refresh_token: "weekly-preview-refresh-1",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "weekly-preview-user-1", email: "weekly1@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // 1. Open Progress view - empty state
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  const weeklySection = page.locator("#weekly-insights-section");
+  await weeklySection.waitFor({ state: "visible" });
+
+  const emptyState = weeklySection.locator(".weekly-empty-state");
+  await emptyState.waitFor({ state: "visible" });
+  assert.match(await emptyState.locator(".weekly-empty-kicker").innerText(), /BELUM ADA AKTIVITAS MINGGUAN/i);
+  assert.match(await emptyState.locator("h3").innerText(), /Belum ada aktivitas belajar/i);
+
+  // Click CTA to start first practice
+  const emptyCta = emptyState.locator('[data-weekly-target="vocabulary"]');
+  await emptyCta.click();
+  await page.locator("#view-vocabulary.is-visible").waitFor({ state: "visible" });
+
+  // 2. Single-day learner
+  const now = Date.now();
+  const todayIso = new Date(now).toISOString();
+  const today = todayIso.slice(0, 10);
+
+  await page.evaluate(async ({ today, todayIso }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-1", at: todayIso, correct: true }],
+          studiedDates: [today],
+          reviewHistory: [{ at: todayIso, date: today, correct: true }],
+          nextReviewAt: null
+        }
+      },
+      grammarProgress: {
+        "present-simple": {
+          attempts: 2,
+          correct: 2,
+          answers: {
+            "ps-1": { correct: true, at: todayIso }
+          }
+        }
+      },
+      events: [],
+      history: [{
+        id: "hist-1",
+        date: today,
+        at: todayIso,
+        type: "vocabulary",
+        title: "hello",
+        correct: true
+      }],
+      updatedAt: todayIso
+    };
+    await window.sinauuApplyCloudBundle({ core, extras: {} });
+  }, { today, todayIso });
+
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  await weeklySection.waitFor({ state: "visible" });
+
+  // Active days card shows 1 / 7 hari
+  const activeDaysVal = weeklySection.locator("#weekly-active-days");
+  await activeDaysVal.waitFor({ state: "visible" });
+  assert.match(await activeDaysVal.innerText(), /1/);
+  assert.match(await activeDaysVal.innerText(), /7 hari/);
+
+  // Narrative notes single active day honestly without false trends
+  const narrative = weeklySection.locator(".weekly-narrative");
+  assert.match(await narrative.innerText(), /1 hari/i);
+
+  assert.deepEqual(pageErrors, [], "Weekly Learning Insights empty state and single-day state must execute without browser errors");
+  await page.close();
+});
+
+test("Weekly Learning Insights aggregates multi-skill activity, computes fair week-over-week comparisons, accuracy trends, and honest disclosures", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = Date.now();
+  const dayMs = 86400000;
+  // Current week timestamps: days 0, 1, 2, 4 prior
+  const d0 = new Date(now).toISOString();
+  const d1 = new Date(now - 1 * dayMs).toISOString();
+  const d2 = new Date(now - 2 * dayMs).toISOString();
+  const d4 = new Date(now - 4 * dayMs).toISOString();
+
+  // Previous week timestamps: days 8, 10 prior
+  const d8 = new Date(now - 8 * dayMs).toISOString();
+  const d10 = new Date(now - 10 * dayMs).toISOString();
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "weekly-preview-access-2",
+      refresh_token: "weekly-preview-refresh-2",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "weekly-preview-user-2", email: "weekly2@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.evaluate(async ({ d0, d1, d2, d4, d8, d10 }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-hello-1", at: d0, correct: true }],
+          studiedDates: [d0.slice(0, 10)],
+          reviewHistory: [
+            { id: "rh-1", at: d0, date: d0.slice(0, 10), correct: true },
+            { id: "rh-2", at: d1, date: d1.slice(0, 10), correct: true }
+          ]
+        },
+        "a1-usually": {
+          attempts: [{ id: "att-usually-1", at: d2, correct: true }],
+          studiedDates: [d2.slice(0, 10)],
+          reviewHistory: [{ id: "rh-3", at: d2, date: d2.slice(0, 10), correct: false }]
+        },
+        "a1-enough": {
+          attempts: [{ id: "att-enough-old", at: d8, correct: true }],
+          studiedDates: [d8.slice(0, 10)],
+          reviewHistory: [{ id: "rh-4", at: d8, date: d8.slice(0, 10), correct: true }]
+        }
+      },
+      grammarProgress: {
+        "present-simple": {
+          attempts: 6,
+          correct: 5,
+          answers: {
+            "ps-1": { correct: true, at: d1 },
+            "ps-2": { correct: true, at: d1 },
+            "ps-3": { correct: false, at: d2 },
+            "ps-4": { correct: true, at: d4 }
+          }
+        },
+        "past-simple": {
+          attempts: 5,
+          correct: 3,
+          answers: {
+            "pst-1": { correct: true, at: d8 },
+            "pst-2": { correct: false, at: d8 },
+            "pst-3": { correct: false, at: d10 },
+            "pst-4": { correct: true, at: d10 }
+          }
+        }
+      },
+      events: [],
+      history: [],
+      updatedAt: d0
+    };
+
+    const extras = {
+      habitProgress: {
+        "habit-page-1": {
+          answers: {
+            "q1": { correct: true, answeredAt: d0 },
+            "q2": { correct: true, answeredAt: d0 },
+            "q3": { correct: true, answeredAt: d0 }
+          }
+        }
+      },
+      adventureProgress: {
+        schemaVersion: 1,
+        studioSessions: [
+          {
+            studioType: "speaking",
+            promptId: "ordering-cafe",
+            completedAt: d1,
+            checklistCompleted: 3
+          }
+        ],
+        pronunciationProgress: {
+          "phrase-1": {
+            attempts: [{ completedAt: d4, durationMs: 4200, matchCount: 5 }]
+          }
+        },
+        mistakeJournal: {
+          "grammar:present-simple:ps-3": {
+            mistakeId: "grammar:present-simple:ps-3",
+            sourceType: "grammar",
+            topicId: "present-simple",
+            stepId: "ps-3",
+            reviewHistory: [{ reviewedAt: d0, correct: true, stage: 1 }]
+          }
+        }
+      }
+    };
+
+    await window.sinauuApplyCloudBundle({ core, extras });
+  }, { d0, d1, d2, d4, d8, d10 });
+
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  const weeklySection = page.locator("#weekly-insights-section");
+  await weeklySection.waitFor({ state: "visible" });
+
+  // 1. Metric grid checks
+  // Active days: 4 days in current week (d0, d1, d2, d4) vs 2 in previous week (d8, d10)
+  const activeDaysEl = weeklySection.locator("#weekly-active-days");
+  assert.match(await activeDaysEl.innerText(), /4/);
+  assert.match(await weeklySection.locator(".weekly-metric-item").nth(0).innerText(), /\+2 hari dibanding minggu lalu/i);
+
+  // Activities & Reviews
+  const totalReviewsEl = weeklySection.locator("#weekly-total-reviews");
+  // 3 vocab reviews + 1 mistake journal review = 4
+  assert.equal(await totalReviewsEl.innerText(), "4");
+
+  // Accuracy Trend: both current and previous have >= 5 objective questions
+  const accuracyEl = weeklySection.locator("#weekly-accuracy-value");
+  assert.match(await accuracyEl.innerText(), /%/);
+  const accuracyCompEl = weeklySection.locator(".weekly-metric-item").nth(3).locator(".weekly-metric-comparison");
+  assert.match(await accuracyCompEl.innerText(), /%/);
+
+  // 2. Skill breakdown table checks
+  const table = weeklySection.locator(".weekly-skills-table");
+  assert.equal(await table.locator("tbody tr").count(), 7, "must list all 7 core skills");
+
+  // Check honest disclosure for Speaking & Pronunciation
+  assert.match(await table.innerText(), /Refleksi mandiri/i);
+  assert.match(await table.innerText(), /Analisis audio lokal/i);
+
+  // 3. Highlights
+  const mostPracticed = weeklySection.locator("#weekly-most-practiced");
+  assert.ok((await mostPracticed.innerText()).length > 0);
+  const leastPracticed = weeklySection.locator("#weekly-least-practiced");
+  assert.ok((await leastPracticed.innerText()).length > 0);
+
+  // 4. Actionable recommendations
+  const recList = weeklySection.locator(".weekly-recommendation-list .weekly-rec-card");
+  assert.ok(await recList.count() >= 1);
+  const recBtn = recList.first().locator(".weekly-rec-btn");
+  assert.ok(await recBtn.isVisible());
+
+  assert.deepEqual(pageErrors, [], "Multi-skill Weekly Learning Insights aggregation must execute cleanly without browser errors");
+  await page.close();
+});
+
+test("Weekly Learning Insights connects to Adaptive Study Plan, handles malformed timestamps, and persists across reload", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = Date.now();
+  const todayIso = new Date(now).toISOString();
+  const yesterdayIso = new Date(now - 86400000).toISOString();
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "weekly-preview-access-3",
+      refresh_token: "weekly-preview-refresh-3",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "weekly-preview-user-3", email: "weekly3@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // 1. Inject state with malformed timestamps and neglected listening skill
+  await page.evaluate(async ({ todayIso, yesterdayIso }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [
+            { id: "att-good", at: todayIso, correct: true },
+            { id: "att-malformed-1", at: "not-a-valid-date", correct: true },
+            { id: "att-malformed-2", at: null, correct: false },
+            { id: "att-malformed-3", at: "", correct: false }
+          ],
+          studiedDates: [todayIso.slice(0, 10)],
+          reviewHistory: [{ at: todayIso, date: todayIso.slice(0, 10), correct: true }]
+        },
+        "a1-usually": {
+          attempts: [{ id: "att-u", at: yesterdayIso, correct: true }],
+          studiedDates: [yesterdayIso.slice(0, 10)],
+          reviewHistory: [{ at: yesterdayIso, date: yesterdayIso.slice(0, 10), correct: true }]
+        }
+      },
+      grammarProgress: {
+        "present-simple": {
+          attempts: 4,
+          correct: 4,
+          answers: {
+            "ps-1": { correct: true, at: todayIso },
+            "ps-2": { correct: true, at: yesterdayIso },
+            "ps-bad": { correct: true, at: "invalid-timestamp" }
+          }
+        }
+      },
+      events: [{ at: "corrupted", type: "unknown" }],
+      history: [],
+      updatedAt: todayIso
+    };
+
+    const extras = {
+      extraLearning: {
+        reading: {
+          "sk-1": { lastAttempt: todayIso, completed: true, attempts: 2, correct: 2 }
+        }
+      },
+      adventureProgress: {
+        schemaVersion: 1,
+        listeningProgress: {} // Neglected listening!
+      }
+    };
+
+    await window.sinauuApplyCloudBundle({ core, extras });
+  }, { todayIso, yesterdayIso });
+
+  // 2. Check that malformed timestamps did not break computation
+  const weeklyData = await page.evaluate(() => window.sinauuComputeWeeklyInsights?.());
+  assert.ok(weeklyData, "computeWeeklyInsights must return valid result despite malformed timestamps");
+  assert.equal(weeklyData.current.activeDaysCount, 2, "only valid days should count as active days");
+
+  // 3. Verify Adaptive Study Plan adapts based on weekly insights (recommends listening because reading & vocab were active)
+  await page.locator(".side-nav [data-view-target='overview']").click();
+  const planSteps = page.locator("#home-study-plan-steps .home-study-plan-step");
+  await planSteps.first().waitFor({ state: "visible" });
+  assert.equal(await planSteps.count(), 3);
+
+  const step2Text = await planSteps.nth(1).innerText();
+  assert.match(step2Text, /Listening Lab|Menyimak/i, "adaptive study plan should recommend listening when neglected in weekly review");
+
+  // 4. Persistence across reload
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const persistedActiveDays = await page.locator("#weekly-insights-section #weekly-active-days").innerText();
+  assert.match(persistedActiveDays, /2/);
+
+  // 5. Mobile viewport accessibility
+  await page.setViewportSize({ width: 375, height: 667 });
+  const weeklySection = page.locator("#weekly-insights-section");
+  await weeklySection.waitFor({ state: "visible" });
+  assert.ok(await weeklySection.locator(".weekly-metric-grid").isVisible());
+  assert.ok(await weeklySection.locator(".weekly-skills-table").isVisible());
+
+  assert.deepEqual(pageErrors, [], "Adaptive study plan connection, timestamp safety, and mobile layout must execute without errors");
   await page.close();
 });

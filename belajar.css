@@ -247,21 +247,202 @@ p{color:var(--body)}
 .study-complete h1{font-size:3.3rem}
 .study-complete p{font-size:.8rem;line-height:1.8}
 .study-complete-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:25px}
-.review-summary{display:grid;grid-template-columns:150px 160px 1fr;gap:20px;align-items:center;margin:7px 0 31px;padding:19px 0;border-block:1px solid var(--line)}
-.review-summary>div{padding-right:20px;border-right:1px solid var(--line)}
-.review-summary strong{display:block;margin-top:6px;font:400 2.1rem/1 "Lora",Georgia,serif}
-.review-summary p{margin:0;color:var(--muted);font-size:.7rem;line-height:1.7}
-.review-list{border-top:1px solid var(--ink)}
+.review-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;align-items:stretch;margin:12px 0 24px;padding:16px 0;border-block:1px solid var(--line)}
+.review-metric-card{display:flex;flex-direction:column;justify-content:space-between;padding:12px 14px;background:var(--sheet);border:1px solid var(--line);border-radius:4px}
+.review-metric-card .metric-label{font-size:.56rem;color:var(--muted);font-weight:700;letter-spacing:.05em}
+.review-metric-card strong{display:block;margin:6px 0 4px;font:400 2.2rem/1 "Lora",Georgia,serif;color:var(--ink)}
+.review-metric-card small{font-size:.65rem;color:var(--muted);line-height:1.4}
+.review-metric-urgent{border-color:color-mix(in srgb,#a66f55 45%,var(--line));background:color-mix(in srgb,#a66f55 5%,var(--sheet))}
+.review-metric-urgent strong{color:#a66f55}
+
+.review-focus-card{margin-bottom:24px;padding:20px 22px;background:var(--sheet);border:1px solid var(--ink);border-radius:4px}
+.review-focus-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.review-focus-badge{display:inline-block;margin-bottom:4px;color:var(--sage-deep);font-size:.55rem;font-weight:800;letter-spacing:.08em}
+.review-focus-header h2{margin:0;font:400 1.45rem/1.2 "Lora",Georgia,serif}
+.review-focus-desc{margin:8px 0 14px;color:var(--body);font-size:.76rem;max-width:640px;line-height:1.6}
+.review-focus-pills{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.review-focus-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--paper);border:1px solid var(--line);border-radius:3px;font-size:.7rem;color:var(--ink)}
+.review-focus-pill small{color:var(--muted);font-size:.62rem}
+
+.review-active-card-container{margin-bottom:24px}
+.review-active-card-container:empty{display:none}
+
+.review-controls{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.review-filter-tabs{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.review-filter-btn{padding:7px 12px;border:1px solid transparent;background:transparent;color:var(--muted);font-size:.73rem;border-radius:3px;cursor:pointer;transition:all .15s ease}
+.review-filter-btn:hover{color:var(--ink);background:var(--paper)}
+.review-filter-btn.is-active{color:var(--ink);font-weight:700;border-color:var(--line);background:var(--sheet)}
+.review-filter-btn span{font-feature-settings:"tnum";font-weight:600}
+
+.review-skill-filters{display:flex;flex-wrap:wrap;gap:6px}
+.review-skill-pill{padding:4px 9px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:.66rem;border-radius:12px;cursor:pointer;transition:all .15s ease}
+.review-skill-pill:hover{color:var(--ink);border-color:var(--ink)}
+.review-skill-pill.is-active{color:var(--sheet);background:var(--ink);border-color:var(--ink)}
+
+.review-disclaimer{margin:0 0 16px;color:var(--muted);font-size:.68rem;line-height:1.6}
+
+.review-list{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+
+.review-queue-card{display:flex;flex-direction:column;gap:12px;padding:16px 18px;background:var(--sheet);border:1px solid var(--line);border-radius:4px;transition:border-color .15s ease}
+.review-queue-card:hover{border-color:var(--ink)}
+.review-queue-card.is-overdue{border-left:4px solid #a66f55}
+.review-queue-card.is-due-today{border-left:4px solid var(--sage-deep)}
+.review-queue-card.is-practice{border-left:4px solid var(--line)}
+.review-queue-card.is-completed{border-left:4px solid var(--ink);opacity:.85}
+
+.review-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.review-card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.review-skill-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:.56rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.review-skill-vocabulary{background:color-mix(in srgb,var(--sage-deep) 15%,transparent);color:var(--sage-deep)}
+.review-skill-grammar{background:color-mix(in srgb,#4a7c89 15%,transparent);color:#4a7c89}
+.review-skill-reading{background:color-mix(in srgb,#926e2e 15%,transparent);color:#926e2e}
+.review-skill-adventure{background:color-mix(in srgb,#7d5b8c 15%,transparent);color:#7d5b8c}
+.review-skill-listening{background:color-mix(in srgb,#3a6b5c 15%,transparent);color:#3a6b5c}
+
+.review-level-badge{display:inline-block;padding:2px 5px;border:1px solid var(--line);border-radius:3px;font-size:.54rem;font-weight:700;color:var(--muted)}
+.review-urgency-badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:.55rem;font-weight:700}
+.review-urgency-overdue{background:color-mix(in srgb,#a66f55 15%,transparent);color:#a66f55}
+.review-urgency-today{background:color-mix(in srgb,var(--sage-deep) 12%,transparent);color:var(--sage-deep)}
+.review-urgency-practice{background:var(--paper);color:var(--muted)}
+.review-urgency-completed{background:var(--paper);color:var(--ink)}
+
+.review-card-stage{display:flex;align-items:center;gap:8px}
+.review-stage-text{font-size:.62rem;color:var(--muted);font-weight:600}
+.review-stage-meter{display:inline-block;width:48px;height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.review-stage-meter i{display:block;height:100%;background:var(--ink);transition:width .2s ease}
+
+.review-card-main{display:flex;flex-direction:column;gap:3px}
+.review-card-title{margin:0;font:500 1.15rem/1.3 "Lora",Georgia,serif;color:var(--ink)}
+.review-card-subtitle{margin:0;color:var(--muted);font-size:.74rem;line-height:1.5}
+
+.review-card-qa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:4px;padding:10px 12px;background:var(--paper);border-radius:3px}
+.review-qa-cell{display:flex;flex-direction:column;gap:3px}
+.review-qa-label{font-size:.52rem;color:var(--muted);font-weight:800;letter-spacing:.06em}
+.review-qa-text{margin:0;font-size:.72rem;line-height:1.5;color:var(--body)}
+
+.review-card-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:6px}
+.review-card-actions button{cursor:pointer}
+.review-source-link{color:var(--muted);font-size:.68rem;text-decoration:none;border:none;background:transparent;padding:4px 0}
+.review-source-link:hover{color:var(--ink);text-decoration:underline}
+.review-action-btn{padding:8px 14px;border:1px solid var(--ink);background:var(--ink);color:var(--sheet);font-size:.73rem;border-radius:3px;transition:all .15s ease}
+.review-action-btn:hover{background:transparent;color:var(--ink)}
+.review-action-secondary{padding:8px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:.73rem;border-radius:3px;transition:all .15s ease}
+.review-action-secondary:hover{border-color:var(--ink)}
+
 .review-row{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:15px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line)}
 .review-row .review-due-label{color:#a66f55;font:500 .57rem "Plus Jakarta Sans",monospace}
 .review-row h3{margin:0 0 3px;font-size:.85rem}
 .review-row p{margin:0;color:var(--muted);font-size:.69rem}
 .review-row button{padding:8px 11px;border:1px solid var(--ink);background:transparent;font-size:.69rem;cursor:pointer}
 .review-row button:hover{background:var(--ink);color:var(--sheet)}
-.review-empty{padding:32px 0;border-bottom:1px solid var(--line)}
-.review-empty h2{font-size:2rem}
-.review-empty p{max-width:520px;font-size:.76rem;line-height:1.8}
-.progress-levels-block,.grammar-progress-block,.history-block{margin-bottom:38px}
+.review-empty{padding:36px 20px;background:var(--sheet);border:1px solid var(--line);border-radius:4px;text-align:center}
+.review-empty h2{margin:0 0 8px;font:400 1.6rem/1.2 "Lora",Georgia,serif}
+.review-empty p{max-width:560px;margin:0 auto 18px;color:var(--body);font-size:.78rem;line-height:1.7}
+.review-empty-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.progress-levels-block,.grammar-progress-block,.history-block,.skill-passport-block,.weekly-insights-block{margin-bottom:38px}
+.passport-block-heading{margin-bottom:18px}
+.passport-lede{margin-top:6px;margin-bottom:18px;color:var(--body);font-size:.82rem;max-width:680px;line-height:1.55}
+.passport-loading{padding:20px;color:var(--muted);font-size:.8rem}
+.passport-insight-card{background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:20px 24px;margin-bottom:24px}
+.passport-empty-state{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px}
+.passport-empty-copy{max-width:580px}
+.passport-empty-kicker{display:block;font:600 .58rem "Plus Jakarta Sans",monospace;letter-spacing:.08em;color:var(--sage-deep);margin-bottom:6px}
+.passport-empty-copy h3{font:400 1.25rem "Lora",Georgia,serif;margin-bottom:6px}
+.passport-empty-copy p{margin:0;color:var(--muted);font-size:.78rem;line-height:1.6}
+.passport-empty-action .primary-action{cursor:pointer}
+.passport-insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.passport-insight-col{display:flex;flex-direction:column;gap:6px}
+.passport-insight-col+.passport-insight-col{border-left:1px solid var(--line);padding-left:20px}
+.passport-insight-label{font:600 .58rem "Plus Jakarta Sans",monospace;letter-spacing:.08em;color:var(--muted)}
+.passport-insight-highlight{font:500 1.12rem "Lora",Georgia,serif;color:var(--ink)}
+.passport-insight-highlight.passport-insufficient-data{color:var(--muted);font-style:italic}
+.passport-insight-desc{margin:0;font-size:.74rem;color:var(--body);line-height:1.5}
+.passport-insight-action-text{margin:0;font-size:.74rem;color:var(--body);line-height:1.5;margin-bottom:8px}
+.passport-next-btn{padding:6px 12px;font-size:.72rem;align-self:flex-start;cursor:pointer;border:1px solid var(--line);background:var(--paper);border-radius:2px}
+.passport-next-btn:hover{background:var(--paper-deep)}
+.passport-skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-bottom:16px}
+.passport-skill-card{background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.passport-skill-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.passport-skill-title-group{display:flex;align-items:center;gap:10px}
+.passport-skill-symbol{width:34px;height:34px;border-radius:50%;background:var(--paper);border:1px solid var(--line);display:grid;place-items:center;font:500 .85rem "Lora",Georgia,serif;color:var(--sage-deep);flex-shrink:0}
+.passport-skill-name{margin:0;font:500 .92rem "Lora",Georgia,serif;color:var(--ink)}
+.passport-skill-sub{font-size:.65rem;color:var(--muted);font-family:"Plus Jakarta Sans",monospace}
+.passport-status-pill{padding:3px 8px;border-radius:12px;font:600 .58rem "Plus Jakarta Sans",monospace;letter-spacing:.04em;white-space:nowrap}
+.status-not-started{background:var(--paper-deep);color:var(--muted);border:1px solid var(--line)}
+.status-practicing{background:color-mix(in srgb,var(--yellow) 40%,transparent);color:var(--ink);border:1px solid color-mix(in srgb,var(--yellow) 80%,var(--line))}
+.status-consistent{background:var(--sage);color:var(--ink);border:1px solid color-mix(in srgb,var(--sage-deep) 30%,transparent);font-weight:700}
+.passport-status-reason{margin:0;font-size:.68rem;color:var(--muted);line-height:1.45;border-bottom:1px solid var(--line);padding-bottom:10px}
+.passport-metrics-table{display:flex;flex-direction:column;gap:7px;font-size:.72rem}
+.passport-metric-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.passport-metric-row .metric-key{color:var(--muted);font-size:.68rem}
+.passport-metric-row .metric-val{text-align:right;color:var(--ink)}
+.passport-metric-row .metric-val strong{font-weight:600}
+.passport-metric-row .metric-val small{color:var(--muted);font-size:.64rem;margin-left:3px}
+.passport-metric-row .metric-na{color:var(--muted);font-style:italic}
+.passport-evidence-box{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:10px 12px;margin-top:2px}
+.passport-evidence-label{display:block;font:600 .56rem "Plus Jakarta Sans",monospace;color:var(--muted);letter-spacing:.05em;margin-bottom:4px}
+.passport-evidence-list{margin:0;padding-left:14px;font-size:.66rem;color:var(--body);line-height:1.5}
+.passport-card-footer{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+.passport-card-action{font-size:.72rem;color:var(--sage-deep);padding:4px 6px;cursor:pointer;border:0;background:transparent;font-weight:600}
+.passport-card-action:hover{text-decoration:underline;color:var(--ink)}
+.passport-evidence-footnote{margin-top:14px;font-size:.68rem;color:var(--muted);line-height:1.55}
+@media(max-width:860px){
+  .passport-insight-grid{grid-template-columns:1fr;gap:16px}
+  .passport-insight-col+.passport-insight-col{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:16px}
+}
+.weekly-block-heading{margin-bottom:18px}
+.weekly-lede{margin-top:6px;margin-bottom:18px;color:var(--body);font-size:.82rem;max-width:680px;line-height:1.55}
+.weekly-loading{padding:20px;color:var(--muted);font-size:.8rem}
+.weekly-insights-card{background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:22px 24px;margin-bottom:16px;max-width:100%;box-sizing:border-box}
+.weekly-empty-state{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px}
+.weekly-empty-copy{max-width:580px}
+.weekly-empty-kicker{display:block;font:600 .58rem "Plus Jakarta Sans",monospace;letter-spacing:.08em;color:var(--sage-deep);margin-bottom:6px}
+.weekly-empty-copy h3{font:400 1.25rem "Lora",Georgia,serif;margin-bottom:6px}
+.weekly-empty-copy p{margin:0;color:var(--muted);font-size:.78rem;line-height:1.6}
+.weekly-empty-action .primary-action{cursor:pointer}
+.weekly-header-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.weekly-range-pill{font:600 .62rem "Plus Jakarta Sans",monospace;letter-spacing:.06em;color:var(--sage-deep);background:var(--paper);padding:4px 10px;border-radius:12px;border:1px solid var(--line)}
+.weekly-narrative{font-size:.82rem;color:var(--body);line-height:1.55;margin:0}
+.weekly-narrative strong{color:var(--ink);font-weight:600}
+.weekly-metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.weekly-metric-item{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.weekly-metric-title{font:600 .56rem "Plus Jakarta Sans",monospace;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.weekly-metric-value{font:600 1.15rem "Lora",Georgia,serif;color:var(--ink)}
+.weekly-metric-comparison{font-size:.65rem;color:var(--muted);display:flex;align-items:center;gap:4px}
+.weekly-metric-comparison.trend-up{color:var(--sage-deep);font-weight:600}
+.weekly-metric-comparison.trend-down{color:var(--rust);font-weight:600}
+.weekly-breakdown-box{margin-bottom:20px;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.weekly-box-title{font:600 .64rem "Plus Jakarta Sans",monospace;color:var(--muted);letter-spacing:.06em;margin-bottom:10px;text-transform:uppercase}
+.weekly-skills-table{width:100%;border-collapse:collapse;font-size:.73rem;min-width:460px}
+.weekly-skills-table th{text-align:left;font:600 .58rem "Plus Jakarta Sans",monospace;color:var(--muted);letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--paper)}
+.weekly-skills-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--ink)}
+.weekly-skills-table tr:last-child td{border-bottom:0}
+.weekly-skill-cell{display:flex;align-items:center;gap:8px;font-weight:600}
+.weekly-skill-symbol{width:24px;height:24px;border-radius:50%;background:var(--paper-deep);display:grid;place-items:center;font-size:.7rem;color:var(--sage-deep);flex-shrink:0}
+.weekly-highlights-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:20px;padding:14px;background:var(--paper);border:1px solid var(--line);border-radius:4px}
+.weekly-highlight-item{display:flex;flex-direction:column;gap:4px}
+.weekly-highlight-label{font:600 .56rem "Plus Jakarta Sans",monospace;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.weekly-highlight-val{font:500 1.05rem "Lora",Georgia,serif;color:var(--ink)}
+.weekly-highlight-desc{font-size:.72rem;color:var(--body);line-height:1.45;margin:0}
+.weekly-recommendations{border-top:1px solid var(--line);padding-top:18px}
+.weekly-recommendations-title{font:600 .62rem "Plus Jakarta Sans",monospace;color:var(--muted);letter-spacing:.06em;margin-bottom:12px;text-transform:uppercase}
+.weekly-recommendation-list{display:flex;flex-direction:column;gap:10px}
+.weekly-rec-card{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:12px 16px}
+.weekly-rec-text{display:flex;flex-direction:column;gap:2px}
+.weekly-rec-title{font-weight:600;font-size:.76rem;color:var(--ink)}
+.weekly-rec-desc{font-size:.7rem;color:var(--muted);line-height:1.4}
+.weekly-rec-btn{flex-shrink:0;padding:6px 14px;font-size:.72rem;cursor:pointer}
+.weekly-evidence-footnote{margin-top:14px;font-size:.68rem;color:var(--muted);line-height:1.55}
+@media(max-width:860px){
+  .weekly-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .weekly-highlights-grid{grid-template-columns:1fr}
+  .weekly-rec-card{flex-direction:column;align-items:flex-start}
+  .weekly-rec-btn{align-self:flex-start}
+}
+@media(max-width:540px){
+  .weekly-insights-card{padding:14px 12px}
+  .weekly-metric-grid{grid-template-columns:1fr}
+}
 .detailed-levels{max-width:700px}
 .grammar-progress-list{border-top:1px solid var(--line)}
 .grammar-progress-row{display:grid;grid-template-columns:50px minmax(0,1fr) 110px;gap:15px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
@@ -1353,8 +1534,11 @@ h1,h2,h3{overflow-wrap:break-word}
 .adventure-journal-count{min-width:43px;padding-left:12px;border-left:1px solid var(--line);color:var(--ink);font:400 1.65rem/1 "Lora",Georgia,serif;text-align:right}
 .adventure-journal-count small{display:block;margin-top:5px;color:var(--muted);font:700 .42rem "Plus Jakarta Sans",sans-serif;letter-spacing:.07em;white-space:nowrap}
 .adventure-journal-filters{display:flex;flex-wrap:wrap;gap:5px;margin:15px 0 10px}
+.adventure-journal-filters.adventure-journal-skill-filters{margin-top:4px}
 .adventure-journal-filters button{padding:6px 9px;border:1px solid var(--line);background:transparent;color:var(--body);font-size:.54rem;cursor:pointer}
 .adventure-journal-filters button.is-active{border-color:var(--sage-deep);background:var(--sage);color:var(--sage-deep);font-weight:700}
+.adventure-mistake-source-link{padding:4px 7px;border:1px solid var(--line);border-radius:4px;background:var(--sheet);color:var(--muted);font-size:.48rem;font-weight:600;cursor:pointer}
+.adventure-mistake-source-link:hover{border-color:var(--sage-deep);color:var(--ink)}
 .adventure-mistake-row{padding:12px 0;border-top:1px solid var(--line)}
 .adventure-mistake-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--muted);font-size:.45rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
 .adventure-mistake-top span:last-child{color:var(--peach-ink)}

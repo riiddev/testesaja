@@ -671,6 +671,20 @@
       habitProgress[activeHabitPassageId].answers[questionId] = {selected:selectedIndex,correct:correct,answeredAt:new Date().toISOString()};
       persistHabitLibraryProgress();
       const passage = habitLibrary.passages.find(function (p) { return p.id === activeHabitPassageId; });
+      if (!correct && typeof window.sinauuRecordMistake === "function") {
+        window.sinauuRecordMistake({
+          sourceType: "habit",
+          sourceId: activeHabitPassageId,
+          passageId: activeHabitPassageId,
+          questionId: questionId,
+          skill: "reading",
+          prompt: question.prompt,
+          wrongAnswer: question.options ? question.options[selectedIndex] : ("Pilihan " + selectedIndex),
+          correctAnswer: question.options ? question.options[question.answer] : "",
+          explanation: question.explanation || (question.evidenceParagraph ? "Bukti di paragraf: " + question.evidenceParagraph : ""),
+          mistakeId: "habit:" + activeHabitPassageId + ":" + questionId
+        });
+      }
       if (typeof window.sinauuTrackExtraActivity === "function") {
         window.sinauuTrackExtraActivity({type:"reading",title:passage.title,detail:"HABIT PDF · soal detail " + (question.evidenceParagraph || ""),correct:correct});
       }
@@ -689,6 +703,13 @@
     persistHabitLibraryProgress();
     if (habitLibrary) renderHabitLibraryList();
     if (activeHabitPassageId) renderHabitPassageDetail();
+  };
+  window.sinauuGetHabitLibrary = function () { return habitLibrary; };
+  window.sinauuGetHabitQuestions = function (passage) { return passage ? getHabitQuestions(passage) : []; };
+  window.sinauuOpenHabitPassage = function (passageId) {
+    activeHabitPassageId = passageId;
+    renderHabitPassageDetail();
+    renderHabitLibraryList();
   };
   $("#habit-library-search")?.addEventListener("input", function () { habitVisibleCount = 9; renderHabitLibraryList(); });
   $("#habit-library-category")?.addEventListener("change", function () { habitVisibleCount = 9; renderHabitLibraryList(); });

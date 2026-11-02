@@ -249,6 +249,7 @@
 
   let words = [], topics = [], state, db = null, storageMode = "loading";
   let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100, vocabDetailOpen = false, grammarDetailOpen = false, cloudApplying = false;
+  let reviewFilterTab = "due", reviewSkillFilter = "all";
   const grammarUI = {};
 
   function freshState() {
@@ -453,6 +454,7 @@
     if (next === "vocabulary") renderVocabulary();
     if (next === "grammar") renderGrammar();
     if (next === "review") renderReview();
+    else window.sinauuUpdateReviewActivePanel?.();
     if (next === "placement") renderPlacementView();
     if (next === "progress") renderProgress();
     if (next === "adventure") window.sinauuRenderAdventure?.();
@@ -485,7 +487,33 @@
     const details = b.total + " kata tersedia · " + b.learning + " learning · " + b.due + " review · " + b.weak + " weak";
     return '<div class="level-progress-row"><span class="level-progress-code">'+level+'</span><div class="level-progress-main"><strong>'+esc(LABELS[level])+'<span>'+pct+'%</span></strong><div class="progress-track"><span style="width:'+pct+'%"></span></div>'+(detailed?'<p style="margin:7px 0 0;color:var(--muted);font-size:.62rem">'+esc(details)+'</p>':"")+'</div><span class="level-progress-count">'+b.mastered+'/'+b.total+'</span></div>';
   }
+  function isReturningLearner(today) {
+    if (!state) return false;
+    const todayStr = String(today);
+    const hasTodayActivity = state.history.some(item => (item.date || (item.at ? item.at.slice(0, 10) : null)) === todayStr) ||
+      state.events.some(item => (item.date || (item.at ? item.at.slice(0, 10) : null)) === todayStr);
+    if (hasTodayActivity) return false;
+
+    const dates = [
+      ...state.history.map(item => item.date || (item.at ? item.at.slice(0, 10) : null)),
+      ...state.events.map(item => item.date || (item.at ? item.at.slice(0, 10) : null)),
+      ...Object.values(state.wordProgress || {}).flatMap(p => [
+        ...(p.studiedDates || []),
+        ...(p.reviewDates || []),
+        ...(p.attempts || []).map(a => a.at ? a.at.slice(0, 10) : null)
+      ]),
+      ...Object.values(state.grammarProgress || {}).flatMap(p => [
+        ...Object.values(p.answers || {}).map(a => a.at ? a.at.slice(0, 10) : null)
+      ])
+    ].filter(Boolean).filter(d => d < todayStr).sort();
+    if (!dates.length) return false;
+    const last = dates[dates.length - 1];
+    const diffDays = Math.floor((new Date(todayStr).getTime() - new Date(last).getTime()) / 86400000);
+    return diffDays >= 3;
+  }
+
   function getPlanVocabularyTask(today) {
+    const returning = isReturningLearner(today);
     const existing = state.history.slice().reverse().find(item =>
       item.date === today && item.type === "vocabulary" && item.wordId
     );
@@ -493,38 +521,72 @@
     let mode = existing && existing.mode === "review" ? "review" : "learn";
 
     if (!word) {
-      const due = dueWords().slice().sort((a,b) =>
+      const due = dueWords().slice().filter(canStudyWord).sort((a,b) =>
         new Date(state.wordProgress[a.id].nextReviewAt) - new Date(state.wordProgress[b.id].nextReviewAt)
       );
       if (due.length) {
         word = due[0];
         mode = "review";
       } else {
-        word = words.find(item => canStudyWord(item) && statusOf(item) === "new")
-          || words.find(item => canStudyWord(item) && state.favorites.includes(item.id))
-          || words.find(item => canStudyWord(item) && statusOf(item) !== "mastered")
-          || words.find(canStudyWord);
-        mode = "learn";
+        const weak = words.filter(item => {
+          if (!canStudyWord(item)) return false;
+          const p = state.wordProgress[item.id];
+          if (!p) return false;
+          return Boolean(p.weak || (p.consecutiveErrors || 0) >= 2);
+        });
+        if (weak.length) {
+          word = weak[0];
+          mode = "review";
+        } else {
+          const targetLevel = placementResult?.level;
+          word = (targetLevel ? words.find(item => canStudyWord(item) && statusOf(item) === "new" && item.level === targetLevel) : null)
+            || words.find(item => canStudyWord(item) && statusOf(item) === "new")
+            || words.find(item => canStudyWord(item) && state.favorites.includes(item.id))
+            || words.find(item => canStudyWord(item) && statusOf(item) !== "mastered")
+            || words.find(canStudyWord);
+          mode = "learn";
+        }
       }
     }
 
-    if (!word) return { word:null, mode:"learn", done:false, title:"Kosakata siap dijelajahi", description:"Pilih satu kata yang menarik untuk mulai berlatih." };
+    if (!word) return { word:null, mode:"learn", done:false, category:"01 · INGAT KEMBALI", duration:"5 MENIT", title:"Kosakata siap dijelajahi", description:"Pilih satu kata yang menarik untuk mulai berlatih." };
     const p = state.wordProgress[word.id] || {};
     let done = false;
     if (mode === "review") {
-      done = (p.reviewHistory || []).some(item => item.date === today);
+      done = (p.reviewHistory || []).some(item => item.date === today) ||
+        state.history.some(item => item.date === today && item.wordId === word.id && item.mode === "review");
     } else {
       const skills = new Set(state.events
         .filter(item => item.wordId === word.id && item.date === today)
         .map(item => item.skill));
-      done = ["recall","context","production"].every(skill => skills.has(skill));
+      done = ["recall","context","production"].every(skill => skills.has(skill)) ||
+        state.history.some(item => item.date === today && item.wordId === word.id && item.mode === "learn");
     }
+
+    let description = "";
+    if (done) {
+      description = mode === "review"
+        ? "Review kata ini sudah selesai hari ini. Jadwal berikutnya tercatat di perangkat."
+        : "Kata ini sudah dipelajari hari ini melalui arti, konteks, dan penggunaan.";
+    } else if (mode === "review") {
+      description = returning
+        ? "Selamat datang kembali! Satu kata sudah waktunya diulang untuk menyegarkan ingatan sebelum materi baru."
+        : (p.weak || (p.consecutiveErrors || 0) >= 2)
+          ? "Kata ini tercatat mengalami kesalahan sebelumnya. Ulangi kembali arti dan contoh kalimatnya."
+          : "Satu kata sudah waktunya diulang. Coba ingat makna dan penggunaannya.";
+    } else {
+      description = returning
+        ? "Selamat datang kembali! Mulai langkah kecil hari ini dengan mempelajari satu kata baru."
+        : "Belum ada review yang jatuh tempo. Pelajari satu kata baru melalui arti, konteks, dan penggunaan.";
+    }
+
     return {
+      type: "word",
       word, mode, done,
+      category: "01 · INGAT KEMBALI",
+      duration: "5 MENIT",
       title: mode === "review" ? "Ingat kembali · " + word.word : "Pelajari kata · " + word.word,
-      description: mode === "review"
-        ? "Satu kata sudah waktunya diulang. Coba ingat makna dan penggunaannya."
-        : "Belum ada review yang jatuh tempo. Pelajari satu kata baru melalui arti, konteks, dan penggunaan."
+      description
     };
   }
 
@@ -532,34 +594,55 @@
     const previous = state.history.slice().reverse().find(item =>
       item.date === today && item.type === "grammar" && item.topicId
     );
-    const candidates = topics.map(topic => {
+    const candidates = topics.map((topic, topicIndex) => {
       const p = state.grammarProgress[topic.id] || {};
       const unique = Object.keys(p.answers || {}).length;
       const attempts = Number(p.attempts) || 0;
-      const accuracy = attempts ? (Number(p.correct) || 0) / attempts : 1;
+      const correct = Number(p.correct) || 0;
+      const wrong = attempts - correct;
+      const accuracy = attempts ? correct / attempts : 1;
       const coverage = unique / Math.max(1, topic.questions.length);
-      const priority = attempts > 0 && accuracy < 0.7
-        ? 0
-        : unique < topic.questions.length ? 1 : 2;
+      const isWeak = attempts >= 2 && (accuracy < 0.70 || wrong >= 2);
+      const priority = isWeak ? 0 : unique < topic.questions.length ? 1 : 2;
       const score = priority === 0 ? accuracy : priority === 1 ? coverage : accuracy;
-      return { topic, attempts, unique, accuracy, priority, score };
+      return { topic, topicIndex, attempts, correct, wrong, accuracy, unique, isWeak, priority, score };
     });
-    candidates.sort((a,b) => a.priority - b.priority || a.score - b.score || a.topic.title.localeCompare(b.topic.title));
+    const levelOrder = { "A1": 0, "A2": 1, "B1": 2, "B2": 3 };
+    candidates.sort((a,b) =>
+      a.priority - b.priority ||
+      a.score - b.score ||
+      ((levelOrder[a.topic.level] ?? 9) - (levelOrder[b.topic.level] ?? 9)) ||
+      (a.topicIndex - b.topicIndex)
+    );
     const chosen = previous
       ? candidates.find(item => item.topic.id === previous.topicId)
       : candidates[0];
     const item = chosen || candidates[0];
-    if (!item) return { topic:null, done:false, description:"Materi grammar belum tersedia." };
+    if (!item) return { topic:null, done:false, category:"02 · PAHAMI POLA", duration:"5 MENIT", title:"Grammar", description:"Materi grammar belum tersedia." };
     const done = state.history.some(entry =>
       entry.date === today && entry.type === "grammar" && entry.topicId === item.topic.id
     );
     let description = "Belum pernah dicoba. Mulai dari penjelasan dan latihan dasar.";
-    if (item.attempts > 0 && item.accuracy < 0.7) {
-      description = "Akurasi sebelumnya " + Math.round(item.accuracy * 100) + "%. Kembali ke konsep ini dan periksa alasannya.";
+    if (done) {
+      description = "Latihan pola kalimat sudah diselesaikan hari ini. Kamu bisa membuka kembali kapan saja.";
+    } else if (item.attempts > 0 && item.accuracy < 0.7) {
+      description = "Akurasi sebelumnya " + Math.round(item.accuracy * 100) + "%. " +
+        (item.wrong >= 2 ? "Tercatat " + item.wrong + " kesalahan. " : "") +
+        "Kembali ke konsep ini dan periksa alasannya.";
     } else if (item.unique > 0) {
       description = item.unique + "/" + item.topic.questions.length + " soal unik sudah dicoba. Lanjutkan bagian yang belum selesai.";
     }
-    return { topic:item.topic, done, description };
+    return {
+      type: "grammar",
+      topic: item.topic,
+      topicId: item.topic.id,
+      done,
+      isWeak: item.isWeak,
+      category: "02 · PAHAMI POLA",
+      duration: "5 MENIT",
+      title: item.topic.title,
+      description
+    };
   }
 
   function getPlanAdventureTask(today) {
@@ -571,58 +654,130 @@
     const quest = snapshot.dailyQuests && snapshot.dailyQuests[today];
     const total = Array.isArray(quest?.stepIds) ? quest.stepIds.length : 3;
     const completed = Array.isArray(quest?.completedStepIds) ? quest.completedStepIds.length : 0;
+    const done = Boolean(quest?.completedAt);
+    const started = Boolean(quest?.startedAt);
     return {
-      done: Boolean(quest?.completedAt),
-      started: Boolean(quest?.startedAt),
+      type: "adventure",
+      done,
+      started,
+      category: "03 · GUNAKAN BAHASA",
+      duration: "5 MENIT",
+      title: "Daily Quest · First Steps Island",
       progress: quest ? Math.min(completed,total) + "/" + total + " tantangan" : "3 tantangan singkat",
-      description: quest?.completedAt
+      description: done
         ? "Daily Quest hari ini sudah selesai. Istirahat juga bagian dari belajar."
-        : quest?.startedAt
+        : started
           ? "Kamu sudah memulai. Lanjutkan " + Math.min(completed,total) + " dari " + total + " tantangan."
           : "Gunakan kosakata dan grammar dalam tiga tantangan singkat di First Steps Island."
     };
+  }
+
+  function getAdaptiveStudyPlan(today) {
+    const vocabStep = getPlanVocabularyTask(today);
+    const grammarStep = getPlanGrammarTask(today);
+    const adventureStep = getPlanAdventureTask(today);
+
+    // Adaptive skill balance check using Weekly Learning Insights & corpus progress:
+    const extras = readExtraSnapshots();
+    const extraLearn = extras.extraLearning || {};
+    const adv = extras.adventureProgress || {};
+    const vocabCount = Math.max(
+      words.filter(w => statusOf(w) !== "new").length,
+      Object.values(state.wordProgress || {}).filter(p => (p.attempts || []).length > 0 || (p.studiedDates || []).length > 0).length
+    );
+    const readingSkillsAttempted = Object.values(extraLearn.reading || {}).filter(r => (r.attempts || 0) > 0).length;
+    const habitPassagesAttempted = Object.keys(extras.habitProgress || {}).length;
+    const storiesAttempted = Object.values(adv.storyProgress || {}).filter(s => (s.attempts || 0) > 0).length;
+    const totalReadingCount = readingSkillsAttempted + habitPassagesAttempted + storiesAttempted;
+
+    let step2 = grammarStep;
+    if (!grammarStep.isWeak && vocabCount >= 5 && totalReadingCount < 2) {
+      const storyKeys = Object.keys(adv.storyProgress || {});
+      const readingDone = storyKeys.some(k => adv.storyProgress[k]?.lastAttemptAt?.slice(0, 10) === today) ||
+        state.history.some(h => h.date === today && (h.type === "reading" || h.skill === "reading"));
+      step2 = {
+        type: "reading",
+        sectionId: "adventure-story-library",
+        actionLabel: "Buka cerita ↗",
+        done: readingDone,
+        category: "02 · LATIH PEMAHAMAN TEKS",
+        duration: "5 MENIT",
+        title: "Latihan bacaan · Everyday Stories",
+        description: "Kosakatamu berkembang aktif (" + vocabCount + " kata dicoba), tetapi pemahaman membaca belum banyak dilatih minggu ini. Coba bacaan kontekstual ini."
+      };
+    } else if (!grammarStep.isWeak && step2 === grammarStep && typeof computeWeeklyInsights === "function") {
+      const weekly = computeWeeklyInsights(state, extras, words, topics);
+      if (weekly && !weekly.emptyState && weekly.current.activeDays.size >= 2) {
+        const listeningPracticed = weekly.current.skills.listening.completed > 0 || weekly.current.skills.listening.attempts > 0;
+        if (!listeningPracticed) {
+          step2 = {
+            type: "adventure",
+            sectionId: "adventure-listening-lab",
+            actionLabel: "Buka Listening Lab ↗",
+            done: false,
+            category: "02 · LATIH MENYIMAK (MINGGUAN)",
+            duration: "5 MENIT",
+            title: "Latihan audio · Listening Lab",
+            description: "Berdasarkan evaluasi mingguan: Keterampilan menyimak belum sempat dilatih dalam 7 hari terakhir. Dengarkan rekaman singkat di Listening Lab."
+          };
+        }
+      }
+    }
+
+    return [vocabStep, step2, adventureStep];
   }
 
   function renderStudyPlan() {
     const node = $("#home-study-plan-steps");
     if (!node || !state) return;
     const today = dayKey();
-    const vocabulary = getPlanVocabularyTask(today);
-    const grammar = getPlanGrammarTask(today);
-    const adventure = getPlanAdventureTask(today);
-    const steps = [vocabulary, grammar, adventure];
+    const steps = getAdaptiveStudyPlan(today);
     const doneCount = steps.filter(item => item.done).length;
     const count = $("#home-study-plan-count");
     const bar = $("#home-study-plan-bar");
     if (count) count.textContent = doneCount + "/3";
     if (bar) bar.style.width = Math.round(doneCount / 3 * 100) + "%";
 
-    const vocabularyAction = vocabulary.word
-      ? '<button type="button" class="home-study-plan-action" data-plan-vocabulary="' + esc(vocabulary.word.id) + '" data-plan-mode="' + vocabulary.mode + '"' + (vocabulary.done ? ' disabled' : '') + '>' +
-        (vocabulary.done ? 'Selesai ✓' : vocabulary.mode === "review" ? 'Mulai review ↗' : 'Mulai belajar ↗') + '</button>'
-      : '<button type="button" class="home-study-plan-action" data-view-target="vocabulary">Jelajahi kosakata ↗</button>';
-    const grammarAction = grammar.topic
-      ? '<button type="button" class="home-study-plan-action" data-plan-topic="' + esc(grammar.topic.id) + '"' + (grammar.done ? ' disabled' : '') + '>' +
-        (grammar.done ? 'Selesai ✓' : 'Buka latihan ↗') + '</button>'
-      : '<button type="button" class="home-study-plan-action" data-view-target="grammar">Buka grammar ↗</button>';
-    const adventureAction = '<button type="button" class="home-study-plan-action" data-plan-adventure' + (adventure.done ? ' disabled' : '') + '>' +
-      (adventure.done ? 'Selesai ✓' : adventure.started ? 'Lanjutkan quest ↗' : 'Mulai Daily Quest ↗') + '</button>';
+    node.innerHTML = steps.map((step, idx) => {
+      const num = String(idx + 1).padStart(2, "0");
+      const metaCategory = step.category || (num + " · REKOMENDASI");
+      const duration = step.duration || "5 MENIT";
+      let actionBtn = "";
+      if (step.actionHtml) {
+        actionBtn = step.actionHtml;
+      } else if (step.type === "word" && step.word) {
+        actionBtn = '<button type="button" class="home-study-plan-action" data-plan-vocabulary="' + esc(step.word.id) + '" data-plan-mode="' + step.mode + '"' + (step.done ? ' disabled' : '') + '>' +
+          (step.done ? 'Selesai ✓' : step.mode === "review" ? 'Mulai review ↗' : 'Mulai belajar ↗') + '</button>';
+      } else if (step.type === "grammar" && step.topic) {
+        actionBtn = '<button type="button" class="home-study-plan-action" data-plan-topic="' + esc(step.topic.id) + '"' + (step.done ? ' disabled' : '') + '>' +
+          (step.done ? 'Selesai ✓' : 'Buka latihan ↗') + '</button>';
+      } else if (step.type === "adventure") {
+        actionBtn = '<button type="button" class="home-study-plan-action" data-plan-adventure' + (step.done ? ' disabled' : '') + '>' +
+          (step.done ? 'Selesai ✓' : step.started ? 'Lanjutkan quest ↗' : 'Mulai Daily Quest ↗') + '</button>';
+      } else if (step.type === "reading") {
+        actionBtn = step.sectionId
+          ? '<button type="button" class="home-study-plan-action" data-plan-adventure-section="' + esc(step.sectionId) + '"' + (step.done ? ' disabled' : '') + '>' +
+            (step.done ? 'Selesai ✓' : (step.actionLabel || 'Buka cerita ↗')) + '</button>'
+          : '<button type="button" class="home-study-plan-action" data-plan-reading' + (step.done ? ' disabled' : '') + '>' +
+            (step.done ? 'Selesai ✓' : 'Buka bacaan ↗') + '</button>';
+      } else if (step.sectionId) {
+        actionBtn = '<button type="button" class="home-study-plan-action" data-plan-adventure-section="' + esc(step.sectionId) + '"' + (step.done ? ' disabled' : '') + '>' +
+          (step.done ? 'Selesai ✓' : (step.actionLabel || 'Buka aktivitas ↗')) + '</button>';
+      } else {
+        actionBtn = '<button type="button" class="home-study-plan-action" data-view-target="vocabulary">Jelajahi materi ↗</button>';
+      }
 
-    node.innerHTML =
-      '<article class="home-study-plan-step' + (vocabulary.done ? ' is-complete' : '') + '">' +
-        '<div class="home-study-plan-step-meta"><span>01 · INGAT KEMBALI</span><small>5 MENIT</small></div>' +
-        '<h3>' + esc(vocabulary.title) + '</h3><p>' + esc(vocabulary.description) + '</p>' + vocabularyAction +
-      '</article>' +
-      '<article class="home-study-plan-step' + (grammar.done ? ' is-complete' : '') + '">' +
-        '<div class="home-study-plan-step-meta"><span>02 · PAHAMI POLA</span><small>5 MENIT</small></div>' +
-        '<h3>' + esc(grammar.topic?.title || "Grammar") + '</h3><p>' + esc(grammar.description) + '</p>' + grammarAction +
-      '</article>' +
-      '<article class="home-study-plan-step' + (adventure.done ? ' is-complete' : '') + '">' +
-        '<div class="home-study-plan-step-meta"><span>03 · GUNAKAN BAHASA</span><small>5 MENIT</small></div>' +
-        '<h3>Daily Quest · First Steps Island</h3><p>' + esc(adventure.description) + '</p>' +
-        (adventure.started && !adventure.done ? '<small class="home-study-plan-quest-progress">' + esc(adventure.progress) + '</small>' : '') +
-        adventureAction +
+      const progressHtml = step.progress && (!step.done || step.started)
+        ? '<small class="home-study-plan-quest-progress">' + esc(step.progress) + '</small>'
+        : '';
+
+      return '<article class="home-study-plan-step' + (step.done ? ' is-complete' : '') + '">' +
+        '<div class="home-study-plan-step-meta"><span>' + esc(metaCategory) + '</span><small>' + esc(duration) + '</small></div>' +
+        '<h3>' + esc(step.title) + '</h3><p>' + esc(step.description) + '</p>' +
+        progressHtml +
+        actionBtn +
       '</article>';
+    }).join("");
   }
 
   function renderHomePrimaryAction() {
@@ -630,20 +785,30 @@
     const label = $("#home-primary-label");
     if (!button || !label || !state) return;
     const today = dayKey();
-    const vocabulary = getPlanVocabularyTask(today);
-    const grammar = getPlanGrammarTask(today);
-    const adventure = getPlanAdventureTask(today);
+    const steps = getAdaptiveStudyPlan(today);
     const hasProgress = state.history.length > 0 ||
       state.events.length > 0 ||
       Object.keys(state.wordProgress).length > 0 ||
       Object.values(state.grammarProgress).some(item => Number(item.attempts) > 0);
+
     let action = {type:"vocabulary"};
     if (activeStudy && activeStudy.stage < 3) action = {type:"active-study"};
-    else if (vocabulary.word && !vocabulary.done) action = {type:"word",wordId:vocabulary.word.id,mode:vocabulary.mode};
-    else if (grammar.topic && !grammar.done) action = {type:"grammar",topicId:grammar.topic.id};
-    else if (adventure.started && !adventure.done) action = {type:"adventure"};
-    else if (!adventure.done) action = {type:"adventure"};
-    else if (vocabulary.word) action = {type:"word",wordId:vocabulary.word.id,mode:vocabulary.mode};
+    else {
+      const pending = steps.find(s => !s.done);
+      if (pending) {
+        if (pending.word?.id) action = {type:"word", wordId:pending.word.id, mode:pending.mode};
+        else if (pending.topic?.id) action = {type:"grammar", topicId:pending.topic.id};
+        else if (pending.sectionId) action = {type:"adventure-section", sectionId:pending.sectionId};
+        else if (pending.type === "reading") action = {type:"reading"};
+        else if (pending.type === "adventure") action = {type:"adventure"};
+        else action = {type: pending.type || "adventure"};
+      } else {
+        const firstWord = steps.find(s => s.word?.id);
+        if (firstWord) action = {type:"word", wordId:firstWord.word.id, mode:firstWord.mode};
+        else action = {type:"adventure"};
+      }
+    }
+
     button.dataset.homeAction = action.type;
     if (action.wordId) button.dataset.homeWord = action.wordId;
     else delete button.dataset.homeWord;
@@ -651,8 +816,11 @@
     else delete button.dataset.homeMode;
     if (action.topicId) button.dataset.homeTopic = action.topicId;
     else delete button.dataset.homeTopic;
+    if (action.sectionId) button.dataset.homeSection = action.sectionId;
+    else delete button.dataset.homeSection;
+
     label.textContent = hasProgress ? "Lanjutkan belajar" : "Mulai sesi pertama";
-    button.setAttribute("aria-label",hasProgress ? "Lanjutkan belajar dari rekomendasi berikutnya" : "Mulai sesi belajar pertamamu");
+    button.setAttribute("aria-label", hasProgress ? "Lanjutkan belajar dari rekomendasi berikutnya" : "Mulai sesi belajar pertamamu");
   }
 
   function renderOverview() {
@@ -697,7 +865,7 @@
     $("#vocab-layout")?.classList.toggle("is-detail-open",vocabDetailOpen);
     $("#view-vocabulary")?.classList.toggle("is-detail-view",vocabDetailOpen);
     more.textContent="Tampilkan "+Math.min(100,filtered.length-shown.length)+" kata berikutnya ↓ · "+(filtered.length-shown.length).toLocaleString("id-ID")+" tersisa";
-    if(selectedWord&&shown.some(w=>w.id===selectedWord))renderWordDetail(selectedWord);
+    if(selectedWord&&words.some(w=>w.id===selectedWord))renderWordDetail(selectedWord);
     else if(shown.length){selectedWord=shown[0].id;renderWordDetail(selectedWord);$$(".vocab-row").forEach(b=>b.classList.toggle("is-selected",b.dataset.selectWord===selectedWord));}
     else $("#word-detail").innerHTML='<div class="detail-empty"><span class="detail-empty-mark">Aa</span><h2>Belum ada hasil</h2><p>Coba ubah kata pencarian atau filter.</p></div>';
   }
@@ -824,6 +992,22 @@
     if(activeStudy.mode==="review"&&!correct)activeStudy.reviewFailed=true;
     pushHistory({type:"vocabulary",title:w.word,detail:""});
     const last=state.history[0];last.detail=({recall:"Recall arti",context:"Pengenalan konteks",production:"Penggunaan aktif"})[skill]+(correct?" · benar":" · perlu dilatih");last.correct=correct;last.wordId=w.id;last.skill=skill;last.mode=activeStudy.mode;
+    if(!correct && (skill === "recall" || skill === "context") && typeof window.sinauuRecordMistake === "function"){
+      const isRecall=skill==="recall";
+      const ctx=isRecall?null:(w.context&&w.context.id===questionId?w.context:null);
+      window.sinauuRecordMistake({
+        sourceType: "vocab",
+        sourceId: w.id,
+        wordId: w.id,
+        questionId: questionId,
+        skill: "vocabulary",
+        prompt: isRecall?("Tuliskan arti kata: "+w.word):(ctx?ctx.prompt:("Konteks kalimat untuk: "+w.word)),
+        wrongAnswer: String(response),
+        correctAnswer: isRecall?w.meaning:(ctx&&ctx.options?ctx.options[ctx.answer]:(w.meaning||"")),
+        explanation: isRecall?("Definisi terverifikasi: "+w.meaning+(w.partOfSpeech?" ("+w.partOfSpeech+")":"")):(ctx?ctx.explanation:""),
+        mistakeId: "vocab:" + w.id + ":" + questionId
+      });
+    }
     await save();
   }
   async function finishStudy() {
@@ -902,15 +1086,2070 @@
     p.answers ||= {};p.answers[q.id]={correct,response:String(response).slice(0,500),at:new Date().toISOString()};
     p.history ||= [];p.history.push({questionId:q.id,correct,at:new Date().toISOString()});if(p.history.length>250)p.history=p.history.slice(-250);
     pushHistory({type:"grammar",title:t.title,detail:"Soal: "+q.id,correct,topicId:t.id,questionId:q.id});
+    if(!correct && typeof window.sinauuRecordMistake === "function"){
+      window.sinauuRecordMistake({
+        sourceType: "grammar",
+        sourceId: t.id,
+        topicId: t.id,
+        questionId: q.id,
+        skill: "grammar",
+        prompt: q.prompt,
+        wrongAnswer: String(response),
+        correctAnswer: expected || (Array.isArray(q.options) && Number.isInteger(q.answer) ? q.options[q.answer] : q.answer),
+        explanation: q.explanation || "",
+        mistakeId: "grammar:" + t.id + ":" + q.id
+      });
+    }
     await save();
   }
-  function renderReview() {
-    const due=dueWords().sort((a,b)=>new Date(state.wordProgress[a.id].nextReviewAt)-new Date(state.wordProgress[b.id].nextReviewAt));
-    $("#review-due-total").textContent=due.length;
-    $("#review-success-total").textContent=Object.values(state.wordProgress).reduce((n,p)=>n+(p.reviewHistory||[]).filter(x=>x.correct).length,0);
-    $("#nav-review-count").textContent=due.length;
-    $("#review-list").innerHTML=due.length?due.map(w=>'<div class="review-row"><span class="review-due-label">JATUH TEMPO</span><div><h3>'+esc(w.word)+' · '+esc(w.level)+'</h3><p>'+esc(w.meaning)+' · '+(state.wordProgress[w.id].reviewSuccesses||0)+'/3 review beruntun</p></div><button type="button" data-review-word="'+esc(w.id)+'">Mulai review →</button></div>').join(""):'<div class="review-empty"><h2>Belum ada review yang jatuh tempo.</h2><p>Setelah kamu mempelajari kata, jadwal review akan muncul di sini. Jadwal memakai hari yang benar-benar berlalu; membuka halaman berulang kali tidak mempercepatnya.</p><button class="primary-action" type="button" data-view-target="vocabulary">Pelajari kata baru ↗</button></div>';
+  function formatUpcomingDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    const diffDays = Math.ceil((d.getTime() - Date.now()) / 86400000);
+    if (diffDays <= 1) return "Besok (" + fmtDate(d, { day: "numeric", month: "short" }) + ")";
+    return fmtDate(d, { day: "numeric", month: "short", year: "numeric" });
   }
+
+  function getUnifiedReviewQueue(coreState, extras, wordList, topicList, habitLibrary, now = Date.now()) {
+    const core = coreState || {};
+    const wordProg = (core.wordProgress && typeof core.wordProgress === "object") ? core.wordProgress : {};
+    const wordsArr = Array.isArray(wordList) ? wordList : [];
+    const topicsArr = Array.isArray(topicList) ? topicList : [];
+    const adv = (extras && extras.adventureProgress && typeof extras.adventureProgress === "object") ? extras.adventureProgress : {};
+    const mistakeJournal = (adv.mistakeJournal && typeof adv.mistakeJournal === "object") ? adv.mistakeJournal : {};
+
+    const nowDate = new Date(now);
+    const nowMs = nowDate.getTime();
+    const todayStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate()).getTime();
+
+    const items = [];
+    const completedItems = [];
+
+    // 1. Vocabulary
+    for (const w of wordsArr) {
+      if (!w || !w.id || !canStudyWord(w)) continue;
+      const p = wordProg[w.id];
+      if (!p) continue;
+
+      const status = statusOf(w);
+      const nextReviewTime = p.nextReviewAt ? Date.parse(p.nextReviewAt) : NaN;
+      const isDue = Number.isFinite(nextReviewTime) && nextReviewTime <= nowMs;
+      const isWeak = Boolean(p.weak);
+
+      if (status !== "mastered" && (isDue || isWeak)) {
+        let category = "dueToday";
+        let delayDays = 0;
+
+        if (isDue) {
+          if (nextReviewTime < todayStart) {
+            category = "overdue";
+            delayDays = Math.max(1, Math.floor((todayStart - nextReviewTime) / 86400000));
+          } else {
+            category = "dueToday";
+          }
+        } else if (isWeak) {
+          category = "needsPractice";
+        }
+
+        const stage = Math.max(0, Math.min(3, Math.floor(Number(p.reviewSuccesses) || 0)));
+        const maxStage = 3;
+
+        let reason = "";
+        if (category === "overdue") {
+          reason = `Terlambat ${delayDays} hari dari jadwal review berkala.`;
+        } else if (isWeak) {
+          reason = "Ada kesalahan pada sesi latihan sebelumnya; perlu pemantapan.";
+        } else if (stage === 0) {
+          reason = "Review retensi tahap 1/3 (jeda 1 hari setelah dipelajari).";
+        } else if (stage === 1) {
+          reason = "Review retensi tahap 2/3 (jeda 3 hari penguatan).";
+        } else {
+          reason = "Review retensi tahap 3/3 (jeda 7 hari retensi jangka panjang).";
+        }
+
+        let consequence = "";
+        if (isWeak) {
+          consequence = "Review benar akan membersihkan label kata lemah.";
+        } else if (stage >= 2) {
+          consequence = "Jika 3 skill, 4 hari aktif, dan rentang 12 hari terpenuhi, kata berstatus Mastered.";
+        } else if (stage === 1) {
+          consequence = "Review benar akan menjadwalkan review tahap 3/3 dengan jeda 7 hari.";
+        } else {
+          consequence = "Review benar akan menjadwalkan review tahap 2/3 dengan jeda 3 hari.";
+        }
+
+        let urgencyScore = 0;
+        if (category === "overdue") {
+          urgencyScore = 3000000000000 - nextReviewTime;
+        } else if (category === "dueToday") {
+          urgencyScore = 2000000000000 - nextReviewTime;
+        } else {
+          urgencyScore = 1000000000000 - (Number.isFinite(nextReviewTime) ? nextReviewTime : 0);
+        }
+
+        items.push({
+          id: `vocab:${w.id}`,
+          type: "vocabulary",
+          wordId: w.id,
+          skill: "vocabulary",
+          skillLabel: "Kosakata",
+          level: w.level ? w.level.toUpperCase() : "A1",
+          title: w.word,
+          subtitle: (w.partOfSpeech ? `[${w.partOfSpeech}] ` : "") + (w.meaning || ""),
+          category,
+          delayDays,
+          dueAt: p.nextReviewAt || null,
+          stage,
+          maxStage,
+          reason,
+          consequence,
+          urgencyScore,
+          sourceLinkLabel: "Buka kamus kata ↗",
+          sourceTarget: "vocabulary",
+          raw: { word: w, progress: p }
+        });
+      }
+
+      if (Array.isArray(p.reviewHistory)) {
+        for (const entry of p.reviewHistory) {
+          if (!entry || !entry.correct || !entry.at) continue;
+          const entryTime = Date.parse(entry.at);
+          if (Number.isFinite(entryTime)) {
+            completedItems.push({
+              id: `completed:vocab:${w.id}:${entry.at}`,
+              type: "vocabulary",
+              wordId: w.id,
+              skill: "vocabulary",
+              skillLabel: "Kosakata",
+              level: w.level ? w.level.toUpperCase() : "A1",
+              title: w.word,
+              subtitle: w.meaning || "",
+              category: "completed",
+              stage: Math.min(3, p.reviewSuccesses || 1),
+              maxStage: 3,
+              completedAt: entry.at,
+              timestamp: entryTime,
+              reason: "Review kosakata berhasil dipanggil kembali.",
+              consequence: status === "mastered" ? "Kata telah tuntas dikuasai (Mastered)." : "Jeda berikutnya dijadwalkan."
+            });
+          }
+        }
+      }
+    }
+
+    // 2. Mistake Journal items
+    for (const m of Object.values(mistakeJournal)) {
+      if (!m || !m.mistakeId || typeof m.mistakeId !== "string") continue;
+
+      const isMastered = Boolean(m.masteredAt || (Number(m.reviewStage) >= 4));
+      const stage = Math.max(0, Math.min(4, Math.floor(Number(m.reviewStage) || 0)));
+      const maxStage = 4;
+
+      let skillKey = "adventure";
+      let skillLabel = "Petualangan";
+      if (m.sourceType === "grammar" || m.topicId || (m.mistakeId && m.mistakeId.startsWith("grammar:"))) {
+        skillKey = "grammar";
+        skillLabel = "Tata Bahasa";
+      } else if (m.sourceType === "habit" || m.passageId || (m.mistakeId && m.mistakeId.startsWith("habit:"))) {
+        skillKey = "reading";
+        skillLabel = "Pemahaman Bacaan";
+      } else if (m.sourceType === "vocab" || m.wordId || (m.mistakeId && m.mistakeId.startsWith("vocab:"))) {
+        skillKey = "vocabulary";
+        skillLabel = "Kosakata";
+      } else if (String(m.skill).toLowerCase() === "listening") {
+        skillKey = "listening";
+        skillLabel = "Menyimak";
+      } else if (String(m.skill).toLowerCase() === "reading") {
+        skillKey = "reading";
+        skillLabel = "Pemahaman Bacaan";
+      }
+
+      const reviewDueTime = Date.parse(m.nextReviewAt || m.recordedAt || "");
+      const isDue = !isMastered && (!Number.isFinite(reviewDueTime) || reviewDueTime <= nowMs);
+
+      if (!isMastered) {
+        let category = "dueToday";
+        let delayDays = 0;
+
+        if (isDue) {
+          if (Number.isFinite(reviewDueTime) && reviewDueTime < todayStart) {
+            category = "overdue";
+            delayDays = Math.max(1, Math.floor((todayStart - reviewDueTime) / 86400000));
+          } else {
+            category = "dueToday";
+          }
+        } else if (stage === 0 || !m.resolvedAt) {
+          category = "needsPractice";
+        } else {
+          category = "scheduledFuture";
+        }
+
+        if (category === "overdue" || category === "dueToday" || category === "needsPractice") {
+          let reason = "";
+          if (category === "overdue") {
+            reason = `Terlambat ${delayDays} hari dari jadwal pengulangan bertahap.`;
+          } else if (stage === 0 || !m.resolvedAt) {
+            reason = "Belum diperbaiki setelah kesalahan awal; perlu pemantapan tanpa kunci.";
+          } else if (stage === 1) {
+            reason = "Review retensi tahap 2/4 (jeda 1 hari pemanggilan ulang).";
+          } else if (stage === 2) {
+            reason = "Review retensi tahap 3/4 (jeda 3 hari penguatan).";
+          } else {
+            reason = "Review retensi tahap 4/4 (jeda 7 hari penguasaan permanen).";
+          }
+
+          let consequence = "";
+          if (stage >= 3) {
+            consequence = "Jawaban tepat akan menuntaskan (master) catatan kesalahan ini secara permanen.";
+          } else if (stage === 2) {
+            consequence = "Jawaban tepat akan memajukan ke tahap 4/4 dengan jeda 7 hari.";
+          } else if (stage === 1) {
+            consequence = "Jawaban tepat akan memajukan ke tahap 3/4 dengan jeda 3 hari.";
+          } else {
+            consequence = "Jawaban tepat akan menjadwalkan review tahap 2/4 dengan jeda 1 hari.";
+          }
+
+          let urgencyScore = 0;
+          if (category === "overdue") {
+            urgencyScore = 3000000000000 - (Number.isFinite(reviewDueTime) ? reviewDueTime : 0);
+          } else if (category === "dueToday") {
+            urgencyScore = 2000000000000 - (Number.isFinite(reviewDueTime) ? reviewDueTime : 0);
+          } else {
+            urgencyScore = 1000000000000 - Date.parse(m.recordedAt || "");
+          }
+
+          let sourceTitle = m.sourceTitle || m.title || "Latihan Terkait";
+          if (skillKey === "grammar") {
+            const topicId = m.topicId || (m.mistakeId.split(":")[1]);
+            const t = topicsArr.find(entry => entry.id === topicId);
+            if (t) sourceTitle = t.title;
+          }
+
+          items.push({
+            id: `mistake:${m.mistakeId}`,
+            type: "mistake",
+            mistakeId: m.mistakeId,
+            skill: skillKey,
+            skillLabel,
+            level: m.level || null,
+            title: m.prompt ? (m.prompt.length > 70 ? m.prompt.slice(0, 68) + "…" : m.prompt) : sourceTitle,
+            subtitle: `Sumber: ${sourceTitle} · Jawaban sebelumnya: ${m.wrongAnswer || "—"}`,
+            category,
+            delayDays,
+            dueAt: m.nextReviewAt || null,
+            stage,
+            maxStage,
+            reason,
+            consequence,
+            urgencyScore,
+            sourceLinkLabel: "Buka sumber latihan ↗",
+            sourceTarget: skillKey,
+            raw: m
+          });
+        }
+      }
+
+      if (Array.isArray(m.reviewHistory)) {
+        for (const entry of m.reviewHistory) {
+          if (!entry || !entry.correct || !entry.reviewedAt) continue;
+          const entryTime = Date.parse(entry.reviewedAt);
+          if (Number.isFinite(entryTime)) {
+            completedItems.push({
+              id: `completed:mistake:${m.mistakeId}:${entry.reviewedAt}`,
+              type: "mistake",
+              mistakeId: m.mistakeId,
+              skill: skillKey,
+              skillLabel,
+              level: m.level || null,
+              title: m.prompt || "Review kesalahan",
+              subtitle: `Jawaban tepat dipanggil kembali pada tahap ${entry.stage || stage} / 4`,
+              category: "completed",
+              stage: entry.stage || stage,
+              maxStage: 4,
+              completedAt: entry.reviewedAt,
+              timestamp: entryTime,
+              reason: "Pengulangan Spaced Retrieval berhasil dijawab dengan tepat.",
+              consequence: entry.stage >= 4 ? "Catatan kesalahan tuntas (Mastered)." : "Jadwal jeda berikutnya diperbarui."
+            });
+          }
+        }
+      }
+    }
+
+    items.sort((a, b) => {
+      if (b.urgencyScore !== a.urgencyScore) {
+        return b.urgencyScore - a.urgencyScore;
+      }
+      return String(a.id).localeCompare(String(b.id));
+    });
+
+    completedItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+    const overdueCount = items.filter(x => x.category === "overdue").length;
+    const todayCount = items.filter(x => x.category === "dueToday").length;
+    const practiceCount = items.filter(x => x.category === "needsPractice").length;
+    const totalDue = overdueCount + todayCount;
+
+    const focusedSession = items.slice(0, 5);
+
+    return {
+      items,
+      completedItems: completedItems.slice(0, 15),
+      focusedSession,
+      counts: {
+        totalDue,
+        overdue: overdueCount,
+        today: todayCount,
+        practice: practiceCount,
+        completed: completedItems.length
+      }
+    };
+  }
+
+  function renderReview() {
+    const queue = getUnifiedReviewQueue(state, readExtraSnapshots(), words, topics, null);
+    const counts = queue.counts;
+
+    const dueTotal = $("#review-due-total");
+    if (dueTotal) dueTotal.textContent = counts.totalDue;
+    const overdueTotal = $("#review-overdue-total");
+    if (overdueTotal) overdueTotal.textContent = counts.overdue;
+    const todayTotal = $("#review-today-total");
+    if (todayTotal) todayTotal.textContent = counts.today;
+    const practiceTotal = $("#review-practice-total");
+    if (practiceTotal) practiceTotal.textContent = counts.practice;
+    const successTotal = $("#review-success-total");
+    if (successTotal) successTotal.textContent = counts.completed;
+    const navCount = $("#nav-review-count");
+    if (navCount) navCount.textContent = counts.totalDue;
+
+    const tabDue = $("#review-tab-due-count");
+    if (tabDue) tabDue.textContent = counts.totalDue;
+    const tabOverdue = $("#review-tab-overdue-count");
+    if (tabOverdue) tabOverdue.textContent = counts.overdue;
+    const tabToday = $("#review-tab-today-count");
+    if (tabToday) tabToday.textContent = counts.today;
+    const tabPractice = $("#review-tab-practice-count");
+    if (tabPractice) tabPractice.textContent = counts.practice;
+    const tabCompleted = $("#review-tab-completed-count");
+    if (tabCompleted) tabCompleted.textContent = counts.completed;
+
+    $$(".review-filter-btn").forEach(btn => {
+      const active = btn.dataset.reviewFilter === reviewFilterTab;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", String(active));
+    });
+    $$(".review-skill-pill").forEach(pill => {
+      const active = pill.dataset.reviewSkill === reviewSkillFilter;
+      pill.classList.toggle("is-active", active);
+    });
+
+    const focusCard = $("#review-focus-card");
+    if (focusCard) {
+      if (queue.focusedSession.length > 0 && reviewFilterTab !== "completed") {
+        focusCard.hidden = false;
+        const focusTitle = $("#review-focus-title");
+        if (focusTitle) focusTitle.textContent = `${queue.focusedSession.length} Materi Prioritas`;
+        const focusDesc = $("#review-focus-desc");
+        if (focusDesc) {
+          const overdueNum = queue.focusedSession.filter(x => x.category === "overdue").length;
+          focusDesc.textContent = overdueNum > 0
+            ? `${overdueNum} materi terlambat diprioritaskan di awal sesi agar ingatan tidak pudar.`
+            : "Materi teratas dipilih agar sesi belajarmu tetap terarah dan tidak membebani.";
+        }
+        const focusPills = $("#review-focus-pills");
+        if (focusPills) {
+          focusPills.innerHTML = queue.focusedSession.map(item => `
+            <span class="review-focus-pill">
+              <strong>${esc(item.title)}</strong>
+              <small>${esc(item.skillLabel)} · ${esc(item.category === 'overdue' ? 'Terlambat' : item.category === 'dueToday' ? 'Hari Ini' : 'Pemantapan')}</small>
+            </span>
+          `).join("");
+        }
+      } else {
+        focusCard.hidden = true;
+      }
+    }
+
+    window.sinauuUpdateReviewActivePanel?.();
+
+    let sourceList = [];
+    if (reviewFilterTab === "due") {
+      sourceList = queue.items.filter(x => x.category === "overdue" || x.category === "dueToday");
+    } else if (reviewFilterTab === "overdue") {
+      sourceList = queue.items.filter(x => x.category === "overdue");
+    } else if (reviewFilterTab === "today") {
+      sourceList = queue.items.filter(x => x.category === "dueToday");
+    } else if (reviewFilterTab === "practice") {
+      sourceList = queue.items.filter(x => x.category === "needsPractice");
+    } else if (reviewFilterTab === "completed") {
+      sourceList = queue.completedItems;
+    }
+
+    if (reviewSkillFilter !== "all") {
+      sourceList = sourceList.filter(x => x.skill === reviewSkillFilter);
+    }
+
+    const reviewList = $("#review-list");
+    if (!reviewList) return;
+
+    if (!sourceList.length) {
+      if (reviewFilterTab === "completed") {
+        reviewList.innerHTML = `<div class="review-empty">
+          <h2>Belum ada review yang baru selesai.</h2>
+          <p>Selesaikan review pada antrean Jatuh Tempo untuk membangun riwayat pengulangan berkala di perangkat ini.</p>
+          <div class="review-empty-actions">
+            <button class="primary-action" type="button" data-review-filter="due">Buka antrean jatuh tempo →</button>
+          </div>
+        </div>`;
+      } else if (counts.totalDue > 0 || counts.practice > 0) {
+        reviewList.innerHTML = `<div class="review-empty">
+          <h2>Tidak ada materi pada kategori ini.</h2>
+          <p>Pilih kategori atau filter kemampuan lain untuk melihat materi yang memerlukan review.</p>
+          <div class="review-empty-actions">
+            <button class="primary-action" type="button" data-review-filter="due">Lihat semua jatuh tempo (${counts.totalDue}) →</button>
+          </div>
+        </div>`;
+      } else {
+        let earliestUpcoming = null;
+        for (const w of words) {
+          const p = state.wordProgress[w.id];
+          if (p && p.nextReviewAt) {
+            const t = Date.parse(p.nextReviewAt);
+            if (Number.isFinite(t) && t > Date.now() && (!earliestUpcoming || t < earliestUpcoming)) earliestUpcoming = t;
+          }
+        }
+        const extras = readExtraSnapshots();
+        const mistakes = extras.adventureProgress?.mistakeJournal || {};
+        for (const m of Object.values(mistakes)) {
+          if (m && m.nextReviewAt && !window.sinauuIsMistakeMastered?.(m)) {
+            const t = Date.parse(m.nextReviewAt);
+            if (Number.isFinite(t) && t > Date.now() && (!earliestUpcoming || t < earliestUpcoming)) earliestUpcoming = t;
+          }
+        }
+
+        if (earliestUpcoming) {
+          const formattedDate = formatUpcomingDate(new Date(earliestUpcoming).toISOString());
+          reviewList.innerHTML = `<div class="review-empty">
+            <h2>Belum ada review yang jatuh tempo.</h2>
+            <p>Semua materi review saat ini masih dalam masa jeda ingatan. Jadwal review terdekat berikutnya: <strong>${esc(formattedDate)}</strong>. Jadwal memakai hari yang benar-benar berlalu; membuka halaman berulang kali tidak mempercepatnya.</p>
+            <div class="review-empty-actions">
+              <button class="primary-action" type="button" data-view-target="vocabulary">Pelajari kata baru ↗</button>
+            </div>
+          </div>`;
+        } else {
+          reviewList.innerHTML = `<div class="review-empty">
+            <h2>Belum ada review yang jatuh tempo.</h2>
+            <p>Setelah kamu mempelajari kata atau menyelesaikan misi, sistem Spaced Retrieval akan menjadwalkan review di sini secara otomatis. Jadwal memakai hari yang benar-benar berlalu; membuka halaman berulang kali tidak mempercepatnya.</p>
+            <div class="review-empty-actions">
+              <button class="primary-action" type="button" data-view-target="vocabulary">Pelajari kata baru ↗</button>
+            </div>
+          </div>`;
+        }
+      }
+    } else {
+      reviewList.innerHTML = sourceList.map(item => {
+        const cardCls = item.category === "overdue" ? "is-overdue" :
+          item.category === "dueToday" ? "is-due-today" :
+          item.category === "needsPractice" ? "is-practice" : "is-completed";
+        const urgencyCls = item.category === "overdue" ? "review-urgency-overdue" :
+          item.category === "dueToday" ? "review-urgency-today" :
+          item.category === "needsPractice" ? "review-urgency-practice" : "review-urgency-completed";
+        const urgencyLabel = item.category === "overdue" ? `TERLAMBAT ${item.delayDays > 0 ? item.delayDays + ' HARI' : ''}`.trim() :
+          item.category === "dueToday" ? "JATUH HARI INI" :
+          item.category === "needsPractice" ? "PERLU PEMANTAPAN" : "SELESAI";
+        const stagePercent = Math.min(100, Math.round((item.stage / item.maxStage) * 100));
+
+        return `<article class="review-queue-card ${cardCls}" data-review-item-id="${esc(item.id)}">
+          <div class="review-card-top">
+            <div class="review-card-meta">
+              <span class="review-skill-badge review-skill-${esc(item.skill)}">${esc(item.skillLabel)}</span>
+              ${item.level ? `<span class="review-level-badge">${esc(item.level)}</span>` : ""}
+              <span class="review-urgency-badge ${urgencyCls}">${esc(urgencyLabel)}</span>
+            </div>
+            <div class="review-card-stage">
+              <span class="review-stage-text">Tahap ${item.stage} / ${item.maxStage}</span>
+              <span class="review-stage-meter" aria-hidden="true"><i style="width:${stagePercent}%"></i></span>
+            </div>
+          </div>
+          <div class="review-card-main">
+            <h3 class="review-card-title">${esc(item.title)}</h3>
+            ${item.subtitle ? `<p class="review-card-subtitle">${esc(item.subtitle)}</p>` : ""}
+          </div>
+          <div class="review-card-qa-grid">
+            <div class="review-qa-cell review-qa-reason">
+              <span class="review-qa-label">MENGAPA JATUH TEMPO?</span>
+              <p class="review-qa-text">${esc(item.reason)}</p>
+            </div>
+            <div class="review-qa-cell review-qa-consequence">
+              <span class="review-qa-label">DAMPAK JIKA SELESAI:</span>
+              <p class="review-qa-text">${esc(item.consequence)}</p>
+            </div>
+          </div>
+          <div class="review-card-actions">
+            <div>
+              ${item.type === "vocabulary" ? `<button class="review-source-link" type="button" data-review-open-source="vocab:${esc(item.wordId)}">Buka kamus kata ↗</button>` :
+                item.type === "mistake" ? `<button class="review-source-link" type="button" data-review-open-source="mistake:${esc(item.mistakeId)}">${esc(item.sourceLinkLabel || "Buka materi asal ↗")}</button>` : ""}
+            </div>
+            <div>
+              ${item.category === "completed" ? `<span class="review-urgency-badge review-urgency-completed">✓ Selesai direview</span>` :
+                item.type === "vocabulary" ? `<button class="review-action-btn" type="button" data-review-word="${esc(item.wordId)}">Mulai review →</button>` :
+                `<button class="review-action-btn" type="button" data-review-mistake="${esc(item.mistakeId)}">Mulai review →</button>`}
+            </div>
+          </div>
+        </article>`;
+      }).join("");
+    }
+  }
+  function aggregateSkillPassport(coreState, extras, wordList, topicList) {
+    const core = coreState || {};
+    const wordProg = core.wordProgress && typeof core.wordProgress === "object" ? core.wordProgress : {};
+    const grammarProg = core.grammarProgress && typeof core.grammarProgress === "object" ? core.grammarProgress : {};
+    const history = Array.isArray(core.history) ? core.history : [];
+
+    const extraLearning = (extras && extras.extraLearning && typeof extras.extraLearning === "object") ? extras.extraLearning : {};
+    const habitProg = (extras && extras.habitProgress && typeof extras.habitProgress === "object") ? extras.habitProgress : {};
+    const adventureProg = (extras && extras.adventureProgress && typeof extras.adventureProgress === "object") ? extras.adventureProgress : {};
+
+    const studioSessions = Array.isArray(adventureProg.studioSessions) ? adventureProg.studioSessions : [];
+    const skillEvidence = (adventureProg.skillEvidence && typeof adventureProg.skillEvidence === "object") ? adventureProg.skillEvidence : {};
+
+    function cleanDate(val) {
+      if (!val) return null;
+      const d = new Date(val);
+      return !isNaN(d.getTime()) ? d : null;
+    }
+    function latestDate(dates) {
+      let max = null;
+      for (const item of dates) {
+        const d = cleanDate(item);
+        if (d && (!max || d.getTime() > max.getTime())) max = d;
+      }
+      return max ? max.toISOString() : null;
+    }
+    function formatLastPracticed(iso) {
+      if (!iso) return "Belum pernah";
+      const d = cleanDate(iso);
+      if (!d) return "Belum pernah";
+      return fmtDate(d, { day: "numeric", month: "short", year: "numeric" }) + " · " +
+        new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(d);
+    }
+    function distinctDays(dates) {
+      const set = new Set();
+      for (const item of dates) {
+        const d = cleanDate(item);
+        if (d) set.add(d.toISOString().slice(0, 10));
+      }
+      return set.size;
+    }
+
+    // 1. VOCABULARY
+    const vocabDates = [];
+    let vocabWordsPracticed = 0;
+    let vocabTotalAttempts = 0;
+    let vocabMasteredCount = 0;
+    let vocabReviewAttempts = 0;
+    let vocabReviewCorrect = 0;
+
+    const allWordKeys = new Set(Object.keys(wordProg));
+    if (Array.isArray(wordList)) {
+      for (const w of wordList) {
+        if (w && w.id) allWordKeys.add(w.id);
+      }
+    }
+
+    for (const key of allWordKeys) {
+      const p = wordProg[key];
+      if (!p || typeof p !== "object") continue;
+      const attemptsCount = Array.isArray(p.attempts) ? p.attempts.length : 0;
+      const isPracticed = attemptsCount > 0 || (Array.isArray(p.studiedDates) && p.studiedDates.length > 0) || p.firstSeenDate || (Array.isArray(p.reviewDates) && p.reviewDates.length > 0);
+      if (isPracticed) vocabWordsPracticed++;
+      vocabTotalAttempts += attemptsCount;
+      if (masteryGate(p) || p.masteredAt) vocabMasteredCount++;
+      if (Array.isArray(p.reviewHistory)) {
+        vocabReviewAttempts += p.reviewHistory.length;
+        vocabReviewCorrect += p.reviewHistory.filter(r => r && r.correct).length;
+        p.reviewHistory.forEach(r => { if (r && r.at) vocabDates.push(r.at); });
+      }
+      if (p.lastSeenAt) vocabDates.push(p.lastSeenAt);
+      if (Array.isArray(p.studiedDates)) p.studiedDates.forEach(d => { if (d) vocabDates.push(d); });
+    }
+
+    const matching = extraLearning.matching || {};
+    const matchingMatches = Number(matching.totalMatches) || 0;
+    const matchingMistakes = Number(matching.totalMistakes) || 0;
+    const matchingAttempts = matchingMatches + matchingMistakes;
+    vocabTotalAttempts += matchingAttempts;
+    vocabReviewAttempts += matchingAttempts;
+    vocabReviewCorrect += matchingMatches;
+
+    const vocabEv = Array.isArray(skillEvidence.vocabulary) ? skillEvidence.vocabulary : [];
+    vocabTotalAttempts += vocabEv.length;
+    vocabEv.forEach(e => { if (e && e.recordedAt) vocabDates.push(e.recordedAt); });
+
+    history.filter(h => h && ["vocabulary", "matching"].includes(h.type)).forEach(h => {
+      if (h.at) vocabDates.push(h.at);
+    });
+
+    const vocabDays = distinctDays(vocabDates);
+    const vocabStatus = (vocabWordsPracticed === 0 && vocabTotalAttempts === 0)
+      ? "not-started"
+      : (vocabWordsPracticed >= 10 || vocabMasteredCount >= 1 || vocabDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const vocabStatusReason = vocabStatus === "not-started"
+      ? "Belum ada kata yang dipelajari atau direview."
+      : vocabStatus === "consistent"
+        ? "Telah mempelajari ≥10 kata atau memiliki catatan latihan bertahap."
+        : "Telah memulai latihan kosakata awal.";
+
+    const vocabAccuracy = vocabReviewAttempts > 0
+      ? {
+          percentage: Math.round((vocabReviewCorrect / vocabReviewAttempts) * 100),
+          correct: vocabReviewCorrect,
+          total: vocabReviewAttempts,
+          note: "Akurasi review berkala & matching"
+        }
+      : null;
+
+    const vocabEntry = {
+      id: "vocabulary",
+      title: "Kosakata (Vocabulary)",
+      shortName: "Kosakata",
+      symbol: "Aa",
+      status: vocabStatus,
+      statusLabel: vocabStatus === "not-started" ? "Belum dimulai" : vocabStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: vocabStatusReason,
+      attemptsCount: vocabTotalAttempts,
+      completedCount: vocabWordsPracticed,
+      completedLabel: vocabWordsPracticed + " kata dipelajari",
+      accuracy: vocabAccuracy,
+      accuracyNote: "Hanya dinilai saat sesi review & matching",
+      mastery: {
+        count: vocabMasteredCount,
+        label: vocabMasteredCount > 0 ? (vocabMasteredCount + " kata mastered (lulus kriteria review berjeda)") : "0 kata mastered (butuh 3 review sukses & interval 12 hari)"
+      },
+      lastPracticedAt: latestDate(vocabDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(vocabDates)),
+      evidenceDetails: [
+        vocabWordsPracticed + " kata dipelajari di korpus",
+        vocabReviewAttempts + " soal review & matching dikerjakan",
+        vocabDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Latih Kosakata ↗",
+        viewTarget: dueWords().length > 0 ? "review" : "vocabulary"
+      }
+    };
+
+    // 2. GRAMMAR
+    const grammarDates = [];
+    let grammarTopicsAttempted = 0;
+    let grammarTotalAttempts = 0;
+    let grammarTotalCorrect = 0;
+
+    const allTopicKeys = new Set(Object.keys(grammarProg));
+    if (Array.isArray(topicList)) {
+      for (const t of topicList) {
+        if (t && t.id) allTopicKeys.add(t.id);
+      }
+    }
+
+    for (const key of allTopicKeys) {
+      const p = grammarProg[key];
+      if (!p || typeof p !== "object") continue;
+      const att = Number(p.attempts) || 0;
+      const cor = Number(p.correct) || 0;
+      const answersCount = p.answers && typeof p.answers === "object" ? Object.keys(p.answers).length : 0;
+      if (att > 0 || answersCount > 0) grammarTopicsAttempted++;
+      grammarTotalAttempts += att;
+      grammarTotalCorrect += cor;
+      if (p.answers && typeof p.answers === "object") {
+        Object.values(p.answers).forEach(a => { if (a && a.at) grammarDates.push(a.at); });
+      }
+      if (Array.isArray(p.history)) {
+        p.history.forEach(h => { if (h && h.at) grammarDates.push(h.at); });
+      }
+    }
+
+    const grammarEv = Array.isArray(skillEvidence.grammar) ? skillEvidence.grammar : [];
+    grammarTotalAttempts += grammarEv.length;
+    grammarEv.forEach(e => { if (e && e.recordedAt) grammarDates.push(e.recordedAt); });
+
+    history.filter(h => h && h.type === "grammar").forEach(h => {
+      if (h.at) grammarDates.push(h.at);
+    });
+
+    const grammarDays = distinctDays(grammarDates);
+    const grammarStatus = (grammarTotalAttempts === 0)
+      ? "not-started"
+      : ((grammarTopicsAttempted >= 2 && grammarTotalAttempts >= 6) || grammarDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const grammarStatusReason = grammarStatus === "not-started"
+      ? "Belum ada soal grammar yang dicoba."
+      : grammarStatus === "consistent"
+        ? "Telah menyelesaikan latihan di minimal 2 topik grammar."
+        : "Telah menjawab latihan soal grammar.";
+
+    const grammarAccuracy = grammarTotalAttempts > 0
+      ? {
+          percentage: Math.round((grammarTotalCorrect / grammarTotalAttempts) * 100),
+          correct: grammarTotalCorrect,
+          total: grammarTotalAttempts,
+          note: "Akurasi soal latihan grammar"
+        }
+      : null;
+
+    const grammarEntry = {
+      id: "grammar",
+      title: "Tata Bahasa (Grammar)",
+      shortName: "Grammar",
+      symbol: "¶",
+      status: grammarStatus,
+      statusLabel: grammarStatus === "not-started" ? "Belum dimulai" : grammarStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: grammarStatusReason,
+      attemptsCount: grammarTotalAttempts,
+      completedCount: grammarTopicsAttempted,
+      completedLabel: grammarTopicsAttempted + " topik dicoba",
+      accuracy: grammarAccuracy,
+      accuracyNote: "Dihitung dari jawaban soal topik grammar",
+      mastery: null,
+      lastPracticedAt: latestDate(grammarDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(grammarDates)),
+      evidenceDetails: [
+        grammarTopicsAttempted + " topik tata bahasa dipraktikkan",
+        grammarTotalAttempts + " butir latihan dijawab (" + grammarTotalCorrect + " tepat)",
+        grammarDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Pelajari Grammar ↗",
+        viewTarget: "grammar"
+      }
+    };
+
+    // 3. READING
+    const readingDates = [];
+    let readingCompletedCount = 0;
+    let readingAttemptsCount = 0;
+    let readingCorrectCount = 0;
+
+    const readingSkills = extraLearning.reading && typeof extraLearning.reading === "object" ? extraLearning.reading : {};
+    Object.values(readingSkills).forEach(s => {
+      if (!s || typeof s !== "object") return;
+      const att = Number(s.attempts) || 0;
+      const cor = Number(s.correct) || 0;
+      readingAttemptsCount += att;
+      readingCorrectCount += cor;
+      if (s.completed) readingCompletedCount++;
+    });
+
+    Object.values(habitProg).forEach(p => {
+      if (!p || typeof p !== "object" || !p.answers) return;
+      const answers = Object.values(p.answers);
+      answers.forEach(a => {
+        if (!a || typeof a !== "object") return;
+        readingAttemptsCount++;
+        if (a.correct) readingCorrectCount++;
+        if (a.answeredAt) readingDates.push(a.answeredAt);
+      });
+      if (answers.length >= 3) readingCompletedCount++;
+    });
+
+    const storyProg = adventureProg.storyProgress && typeof adventureProg.storyProgress === "object" ? adventureProg.storyProgress : {};
+    Object.values(storyProg).forEach(s => {
+      if (!s || typeof s !== "object") return;
+      if (Array.isArray(s.attempts)) {
+        s.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          const tot = Number(a.total) || 1;
+          const sco = Number(a.score) || 0;
+          readingAttemptsCount += tot;
+          readingCorrectCount += sco;
+          if (a.completedAt) readingDates.push(a.completedAt);
+        });
+      }
+      if (s.completedAt || (Array.isArray(s.attempts) && s.attempts.some(a => a && a.passed))) {
+        readingCompletedCount++;
+      }
+      if (s.updatedAt) readingDates.push(s.updatedAt);
+    });
+
+    const readingEv = Array.isArray(skillEvidence.reading) ? skillEvidence.reading : [];
+    readingAttemptsCount += readingEv.length;
+    readingEv.forEach(e => { if (e && e.recordedAt) readingDates.push(e.recordedAt); });
+
+    history.filter(h => h && h.type === "reading").forEach(h => {
+      if (h.at) readingDates.push(h.at);
+    });
+
+    const readingDays = distinctDays(readingDates);
+    const readingStatus = (readingAttemptsCount === 0 && readingCompletedCount === 0)
+      ? "not-started"
+      : (readingCompletedCount >= 2 || readingDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const readingStatusReason = readingStatus === "not-started"
+      ? "Belum ada bacaan HABIT, skill, atau cerita yang diselesaikan."
+      : readingStatus === "consistent"
+        ? "Telah menyelesaikan minimal 2 aktivitas bacaan atau berlatih berkala."
+        : "Telah memulai latihan pemahaman bacaan.";
+
+    const readingAccuracy = readingAttemptsCount > 0
+      ? {
+          percentage: Math.round((readingCorrectCount / readingAttemptsCount) * 100),
+          correct: readingCorrectCount,
+          total: readingAttemptsCount,
+          note: "Akurasi soal pemahaman teks (HABIT, Skills, Stories)"
+        }
+      : null;
+
+    const readingEntry = {
+      id: "reading",
+      title: "Membaca (Reading)",
+      shortName: "Reading",
+      symbol: "▤",
+      status: readingStatus,
+      statusLabel: readingStatus === "not-started" ? "Belum dimulai" : readingStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: readingStatusReason,
+      attemptsCount: readingAttemptsCount,
+      completedCount: readingCompletedCount,
+      completedLabel: readingCompletedCount + " aktivitas bacaan selesai",
+      accuracy: readingAccuracy,
+      accuracyNote: "Dihitung dari soal pemahaman teks",
+      mastery: null,
+      lastPracticedAt: latestDate(readingDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(readingDates)),
+      evidenceDetails: [
+        readingCompletedCount + " bacaan selesai (HABIT, Stories, Reading Skills)",
+        readingAttemptsCount + " butir pemahaman dijawab (" + readingCorrectCount + " tepat)",
+        readingDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Buka Bacaan ↗",
+        viewTarget: "reading"
+      }
+    };
+
+    // 4. LISTENING
+    const listeningDates = [];
+    let listeningCompletedCount = 0;
+    let listeningAttemptsCount = 0;
+    let listeningTotalScore = 0;
+    let listeningTotalPossible = 0;
+
+    const listeningProg = adventureProg.listeningProgress && typeof adventureProg.listeningProgress === "object" ? adventureProg.listeningProgress : {};
+    Object.values(listeningProg).forEach(e => {
+      if (!e || typeof e !== "object") return;
+      if (Array.isArray(e.attempts)) {
+        e.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          listeningAttemptsCount++;
+          listeningTotalScore += (Number(a.score) || 0);
+          listeningTotalPossible += (Number(a.total) || 0);
+          if (a.completedAt) listeningDates.push(a.completedAt);
+        });
+      }
+      if (e.completedAt || (Array.isArray(e.attempts) && e.attempts.some(a => a && a.passed))) {
+        listeningCompletedCount++;
+      }
+      if (e.updatedAt) listeningDates.push(e.updatedAt);
+    });
+
+    const listeningEv = Array.isArray(skillEvidence.listening) ? skillEvidence.listening : [];
+    listeningAttemptsCount += listeningEv.length;
+    listeningEv.forEach(ev => { if (ev && ev.recordedAt) listeningDates.push(ev.recordedAt); });
+
+    const listeningDays = distinctDays(listeningDates);
+    const listeningStatus = (listeningAttemptsCount === 0 && listeningCompletedCount === 0)
+      ? "not-started"
+      : (listeningCompletedCount >= 2 || listeningDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const listeningStatusReason = listeningStatus === "not-started"
+      ? "Belum ada latihan Listening Lab atau audio yang dicoba."
+      : listeningStatus === "consistent"
+        ? "Telah menyelesaikan minimal 2 latihan Listening Lab."
+        : "Telah mencoba latihan menyimak.";
+
+    const listeningAccuracy = listeningTotalPossible > 0
+      ? {
+          percentage: Math.round((listeningTotalScore / listeningTotalPossible) * 100),
+          correct: listeningTotalScore,
+          total: listeningTotalPossible,
+          note: "Akurasi tahap Listening Lab"
+        }
+      : null;
+
+    const listeningEntry = {
+      id: "listening",
+      title: "Menyimak (Listening)",
+      shortName: "Listening",
+      symbol: ")))",
+      status: listeningStatus,
+      statusLabel: listeningStatus === "not-started" ? "Belum dimulai" : listeningStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: listeningStatusReason,
+      attemptsCount: listeningAttemptsCount,
+      completedCount: listeningCompletedCount,
+      completedLabel: listeningCompletedCount + " latihan audio selesai",
+      accuracy: listeningAccuracy,
+      accuracyNote: "Dihitung dari soal Listening Lab",
+      mastery: null,
+      lastPracticedAt: latestDate(listeningDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(listeningDates)),
+      evidenceDetails: [
+        listeningCompletedCount + " latihan Listening Lab selesai",
+        listeningAttemptsCount + " percobaan menyimak tercatat",
+        listeningDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Buka Listening Lab ↗",
+        viewTarget: "adventure"
+      }
+    };
+
+    // 5. SPEAKING
+    const speakingDates = [];
+    let speakingCompletedCount = 0;
+    let speakingAttemptsCount = 0;
+    let speakingChecklistTotal = 0;
+
+    const speakingSessions = studioSessions.filter(s => s && s.studioType === "speaking");
+    speakingSessions.forEach(s => {
+      speakingAttemptsCount++;
+      speakingCompletedCount++;
+      speakingChecklistTotal += (Number(s.checklistCompleted) || 0);
+      if (s.completedAt) speakingDates.push(s.completedAt);
+      if (s.updatedAt) speakingDates.push(s.updatedAt);
+    });
+
+    const dialogueProg = adventureProg.dialogueProgress && typeof adventureProg.dialogueProgress === "object" ? adventureProg.dialogueProgress : {};
+    Object.values(dialogueProg).forEach(d => {
+      if (!d || typeof d !== "object") return;
+      if (Array.isArray(d.attempts)) {
+        d.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          speakingAttemptsCount++;
+          if (a.completedAt) speakingDates.push(a.completedAt);
+        });
+      }
+      if (d.completedAt || (Array.isArray(d.attempts) && d.attempts.some(a => a && a.passed))) {
+        speakingCompletedCount++;
+      }
+      if (d.updatedAt) speakingDates.push(d.updatedAt);
+    });
+
+    const speakingEv = Array.isArray(skillEvidence.speaking) ? skillEvidence.speaking : [];
+    speakingAttemptsCount += speakingEv.length;
+    speakingEv.forEach(ev => { if (ev && ev.recordedAt) speakingDates.push(ev.recordedAt); });
+
+    const speakingDays = distinctDays(speakingDates);
+    const speakingStatus = (speakingAttemptsCount === 0 && speakingCompletedCount === 0)
+      ? "not-started"
+      : (speakingCompletedCount >= 2 || speakingDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const speakingStatusReason = speakingStatus === "not-started"
+      ? "Belum ada sesi Speaking Studio atau percakapan yang dicoba."
+      : speakingStatus === "consistent"
+        ? "Telah menyelesaikan minimal 2 sesi berbicara atau percakapan."
+        : "Telah mencoba sesi berbicara/roleplay.";
+
+    const speakingEntry = {
+      id: "speaking",
+      title: "Berbicara (Speaking)",
+      shortName: "Speaking",
+      symbol: "↗",
+      status: speakingStatus,
+      statusLabel: speakingStatus === "not-started" ? "Belum dimulai" : speakingStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: speakingStatusReason,
+      attemptsCount: speakingAttemptsCount,
+      completedCount: speakingCompletedCount,
+      completedLabel: speakingCompletedCount + " sesi berbicara selesai",
+      accuracy: null,
+      accuracyNote: "Evaluasi refleksi mandiri, tanpa skor otomatis",
+      mastery: null,
+      lastPracticedAt: latestDate(speakingDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(speakingDates)),
+      evidenceDetails: [
+        speakingSessions.length + " sesi Speaking Studio mandiri",
+        speakingChecklistTotal + " kriteria checklist self-review terpenuhi",
+        speakingDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Buka Speaking Studio ↗",
+        viewTarget: "adventure"
+      }
+    };
+
+    // 6. WRITING
+    const writingDates = [];
+    let writingCompletedCount = 0;
+    let writingAttemptsCount = 0;
+    let writingWordsTotal = 0;
+    let writingChecklistTotal = 0;
+
+    const writingSessions = studioSessions.filter(s => s && s.studioType === "writing");
+    writingSessions.forEach(s => {
+      writingAttemptsCount++;
+      writingCompletedCount++;
+      writingWordsTotal += (Number(s.wordCount) || 0);
+      writingChecklistTotal += (Number(s.checklistCompleted) || 0);
+      if (s.completedAt) writingDates.push(s.completedAt);
+      if (s.updatedAt) writingDates.push(s.updatedAt);
+    });
+
+    const writingEv = Array.isArray(skillEvidence.writing) ? skillEvidence.writing : [];
+    writingAttemptsCount += writingEv.length;
+    writingEv.forEach(ev => { if (ev && ev.recordedAt) writingDates.push(ev.recordedAt); });
+
+    const writingDays = distinctDays(writingDates);
+    const writingStatus = (writingAttemptsCount === 0 && writingCompletedCount === 0)
+      ? "not-started"
+      : (writingCompletedCount >= 2 || writingDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const writingStatusReason = writingStatus === "not-started"
+      ? "Belum ada sesi Writing Studio yang diselesaikan."
+      : writingStatus === "consistent"
+        ? "Telah menyelesaikan minimal 2 sesi menulis dengan refleksi."
+        : "Telah membuat draft tulisan dan refleksi awal.";
+
+    const writingEntry = {
+      id: "writing",
+      title: "Menulis (Writing)",
+      shortName: "Writing",
+      symbol: "✎",
+      status: writingStatus,
+      statusLabel: writingStatus === "not-started" ? "Belum dimulai" : writingStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: writingStatusReason,
+      attemptsCount: writingAttemptsCount,
+      completedCount: writingCompletedCount,
+      completedLabel: writingCompletedCount + " sesi tulisan selesai",
+      accuracy: null,
+      accuracyNote: "Evaluasi refleksi mandiri, tanpa skor otomatis",
+      mastery: null,
+      lastPracticedAt: latestDate(writingDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(writingDates)),
+      evidenceDetails: [
+        writingSessions.length + " sesi Writing Studio selesai",
+        writingWordsTotal + " kata disusun dalam sesi tersimpan",
+        writingChecklistTotal + " kriteria checklist self-review terpenuhi"
+      ],
+      primaryAction: {
+        label: "Buka Writing Studio ↗",
+        viewTarget: "adventure"
+      }
+    };
+
+    // 7. PRONUNCIATION
+    const pronDates = [];
+    let pronPhrasesPracticed = 0;
+    let pronTotalAttempts = 0;
+    let pronTotalDurationMs = 0;
+
+    const pronProg = adventureProg.pronunciationProgress && typeof adventureProg.pronunciationProgress === "object" ? adventureProg.pronunciationProgress : {};
+    Object.values(pronProg).forEach(p => {
+      if (!p || typeof p !== "object") return;
+      const attempts = Array.isArray(p.attempts) ? p.attempts : [];
+      if (attempts.length > 0) pronPhrasesPracticed++;
+      attempts.forEach(a => {
+        if (!a || typeof a !== "object") return;
+        pronTotalAttempts++;
+        pronTotalDurationMs += (Number(a.durationMs) || 0);
+        if (a.completedAt) pronDates.push(a.completedAt);
+      });
+      if (p.updatedAt) pronDates.push(p.updatedAt);
+    });
+
+    const pronDays = distinctDays(pronDates);
+    const pronStatus = (pronTotalAttempts === 0)
+      ? "not-started"
+      : (pronPhrasesPracticed >= 3 || pronTotalAttempts >= 5 || pronDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const pronStatusReason = pronStatus === "not-started"
+      ? "Belum ada rekaman artikulasi frasa yang dicatat."
+      : pronStatus === "consistent"
+        ? "Telah melatih ≥3 frasa pengucapan secara berkala."
+        : "Telah merekam latihan artikulasi frasa.";
+
+    const pronSeconds = Math.round(pronTotalDurationMs / 1000);
+    const pronDurationFormatted = pronSeconds >= 60
+      ? (Math.floor(pronSeconds / 60) + " m " + (pronSeconds % 60) + " d")
+      : (pronSeconds + " detik");
+
+    const pronEntry = {
+      id: "pronunciation",
+      title: "Pengucapan (Pronunciation)",
+      shortName: "Pronunciation",
+      symbol: "🗣",
+      status: pronStatus,
+      statusLabel: pronStatus === "not-started" ? "Belum dimulai" : pronStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: pronStatusReason,
+      attemptsCount: pronTotalAttempts,
+      completedCount: pronPhrasesPracticed,
+      completedLabel: pronPhrasesPracticed + " frasa dipraktikkan",
+      accuracy: null,
+      accuracyNote: "Analisis audio lokal, tanpa skor persentase otomatis",
+      mastery: null,
+      lastPracticedAt: latestDate(pronDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(pronDates)),
+      evidenceDetails: [
+        pronPhrasesPracticed + " frasa pengucapan dicoba",
+        pronTotalAttempts + " rekaman latihan artikulasi (" + pronDurationFormatted + " total rekaman)",
+        pronDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Buka Pronunciation Studio ↗",
+        viewTarget: "adventure"
+      }
+    };
+
+    const skills = [vocabEntry, grammarEntry, readingEntry, listeningEntry, speakingEntry, writingEntry, pronEntry];
+
+    // Compute Overall Insight
+    const activeSkills = skills.filter(s => s.status !== "not-started" || s.attemptsCount > 0 || s.completedCount > 0);
+    let insight = null;
+
+    if (activeSkills.length === 0) {
+      insight = {
+        emptyState: true,
+        mostPracticed: null,
+        leastPracticed: null,
+        insufficientDataReason: null,
+        nextAction: {
+          text: "Mulai sesi kosakata pertamamu untuk meletakkan fondasi kata dasar dalam konteks.",
+          target: "vocabulary",
+          label: "Mulai Kosakata ↗"
+        }
+      };
+    } else if (activeSkills.length === 1) {
+      const active = activeSkills[0];
+      const nextSkill = skills.find(s => s.id !== active.id && s.id !== "pronunciation") || skills[1];
+      insight = {
+        emptyState: false,
+        mostPracticed: {
+          name: active.title,
+          detail: active.completedLabel + " · " + active.attemptsCount + " percobaan"
+        },
+        leastPracticed: null,
+        insufficientDataReason: "Data perbandingan belum cukup: baru 1 dari 7 keterampilan yang aktif. Latih minimal satu keterampilan lain (misalnya Grammar atau Bacaan) untuk melihat peta keseimbangan belajar.",
+        nextAction: {
+          text: "Seimbangkan latihanmu dengan mulai mempelajari " + nextSkill.shortName + ".",
+          target: nextSkill.primaryAction.viewTarget,
+          label: nextSkill.primaryAction.label
+        }
+      };
+    } else {
+      const sorted = activeSkills.slice().sort((a, b) => {
+        const scoreA = a.completedCount * 3 + a.attemptsCount;
+        const scoreB = b.completedCount * 3 + b.attemptsCount;
+        return scoreB - scoreA;
+      });
+      const top = sorted[0];
+      const least = sorted[sorted.length - 1];
+
+      let nextAction = null;
+      const dueCount = typeof dueWords === "function" ? dueWords().length : 0;
+      if (dueCount > 0) {
+        nextAction = {
+          text: "Ada " + dueCount + " kata yang jatuh tempo untuk direview hari ini agar retensi memori tetap kuat.",
+          target: "review",
+          label: "Mulai Review ↗"
+        };
+      } else {
+        const unstarted = skills.find(s => s.status === "not-started");
+        if (unstarted) {
+          nextAction = {
+            text: "Coba keterampilan " + unstarted.shortName + " untuk memperluas variasi kemampuan komunikasimu.",
+            target: unstarted.primaryAction.viewTarget,
+            label: unstarted.primaryAction.label
+          };
+        } else {
+          nextAction = {
+            text: "Fokuskan latihan berikutnya pada " + least.shortName + " agar perkembangan belajarmu merata di semua aspek.",
+            target: least.primaryAction.viewTarget,
+            label: least.primaryAction.label
+          };
+        }
+      }
+
+      insight = {
+        emptyState: false,
+        mostPracticed: {
+          name: top.title,
+          detail: top.completedLabel + " · " + top.attemptsCount + " percobaan"
+        },
+        leastPracticed: {
+          name: least.title,
+          detail: least.completedLabel + " · " + least.attemptsCount + " percobaan"
+        },
+        insufficientDataReason: null,
+        nextAction: nextAction
+      };
+    }
+
+    return {
+      skills,
+      insight,
+      totalActiveSkills: activeSkills.length,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  function computeWeeklyInsights(currentState, extras = {}, allWords = [], allTopics = [], refDate = new Date()) {
+    const ref = (refDate instanceof Date && !isNaN(refDate.getTime())) ? refDate : (typeof refDate === "string" && !isNaN(new Date(refDate).getTime())) ? new Date(refDate) : new Date();
+    const st = currentState || {};
+    const extraLearning = extras.extraLearning || {};
+    const habitProg = extras.habitProgress || {};
+    const adventureProg = extras.adventureProgress || {};
+    const studioSessions = Array.isArray(adventureProg.studioSessions) ? adventureProg.studioSessions : [];
+    const skillEvidence = adventureProg.skillEvidence && typeof adventureProg.skillEvidence === "object" ? adventureProg.skillEvidence : {};
+    const mistakeJournal = adventureProg.mistakeJournal && typeof adventureProg.mistakeJournal === "object" ? adventureProg.mistakeJournal : {};
+
+    function toDayKey(val) {
+      if (!val) return null;
+      if (typeof val === "string") {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return null;
+        return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
+      }
+      if (typeof val === "number") {
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return null;
+        return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
+      }
+      if (val instanceof Date && !isNaN(val.getTime())) {
+        return [val.getFullYear(), String(val.getMonth() + 1).padStart(2, "0"), String(val.getDate()).padStart(2, "0")].join("-");
+      }
+      return null;
+    }
+
+    // Build rolling 7-day windows
+    const currentDayKeys = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(ref.getTime() - i * 86400000);
+      currentDayKeys.push(toDayKey(d));
+    }
+    const prevDayKeys = [];
+    for (let i = 7; i < 14; i++) {
+      const d = new Date(ref.getTime() - i * 86400000);
+      prevDayKeys.push(toDayKey(d));
+    }
+    const currentSet = new Set(currentDayKeys.filter(Boolean));
+    const prevSet = new Set(prevDayKeys.filter(Boolean));
+
+    function createPeriodBucket() {
+      return {
+        activeDays: new Set(),
+        totalActivities: 0,
+        totalQuestions: 0,
+        totalCorrect: 0,
+        skills: {
+          vocabulary: { id: "vocabulary", name: "Kosakata", symbol: "Aa", completed: 0, attempts: 0, correct: 0, questionTotal: 0, accuracy: null, target: "vocabulary" },
+          grammar: { id: "grammar", name: "Tata Bahasa", symbol: "¶", completed: 0, attempts: 0, correct: 0, questionTotal: 0, accuracy: null, target: "grammar" },
+          reading: { id: "reading", name: "Membaca", symbol: "▤", completed: 0, attempts: 0, correct: 0, questionTotal: 0, accuracy: null, target: "reading" },
+          listening: { id: "listening", name: "Menyimak", symbol: ")))", completed: 0, attempts: 0, correct: 0, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-listening-lab" },
+          speaking: { id: "speaking", name: "Berbicara", symbol: "↗", completed: 0, attempts: 0, correct: null, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-speaking-studio" },
+          writing: { id: "writing", name: "Menulis", symbol: "✎", completed: 0, attempts: 0, correct: null, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-writing-studio" },
+          pronunciation: { id: "pronunciation", name: "Pengucapan", symbol: "🗣", completed: 0, attempts: 0, correct: null, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-pronunciation-studio" }
+        },
+        reviews: {
+          vocabReviews: 0,
+          vocabReviewsCorrect: 0,
+          mistakeReviews: 0,
+          mistakesResolved: 0,
+          totalReviews: 0
+        }
+      };
+    }
+
+    const current = createPeriodBucket();
+    const previous = createPeriodBucket();
+
+    // 1. Vocabulary
+    const wordProgress = st.wordProgress && typeof st.wordProgress === "object" ? st.wordProgress : {};
+    Object.values(wordProgress).forEach(p => {
+      if (!p || typeof p !== "object") return;
+      if (Array.isArray(p.attempts)) {
+        p.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          const k = toDayKey(a.at || a.date);
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.skills.vocabulary.attempts++;
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.skills.vocabulary.attempts++;
+          }
+        });
+      }
+      if (Array.isArray(p.reviewHistory)) {
+        p.reviewHistory.forEach(r => {
+          if (!r || typeof r !== "object") return;
+          const k = toDayKey(r.at || r.date);
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.skills.vocabulary.attempts++;
+            current.skills.vocabulary.questionTotal++;
+            current.totalQuestions++;
+            current.reviews.vocabReviews++;
+            if (r.correct) {
+              current.skills.vocabulary.correct++;
+              current.totalCorrect++;
+              current.reviews.vocabReviewsCorrect++;
+            }
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.skills.vocabulary.attempts++;
+            previous.skills.vocabulary.questionTotal++;
+            previous.totalQuestions++;
+            previous.reviews.vocabReviews++;
+            if (r.correct) {
+              previous.skills.vocabulary.correct++;
+              previous.totalCorrect++;
+              previous.reviews.vocabReviewsCorrect++;
+            }
+          }
+        });
+      }
+      if (Array.isArray(p.studiedDates)) {
+        p.studiedDates.forEach(d => {
+          const k = toDayKey(d);
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.skills.vocabulary.completed++;
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.skills.vocabulary.completed++;
+          }
+        });
+      }
+    });
+
+    // 2. Grammar
+    const grammarProg = st.grammarProgress && typeof st.grammarProgress === "object" ? st.grammarProgress : {};
+    const currGrammarTopics = new Set();
+    const prevGrammarTopics = new Set();
+    Object.keys(grammarProg).forEach(topicId => {
+      const p = grammarProg[topicId];
+      if (!p || typeof p !== "object") return;
+      if (p.answers && typeof p.answers === "object") {
+        Object.values(p.answers).forEach(a => {
+          if (!a || typeof a !== "object") return;
+          const k = toDayKey(a.at);
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.skills.grammar.attempts++;
+            current.skills.grammar.questionTotal++;
+            current.totalQuestions++;
+            currGrammarTopics.add(topicId);
+            if (a.correct) {
+              current.skills.grammar.correct++;
+              current.totalCorrect++;
+            }
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.skills.grammar.attempts++;
+            previous.skills.grammar.questionTotal++;
+            previous.totalQuestions++;
+            prevGrammarTopics.add(topicId);
+            if (a.correct) {
+              previous.skills.grammar.correct++;
+              previous.totalCorrect++;
+            }
+          }
+        });
+      }
+      if (Array.isArray(p.history)) {
+        p.history.forEach(h => {
+          if (!h || typeof h !== "object") return;
+          const k = toDayKey(h.at);
+          if (currentSet.has(k)) current.activeDays.add(k);
+          else if (prevSet.has(k)) previous.activeDays.add(k);
+        });
+      }
+    });
+    current.skills.grammar.completed = currGrammarTopics.size;
+    previous.skills.grammar.completed = prevGrammarTopics.size;
+
+    // 3. Reading
+    Object.values(habitProg).forEach(p => {
+      if (!p || typeof p !== "object" || !p.answers) return;
+      let currAnswers = 0;
+      let prevAnswers = 0;
+      Object.values(p.answers).forEach(a => {
+        if (!a || typeof a !== "object") return;
+        const k = toDayKey(a.answeredAt);
+        if (currentSet.has(k)) {
+          current.activeDays.add(k);
+          current.skills.reading.attempts++;
+          current.skills.reading.questionTotal++;
+          current.totalQuestions++;
+          currAnswers++;
+          if (a.correct) {
+            current.skills.reading.correct++;
+            current.totalCorrect++;
+          }
+        } else if (prevSet.has(k)) {
+          previous.activeDays.add(k);
+          previous.skills.reading.attempts++;
+          previous.skills.reading.questionTotal++;
+          previous.totalQuestions++;
+          prevAnswers++;
+          if (a.correct) {
+            previous.skills.reading.correct++;
+            previous.totalCorrect++;
+          }
+        }
+      });
+      if (currAnswers >= 3) current.skills.reading.completed++;
+      if (prevAnswers >= 3) previous.skills.reading.completed++;
+    });
+
+    const storyProg = adventureProg.storyProgress && typeof adventureProg.storyProgress === "object" ? adventureProg.storyProgress : {};
+    Object.values(storyProg).forEach(s => {
+      if (!s || typeof s !== "object") return;
+      if (Array.isArray(s.attempts)) {
+        s.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          const k = toDayKey(a.completedAt);
+          const tot = Number(a.total) || 1;
+          const sco = Number(a.score) || 0;
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.skills.reading.attempts += tot;
+            current.skills.reading.questionTotal += tot;
+            current.totalQuestions += tot;
+            current.skills.reading.correct += sco;
+            current.totalCorrect += sco;
+            if (a.passed) current.skills.reading.completed++;
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.skills.reading.attempts += tot;
+            previous.skills.reading.questionTotal += tot;
+            previous.totalQuestions += tot;
+            previous.skills.reading.correct += sco;
+            previous.totalCorrect += sco;
+            if (a.passed) previous.skills.reading.completed++;
+          }
+        });
+      }
+    });
+
+    const readingSkills = extraLearning.reading && typeof extraLearning.reading === "object" ? extraLearning.reading : {};
+    Object.values(readingSkills).forEach(r => {
+      if (!r || typeof r !== "object") return;
+      const k = toDayKey(r.lastAttempt);
+      const att = Number(r.attempts) || 0;
+      const cor = Number(r.correct) || 0;
+      if (currentSet.has(k)) {
+        current.activeDays.add(k);
+        if (r.completed) current.skills.reading.completed++;
+        current.skills.reading.attempts += att;
+        current.skills.reading.questionTotal += att;
+        current.totalQuestions += att;
+        current.skills.reading.correct += cor;
+        current.totalCorrect += cor;
+      } else if (prevSet.has(k)) {
+        previous.activeDays.add(k);
+        if (r.completed) previous.skills.reading.completed++;
+        previous.skills.reading.attempts += att;
+        previous.skills.reading.questionTotal += att;
+        previous.totalQuestions += att;
+        previous.skills.reading.correct += cor;
+        previous.totalCorrect += cor;
+      }
+    });
+
+    // 4. Listening
+    const listeningProg = adventureProg.listeningProgress && typeof adventureProg.listeningProgress === "object" ? adventureProg.listeningProgress : {};
+    Object.values(listeningProg).forEach(e => {
+      if (!e || typeof e !== "object") return;
+      if (Array.isArray(e.attempts)) {
+        e.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          const k = toDayKey(a.completedAt);
+          const tot = Number(a.total) || 1;
+          const sco = Number(a.score) || 0;
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.skills.listening.attempts += tot;
+            current.skills.listening.questionTotal += tot;
+            current.totalQuestions += tot;
+            current.skills.listening.correct += sco;
+            current.totalCorrect += sco;
+            if (a.passed) current.skills.listening.completed++;
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.skills.listening.attempts += tot;
+            previous.skills.listening.questionTotal += tot;
+            previous.totalQuestions += tot;
+            previous.skills.listening.correct += sco;
+            previous.totalCorrect += sco;
+            if (a.passed) previous.skills.listening.completed++;
+          }
+        });
+      }
+    });
+
+    // 5. Speaking
+    studioSessions.filter(s => s && s.studioType === "speaking").forEach(s => {
+      const k = toDayKey(s.completedAt || s.updatedAt);
+      if (currentSet.has(k)) {
+        current.activeDays.add(k);
+        current.skills.speaking.completed++;
+        current.skills.speaking.attempts++;
+      } else if (prevSet.has(k)) {
+        previous.activeDays.add(k);
+        previous.skills.speaking.completed++;
+        previous.skills.speaking.attempts++;
+      }
+    });
+    const dialogueProg = adventureProg.dialogueProgress && typeof adventureProg.dialogueProgress === "object" ? adventureProg.dialogueProgress : {};
+    Object.values(dialogueProg).forEach(d => {
+      if (!d || typeof d !== "object") return;
+      if (Array.isArray(d.attempts)) {
+        d.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          const k = toDayKey(a.completedAt);
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.skills.speaking.attempts++;
+            if (a.passed) current.skills.speaking.completed++;
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.skills.speaking.attempts++;
+            if (a.passed) previous.skills.speaking.completed++;
+          }
+        });
+      }
+    });
+
+    // 6. Writing
+    studioSessions.filter(s => s && s.studioType === "writing").forEach(s => {
+      const k = toDayKey(s.completedAt || s.updatedAt);
+      if (currentSet.has(k)) {
+        current.activeDays.add(k);
+        current.skills.writing.completed++;
+        current.skills.writing.attempts++;
+      } else if (prevSet.has(k)) {
+        previous.activeDays.add(k);
+        previous.skills.writing.completed++;
+        previous.skills.writing.attempts++;
+      }
+    });
+
+    // 7. Pronunciation
+    const pronProg = adventureProg.pronunciationProgress && typeof adventureProg.pronunciationProgress === "object" ? adventureProg.pronunciationProgress : {};
+    Object.values(pronProg).forEach(p => {
+      if (!p || typeof p !== "object") return;
+      if (Array.isArray(p.attempts)) {
+        let currPhraseAtt = 0;
+        let prevPhraseAtt = 0;
+        p.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          const k = toDayKey(a.completedAt);
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.skills.pronunciation.attempts++;
+            currPhraseAtt++;
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.skills.pronunciation.attempts++;
+            prevPhraseAtt++;
+          }
+        });
+        if (currPhraseAtt > 0) current.skills.pronunciation.completed++;
+        if (prevPhraseAtt > 0) previous.skills.pronunciation.completed++;
+      }
+    });
+
+    // 8. Mistake Journal Retrieval Reviews
+    Object.values(mistakeJournal).forEach(m => {
+      if (!m || typeof m !== "object") return;
+      if (Array.isArray(m.reviewHistory)) {
+        m.reviewHistory.forEach(h => {
+          if (!h || typeof h !== "object") return;
+          const k = toDayKey(h.reviewedAt);
+          if (currentSet.has(k)) {
+            current.activeDays.add(k);
+            current.reviews.mistakeReviews++;
+            if (h.correct) current.reviews.mistakesResolved++;
+          } else if (prevSet.has(k)) {
+            previous.activeDays.add(k);
+            previous.reviews.mistakeReviews++;
+            if (h.correct) previous.reviews.mistakesResolved++;
+          }
+        });
+      }
+    });
+
+    // History and Events scan for active days
+    if (Array.isArray(st.history)) {
+      st.history.forEach(h => {
+        if (!h || typeof h !== "object") return;
+        const k = toDayKey(h.at || h.date);
+        if (currentSet.has(k)) current.activeDays.add(k);
+        else if (prevSet.has(k)) previous.activeDays.add(k);
+      });
+    }
+
+    // Totals
+    current.activeDaysCount = current.activeDays.size;
+    previous.activeDaysCount = previous.activeDays.size;
+    current.activeDaysList = Array.from(current.activeDays);
+    previous.activeDaysList = Array.from(previous.activeDays);
+    current.totalActivities = Object.values(current.skills).reduce((acc, s) => acc + s.completed, 0);
+    previous.totalActivities = Object.values(previous.skills).reduce((acc, s) => acc + s.completed, 0);
+    current.reviews.totalReviews = current.reviews.vocabReviews + current.reviews.mistakeReviews;
+    previous.reviews.totalReviews = previous.reviews.vocabReviews + previous.reviews.mistakeReviews;
+
+    // Per-skill accuracy calculations
+    Object.values(current.skills).forEach(s => {
+      if (s.questionTotal > 0) {
+        s.accuracy = {
+          percentage: Math.round((s.correct / s.questionTotal) * 100),
+          correct: s.correct,
+          total: s.questionTotal
+        };
+      }
+    });
+    Object.values(previous.skills).forEach(s => {
+      if (s.questionTotal > 0) {
+        s.accuracy = {
+          percentage: Math.round((s.correct / s.questionTotal) * 100),
+          correct: s.correct,
+          total: s.questionTotal
+        };
+      }
+    });
+
+    if (current.totalQuestions > 0) {
+      current.accuracy = {
+        percentage: Math.round((current.totalCorrect / current.totalQuestions) * 100),
+        correct: current.totalCorrect,
+        total: current.totalQuestions
+      };
+    } else {
+      current.accuracy = null;
+    }
+
+    if (previous.totalQuestions > 0) {
+      previous.accuracy = {
+        percentage: Math.round((previous.totalCorrect / previous.totalQuestions) * 100),
+        correct: previous.totalCorrect,
+        total: previous.totalQuestions
+      };
+    } else {
+      previous.accuracy = null;
+    }
+
+    const currentStartDate = new Date(ref.getTime() - 6 * 86400000);
+    const prevStartDate = new Date(ref.getTime() - 13 * 86400000);
+    const prevEndDate = new Date(ref.getTime() - 7 * 86400000);
+
+    const currentRangeLabel = fmtDate(currentStartDate, { day: "2-digit", month: "short" }) + " – " + fmtDate(ref, { day: "2-digit", month: "short", year: "numeric" });
+    const prevRangeLabel = fmtDate(prevStartDate, { day: "2-digit", month: "short" }) + " – " + fmtDate(prevEndDate, { day: "2-digit", month: "short", year: "numeric" });
+
+    current.dateRangeLabel = currentRangeLabel;
+    previous.dateRangeLabel = prevRangeLabel;
+
+    const activeDaysDiff = current.activeDays.size - previous.activeDays.size;
+    let activeDaysComparison = "";
+    if (previous.activeDays.size === 0) {
+      activeDaysComparison = current.activeDays.size > 0 ? (current.activeDays.size + " hari aktif (minggu sebelumnya belum ada)") : "Belum aktif";
+    } else if (activeDaysDiff > 0) {
+      activeDaysComparison = "+" + activeDaysDiff + " hari dibanding minggu lalu";
+    } else if (activeDaysDiff < 0) {
+      activeDaysComparison = activeDaysDiff + " hari dibanding minggu lalu";
+    } else {
+      activeDaysComparison = "Sama seperti minggu lalu";
+    }
+
+    const activitiesDiff = current.totalActivities - previous.totalActivities;
+    let activitiesComparison = "";
+    if (previous.totalActivities === 0) {
+      activitiesComparison = current.totalActivities > 0 ? (current.totalActivities + " selesai (minggu sebelumnya belum ada)") : "Belum ada aktivitas";
+    } else if (activitiesDiff > 0) {
+      activitiesComparison = "+" + activitiesDiff + " aktivitas dibanding minggu lalu";
+    } else if (activitiesDiff < 0) {
+      activitiesComparison = activitiesDiff + " aktivitas dibanding minggu lalu";
+    } else {
+      activitiesComparison = "Sama seperti minggu lalu";
+    }
+
+    const hasFairAccuracyComparison = current.totalQuestions >= 5 && previous.totalQuestions >= 5;
+    let accuracyComparison = "";
+    if (hasFairAccuracyComparison) {
+      const diff = current.accuracy.percentage - previous.accuracy.percentage;
+      accuracyComparison = (diff >= 0 ? "+" : "") + diff + "% (" + current.accuracy.percentage + "% vs " + previous.accuracy.percentage + "%)";
+    } else if (current.totalQuestions >= 5) {
+      accuracyComparison = current.accuracy.percentage + "% (" + current.totalCorrect + "/" + current.totalQuestions + " soal tepat)";
+    } else if (current.totalQuestions > 0) {
+      accuracyComparison = current.totalCorrect + "/" + current.totalQuestions + " soal tepat (data belum cukup untuk tren)";
+    } else {
+      accuracyComparison = "Belum ada butir soal objektif";
+    }
+
+    const emptyState = current.activeDays.size === 0 && current.totalActivities === 0;
+    const singleDayState = current.activeDays.size === 1;
+
+    let narrative = "";
+    if (emptyState) {
+      narrative = "Belum ada aktivitas belajar dalam 7 hari terakhir.";
+    } else if (singleDayState) {
+      narrative = "Kamu aktif belajar di 1 hari minggu ini dengan " + current.totalActivities + " aktivitas selesai. Teruskan ritmemu agar tren mingguan dapat dipantau secara adil.";
+    } else {
+      const practicedSkillCount = Object.values(current.skills).filter(s => s.completed > 0 || s.attempts > 0).length;
+      narrative = "Kamu aktif berlatih di " + current.activeDays.size + " dari 7 hari dengan " + current.totalActivities + " aktivitas selesai di " + practicedSkillCount + " keterampilan berbeda.";
+    }
+
+    let mostPracticed = null;
+    let leastPracticed = null;
+
+    if (!emptyState) {
+      const activeSkillList = Object.values(current.skills).filter(s => s.completed > 0 || s.attempts > 0);
+      if (activeSkillList.length > 0) {
+        activeSkillList.sort((a, b) => (b.completed * 2 + b.attempts) - (a.completed * 2 + a.attempts));
+        const top = activeSkillList[0];
+        mostPracticed = {
+          id: top.id,
+          name: top.name,
+          symbol: top.symbol,
+          count: top.completed,
+          attempts: top.attempts,
+          detail: top.completed + " aktivitas selesai · " + top.attempts + " percobaan"
+        };
+      }
+
+      const unpracticedSkills = Object.values(current.skills).filter(s => s.completed === 0 && s.attempts === 0);
+      if (unpracticedSkills.length > 0) {
+        const lp = unpracticedSkills[0];
+        leastPracticed = {
+          id: lp.id,
+          name: lp.name,
+          symbol: lp.symbol,
+          count: 0,
+          attempts: 0,
+          detail: "Belum dilatih dalam 7 hari terakhir",
+          isUnpracticed: true,
+          target: lp.target,
+          sectionId: lp.sectionId
+        };
+      } else if (activeSkillList.length > 1) {
+        const lp = activeSkillList[activeSkillList.length - 1];
+        leastPracticed = {
+          id: lp.id,
+          name: lp.name,
+          symbol: lp.symbol,
+          count: lp.completed,
+          attempts: lp.attempts,
+          detail: lp.completed + " aktivitas selesai",
+          isUnpracticed: false,
+          target: lp.target,
+          sectionId: lp.sectionId
+        };
+      }
+    }
+
+    const recommendations = [];
+    const dueCount = typeof dueWords === "function" ? dueWords().length : 0;
+    const mistakeCount = Object.values(mistakeJournal).filter(m => {
+      if (!m || typeof m !== "object") return false;
+      if (typeof window.sinauuIsMistakeDue === "function") return window.sinauuIsMistakeDue(m);
+      return m.nextReviewAt && new Date(m.nextReviewAt).getTime() <= ref.getTime();
+    }).length;
+
+    if (dueCount > 0 || mistakeCount > 0) {
+      const totalDue = dueCount + mistakeCount;
+      recommendations.push({
+        id: "rec-review",
+        title: "Tuntaskan " + totalDue + " Materi di Review Queue",
+        desc: "Terdapat materi kosakata dan pengulangan kesalahan yang sudah jatuh tempo. Menyelesaikannya menjaga retensi memori jangka panjang.",
+        actionLabel: "Buka Review Queue ↗",
+        target: "review"
+      });
+    }
+
+    if (leastPracticed && leastPracticed.isUnpracticed && recommendations.length < 2) {
+      let viewTarget = leastPracticed.target || "vocabulary";
+      recommendations.push({
+        id: "rec-neglected",
+        title: "Beri Perhatian pada " + leastPracticed.name,
+        desc: "Keterampilan " + leastPracticed.name + " belum sempat dilatih dalam 7 hari terakhir. Melatihnya minggu depan menjaga keseimbangan belajar.",
+        actionLabel: "Latih " + leastPracticed.name + " ↗",
+        target: viewTarget,
+        sectionId: leastPracticed.sectionId
+      });
+    }
+
+    if (recommendations.length < 2) {
+      recommendations.push({
+        id: "rec-continue",
+        title: "Lanjutkan Materi Baru di Petualangan",
+        desc: "Ritme belajarmu stabil. Teruskan dengan menyelesaikan tantangan Daily Quest atau pelajari kata baru di korpus.",
+        actionLabel: "Buka Petualangan ↗",
+        target: "adventure"
+      });
+    }
+
+    return {
+      emptyState,
+      singleDayState,
+      current,
+      previous,
+      comparisons: {
+        activeDaysDiff,
+        activeDaysComparison,
+        activitiesDiff,
+        activitiesComparison,
+        hasFairAccuracyComparison,
+        accuracyComparison
+      },
+      narrative,
+      mostPracticed,
+      leastPracticed,
+      recommendations
+    };
+  }
+
+  function renderWeeklyInsights() {
+    const cardEl = $("#weekly-insights-card");
+    if (!cardEl) return;
+    const extras = readExtraSnapshots();
+    const weekly = computeWeeklyInsights(state, extras, words, topics);
+    window.sinauuWeeklyInsightsData = weekly;
+
+    if (weekly.emptyState) {
+      cardEl.innerHTML = '<div class="weekly-empty-state">' +
+        '<div class="weekly-empty-copy">' +
+          '<span class="weekly-empty-kicker">BELUM ADA AKTIVITAS MINGGUAN</span>' +
+          '<h3>Belum ada aktivitas belajar dalam 7 hari terakhir.</h3>' +
+          '<p>Begitu kamu menyelesaikan sesi kosakata, latihan grammar, bacaan, atau petualangan, tinjauan mingguan akan memetakan konsistensi dan perkembangan belajarmu secara otomatis.</p>' +
+        '</div>' +
+        '<div class="weekly-empty-action">' +
+          '<button type="button" class="primary-action" data-weekly-target="vocabulary">Mulai Latihan Pertama ↗</button>' +
+        '</div>' +
+      '</div>';
+      return;
+    }
+
+    const current = weekly.current;
+    const previous = weekly.previous;
+    const comp = weekly.comparisons;
+
+    const headerHtml = '<div class="weekly-header-bar">' +
+      '<span class="weekly-range-pill">' + esc(current.dateRangeLabel) + '</span>' +
+      '<p class="weekly-narrative">' + esc(weekly.narrative) + '</p>' +
+    '</div>';
+
+    const accDisplay = current.accuracy
+      ? current.accuracy.percentage + '% <small>(' + current.accuracy.correct + '/' + current.accuracy.total + ' tepat)</small>'
+      : '<span class="metric-na">— <small>Belum ada butir soal objektif</small></span>';
+
+    const metricsHtml = '<div class="weekly-metric-grid">' +
+      '<div class="weekly-metric-item">' +
+        '<span class="weekly-metric-title">Hari Aktif</span>' +
+        '<span class="weekly-metric-value" id="weekly-active-days">' + current.activeDays.size + ' <small>/ 7 hari</small></span>' +
+        '<span class="weekly-metric-comparison ' + (comp.activeDaysDiff > 0 ? 'trend-up' : comp.activeDaysDiff < 0 ? 'trend-down' : '') + '">' + esc(comp.activeDaysComparison) + '</span>' +
+      '</div>' +
+      '<div class="weekly-metric-item">' +
+        '<span class="weekly-metric-title">Aktivitas Selesai</span>' +
+        '<span class="weekly-metric-value" id="weekly-total-activities">' + current.totalActivities + '</span>' +
+        '<span class="weekly-metric-comparison ' + (comp.activitiesDiff > 0 ? 'trend-up' : comp.activitiesDiff < 0 ? 'trend-down' : '') + '">' + esc(comp.activitiesComparison) + '</span>' +
+      '</div>' +
+      '<div class="weekly-metric-item">' +
+        '<span class="weekly-metric-title">Review & Perbaikan</span>' +
+        '<span class="weekly-metric-value" id="weekly-total-reviews">' + current.reviews.totalReviews + '</span>' +
+        '<span class="weekly-metric-comparison">' + current.reviews.vocabReviews + ' review kata · ' + current.reviews.mistakesResolved + ' perbaikan</span>' +
+      '</div>' +
+      '<div class="weekly-metric-item">' +
+        '<span class="weekly-metric-title">Akurasi Soal Objektif</span>' +
+        '<span class="weekly-metric-value" id="weekly-accuracy-value">' + accDisplay + '</span>' +
+        '<span class="weekly-metric-comparison ' + (comp.hasFairAccuracyComparison && current.accuracy && previous.accuracy && current.accuracy.percentage > previous.accuracy.percentage ? 'trend-up' : '') + '">' + esc(comp.accuracyComparison) + '</span>' +
+      '</div>' +
+    '</div>';
+
+    const skillRows = Object.values(current.skills).map(s => {
+      const prevSkill = previous.skills[s.id] || { completed: 0, attempts: 0 };
+      const diff = s.completed - prevSkill.completed;
+      let changeText = "";
+      if (s.completed === 0 && s.attempts === 0) {
+        changeText = '<span style="color:var(--muted)">Belum dilatih minggu ini</span>';
+      } else if (prevSkill.completed === 0 && prevSkill.attempts === 0) {
+        changeText = '<span style="color:var(--sage-deep);font-weight:600">Baru dilatih minggu ini</span>';
+      } else if (diff > 0) {
+        changeText = '<span style="color:var(--sage-deep);font-weight:600">+' + diff + ' dibanding mgg lalu</span>';
+      } else if (diff < 0) {
+        changeText = '<span style="color:var(--rust)">' + diff + ' dibanding mgg lalu</span>';
+      } else {
+        changeText = '<span>Sama seperti mgg lalu</span>';
+      }
+
+      let accText = "—";
+      if (s.id === "speaking" || s.id === "writing") {
+        accText = '<span style="font-style:italic;color:var(--muted)">Refleksi mandiri</span>';
+      } else if (s.id === "pronunciation") {
+        accText = '<span style="font-style:italic;color:var(--muted)">Analisis audio lokal</span>';
+      } else if (s.accuracy) {
+        accText = '<strong>' + s.accuracy.percentage + '%</strong> <small>(' + s.accuracy.correct + '/' + s.accuracy.total + ')</small>';
+      } else {
+        accText = '<span style="color:var(--muted)">—</span>';
+      }
+
+      return '<tr>' +
+        '<td><div class="weekly-skill-cell"><span class="weekly-skill-symbol">' + esc(s.symbol) + '</span><span>' + esc(s.name) + '</span></div></td>' +
+        '<td><strong>' + s.completed + '</strong></td>' +
+        '<td>' + s.attempts + '</td>' +
+        '<td>' + accText + '</td>' +
+        '<td>' + changeText + '</td>' +
+      '</tr>';
+    }).join("");
+
+    const breakdownHtml = '<div class="weekly-breakdown-box">' +
+      '<div class="weekly-box-title">Aktivitas per Keterampilan (7 Hari Terakhir)</div>' +
+      '<table class="weekly-skills-table" aria-label="Rincian aktivitas mingguan per kemampuan">' +
+        '<thead>' +
+          '<tr>' +
+            '<th>Kemampuan</th>' +
+            '<th>Aktivitas</th>' +
+            '<th>Percobaan</th>' +
+            '<th>Akurasi / Bukti</th>' +
+            '<th>Perubahan vs Mgg Lalu</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody>' + skillRows + '</tbody>' +
+      '</table>' +
+    '</div>';
+
+    const highlightsHtml = '<div class="weekly-highlights-grid">' +
+      '<div class="weekly-highlight-item">' +
+        '<span class="weekly-highlight-label">Fokus Terbanyak Minggu Ini</span>' +
+        '<strong class="weekly-highlight-val" id="weekly-most-practiced">' + (weekly.mostPracticed ? esc(weekly.mostPracticed.name) : '—') + '</strong>' +
+        '<p class="weekly-highlight-desc">' + (weekly.mostPracticed ? esc(weekly.mostPracticed.detail) : 'Belum ada aktivitas.') + '</p>' +
+      '</div>' +
+      '<div class="weekly-highlight-item">' +
+        '<span class="weekly-highlight-label">Perlu Diperhatikan</span>' +
+        '<strong class="weekly-highlight-val" id="weekly-least-practiced">' + (weekly.leastPracticed ? esc(weekly.leastPracticed.name) : '—') + '</strong>' +
+        '<p class="weekly-highlight-desc">' + (weekly.leastPracticed ? esc(weekly.leastPracticed.detail) : 'Belum ada data.') + '</p>' +
+      '</div>' +
+    '</div>';
+
+    const recsHtml = '<div class="weekly-recommendations">' +
+      '<div class="weekly-recommendations-title">Rekomendasi Terarah untuk Minggu Depan</div>' +
+      '<div class="weekly-recommendation-list">' +
+        weekly.recommendations.map(r => (
+          '<div class="weekly-rec-card">' +
+            '<div class="weekly-rec-text">' +
+              '<span class="weekly-rec-title">' + esc(r.title) + '</span>' +
+              '<span class="weekly-rec-desc">' + esc(r.desc) + '</span>' +
+            '</div>' +
+            '<button type="button" class="secondary-action weekly-rec-btn" data-weekly-target="' + esc(r.target) + '"' + (r.sectionId ? ' data-weekly-section="' + esc(r.sectionId) + '"' : '') + '>' + esc(r.actionLabel) + '</button>' +
+          '</div>'
+        )).join("") +
+      '</div>' +
+    '</div>';
+
+    cardEl.innerHTML = headerHtml + metricsHtml + breakdownHtml + highlightsHtml + recsHtml;
+  }
+
+  function renderSkillPassport() {
+    const passportContainer = $("#skill-passport-section");
+    if (!passportContainer) return;
+    const extras = readExtraSnapshots();
+    const passport = aggregateSkillPassport(state, extras, words, topics);
+    window.sinauuSkillPassportData = passport;
+
+    const insightEl = $("#passport-insight-card");
+    const gridEl = $("#passport-skills-grid");
+    if (!insightEl || !gridEl) return;
+
+    if (passport.insight.emptyState) {
+      insightEl.innerHTML = '<div class="passport-empty-state">' +
+        '<div class="passport-empty-copy">' +
+          '<span class="passport-empty-kicker">MEMULAI PERJALANAN</span>' +
+          '<h3>Paspor Kemampuan masih menunggu langkah pertamamu.</h3>' +
+          '<p>Setiap bukti latihan dari kosakata, grammar, bacaan, menyimak, berbicara, menulis, hingga artikulasi akan tercatat di sini secara transparan. Tidak ada skor buatan atau tebakan algoritma.</p>' +
+        '</div>' +
+        '<div class="passport-empty-action">' +
+          '<button type="button" class="primary-action" data-passport-target="' + esc(passport.insight.nextAction.target) + '">' + esc(passport.insight.nextAction.label) + '</button>' +
+        '</div>' +
+      '</div>';
+    } else {
+      insightEl.innerHTML = '<div class="passport-insight-grid">' +
+        '<div class="passport-insight-col">' +
+          '<span class="passport-insight-label">FOKUS TERBANYAK</span>' +
+          '<strong class="passport-insight-highlight">' + esc(passport.insight.mostPracticed.name) + '</strong>' +
+          '<p class="passport-insight-desc">' + esc(passport.insight.mostPracticed.detail) + '</p>' +
+        '</div>' +
+        '<div class="passport-insight-col">' +
+          '<span class="passport-insight-label">PERLU DILATIH</span>' +
+          (passport.insight.leastPracticed ? (
+            '<strong class="passport-insight-highlight">' + esc(passport.insight.leastPracticed.name) + '</strong>' +
+            '<p class="passport-insight-desc">' + esc(passport.insight.leastPracticed.detail) + '</p>'
+          ) : (
+            '<strong class="passport-insight-highlight passport-insufficient-data">Data Belum Cukup</strong>' +
+            '<p class="passport-insight-desc">' + esc(passport.insight.insufficientDataReason) + '</p>'
+          )) +
+        '</div>' +
+        '<div class="passport-insight-col passport-insight-action-col">' +
+          '<span class="passport-insight-label">LANGKAH BERIKUTNYA</span>' +
+          '<p class="passport-insight-action-text">' + esc(passport.insight.nextAction.text) + '</p>' +
+          '<button type="button" class="secondary-action passport-next-btn" data-passport-target="' + esc(passport.insight.nextAction.target) + '">' + esc(passport.insight.nextAction.label) + '</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    gridEl.innerHTML = passport.skills.map(s => {
+      const accuracyHtml = s.accuracy
+        ? '<strong>' + s.accuracy.percentage + '%</strong> <small>(' + s.accuracy.correct + '/' + s.accuracy.total + ' tepat · ' + esc(s.accuracy.note) + ')</small>'
+        : '<span class="metric-na">— <small>' + esc(s.accuracyNote) + '</small></span>';
+
+      const masteryHtml = s.mastery
+        ? '<strong>' + s.mastery.count + ' kata</strong> <small>' + esc(s.mastery.label) + '</small>'
+        : '<span class="metric-na">— <small>Tidak didefinisikan modul</small></span>';
+
+      const evidenceHtml = s.evidenceDetails && s.evidenceDetails.length
+        ? '<div class="passport-evidence-box"><span class="passport-evidence-label">Bukti Rekaman:</span><ul class="passport-evidence-list">' +
+            s.evidenceDetails.map(d => '<li>' + esc(d) + '</li>').join("") +
+          '</ul></div>'
+        : '';
+
+      return '<article class="passport-skill-card" data-skill-id="' + esc(s.id) + '">' +
+        '<div class="passport-skill-header">' +
+          '<div class="passport-skill-title-group">' +
+            '<span class="passport-skill-symbol" aria-hidden="true">' + esc(s.symbol) + '</span>' +
+            '<div><h3 class="passport-skill-name">' + esc(s.title) + '</h3><span class="passport-skill-sub">' + esc(s.shortName) + '</span></div>' +
+          '</div>' +
+          '<span class="passport-status-pill status-' + esc(s.status) + '">' + esc(s.statusLabel) + '</span>' +
+        '</div>' +
+        '<p class="passport-status-reason">' + esc(s.statusReason) + '</p>' +
+        '<div class="passport-metrics-table">' +
+          '<div class="passport-metric-row"><span class="metric-key">Aktivitas Selesai</span><span class="metric-val"><strong>' + esc(s.completedLabel) + '</strong></span></div>' +
+          '<div class="passport-metric-row"><span class="metric-key">Total Percobaan</span><span class="metric-val">' + s.attemptsCount + ' percobaan</span></div>' +
+          '<div class="passport-metric-row"><span class="metric-key">Akurasi Soal</span><span class="metric-val">' + accuracyHtml + '</span></div>' +
+          '<div class="passport-metric-row"><span class="metric-key">Status Mastery</span><span class="metric-val">' + masteryHtml + '</span></div>' +
+          '<div class="passport-metric-row"><span class="metric-key">Terakhir Dilatih</span><span class="metric-val">' + esc(s.lastPracticedLabel) + '</span></div>' +
+        '</div>' +
+        evidenceHtml +
+        '<div class="passport-card-footer">' +
+          '<button type="button" class="plain-action passport-card-action" data-passport-target="' + esc(s.primaryAction.viewTarget) + '">' + esc(s.primaryAction.label) + '</button>' +
+        '</div>' +
+      '</article>';
+    }).join("");
+  }
+
   function renderProgress() {
     const stats=levelStats();
     $("#progress-words-tried").textContent=String(words.filter(w=>statusOf(w)!=="new").length);
@@ -924,6 +3163,8 @@
     }).join("");
     const history=state.history.slice(0,18);
     $("#history-list").innerHTML=history.length?history.map(x=>'<div class="history-row"><time>'+esc(fmtDate(new Date(x.at),{day:"2-digit",month:"short"}))+' · '+esc(new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(new Date(x.at)))+'</time><div><strong>'+esc((x.type==="vocabulary"?"Kosakata: ":x.type==="grammar"?"Grammar: ":x.type==="matching"?"Matching: ":x.type==="reading"?"Reading: ":"Aktivitas: ")+x.title)+'</strong><small>'+esc(x.detail||"")+'</small></div><span class="history-result">'+(x.correct===true?"BENAR":x.correct===false?"PERLU ULANG":"")+'</span></div>').join(""):'<div class="empty-state">Belum ada aktivitas. Latihan pertamamu akan tercatat di sini.</div>';
+    renderWeeklyInsights();
+    renderSkillPassport();
   }
   function exportBackup() {
     const extras=readExtraSnapshots();
@@ -963,6 +3204,7 @@
   function bindEvents() {
     window.addEventListener("sinauu:local-extras-saved",()=>{
       if(state && view==="overview")renderStudyPlan();
+      if(state && view==="progress")renderProgress();
     });
     document.addEventListener("click",async e=>{
       const readingModeBtn=e.target.closest("[data-reading-mode]");
@@ -999,6 +3241,12 @@
         if(action==="active-study"&&activeStudy){setView("study");renderStudy();return;}
         if(action==="word"&&homePrimary.dataset.homeWord){startStudy(homePrimary.dataset.homeWord,homePrimary.dataset.homeMode||"learn");return;}
         if(action==="grammar"&&homePrimary.dataset.homeTopic){activeTopic=homePrimary.dataset.homeTopic;grammarDetailOpen=true;setView("grammar");return;}
+        if(action==="reading"){setView("reading");return;}
+        if(action==="adventure-section"&&homePrimary.dataset.homeSection){
+          setView("adventure");
+          $("#"+homePrimary.dataset.homeSection)?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+          return;
+        }
         if(action==="adventure"){
           setView("adventure");
           $("#adventure-daily-quest")?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
@@ -1016,6 +3264,27 @@
         $("#adventure-daily-quest")?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
         return;
       }
+      const planReading=e.target.closest("[data-plan-reading]");
+      if(planReading){setView("reading");return;}
+      const planAdvSection=e.target.closest("[data-plan-adventure-section]");
+      if(planAdvSection){
+        const secId=planAdvSection.dataset.planAdventureSection;
+        setView("adventure");
+        $("#"+secId)?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+        return;
+      }
+      const weeklyBtn=e.target.closest("[data-weekly-target]");
+      if(weeklyBtn){
+        const targetView = weeklyBtn.dataset.weeklyTarget;
+        const targetSec = weeklyBtn.dataset.weeklySection;
+        setView(targetView);
+        if(targetSec){
+          $("#"+targetSec)?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+        }
+        return;
+      }
+      const passportBtn=e.target.closest("[data-passport-target]");
+      if(passportBtn){setView(passportBtn.dataset.passportTarget);return;}
       const viewBtn=e.target.closest("[data-view-target]");
       if(viewBtn){setView(viewBtn.dataset.viewTarget);return;}
       const wordBtn=e.target.closest("[data-select-word]");
@@ -1034,8 +3303,70 @@
       if(topic){activeTopic=topic.dataset.topicId;grammarDetailOpen=true;renderGrammar();return;}
       const openTopic=e.target.closest("[data-open-topic]");
       if(openTopic){activeTopic=openTopic.dataset.openTopic;grammarDetailOpen=true;setView("grammar");return;}
+      const openGrammar=e.target.closest("[data-open-grammar-topic]");
+      if(openGrammar){activeTopic=openGrammar.dataset.openGrammarTopic;grammarDetailOpen=true;setView("grammar");renderGrammar();return;}
+      const openWord=e.target.closest("[data-open-vocab-word]");
+      if(openWord){selectedWord=openWord.dataset.openVocabWord;vocabDetailOpen=true;setView("vocabulary");renderVocabulary(false);return;}
+      const openHabit=e.target.closest("[data-open-habit-passage]");
+      if(openHabit){setView("reading");if(typeof window.sinauuOpenHabitPassage==="function"){window.sinauuOpenHabitPassage(openHabit.dataset.openHabitPassage);}return;}
       const review=e.target.closest("[data-review-word]");
       if(review){startStudy(review.dataset.reviewWord,"review");return;}
+      const reviewFilter=e.target.closest("[data-review-filter]");
+      if(reviewFilter){reviewFilterTab=reviewFilter.dataset.reviewFilter;renderReview();return;}
+      const reviewSkill=e.target.closest("[data-review-skill]");
+      if(reviewSkill){reviewSkillFilter=reviewSkill.dataset.reviewSkill;renderReview();return;}
+      const startFocus=e.target.closest("#review-start-focus");
+      if(startFocus){
+        const queue=getUnifiedReviewQueue(state,readExtraSnapshots(),words,topics,null);
+        const first=queue.focusedSession&&queue.focusedSession[0];
+        if(first){
+          if(first.type==="vocabulary"){startStudy(first.wordId,"review");}
+          else if(first.type==="mistake"){
+            window.sinauuOpenMistakeReview?.(first.mistakeId);
+            window.sinauuUpdateReviewActivePanel?.();
+            $("#review-active-panel")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+          }
+        }
+        return;
+      }
+      const reviewMistake=e.target.closest("[data-review-mistake]");
+      if(reviewMistake){
+        window.sinauuOpenMistakeReview?.(reviewMistake.dataset.reviewMistake);
+        window.sinauuUpdateReviewActivePanel?.();
+        $("#review-active-panel")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+        return;
+      }
+      const openSource=e.target.closest("[data-review-open-source]");
+      if(openSource){
+        const itemId=openSource.dataset.reviewOpenSource;
+        if(itemId.startsWith("vocab:")){
+          selectedWord=itemId.replace("vocab:","");
+          vocabDetailOpen=true;
+          setView("vocabulary");
+          renderVocabulary(false);
+          return;
+        }else if(itemId.startsWith("mistake:")){
+          const mistakeId=itemId.replace("mistake:","");
+          const item=window.sinauuGetMistakeRecord?.(mistakeId);
+          if(item){
+            if(item.sourceType==="grammar"||item.topicId){
+              const topicId=item.topicId||(item.mistakeId.split(":")[1]);
+              if(topicId){activeTopic=topicId;grammarDetailOpen=true;setView("grammar");renderGrammar();return;}
+            }else if(item.sourceType==="habit"||item.passageId){
+              const passageId=item.passageId||(item.mistakeId.split(":")[1]);
+              setView("reading");
+              if(typeof window.sinauuOpenHabitPassage==="function"){window.sinauuOpenHabitPassage(passageId);}
+              return;
+            }else if(item.sourceType==="vocab"||item.wordId){
+              const wordId=item.wordId||(item.mistakeId.split(":")[1]);
+              if(wordId){selectedWord=wordId;vocabDetailOpen=true;setView("vocabulary");renderVocabulary(false);return;}
+            }
+          }
+          setView("adventure");
+          window.sinauuRenderAdventure?.();
+          return;
+        }
+      }
     });
     $("#vocab-search").addEventListener("input",()=>{vocabDetailOpen=false;renderVocabulary();});
     $("#vocab-load-more").addEventListener("click",()=>{listLimit+=100;renderVocabulary(false);});
@@ -1066,6 +3397,15 @@
       if(e.key==="/"&&view==="vocabulary"&&!["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)){e.preventDefault();$("#vocab-search").focus();}
       if(e.key==="Escape")$("#goal-dialog")?.close();
     });
+    window.addEventListener("sinauu:open-topic",(e)=>{
+      if(e.detail?.topicId){activeTopic=e.detail.topicId;grammarDetailOpen=true;setView("grammar");renderGrammar();}
+    });
+    window.addEventListener("sinauu:open-word",(e)=>{
+      if(e.detail?.wordId){selectedWord=e.detail.wordId;vocabDetailOpen=true;setView("vocabulary");renderVocabulary(false);}
+    });
+    window.addEventListener("sinauu:open-habit",(e)=>{
+      if(e.detail?.passageId){setView("reading");if(typeof window.sinauuOpenHabitPassage==="function"){window.sinauuOpenHabitPassage(e.detail.passageId);}}
+    });
   }
   async function init() {
     bindEvents();renderDate();
@@ -1073,6 +3413,21 @@
       await loadDatasets();await loadState();await setTheme(state.settings.theme);
       renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
       window.sinauuExportLocalBundle = () => ({schemaVersion:2,core:state,extras:readExtraSnapshots()});
+      window.sinauuGetSkillPassport = () => aggregateSkillPassport(state, readExtraSnapshots(), words, topics);
+      window.sinauuComputeWeeklyInsights = (refDate) => computeWeeklyInsights(state, readExtraSnapshots(), words, topics, refDate);
+      window.sinauuRenderWeeklyInsights = () => renderWeeklyInsights();
+      window.sinauuGetAdaptiveStudyPlan = (today) => getAdaptiveStudyPlan(today || dayKey());
+      window.sinauuGetUnifiedReviewQueue = (now) => getUnifiedReviewQueue(state, readExtraSnapshots(), words, topics, null, now);
+      window.sinauuRenderReview = () => renderReview();
+      window.sinauuGetWordList = () => words;
+      window.sinauuGetTopicList = () => topics;
+      window.sinauuGetCoreState = () => state;
+      window.sinauuGetWordContextQuestion = (word, qId) => {
+        if(!word)return null;
+        if(word.context&&word.context.id===qId)return word.context;
+        const p=ensureProgress(word.id);
+        return contextQuestion(word,p);
+      };
       window.sinauuApplyCloudBundle = async (bundle) => {
         if (!bundle || !bundle.core || !state) return;
         cloudApplying = true;
@@ -1113,6 +3468,12 @@
     renderOverview();
     renderProgress();
   };
+  window.sinauuOnMistakeReviewChanged = () => {
+    if (view === "review") renderReview();
+  };
+  window.addEventListener("sinauu:local-extras-saved", () => {
+    if (view === "review") renderReview();
+  });
   init();
 })();
 

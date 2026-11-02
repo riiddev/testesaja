@@ -75,12 +75,12 @@
     for (const [phraseId, entry] of Object.entries(base.pronunciationProgress)) {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) { delete base.pronunciationProgress[phraseId]; continue; }
       entry.attempts = Array.isArray(entry.attempts)
-        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && typeof attempt.completedAt === "string" && Number.isFinite(attempt.durationMs) && Number.isFinite(attempt.voiceShare))
+        ? entry.attempts.filter((attempt) => attempt && typeof attempt.attemptId === "string" && typeof attempt.completedAt === "string" && Number.isFinite(attempt.durationMs))
           .map((attempt) => ({
             attemptId: attempt.attemptId.slice(0, 140),
             completedAt: attempt.completedAt,
             durationMs: Math.max(0, Math.min(12000, Number(attempt.durationMs) || 0)),
-            voiceShare: Math.max(0, Math.min(1, Number(attempt.voiceShare) || 0)),
+            voiceShare: Number.isFinite(attempt.voiceShare) ? Math.max(0, Math.min(1, Number(attempt.voiceShare))) : 0.8,
             voicedFrames: Math.max(0, Math.min(200, Math.trunc(Number(attempt.voicedFrames) || 0))),
             meanRms: Math.max(0, Math.min(1, Number(attempt.meanRms) || 0)),
             pauseCount: Math.max(0, Math.min(30, Math.trunc(Number(attempt.pauseCount) || 0))),
@@ -552,7 +552,7 @@
 
 
 
-  let mistakeFilterValue = "open";
+  let mistakeFilterValue = "open", mistakeSkillFilterValue = "all";
   let dailyListenReady = false;
 
   function localDateKey(date = new Date()) {
@@ -579,18 +579,30 @@
   }
 
   function recordMistake(input) {
-    const sourceId = input.sourceId;
-    const wrongCount = input.wrongCount || 0;
-    const mistakeId = [sourceId, input.stepId, wrongCount || makeId()].join(":");
+    const mistakeId = input.mistakeId || [input.sourceId, input.stepId, input.wrongCount || makeId()].join(":");
     if (progress.mistakeJournal[mistakeId]) return;
+    const recordedAt = input.recordedAt || new Date().toISOString();
     progress.mistakeJournal[mistakeId] = {
-      mistakeId, sourceType: input.sourceType, sourceId, missionId: input.missionId,
-      stepId: input.stepId, skill: input.skill, prompt: input.prompt,
+      mistakeId,
+      sourceType: input.sourceType || "mission",
+      sourceId: input.sourceId,
+      missionId: input.missionId,
+      topicId: input.topicId,
+      wordId: input.wordId,
+      passageId: input.passageId,
+      questionId: input.questionId || input.stepId,
+      stepId: input.stepId || input.questionId,
+      skill: input.skill || "adventure",
+      prompt: input.prompt || "",
       wrongAnswer: input.wrongAnswer || "Belum memilih jawaban",
       correctAnswer: input.correctAnswer || "",
       explanation: input.explanation || "",
-      recordedAt: new Date().toISOString(), resolvedAt: null, status: "open",
-      reviewStage: 0, nextReviewAt: new Date().toISOString(), reviewHistory: []
+      recordedAt,
+      resolvedAt: null,
+      status: "open",
+      reviewStage: 0,
+      nextReviewAt: recordedAt,
+      reviewHistory: []
     };
     saveProgress();
   }
@@ -659,10 +671,77 @@
   }
 
   function mistakeStep(item) {
-    const mission = curriculum && curriculum.missions.find((entry) => entry.id === item.missionId);
-    const step = mission && mission.steps.find((entry) => entry.id === item.stepId);
-    if (!mission || !step || !Array.isArray(step.options) || !step.options.length || !Number.isInteger(step.answer)) return null;
-    return { mission, step };
+    if (!item) return null;
+    if (item.missionId) {
+      const mission = curriculum && curriculum.missions && curriculum.missions.find((entry) => entry.id === item.missionId);
+      const step = mission && mission.steps && mission.steps.find((entry) => entry.id === item.stepId);
+      if (mission && step && Array.isArray(step.options) && step.options.length && Number.isInteger(step.answer)) {
+        return { mission, step, sourceType: "adventure", title: mission.title };
+      }
+    }
+    if (item.sourceType === "grammar" || item.topicId) {
+      const topicId = item.topicId || item.sourceId;
+      const qId = item.questionId || item.stepId;
+      const topics = (typeof window.sinauuGetTopicList === "function" ? window.sinauuGetTopicList() : null) || [];
+      const topic = topics.find((t) => t.id === topicId);
+      if (topic && Array.isArray(topic.questions)) {
+        const q = topic.questions.find((entry) => entry.id === qId);
+        if (q && Array.isArray(q.options) && q.options.length && Number.isInteger(q.answer)) {
+          return { topic, step: q, sourceType: "grammar", title: topic.title };
+        }
+      }
+    }
+    if (item.sourceType === "habit" || item.passageId) {
+      const passageId = item.passageId || item.sourceId;
+      const qId = item.questionId || item.stepId;
+      const library = typeof window.sinauuGetHabitLibrary === "function" ? window.sinauuGetHabitLibrary() : null;
+      const passage = library && library.passages && library.passages.find((p) => p.id === passageId);
+      if (passage && typeof window.sinauuGetHabitQuestions === "function") {
+        const questions = window.sinauuGetHabitQuestions(passage);
+        const q = questions.find((entry) => entry.id === qId);
+        if (q && Array.isArray(q.options) && q.options.length && Number.isInteger(q.answer)) {
+          const stepWithPassage = {
+            ...q,
+            type: "read",
+            passage: (passage.paragraphs || []).slice(0, 2).join("\n\n")
+          };
+          return { passage, step: stepWithPassage, sourceType: "habit", title: passage.title };
+        }
+      }
+    }
+    if (item.sourceType === "vocab" || item.wordId) {
+      const wordId = item.wordId || item.sourceId;
+      const qId = item.questionId || item.stepId;
+      const words = (typeof window.sinauuGetWordList === "function" ? window.sinauuGetWordList() : null) || [];
+      const word = words.find((w) => w.id === wordId);
+      if (word) {
+        if (typeof window.sinauuGetWordContextQuestion === "function" && qId !== "typed-meaning") {
+          const q = window.sinauuGetWordContextQuestion(word, qId);
+          if (q && Array.isArray(q.options) && q.options.length && Number.isInteger(q.answer)) {
+            return { word, step: q, sourceType: "vocab", title: word.word };
+          }
+        }
+        const correctMeaning = (word.acceptedMeanings && word.acceptedMeanings[0]) || (word.meaning || "").split(/[;,]/)[0].trim();
+        const otherMeanings = words.filter((w) => w.id !== word.id && w.meaning).map((w) => (w.acceptedMeanings && w.acceptedMeanings[0]) || (w.meaning || "").split(/[;,]/)[0].trim());
+        const uniqueOthers = Array.from(new Set(otherMeanings)).filter((m) => m && m.toLowerCase() !== correctMeaning.toLowerCase());
+        const distractors = uniqueOthers.slice(0, 2);
+        if (distractors.length >= 2) {
+          const seed = word.id.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+          const rawOptions = [correctMeaning, ...distractors];
+          const shift = seed % rawOptions.length;
+          const options = rawOptions.slice(shift).concat(rawOptions.slice(0, shift));
+          const step = {
+            id: qId || "vocab-recall",
+            prompt: "Pilih arti kata yang tepat untuk: " + word.word,
+            options,
+            answer: options.indexOf(correctMeaning),
+            explanation: "Definisi terverifikasi: " + word.meaning + (word.partOfSpeech ? " (" + word.partOfSpeech + ")" : "")
+          };
+          return { word, step, sourceType: "vocab", title: word.word };
+        }
+      }
+    }
+    return null;
   }
 
   function renderMistakeReview(item) {
@@ -697,9 +776,138 @@
       context + '<h4>' + escapeHtml(step.prompt) + '</h4>' + choices + feedbackHtml + '</section>';
   }
 
+  function syncExternalMistakes() {
+    let changed = false;
+    let core = null;
+    if (typeof window.sinauuGetCoreState === "function") {
+      core = window.sinauuGetCoreState();
+    }
+    if (!core) {
+      try {
+        core = JSON.parse(localStorage.getItem("sinauu-learning-state-v1") || "null");
+      } catch (e) {
+        core = null;
+      }
+    }
+
+    if (core && core.grammarProgress && typeof core.grammarProgress === "object") {
+      const topics = (typeof window.sinauuGetTopicList === "function" ? window.sinauuGetTopicList() : null) || [];
+      for (const [topicId, entry] of Object.entries(core.grammarProgress)) {
+        if (!entry || !entry.answers || typeof entry.answers !== "object") continue;
+        const topic = topics.find((t) => t.id === topicId);
+        for (const [qId, ans] of Object.entries(entry.answers)) {
+          if (!ans || ans.correct !== false) continue;
+          const mistakeId = "grammar:" + topicId + ":" + qId;
+          if (progress.mistakeJournal[mistakeId]) continue;
+          const q = topic && topic.questions ? topic.questions.find((item) => item.id === qId) : null;
+          progress.mistakeJournal[mistakeId] = {
+            mistakeId,
+            sourceType: "grammar",
+            sourceId: topicId,
+            topicId,
+            questionId: qId,
+            stepId: qId,
+            skill: "grammar",
+            prompt: q ? q.prompt : ("Soal grammar: " + qId),
+            wrongAnswer: ans.response ? String(ans.response) : "Jawaban salah",
+            correctAnswer: q ? (Array.isArray(q.options) && Number.isInteger(q.answer) ? q.options[q.answer] : q.answer) : "",
+            explanation: q ? (q.explanation || "") : "",
+            recordedAt: ans.at || core.updatedAt || new Date().toISOString(),
+            resolvedAt: null,
+            status: "open",
+            reviewStage: 0,
+            nextReviewAt: ans.at || new Date().toISOString(),
+            reviewHistory: []
+          };
+          changed = true;
+        }
+      }
+    }
+
+    let habitProg = null;
+    try {
+      habitProg = JSON.parse(localStorage.getItem("sinauu-habit-library-v1") || "null");
+    } catch (e) {
+      habitProg = null;
+    }
+    if (habitProg && typeof habitProg === "object") {
+      const library = typeof window.sinauuGetHabitLibrary === "function" ? window.sinauuGetHabitLibrary() : null;
+      for (const [passageId, entry] of Object.entries(habitProg)) {
+        if (!entry || !entry.answers || typeof entry.answers !== "object") continue;
+        const passage = library && library.passages ? library.passages.find((p) => p.id === passageId) : null;
+        const questions = passage && typeof window.sinauuGetHabitQuestions === "function" ? window.sinauuGetHabitQuestions(passage) : [];
+        for (const [qId, ans] of Object.entries(entry.answers)) {
+          if (!ans || ans.correct !== false) continue;
+          const mistakeId = "habit:" + passageId + ":" + qId;
+          if (progress.mistakeJournal[mistakeId]) continue;
+          const q = questions.find((item) => item.id === qId);
+          progress.mistakeJournal[mistakeId] = {
+            mistakeId,
+            sourceType: "habit",
+            sourceId: passageId,
+            passageId,
+            questionId: qId,
+            stepId: qId,
+            skill: "reading",
+            prompt: q ? q.prompt : "Soal pemahaman HABIT",
+            wrongAnswer: (q && q.options && q.options[ans.selected]) || ("Pilihan " + ans.selected),
+            correctAnswer: (q && q.options && q.options[q.answer]) || "",
+            explanation: q ? (q.explanation || (q.evidenceParagraph ? "Bukti di paragraf: " + q.evidenceParagraph : "")) : "",
+            recordedAt: ans.answeredAt || new Date().toISOString(),
+            resolvedAt: null,
+            status: "open",
+            reviewStage: 0,
+            nextReviewAt: ans.answeredAt || new Date().toISOString(),
+            reviewHistory: []
+          };
+          changed = true;
+        }
+      }
+    }
+
+    if (core && core.events && Array.isArray(core.events)) {
+      const words = (typeof window.sinauuGetWordList === "function" ? window.sinauuGetWordList() : null) || [];
+      for (const ev of core.events) {
+        if (!ev || ev.correct !== false || (ev.skill !== "recall" && ev.skill !== "context")) continue;
+        const wordId = ev.wordId;
+        const qId = ev.questionId || (ev.skill === "recall" ? "recall" : "context");
+        const mistakeId = "vocab:" + wordId + ":" + qId;
+        if (progress.mistakeJournal[mistakeId]) continue;
+        const word = words.find((w) => w.id === wordId);
+        const isRecall = ev.skill === "recall";
+        const ctx = isRecall ? null : (word && word.context && word.context.id === qId ? word.context : null);
+        progress.mistakeJournal[mistakeId] = {
+          mistakeId,
+          sourceType: "vocab",
+          sourceId: wordId,
+          wordId,
+          questionId: qId,
+          stepId: qId,
+          skill: "vocabulary",
+          prompt: isRecall ? ("Tuliskan arti kata: " + (word ? word.word : (ev.word || wordId))) : (ctx ? ctx.prompt : ("Konteks kalimat untuk: " + (word ? word.word : (ev.word || wordId)))),
+          wrongAnswer: ev.response ? String(ev.response) : "Jawaban salah",
+          correctAnswer: isRecall ? (word ? word.meaning : "") : (ctx && ctx.options ? ctx.options[ctx.answer] : (word ? word.meaning : "")),
+          explanation: isRecall ? (word ? ("Definisi terverifikasi: " + word.meaning + (word.partOfSpeech ? " (" + word.partOfSpeech + ")" : "")) : "") : (ctx ? ctx.explanation : ""),
+          recordedAt: ev.at || new Date().toISOString(),
+          resolvedAt: null,
+          status: "open",
+          reviewStage: 0,
+          nextReviewAt: ev.at || new Date().toISOString(),
+          reviewHistory: []
+        };
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      saveProgress();
+    }
+  }
+
   function renderMistakeJournal() {
     const node = $("#adventure-mistake-journal");
     if (!node) return;
+    syncExternalMistakes();
     const all = Object.values(progress.mistakeJournal).sort((a, b) => String(b.recordedAt || "").localeCompare(String(a.recordedAt || "")));
     const dueCount = all.filter((item) => isMistakeDue(item)).length;
     const openCount = all.filter((item) => !item.resolvedAt && !isMistakeMastered(item)).length;
@@ -708,19 +916,29 @@
     const reviewPanel = selected && !isMistakeMastered(selected) && (isMistakeDue(selected) || (mistakeReviewFeedback && mistakeReviewFeedback.mistakeId === selected.mistakeId && mistakeReviewFeedback.kind === "success"))
       ? renderMistakeReview(selected) : "";
     const matchesFilter = (item) => {
-      if (mistakeFilterValue === "open") return !item.resolvedAt && !isMistakeMastered(item);
-      if (mistakeFilterValue === "due") return isMistakeDue(item);
-      if (mistakeFilterValue === "reviewing") return Boolean(item.resolvedAt) && !isMistakeMastered(item);
-      if (mistakeFilterValue === "resolved") return Boolean(item.resolvedAt);
-      return true;
+      let matchesStatus = true;
+      if (mistakeFilterValue === "open") matchesStatus = !item.resolvedAt && !isMistakeMastered(item);
+      else if (mistakeFilterValue === "due") matchesStatus = isMistakeDue(item);
+      else if (mistakeFilterValue === "reviewing") matchesStatus = Boolean(item.resolvedAt) && !isMistakeMastered(item);
+      else if (mistakeFilterValue === "resolved") matchesStatus = Boolean(item.resolvedAt);
+
+      let matchesSkill = true;
+      if (mistakeSkillFilterValue !== "all") {
+        matchesSkill = String(item.skill || "").toLowerCase() === mistakeSkillFilterValue.toLowerCase();
+      }
+      return matchesStatus && matchesSkill;
     };
     const visible = all.filter(matchesFilter).slice(0, 8);
     const filters = '<div class="adventure-journal-filters">' +
       [["open","Perlu dipahami"],["due","Jatuh tempo"],["reviewing","Dijadwalkan"],["resolved","Tuntas"],["all","Semua"]]
         .map(([value, label]) => '<button type="button" data-mistake-filter="' + value + '" class="' + (mistakeFilterValue === value ? "is-active" : "") + '">' + label + '</button>').join("") +
       '</div>';
+    const skillFilters = '<div class="adventure-journal-filters adventure-journal-skill-filters" role="group" aria-label="Filter berdasarkan skill">' +
+      [["all","Semua skill"],["grammar","Grammar"],["vocabulary","Kosakata"],["reading","Reading"],["listening","Listening"]]
+        .map(([value, label]) => '<button type="button" data-mistake-skill-filter="' + value + '" class="' + (mistakeSkillFilterValue === value ? "is-active" : "") + '">' + label + '</button>').join("") +
+      '</div>';
     const rows = visible.length ? visible.map((item) => {
-      const mission = curriculum.missions.find((entry) => entry.id === item.missionId);
+      const mission = curriculum && curriculum.missions ? curriculum.missions.find((entry) => entry.id === item.missionId) : null;
       const match = mistakeStep(item);
       const mastered = isMistakeMastered(item);
       const due = isMistakeDue(item);
@@ -739,6 +957,17 @@
       } else if (!mastered && !match && mission) {
         action = '<button type="button" data-mistake-review="' + escapeHtml(item.missionId) + '">Ulangi misi ↗</button>';
       }
+      let sourceLink = "";
+      if (item.sourceType === "grammar" || item.topicId) {
+        sourceLink = '<button type="button" class="adventure-mistake-source-link" data-open-grammar-topic="' + escapeHtml(item.topicId || item.sourceId) + '">Buka materi grammar ↗</button>';
+      } else if (item.sourceType === "vocab" || item.wordId) {
+        sourceLink = '<button type="button" class="adventure-mistake-source-link" data-open-vocab-word="' + escapeHtml(item.wordId || item.sourceId) + '">Buka kartu kosakata ↗</button>';
+      } else if (item.sourceType === "habit" || item.passageId) {
+        sourceLink = '<button type="button" class="adventure-mistake-source-link" data-open-habit-passage="' + escapeHtml(item.passageId || item.sourceId) + '">Buka bacaan HABIT ↗</button>';
+      } else if (item.missionId) {
+        sourceLink = '<button type="button" class="adventure-mistake-source-link" data-mistake-review="' + escapeHtml(item.missionId) + '">Buka misi ↗</button>';
+      }
+      const sourceTitle = (match && match.title) || (mission && mission.title) || (item.sourceType === "daily-quest" ? "Daily Quest" : item.sourceType === "grammar" ? "Grammar" : item.sourceType === "habit" ? "Reading HABIT" : item.sourceType === "vocab" ? "Kosakata" : "Latihan");
       const rowClass = mastered ? "is-resolved" : item.resolvedAt ? "is-resolved is-reviewing" : "is-open";
       return '<article class="adventure-mistake-row ' + rowClass + '">' +
         '<div class="adventure-mistake-top"><span>' + escapeHtml(item.skill) + '</span><span>' + stateLabel + '</span></div>' +
@@ -746,7 +975,7 @@
         '<p class="adventure-mistake-answer"><span>Jawabanmu</span> ' + escapeHtml(item.wrongAnswer) + '</p>' +
         explanation +
         '<div class="adventure-mistake-progress"><span>REVIEW ' + stage + ' / 4</span><i><b style="width:' + (stage / 4 * 100) + '%"></b></i><small>' + escapeHtml(schedule) + '</small></div>' +
-        '<div class="adventure-mistake-bottom"><small>' + escapeHtml(mission?.title || "Daily Quest") + '</small>' + action + '</div></article>';
+        '<div class="adventure-mistake-bottom"><small>' + escapeHtml(sourceTitle) + '</small>' + (sourceLink ? sourceLink : '') + action + '</div></article>';
     }).join("") : '<p class="adventure-journal-empty">' +
       (mistakeFilterValue === "due" ? "Belum ada pengulangan yang jatuh tempo. Kesalahan berikutnya akan muncul sesuai jadwal." :
         mistakeFilterValue === "reviewing" ? "Belum ada catatan yang sedang menunggu pengulangan terjadwal." :
@@ -754,17 +983,44 @@
         mistakeFilterValue === "open" ? "Belum ada kesalahan yang perlu dipahami. Bagus, pertahankan kebiasaan memeriksa jawaban." :
         "Belum ada catatan pada filter ini.") + '</p>';
     node.innerHTML = '<div class="adventure-extra-heading"><div><span class="eyebrow">LEARN FROM IT</span><h3>Mistake Journal</h3><p>Jawaban benar belum langsung dianggap dikuasai. Kita akan mengulangnya setelah jeda 1, 3, dan 7 hari.</p></div><span class="adventure-journal-count">' + dueCount + '<small>JATUH TEMPO</small></span></div>' +
-      '<p class="adventure-journal-summary">' + openCount + ' belum berhasil diingat · ' + reviewingCount + ' menunggu review.</p>' + reviewPanel + filters + rows;
+      '<p class="adventure-journal-summary">' + openCount + ' belum berhasil diingat · ' + reviewingCount + ' menunggu review.</p>' + reviewPanel + filters + skillFilters + rows;
+  }
+
+  function findMistakeRecord(id) {
+    if (!id) return null;
+    return progress.mistakeJournal[id] || Object.values(progress.mistakeJournal).find((x) => x && x.mistakeId === id) || null;
+  }
+
+  function updateReviewActivePanel() {
+    const panel = $("#review-active-panel");
+    if (!panel) return;
+    const reviewView = $("#view-review");
+    const isReviewVisible = reviewView && reviewView.classList.contains("is-visible");
+    if (!isReviewVisible) {
+      panel.innerHTML = "";
+      panel.hidden = true;
+      return;
+    }
+    const selected = selectedMistakeReviewId ? findMistakeRecord(selectedMistakeReviewId) : null;
+    if (selected && !isMistakeMastered(selected) && (isMistakeDue(selected) || (mistakeReviewFeedback && mistakeReviewFeedback.mistakeId === selected.mistakeId))) {
+      panel.innerHTML = renderMistakeReview(selected);
+      panel.hidden = false;
+    } else {
+      panel.innerHTML = "";
+      panel.hidden = true;
+    }
   }
 
   function openMistakeReview(mistakeId) {
-    const item = progress.mistakeJournal[mistakeId];
+    const item = findMistakeRecord(mistakeId);
     if (!item || isMistakeMastered(item) || !isMistakeDue(item) || !mistakeStep(item)) return;
-    selectedMistakeReviewId = mistakeId;
+    selectedMistakeReviewId = item.mistakeId || mistakeId;
     mistakeReviewFeedback = null;
     mistakeReviewTranscriptVisible = false;
     mistakeReviewListenReady = false;
     renderMistakeJournal();
+    updateReviewActivePanel();
+    if (typeof window.sinauuOnMistakeReviewChanged === "function") window.sinauuOnMistakeReviewChanged();
   }
 
   function closeMistakeReview() {
@@ -774,28 +1030,32 @@
     mistakeReviewListenReady = false;
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     renderMistakeJournal();
+    updateReviewActivePanel();
+    if (typeof window.sinauuOnMistakeReviewChanged === "function") window.sinauuOnMistakeReviewChanged();
   }
 
   function listenToMistakeReview() {
-    const item = selectedMistakeReviewId && progress.mistakeJournal[selectedMistakeReviewId];
+    const item = selectedMistakeReviewId && findMistakeRecord(selectedMistakeReviewId);
     const match = item && mistakeStep(item);
     if (!match || match.step.type !== "listen") return;
     mistakeReviewListenReady = true;
     mistakeReviewTranscriptVisible = !playText(match.step.audioText);
     renderMistakeJournal();
+    updateReviewActivePanel();
   }
 
   function toggleMistakeReviewTranscript() {
-    const item = selectedMistakeReviewId && progress.mistakeJournal[selectedMistakeReviewId];
+    const item = selectedMistakeReviewId && findMistakeRecord(selectedMistakeReviewId);
     const match = item && mistakeStep(item);
     if (!match || match.step.type !== "listen") return;
     mistakeReviewListenReady = true;
     mistakeReviewTranscriptVisible = !mistakeReviewTranscriptVisible;
     renderMistakeJournal();
+    updateReviewActivePanel();
   }
 
   function answerMistakeReview(mistakeId, answerIndex) {
-    const item = progress.mistakeJournal[mistakeId];
+    const item = findMistakeRecord(mistakeId);
     const match = item && mistakeStep(item);
     if (!item || isMistakeMastered(item) || !isMistakeDue(item) || !match) return;
     const step = match.step;
@@ -808,11 +1068,15 @@
       renderMistakeJournal();
       renderSkillProfile();
       renderAchievements();
+      updateReviewActivePanel();
+      if (typeof window.sinauuOnMistakeReviewChanged === "function") window.sinauuOnMistakeReviewChanged();
     } else {
       resetMistakeReviewAfterWrong(item);
       mistakeReviewFeedback = { mistakeId, kind: "try-again" };
       saveProgress();
       renderMistakeJournal();
+      updateReviewActivePanel();
+      if (typeof window.sinauuOnMistakeReviewChanged === "function") window.sinauuOnMistakeReviewChanged();
     }
   }
 
@@ -2275,6 +2539,8 @@
       if (mistakeReview) { startMission(mistakeReview.dataset.mistakeReview); return; }
       const mistakeFilter = event.target.closest("[data-mistake-filter]");
       if (mistakeFilter) { mistakeFilterValue = mistakeFilter.dataset.mistakeFilter; renderMistakeJournal(); return; }
+      const mistakeSkillFilter = event.target.closest("[data-mistake-skill-filter]");
+      if (mistakeSkillFilter) { mistakeSkillFilterValue = mistakeSkillFilter.dataset.mistakeSkillFilter; renderMistakeJournal(); return; }
       const storyOpen = event.target.closest("[data-story-open]");
       if (storyOpen) { openStory(storyOpen.dataset.storyOpen); return; }
       if (event.target.closest("[data-story-close]")) { storyRun = null; renderStoryLibrary(); return; }
@@ -2367,9 +2633,22 @@
 
   document.addEventListener("visibilitychange", () => { if (document.hidden && pronunciationCapture) stopPronunciationCapture(false); });
   window.addEventListener("pagehide", () => { if (pronunciationCapture) stopPronunciationCapture(false); });
+  window.addEventListener("sinauu:local-state-saved", () => { syncExternalMistakes(); renderMistakeJournal(); });
+  window.addEventListener("sinauu:local-extras-saved", () => { syncExternalMistakes(); renderMistakeJournal(); });
+  window.addEventListener("sinauu:workspace-ready", () => { syncExternalMistakes(); renderMistakeJournal(); });
   window.sinauuAdventureBackup = () => cloneProgress(progress);
-  window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); renderAll(); };
-  window.sinauuRenderAdventure = () => { if (curriculum) renderAll(); else void init(); };
+  window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); syncExternalMistakes(); renderAll(); updateReviewActivePanel(); };
+  window.sinauuRenderAdventure = () => { syncExternalMistakes(); if (curriculum) renderAll(); else void init(); updateReviewActivePanel(); };
+  window.sinauuRecordMistake = recordMistake;
+  window.sinauuSyncMistakes = syncExternalMistakes;
+  window.sinauuGetMistakeJournal = () => progress.mistakeJournal;
+  window.sinauuGetMistakeRecord = (id) => findMistakeRecord(id);
+  window.sinauuOpenMistakeReview = (id) => { openMistakeReview(id); };
+  window.sinauuCloseMistakeReview = () => { closeMistakeReview(); };
+  window.sinauuIsMistakeDue = (item, now) => isMistakeDue(item, now);
+  window.sinauuIsMistakeMastered = (item) => isMistakeMastered(item);
+  window.sinauuRenderMistakeReviewHtml = (item) => renderMistakeReview(item);
+  window.sinauuUpdateReviewActivePanel = () => updateReviewActivePanel();
 
   // Adventure uses only its own small curriculum and local extras. Do not wait for
   // the large Oxford corpus before showing Daily Quest, Mistake Journal, or Studios.
