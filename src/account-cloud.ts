@@ -50,6 +50,8 @@ let currentMode: "signin" | "signup" = "signin";
 let recoveryMode = false;
 let sessionEpoch = 0;
 let lastSuccessfulSync: string | null = null;
+let lastCloudRevision: number | null = null;
+let syncConflict = false;
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -634,7 +636,11 @@ function setSyncBadge(label: string, state: "idle" | "syncing" | "success" | "er
 function setSession(next: AuthSession | null): void {
   const oldUserId = session?.user?.id || null;
   const nextUserId = next?.user?.id || null;
-  if (oldUserId !== nextUserId) sessionEpoch += 1;
+  if (oldUserId !== nextUserId) {
+    sessionEpoch += 1;
+    lastCloudRevision = null;
+    syncConflict = false;
+  }
   session = next;
   try { if (next) localStorage.setItem(SESSION_KEY, JSON.stringify(next)); else localStorage.removeItem(SESSION_KEY); } catch { /* This open tab keeps its in-memory session. */ }
   renderAccount();
@@ -706,26 +712,79 @@ async function cloudRequest(path: string, options: RequestInit = {}): Promise<an
   const text = await response.text();
   const body = text ? (() => { try { return JSON.parse(text); } catch { return text; } })() : null;
   if (!response.ok) {
+    if (response.status === 409) {
+      const conflictError = new Error(body?.message || "Progres akun berubah dari perangkat lain. Perubahan ini belum tersimpan. Muat progres terbaru sebelum melanjutkan sinkronisasi.");
+      (conflictError as any).status = 409;
+      (conflictError as any).code = body?.code || "REVISION_CONFLICT";
+      (conflictError as any).currentRevision = body?.currentRevision;
+      throw conflictError;
+    }
     const message = body && typeof body === "object" ? body.message : "";
     throw new Error(message || "Sinkronisasi Google Sheets gagal (" + response.status + "). Progres lokal tetap tersimpan.");
   }
   return body;
 }
-async function readCloudBundle(): Promise<CloudBundle | null> {
+
+async function readCloudBundle(): Promise<{ bundle: CloudBundle; revision: number } | null> {
   if (!session) return null;
-  const rows = await cloudRequest("/user_learning_states?select=state,updated_at&user_id=eq." + encodeURIComponent(session.user.id) + "&limit=1", { method: "GET" });
+  const rows = await cloudRequest("/user_learning_states?select=state,updated_at,revision&user_id=eq." + encodeURIComponent(session.user.id) + "&limit=1", { method: "GET" });
   if (!Array.isArray(rows) || !rows.length) return null;
   const bundle = normalizeBundle(rows[0].state);
-  return bundle;
+  const revision = typeof rows[0].revision === "number" ? rows[0].revision : 0;
+  return { bundle, revision };
 }
 
-async function writeCloudBundle(bundle: CloudBundle): Promise<void> {
+async function writeCloudBundle(bundle: CloudBundle): Promise<{ revision: number }> {
   if (!session) throw new Error("Masuk terlebih dahulu untuk menyinkronkan progres.");
-  await cloudRequest("/user_learning_states?on_conflict=user_id", {
+  const res = await cloudRequest("/user_learning_states?on_conflict=user_id", {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify([{ user_id: session.user.id, state: bundle, updated_at: new Date().toISOString() }]),
+    body: JSON.stringify([{
+      user_id: session.user.id,
+      state: bundle,
+      updated_at: new Date().toISOString(),
+      baseRevision: lastCloudRevision ?? 0
+    }]),
   });
+  const newRev = typeof res?.revision === "number" ? res.revision : ((lastCloudRevision ?? 0) + 1);
+  lastCloudRevision = newRev;
+  syncConflict = false;
+  return { revision: newRev };
+}
+
+async function reloadLatestCloudProgress(): Promise<boolean> {
+  if (!session || syncing) return false;
+  syncing = true;
+  setSyncBadge("Memuat cloud…", "syncing");
+  setMessage("Memuat progres terbaru dari cloud…", "info");
+  try {
+    const remoteData = await readCloudBundle();
+    if (!remoteData || !remoteData.bundle) {
+      setMessage("Tidak ditemukan data progres di cloud.", "info");
+      syncConflict = false;
+      setSyncBadge("Tersimpan di perangkat", "idle");
+      renderAccount();
+      return true;
+    }
+    lastCloudRevision = remoteData.revision;
+    syncConflict = false;
+    await applyLocalBundle(remoteData.bundle);
+    try {
+      localStorage.setItem(OWNER_KEY, session.user.id);
+      localStorage.setItem(ACCOUNT_CACHE_PREFIX + session.user.id, JSON.stringify(remoteData.bundle));
+    } catch { /* Local account cache is a convenience */ }
+    lastSuccessfulSync = new Date().toISOString();
+    setSyncBadge("Tersinkron", "success");
+    setMessage("Progres terbaru (revisi " + remoteData.revision + ") berhasil dimuat. Siap melanjutkan belajar.", "success");
+    renderAccount();
+    return true;
+  } catch (err: any) {
+    setMessage("Gagal memuat progres dari cloud: " + (err.message || String(err)), "error");
+    setSyncBadge("Gagal memuat", "error");
+    return false;
+  } finally {
+    syncing = false;
+  }
 }
 
 async function prepareLocalForAccount(): Promise<void> {
@@ -783,6 +842,11 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
     return true;
   }
   if (!CLOUD_READY || !session || syncing || (signingOut && !allowWhileSigningOut)) return false;
+  if (syncConflict && !allowWhileSigningOut) {
+    setSyncBadge("Konflik revisi", "error");
+    setMessage("Progres akun berubah dari perangkat lain. Perubahan ini belum tersimpan. Muat progres terbaru sebelum melanjutkan sinkronisasi.", "error");
+    return false;
+  }
 
   if (!navigator.onLine) {
     try {
@@ -812,8 +876,13 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
       }
     }
 
-    const remote = await readCloudBundle();
+    const remoteData = await readCloudBundle();
     if (!stillSameAccount()) return false;
+    const remote = remoteData?.bundle || null;
+    if (remoteData) {
+      lastCloudRevision = remoteData.revision;
+    }
+
     const merged = remote ? mergeBundles(local, remote) : local;
     if (!remote || stable(merged) !== stable(remote)) await writeCloudBundle(merged);
     if (!stillSameAccount()) return false;
@@ -828,10 +897,19 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
     } catch { /* Local account cache is a convenience, not the only cloud copy. */ }
 
     lastSuccessfulSync = new Date().toISOString();
+    syncConflict = false;
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres tersinkron pada " + new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(new Date(lastSuccessfulSync)) + ". Kamu bisa lanjut di perangkat lain.", "success");
+    renderAccount();
     return true;
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.status === 409 || error?.code === "REVISION_CONFLICT") {
+      syncConflict = true;
+      setSyncBadge("Konflik revisi", "error");
+      setMessage("Progres akun berubah dari perangkat lain. Perubahan ini belum tersimpan. Muat progres terbaru sebelum melanjutkan sinkronisasi.", "error");
+      renderAccount();
+      return false;
+    }
     try {
       const local = await readLocalBundle();
       enqueueOfflineSync(syncUserId, local);
@@ -843,7 +921,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
 }
 
 function scheduleSync(): void {
-  if (isVercelPreviewDeployment() || !session || !CLOUD_READY || applyingCloud || signingOut) return;
+  if (isVercelPreviewDeployment() || !session || !CLOUD_READY || applyingCloud || signingOut || syncConflict) return;
   setSyncBadge(navigator.onLine ? "Ada perubahan" : "Menunggu internet", navigator.onLine ? "syncing" : "error");
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(() => void syncNow(), 900);
@@ -881,7 +959,7 @@ function modalMarkup(): string {
         <div class="account-signed-in" id="account-signed-in" hidden>
           <div class="account-avatar" aria-hidden="true">S</div>
           <div class="account-user-info"><strong id="account-user-email"></strong><span>Progres pribadi · hanya untuk akun ini</span></div>
-          <div class="account-sync-card"><div><strong id="cloud-sync-badge" data-state="idle">Belum tersinkron</strong><p id="account-sync-copy">Progres akan disinkronkan saat tersambung ke internet.</p></div><button type="button" id="account-sync-now">Sinkronkan sekarang ↻</button></div>
+          <div class="account-sync-card"><div><strong id="cloud-sync-badge" data-state="idle">Belum tersinkron</strong><p id="account-sync-copy">Progres akan disinkronkan saat tersambung ke internet.</p></div><button type="button" id="account-sync-now">Sinkronkan sekarang ↻</button><button type="button" id="account-reload-cloud" class="account-conflict-reload" hidden>Muat progres terbaru ↻</button></div>
           <button class="account-sign-out" type="button" id="account-sign-out">Keluar dari akun</button>
         </div>
         <div class="account-recovery-panel" id="account-recovery-panel" hidden>
@@ -935,6 +1013,7 @@ function mountUi(): void {
   $("#account-reset")?.addEventListener("click", () => void sendPasswordReset());
   $("#account-sign-out")?.addEventListener("click", () => void signOut());
   $("#account-sync-now")?.addEventListener("click", () => void syncNow());
+  $("#account-reload-cloud")?.addEventListener("click", () => void reloadLatestCloudProgress());
   $("#account-install-app")?.addEventListener("click", () => void triggerInstall());
   const notice = $("#account-config-notice");
   if (notice) notice.toggleAttribute("hidden", CLOUD_READY);
@@ -968,6 +1047,8 @@ function renderAccount(): void {
   if (email) email.textContent = session?.user?.email || "Akun SinauuEnglish";
   const installButton = $("#account-install-app") as HTMLButtonElement | null;
   if (installButton) installButton.hidden = !installPrompt;
+  const reloadButton = $("#account-reload-cloud") as HTMLButtonElement | null;
+  if (reloadButton) reloadButton.hidden = !signedIn || !syncConflict;
   const configNotice = $("#account-config-notice");
   if (configNotice) configNotice.toggleAttribute("hidden", CLOUD_READY);
 }
@@ -1184,25 +1265,30 @@ function setupPwa(): void {
 
 window.addEventListener("sinauu:local-state-saved", () => { if (!applyingCloud) scheduleSync(); });
 window.addEventListener("sinauu:local-extras-saved", () => { if (!applyingCloud) scheduleSync(); });
-window.addEventListener("online", () => { if (session) void syncNow(); });
-window.addEventListener("focus", () => { if (session) void syncNow(); });
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && session) void syncNow(); });
+window.addEventListener("online", () => { if (session && !syncConflict) void syncNow(); });
+window.addEventListener("focus", () => { if (session && !syncConflict) void syncNow(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && session && !syncConflict) void syncNow(); });
 
 mountUi();
 setupPwa();
 void checkCloudReady();
 pollingTimer = window.setInterval(() => {
-  if (session && document.visibilityState === "visible") void syncNow();
+  if (session && document.visibilityState === "visible" && !syncConflict) void syncNow();
 }, 45_000);
 window.addEventListener("pagehide", () => { window.clearTimeout(syncTimer); window.clearInterval(pollingTimer); });
 
 (window as any).sinauuSyncNow = () => syncNow();
+(window as any).sinauuReloadLatestCloud = () => reloadLatestCloudProgress();
+(window as any).sinauuGetLastCloudRevision = () => lastCloudRevision;
+(window as any).sinauuHasSyncConflict = () => syncConflict;
 (window as any).sinauuGetSyncStatus = () => ({
   syncing,
   lastSuccessfulSync,
   online: navigator.onLine,
   queuedCount: readOfflineQueue().length,
   badgeText: ($("#cloud-sync-badge") as HTMLElement | null)?.textContent || "",
+  conflict: syncConflict,
+  revision: lastCloudRevision,
 });
 
 export {};
