@@ -35,10 +35,12 @@
     {id:"b2-reading-1",level:"B2",category:"reading",prompt:"What trade-off does the passage describe?",context:"A company introduced a hybrid-work policy after employees asked for more flexibility. An internal survey found higher satisfaction, but some cross-team handoffs became slower. The company kept the flexible schedule while introducing shared office days for teams that depend on frequent coordination.",options:["Lower satisfaction in exchange for fewer meetings.","More flexibility, but some coordination becomes harder.","Less flexibility, with no change to collaboration."],answer:1,explanation:"Kebijakan meningkatkan kepuasan melalui fleksibilitas, tetapi koordinasi antartim menjadi lebih lambat."},
     {id:"b2-vocabulary-2",level:"B2",category:"vocabulary",prompt:"The report was criticized for having ___ the benefits while ignoring the costs.",context:"",options:["overstated","postponed","inherited"],answer:0,explanation:"Overstate berarti menyatakan sesuatu secara berlebihan, misalnya menggambarkan manfaat lebih besar daripada kenyataannya."}
   ];
+  let words = [], topics = [], state, db = null, storageMode = "loading";
   let placementRun = null;
   let placementResult = readPlacementResult();
 
   function readPlacementResult() {
+    if (state && state.placementResult) return state.placementResult;
     try {
       const saved = JSON.parse(localStorage.getItem(PLACEMENT_RESULT_KEY) || "null");
       if (!saved || typeof saved !== "object" || Array.isArray(saved)) return null;
@@ -198,7 +200,11 @@
       categoryScores,
       completedAt:new Date().toISOString()
     };
-    try { localStorage.setItem(PLACEMENT_RESULT_KEY,JSON.stringify(placementResult)); } catch (_) { /* Keep the result for this visit. */ }
+    if (state) state.placementResult = placementResult;
+    if (!window.sinauuIsCloudVerified?.()) {
+      try { localStorage.setItem(PLACEMENT_RESULT_KEY,JSON.stringify(placementResult)); } catch (_) { /* Keep the result for this visit. */ }
+    }
+    void save();
     placementRun = null;
     $("#placement-result-level").textContent = estimatedLevel;
     $("#placement-score").textContent = placementResult.correct + "/" + placementResult.total;
@@ -247,7 +253,6 @@
     showPlacementPanel("placement-result");
   }
 
-  let words = [], topics = [], state, db = null, storageMode = "loading";
   let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100, vocabDetailOpen = false, grammarDetailOpen = false, cloudApplying = false;
   let reviewFilterTab = "due", reviewSkillFilter = "all";
   const grammarUI = {};
@@ -277,8 +282,8 @@
   }
   function labelStorage() {
     const el = $("#storage-indicator"); if (!el) return;
-    el.classList.toggle("is-fallback", storageMode !== "indexedDB");
-    $("span", el).textContent = storageMode === "indexedDB" ? "Tersimpan di perangkat" : storageMode === "localStorage" ? "Penyimpanan cadangan" : "Penyimpanan terbatas";
+    el.classList.toggle("is-fallback", storageMode !== "indexedDB" && storageMode !== "cloud");
+    $("span", el).textContent = storageMode === "cloud" ? "Tersimpan di cloud" : storageMode === "indexedDB" ? "Tersimpan di perangkat" : storageMode === "localStorage" ? "Penyimpanan cadangan" : "Penyimpanan terbatas";
   }
   function openDB() {
     return new Promise((resolve, reject) => {
@@ -337,10 +342,52 @@
   }
   function readExtraSnapshots() {
     const read = (key) => { try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch (_) { return {}; } };
+    const locAdv = read("sinauu-adventure-progress-v1");
+    const memAdv = window.sinauuAdventureBackup?.() || {};
+    const adv = Object.assign({}, memAdv, locAdv);
+    if (locAdv.missionProgress || memAdv.missionProgress) {
+      adv.missionProgress = Object.assign({}, memAdv.missionProgress, locAdv.missionProgress);
+    }
+    if (locAdv.dialogueProgress || memAdv.dialogueProgress) {
+      adv.dialogueProgress = Object.assign({}, memAdv.dialogueProgress, locAdv.dialogueProgress);
+    }
+    if (locAdv.listeningProgress || memAdv.listeningProgress) {
+      adv.listeningProgress = Object.assign({}, memAdv.listeningProgress, locAdv.listeningProgress);
+    }
+    if (locAdv.pronunciationProgress || memAdv.pronunciationProgress) {
+      adv.pronunciationProgress = Object.assign({}, memAdv.pronunciationProgress, locAdv.pronunciationProgress);
+    }
+    if (locAdv.storyProgress || memAdv.storyProgress) {
+      adv.storyProgress = Object.assign({}, memAdv.storyProgress, locAdv.storyProgress);
+    }
+    if (locAdv.dailyQuests || memAdv.dailyQuests) {
+      adv.dailyQuests = Object.assign({}, memAdv.dailyQuests, locAdv.dailyQuests);
+    }
+    if (locAdv.mistakeJournal || memAdv.mistakeJournal) {
+      adv.mistakeJournal = Object.assign({}, memAdv.mistakeJournal, locAdv.mistakeJournal);
+    }
+    if (locAdv.xpLedger || memAdv.xpLedger) {
+      adv.xpLedger = Object.assign({}, memAdv.xpLedger, locAdv.xpLedger);
+    }
+    if (locAdv.listeningRate != null) {
+      adv.listeningRate = locAdv.listeningRate;
+    }
+    if (locAdv.studioSessions?.length) {
+      adv.studioSessions = locAdv.studioSessions;
+    }
+
+    const locExtra = read("sinauu-extra-learning-v1");
+    const memExtra = window.sinauuExtraLearningBackup?.() || {};
+    const locHabit = read("sinauu-habit-library-v1");
+    const memHabit = window.sinauuHabitLibraryBackup?.() || {};
+    const locDrafts = read("sinauu-adventure-studio-drafts-v1:local");
+    const memDrafts = window.sinauuStudioDraftsBackup?.() || {};
+
     return {
-      extraLearning:read("sinauu-extra-learning-v1"),
-      habitProgress:read("sinauu-habit-library-v1"),
-      adventureProgress:read("sinauu-adventure-progress-v1")
+      extraLearning: Object.assign({}, memExtra, locExtra),
+      habitProgress: Object.assign({}, memHabit, locHabit),
+      adventureProgress: adv,
+      studioDrafts: Object.assign({}, memDrafts, locDrafts)
     };
   }
   function notifyCloudState() {
@@ -350,12 +397,18 @@
   async function save() {
     state.updatedAt = new Date().toISOString();
     let stored = false;
-    try {
-      if (storageMode === "indexedDB" && db) { await writeDB(db,state); labelStorage(); stored = true; }
-      else { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); stored = true; }
-    } catch (_) {
-      try { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); stored = true; }
-      catch (_) { storageMode = "unavailable"; labelStorage(); toast("Browser tidak dapat menyimpan progres. Coba ekspor backup."); }
+    if (window.sinauuIsCloudVerified?.()) {
+      stored = true;
+      storageMode = "cloud";
+      labelStorage();
+    } else {
+      try {
+        if (storageMode === "indexedDB" && db) { await writeDB(db,state); labelStorage(); stored = true; }
+        else { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); stored = true; }
+      } catch (_) {
+        try { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); stored = true; }
+        catch (_) { storageMode = "unavailable"; labelStorage(); toast("Browser tidak dapat menyimpan progres. Coba ekspor backup."); }
+      }
     }
     if (stored) notifyCloudState();
     return stored;
@@ -3527,11 +3580,14 @@
   function exportBackup() {
     const extras=readExtraSnapshots();
     const backup=Object.assign({product:"SinauuEnglish",exportedAt:new Date().toISOString()},state,{
-      extraLearning:extras.extraLearning,habitProgress:extras.habitProgress,adventureProgress:extras.adventureProgress
+      extraLearning:extras.extraLearning,
+      habitProgress:extras.habitProgress,
+      adventureProgress:extras.adventureProgress,
+      studioDrafts:extras.studioDrafts
     });
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
     a.href=url;a.download="sinauuenglish-backup-"+dayKey()+".json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
-    $("#backup-status").textContent="Backup dibuat dari progres inti dan semua latihan tambahan.";
+    $("#backup-status").textContent="Backup dibuat dari progres inti, latihan, petualangan, dan draft studio.";
   }
   async function importBackup(file) {
     if(!file)return;
@@ -3540,7 +3596,7 @@
       const parsed=JSON.parse(await file.text());
       if(parsed.product&&parsed.product!=="SinauuEnglish")throw new Error("File bukan backup SinauuEnglish.");
       const safe=sanitize(parsed);
-      if(!confirm("Pulihkan backup? Progres lokal saat ini akan diganti."))return;
+      if(!confirm("Pulihkan backup? Progres saat ini akan diganti."))return;
       state=safe;
       const backupExtras=[
         ["extraLearning","sinauu-extra-learning-v1",window.sinauuExtraLearningRestore],
@@ -3549,9 +3605,14 @@
       ];
       for(const [field,key,restore] of backupExtras){
         if(parsed[field]&&typeof parsed[field]==="object"){
-          localStorage.setItem(key,JSON.stringify(parsed[field]));
+          if (!window.sinauuIsCloudVerified?.()) {
+            localStorage.setItem(key,JSON.stringify(parsed[field]));
+          }
           restore?.(parsed[field]);
         }
+      }
+      if (parsed.studioDrafts && typeof parsed.studioDrafts === "object") {
+        window.sinauuStudioDraftsRestore?.(parsed.studioDrafts);
       }
       root.dataset.theme=state.settings.theme;await save();
       renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();window.sinauuRenderAdventure?.();
@@ -4340,16 +4401,29 @@
           for (const [wId, p] of Object.entries(state.wordProgress || {})) {
             if (p && p.savedContext) ensureWordEntryInList(wId, p);
           }
+          if (bundle.core && bundle.core.placementResult) {
+            placementResult = bundle.core.placementResult;
+            state.placementResult = placementResult;
+            renderPlacementTeaser();
+          }
           const extras = bundle.extras || {};
-          localStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(extras.extraLearning || {}));
-          localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(extras.habitProgress || {}));
-          localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(extras.adventureProgress || {}));
-          if (storageMode === "indexedDB" && db) await writeDB(db,state);
-          else localStorage.setItem(FALLBACK,JSON.stringify(state));
+          if (!window.sinauuIsCloudVerified?.()) {
+            localStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(extras.extraLearning || {}));
+            localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(extras.habitProgress || {}));
+            localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(extras.adventureProgress || {}));
+            if (storageMode === "indexedDB" && db) await writeDB(db,state);
+            else localStorage.setItem(FALLBACK,JSON.stringify(state));
+          } else {
+            storageMode = "cloud";
+            labelStorage();
+          }
           await setTheme(state.settings.theme);
           window.sinauuExtraLearningRestore?.(extras.extraLearning || {});
           window.sinauuHabitLibraryRestore?.(extras.habitProgress || {});
           window.sinauuAdventureRestore?.(extras.adventureProgress || {});
+          if (extras.studioDrafts && typeof extras.studioDrafts === "object") {
+            window.sinauuStudioDraftsRestore?.(extras.studioDrafts);
+          }
           renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();window.sinauuRenderAdventure?.();
         } finally { cloudApplying = false; }
       };

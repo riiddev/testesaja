@@ -43,6 +43,7 @@ test("landing CTA sends new visitors to login and a successful mocked signup ope
     const action = new URL(route.request().url()).searchParams.get("action");
     if (action === "status") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: true }) });
     if (action === "signup" || action === "login") return route.fulfill({ status: action === "signup" ? 201 : 200, contentType: "application/json", body: JSON.stringify(fakeSession) });
+    if (action === "me") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fakeSession.user) });
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
   });
   await page.route("**/api/progress**", async (route) => {
@@ -445,7 +446,7 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   await second.waitForFunction(() => window.sinauuAdventureBackup?.().studioSessions?.some((item) => item.promptId === "ask-directions"));
   await second.locator('[data-adventure-select="a-day-around-town"]').waitFor({ state: "visible" });
   assert.match(await second.locator('[data-adventure-select="a-day-around-town"]').getAttribute("class"), /is-available/);
-  const restored = await second.evaluate(() => JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
+  const restored = await second.evaluate(() => window.sinauuAdventureBackup ? window.sinauuAdventureBackup() : JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "null"));
   assert.ok(restored?.missionProgress?.["meet-your-new-neighbors"]?.completedAt, "a second browser profile should restore the mission completion");
   assert.equal(restored?.xpLedger?.["first-completion:meet-your-new-neighbors"]?.amount, 40);
   assert.equal(restored?.listeningRate, 0.75, "Listening Lab speed preference should restore on the second profile");
@@ -461,7 +462,7 @@ test("CloudBundle v2 Adventure progress merges across two independent browser pr
   assert.equal(restored?.pronunciationProgress?.["polite-help"]?.attempts?.[0]?.durationMs, 3500, "the first device's local pronunciation metrics should restore");
 
   await second.evaluate(() => {
-    const snapshot = JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
+    const snapshot = (window.sinauuAdventureBackup ? window.sinauuAdventureBackup() : null) || JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
     const quest = snapshot.dailyQuests["2026-10-31"];
     quest.completedStepIds.push("grammar-article");
     quest.updatedAt = new Date(Date.now() + 1000).toISOString();

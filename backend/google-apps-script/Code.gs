@@ -120,11 +120,9 @@ function doGet(e) {
 // ==========================================
 
 function handleHealth() {
-  var ss = getSpreadsheet();
   return jsonResponse({
     ok: true,
     version: CONFIG.VERSION,
-    spreadsheetId: ss.getId(),
     timestamp: new Date().toISOString()
   });
 }

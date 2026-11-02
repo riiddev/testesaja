@@ -254,12 +254,12 @@ describe("Phase 1C — Vercel Reunification, Idempotent Writes & Safe Cutover (2
   });
 
   // Scenario 2: Apps Script health action with mocked Apps Script runtime
-  test("2. Apps Script health action with mocked Apps Script runtime returns valid health response", () => {
+  test("2. Apps Script health action with mocked Apps Script runtime returns valid health response without disclosing spreadsheet ID", () => {
     const sandbox = createGasSandbox();
     const result = sandbox.callDoPost({ apiKey: TEST_API_KEY, action: "status" });
     assert.equal(result.ok, true);
     assert.equal(result.version, "2.0.0");
-    assert.ok(result.spreadsheetId);
+    assert.equal(result.spreadsheetId, undefined);
   });
 
   // Scenario 3: JWT authentication enforcement
