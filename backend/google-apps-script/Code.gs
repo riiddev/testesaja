@@ -13,7 +13,7 @@
 
 var CONFIG = {
   VERSION: "2.0.0",
-  MAX_LOCK_WAIT_MS: 15000,
+  MAX_LOCK_WAIT_MS: 10000, // 10s max lock wait to coordinate safely within gateway timeout budget
   CACHE_TTL_SECONDS: 600, // 10 minutes cache for read lookups
   CHUNK_SIZE: 30000,
   MAX_CHUNKS: 250,
@@ -62,14 +62,14 @@ function doPost(e) {
       return handleFindUserById(payload);
     } else if (action === "users.create") {
       if (!lock.tryLock(CONFIG.MAX_LOCK_WAIT_MS)) {
-        return jsonResponse({ ok: false, error: "Server sibuk. Coba lagi dalam beberapa saat." });
+        return jsonResponse({ ok: false, code: "LOCK_BUSY", error: "Server sibuk. Coba lagi dalam beberapa saat." });
       }
       return handleCreateUser(payload);
     } else if (action === "collections.list") {
       return handleCollectionsList(payload);
     } else if (action === "collections.upsertBatch") {
       if (!lock.tryLock(CONFIG.MAX_LOCK_WAIT_MS)) {
-        return jsonResponse({ ok: false, error: "Server sibuk memproses antrean sinkronisasi. Coba lagi." });
+        return jsonResponse({ ok: false, code: "LOCK_BUSY", error: "Server sibuk memproses antrean sinkronisasi. Coba lagi." });
       }
       return handleCollectionsUpsertBatch(payload);
     } else if (action === "snapshot.commit") {
@@ -81,7 +81,7 @@ function doPost(e) {
       return handleProgressGet(payload);
     } else if (action === "progress.save") {
       if (!lock.tryLock(CONFIG.MAX_LOCK_WAIT_MS)) {
-        return jsonResponse({ ok: false, error: "Server sibuk memproses penyimpanan progres. Coba lagi." });
+        return jsonResponse({ ok: false, code: "LOCK_BUSY", error: "Server sibuk memproses penyimpanan progres. Coba lagi." });
       }
       return handleProgressSave(payload);
     } else {
@@ -331,6 +331,18 @@ function handleCollectionsList(payload) {
   return jsonResponse({ ok: true, data: { records: matchingRecords } });
 }
 
+function payloadsMatch(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  try {
+    var objA = JSON.parse(a);
+    var objB = JSON.parse(b);
+    return JSON.stringify(objA) === JSON.stringify(objB);
+  } catch (_) {
+    return false;
+  }
+}
+
 function handleCollectionsUpsertBatch(payload) {
   var collectionName = String(payload.collection || "lists").trim();
   var userId = String(payload.userId || "").trim();
@@ -350,12 +362,47 @@ function handleCollectionsUpsertBatch(payload) {
 
   var data = sheet.getDataRange().getValues();
   var rowIndexById = {};
+  var rowPayloadById = {};
 
-  // Build row index map for this user
+  // Build row index map for this user and collection
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
     if (String(row[2] || "") === userId && String(row[0] || "") === collectionName) {
-      rowIndexById[String(row[1] || "")] = i + 1; // 1-based sheet row number
+      var rId = String(row[1] || "");
+      rowIndexById[rId] = i + 1; // 1-based sheet row number
+      rowPayloadById[rId] = String(row[4] || "");
+    }
+  }
+
+  // Pre-validate all records in batch:
+  // 1. sinau_state_v1_manifest is reserved and CANNOT be updated via collections.upsertBatch
+  // 2. Existing sinau_state_v1_ chunks are immutable: must match stored payload byte-for-byte or parsed JSON
+  for (var v = 0; v < records.length; v++) {
+    var checkItem = records[v];
+    if (!checkItem) continue;
+    var checkId = String(checkItem.id || checkItem.record_id || checkItem.listId || "");
+    if (!checkId) continue;
+
+    if (checkId === "sinau_state_v1_manifest") {
+      return jsonResponse({
+        ok: false,
+        code: "MANIFEST_IMMUTABLE",
+        error: "Pembaruan sinau_state_v1_manifest tidak diizinkan melalui collections.upsertBatch. Gunakan aksi snapshot.commit."
+      });
+    }
+
+    if (checkId.indexOf("sinau_state_v1_") === 0) {
+      if (rowIndexById[checkId]) {
+        var existingPayload = rowPayloadById[checkId];
+        var incomingPayload = JSON.stringify(checkItem.data !== undefined ? checkItem.data : checkItem);
+        if (!payloadsMatch(existingPayload, incomingPayload)) {
+          return jsonResponse({
+            ok: false,
+            code: "SNAPSHOT_CHUNK_IMMUTABLE",
+            error: "Chunk snapshot '" + checkId + "' bersifat immutable dan tidak dapat diubah."
+          });
+        }
+      }
     }
   }
 
@@ -372,7 +419,11 @@ function handleCollectionsUpsertBatch(payload) {
     var targetRow = rowIndexById[recordId];
 
     if (targetRow) {
-      // In-place batch row update
+      // If snapshot chunk and identical content, skip writing (idempotent retry)
+      if (recordId.indexOf("sinau_state_v1_") === 0) {
+        continue;
+      }
+      // Normal non-snapshot collection row update
       sheet.getRange(targetRow, 1, 1, 5).setValues([[
         collectionName,
         recordId,
@@ -389,8 +440,8 @@ function handleCollectionsUpsertBatch(payload) {
         now,
         recordPayload
       ]);
-      // Update local index so subsequent items with same ID in same batch update rather than double-append
       rowIndexById[recordId] = data.length + appendRows.length;
+      rowPayloadById[recordId] = recordPayload;
     }
   }
 
@@ -403,18 +454,53 @@ function handleCollectionsUpsertBatch(payload) {
 
 function handleSnapshotCommit(payload) {
   var userId = String(payload.userId || "").trim();
-  var snapshotId = String(payload.snapshotId || "").trim();
-  var collectionName = String(payload.collection || "lists").trim();
-  var partCount = Math.floor(Number(payload.partCount || 0));
-  var expectedRevision = Number(payload.expectedRevision !== undefined && payload.expectedRevision !== null ? payload.expectedRevision : 0);
-  var newRevision = Number(payload.newRevision !== undefined && payload.newRevision !== null ? payload.newRevision : (expectedRevision + 1));
-  var updatedAt = String(payload.updatedAt || new Date().toISOString());
+  if (!userId) {
+    return jsonResponse({ ok: false, code: "INVALID_USER_ID", error: "userId wajib diisi." });
+  }
 
-  if (!userId || !snapshotId || partCount < 1) {
+  var collectionName = String(payload.collection || "").trim();
+  if (collectionName !== "lists") {
     return jsonResponse({
       ok: false,
-      code: "INVALID_PAYLOAD",
-      error: "userId, snapshotId, dan partCount valid wajib disertakan."
+      code: "INVALID_COLLECTION",
+      error: "collection harus 'lists' untuk protokol snapshot."
+    });
+  }
+
+  var snapshotId = String(payload.snapshotId || "").trim();
+  var uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidPattern.test(snapshotId)) {
+    return jsonResponse({
+      ok: false,
+      code: "INVALID_SNAPSHOT_ID",
+      error: "snapshotId tidak valid (harus format UUID)."
+    });
+  }
+
+  var expectedRevision = payload.expectedRevision;
+  if (typeof expectedRevision !== "number" || !isFinite(expectedRevision) || Math.floor(expectedRevision) !== expectedRevision || expectedRevision < 0) {
+    return jsonResponse({
+      ok: false,
+      code: "INVALID_REVISION",
+      error: "expectedRevision harus berupa bilangan bulat non-negatif."
+    });
+  }
+
+  var newRevision = payload.newRevision;
+  if (typeof newRevision !== "number" || !isFinite(newRevision) || newRevision !== expectedRevision + 1) {
+    return jsonResponse({
+      ok: false,
+      code: "INVALID_REVISION",
+      error: "newRevision harus tepat bernilai expectedRevision + 1."
+    });
+  }
+
+  var partCount = payload.partCount;
+  if (typeof partCount !== "number" || !isFinite(partCount) || Math.floor(partCount) !== partCount || partCount < 1 || partCount > CONFIG.MAX_CHUNKS) {
+    return jsonResponse({
+      ok: false,
+      code: "INVALID_PART_COUNT",
+      error: "partCount harus berupa integer antara 1 dan " + CONFIG.MAX_CHUNKS + "."
     });
   }
 
@@ -423,22 +509,31 @@ function handleSnapshotCommit(payload) {
   ]);
 
   var data = sheet.getDataRange().getValues();
-  var currentManifest = null;
+  var manifestCount = 0;
   var manifestRowIndex = -1;
+  var currentManifest = null;
 
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
     if (String(row[2] || "") === userId &&
         String(row[0] || "") === collectionName &&
         String(row[1] || "") === "sinau_state_v1_manifest") {
+      manifestCount++;
       manifestRowIndex = i + 1;
       try {
         currentManifest = JSON.parse(String(row[4] || "{}"));
       } catch (_) {
         currentManifest = {};
       }
-      break;
     }
+  }
+
+  if (manifestCount > 1) {
+    return jsonResponse({
+      ok: false,
+      code: "DUPLICATE_MANIFEST",
+      error: "Terdeteksi lebih dari satu record sinau_state_v1_manifest untuk pengguna ini."
+    });
   }
 
   var currentRevision = 0;
@@ -458,7 +553,7 @@ function handleSnapshotCommit(payload) {
         snapshotId: snapshotId,
         revision: newRevision,
         partCount: Number(currentManifest.partCount || partCount),
-        updatedAt: String(currentManifest.updatedAt || updatedAt)
+        updatedAt: String(currentManifest.updatedAt || payload.updatedAt || new Date().toISOString())
       }
     });
   }
@@ -475,34 +570,92 @@ function handleSnapshotCommit(payload) {
 
   // Verify that every expected immutable chunk exists for authenticated userId, collection, and snapshotId
   var chunkPrefix = "sinau_state_v1_" + snapshotId + "_";
-  var chunksFound = {};
+  var chunksByIndex = {};
 
   for (var j = 1; j < data.length; j++) {
     var chunkRow = data[j];
-    if (String(chunkRow[2] || "") === userId && String(chunkRow[0] || "") === collectionName) {
-      var recId = String(chunkRow[1] || "");
-      if (recId.indexOf(chunkPrefix) === 0) {
-        var rawData = String(chunkRow[4] || "");
-        try {
-          var parsedChunk = JSON.parse(rawData);
-          if (parsedChunk && parsedChunk.snapshotId === snapshotId && typeof parsedChunk.chunkIndex === "number") {
-            chunksFound[parsedChunk.chunkIndex] = (chunksFound[parsedChunk.chunkIndex] || 0) + 1;
-          }
-        } catch (_) {}
+    var rowUser = String(chunkRow[2] || "");
+    var rowCol = String(chunkRow[0] || "");
+    var recId = String(chunkRow[1] || "");
+
+    if (recId.indexOf(chunkPrefix) === 0) {
+      if (rowUser !== userId || rowCol !== collectionName) {
+        return jsonResponse({
+          ok: false,
+          code: "UNAUTHORIZED_CHUNK",
+          error: "Chunk snapshot '" + recId + "' tidak cocok dengan pemilik atau koleksi."
+        });
       }
+
+      var rawData = String(chunkRow[4] || "");
+      var parsedChunk = null;
+      try {
+        parsedChunk = JSON.parse(rawData);
+      } catch (_) {
+        return jsonResponse({
+          ok: false,
+          code: "CORRUPT_CHUNK",
+          error: "Payload chunk '" + recId + "' bukan JSON valid."
+        });
+      }
+
+      if (!parsedChunk || parsedChunk.snapshotId !== snapshotId) {
+        return jsonResponse({
+          ok: false,
+          code: "INVALID_CHUNK",
+          error: "snapshotId di dalam payload chunk tidak cocok."
+        });
+      }
+
+      var cIdx = parsedChunk.chunkIndex;
+      if (typeof cIdx !== "number" || cIdx < 0 || cIdx >= partCount) {
+        return jsonResponse({
+          ok: false,
+          code: "INVALID_CHUNK_SET",
+          error: "Ditemukan chunk index di luar rentang partCount [0, " + (partCount - 1) + "]: " + cIdx
+        });
+      }
+
+      if (parsedChunk.partCount !== partCount) {
+        return jsonResponse({
+          ok: false,
+          code: "INVALID_CHUNK_SET",
+          error: "partCount di dalam chunk tidak cocok dengan permintaan komit."
+        });
+      }
+
+      var expectedPaddedId = "sinau_state_v1_" + snapshotId + "_" + (cIdx < 10 ? "000" + cIdx : cIdx < 100 ? "00" + cIdx : cIdx < 1000 ? "0" + cIdx : "" + cIdx);
+      if (recId !== expectedPaddedId) {
+        return jsonResponse({
+          ok: false,
+          code: "INVALID_CHUNK_ID",
+          error: "ID chunk '" + recId + "' tidak sesuai format: " + expectedPaddedId
+        });
+      }
+
+      chunksByIndex[cIdx] = (chunksByIndex[cIdx] || 0) + 1;
     }
   }
 
   for (var c = 0; c < partCount; c++) {
-    if (!chunksFound[c] || chunksFound[c] !== 1) {
+    var count = chunksByIndex[c] || 0;
+    if (count === 0) {
       return jsonResponse({
         ok: false,
         code: "INCOMPLETE_SNAPSHOT",
-        error: "Snapshot tidak lengkap atau terdapat duplikasi chunk pada index " + c + "."
+        error: "Snapshot tidak lengkap: chunk index " + c + " tidak ditemukan."
+      });
+    }
+    if (count > 1) {
+      return jsonResponse({
+        ok: false,
+        code: "DUPLICATE_CHUNK",
+        error: "Ditemukan duplikasi chunk pada index " + c + "."
       });
     }
   }
 
+  var updatedAt = String(payload.updatedAt || new Date().toISOString());
   var manifestDataObj = {
     snapshotId: snapshotId,
     partCount: partCount,

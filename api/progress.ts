@@ -1,5 +1,5 @@
-import { assertSheetsConfigured, readProgress, writeProgress, RevisionConflictError, LockBusyError } from "./_lib/sheets";
-import { bearerToken, verifyToken } from "./_lib/security";
+import { assertSheetsConfigured, readProgress, writeProgress, RevisionConflictError, LockBusyError } from "./_lib/sheets.ts";
+import { bearerToken, verifyToken } from "./_lib/security.ts";
 
 type RequestLike = {
   method?: string;

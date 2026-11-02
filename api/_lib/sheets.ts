@@ -47,12 +47,15 @@ async function callSinai(action: string, payload: Record<string, unknown> = {}):
   const apiKey = requiredEnv("SINAI_API_KEY");
   let response: Response;
   try {
+    // Timeout budget: Apps Script CONFIG.MAX_LOCK_WAIT_MS is 10s.
+    // Adding ~2-3s execution time gives ~13s worst-case response from GAS.
+    // Setting client timeout to 20s provides a safe 7s margin over lock wait.
     response = await fetch(url, {
       method: "POST",
       redirect: "follow",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ ...payload, apiKey, action }),
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(20_000),
     });
   } catch {
     throw new Error("Tidak dapat menghubungi Google Sheets. Coba lagi sebentar.");
@@ -68,8 +71,11 @@ async function callSinai(action: string, payload: Record<string, unknown> = {}):
     if (code === "REVISION_CONFLICT") {
       throw new RevisionConflictError(message || "Snapshot sudah diperbarui dari perangkat lain.", Number(result?.currentRevision ?? 0));
     }
-    if (code === "LOCK_BUSY") {
+    if (code === "LOCK_BUSY" || /server sibuk/i.test(message)) {
       throw new LockBusyError(message || "Server sibuk. Gagal mendapatkan lock untuk snapshot commit.");
+    }
+    if (code === "SNAPSHOT_CHUNK_IMMUTABLE" || code === "MANIFEST_IMMUTABLE") {
+      throw new Error(message || "Operasi penyimpanan ditolak: data snapshot bersifat immutable.");
     }
     if (/email sudah terdaftar/i.test(message)) throw new Error("Email ini sudah terdaftar. Silakan masuk.");
     if (/unauthorized/i.test(message)) throw new Error("API key tidak cocok dengan Google Apps Script. Periksa environment variable dan deployment Apps Script.");
@@ -151,18 +157,17 @@ export async function readProgress(userId: string): Promise<{ state: any; update
   const manifest = records.find((record) => recordId(record) === MANIFEST_ID);
   const manifestData: Record<string, any> = manifest?.data || {};
   const snapshotId = String(manifestData.snapshotId || "");
-  const slot = String(manifestData.slot || "");
+  const slot = String(manifestData.slot || manifestData.activeSlot || "");
   const revision = typeof manifestData.revision === "number" ? manifestData.revision : 0;
-  const partCount = Math.max(0, Math.min(MAX_CHUNKS, Number(manifestData.partCount || 0)));
-
-  if (!snapshotId || partCount < 1) return null;
-
   const isLegacy = slot === "A" || slot === "B";
+  const partCount = Math.max(0, Math.min(MAX_CHUNKS, Number(manifestData.partCount || (isLegacy ? 1 : 0))));
+  if ((!snapshotId && !isLegacy) || partCount < 1) return null;
+
   const byIndex = new Map<number, CollectionRecord>();
 
   for (const record of records) {
     const data = record.data || {};
-    if (data.snapshotId !== snapshotId) continue;
+    if (snapshotId && data.snapshotId && data.snapshotId !== snapshotId) continue;
     if (isLegacy && data.slot !== slot) continue;
     const index = Number(data.chunkIndex);
     if (Number.isInteger(index) && index >= 0 && index < partCount) {
@@ -207,7 +212,11 @@ export async function writeProgress(userId: string, state: unknown, baseRevision
 
   const snapshotId = randomUUID();
   const updatedAt = new Date().toISOString();
-  const expectedRevision = Math.max(0, Math.floor(Number(baseRevision) || 0));
+
+  if (typeof baseRevision !== "number" || !Number.isFinite(baseRevision) || Math.floor(baseRevision) !== baseRevision || baseRevision < 0) {
+    throw new Error("baseRevision tidak valid. Harus berupa bilangan bulat non-negatif.");
+  }
+  const expectedRevision = baseRevision;
   const newRevision = expectedRevision + 1;
 
   // Build immutable chunks
@@ -242,8 +251,13 @@ export async function writeProgress(userId: string, state: unknown, baseRevision
     updatedAt,
   });
 
+  const committedRevision = commitResult?.revision;
+  if (typeof committedRevision !== "number" || !Number.isFinite(committedRevision) || committedRevision !== newRevision) {
+    throw new Error("Penyimpanan gagal: konfirmasi komit manifes dari Google Sheets tidak mengembalikan revisi yang valid.");
+  }
+
   return {
-    revision: Number(commitResult?.revision || newRevision),
+    revision: committedRevision,
     snapshotId
   };
 }

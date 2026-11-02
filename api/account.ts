@@ -1,5 +1,5 @@
-import { appendAccount, assertSheetsConfigured, ensureSheetsReady, findAccountByEmail } from "./_lib/sheets";
-import { bearerToken, hashPassword, issueSession, verifyPassword, verifyToken } from "./_lib/security";
+import { appendAccount, assertSheetsConfigured, ensureSheetsReady, findAccountByEmail } from "./_lib/sheets.ts";
+import { bearerToken, hashPassword, issueSession, verifyPassword, verifyToken } from "./_lib/security.ts";
 
 type RequestLike = {
   method?: string;
