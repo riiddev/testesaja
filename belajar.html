@@ -41,17 +41,23 @@
 </head>
 <body>
   <a class="skip-link" href="#app-main">Lewati ke konten</a>
+  <div class="nav-backdrop" id="nav-backdrop" hidden aria-hidden="true"></div>
   <div class="app-shell">
-    <aside class="sidebar">
-      <a class="brand" href="/index.html" aria-label="SinauuEnglish, kembali ke landing page">
-        <span class="brand-mark" aria-hidden="true"><img src="/assets/sinauu-mark.svg" alt=""></span><span class="brand-name">sinauu</span>
-      </a>
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <a class="brand" href="/index.html" aria-label="SinauuEnglish, kembali ke landing page">
+          <span class="brand-mark" aria-hidden="true"><img src="/assets/sinauu-mark.svg" alt=""></span><span class="brand-name">sinauu</span>
+        </a>
+        <button class="sidebar-collapse-toggle" id="sidebar-collapse-toggle" type="button" aria-label="Kecilkan bilah samping" aria-expanded="true" title="Kecilkan bilah samping">
+          <svg class="collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9-3 3 3 3"/></svg>
+        </button>
+      </div>
       <nav class="side-nav" aria-label="Navigasi utama">
-        <button class="side-link is-active" data-view-target="overview" aria-current="page" type="button"><span class="nav-icon" aria-hidden="true">⌂</span><span>Beranda</span></button>
-        <button class="side-link" data-view-target="adventure" type="button"><span class="nav-icon" aria-hidden="true">⚔</span><span>Petualangan</span></button>
-        <button class="side-link" data-view-target="practice" type="button"><span class="nav-icon" aria-hidden="true">★</span><span>Latihan</span></button>
-        <button class="side-link" data-view-target="review" type="button"><span class="nav-icon" aria-hidden="true">↻</span><span>Review</span><span class="nav-count" id="nav-review-count">0</span></button>
-        <button class="side-link" data-view-target="progress" type="button"><span class="nav-icon" aria-hidden="true">↗</span><span>Progres</span></button>
+        <button class="side-link is-active" data-view-target="overview" aria-current="page" type="button" title="Beranda" data-tooltip="Beranda"><span class="nav-icon" aria-hidden="true"><svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="nav-label">Beranda</span></button>
+        <button class="side-link" data-view-target="adventure" type="button" title="Petualangan" data-tooltip="Petualangan"><span class="nav-icon" aria-hidden="true"><svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span><span class="nav-label">Petualangan</span></button>
+        <button class="side-link" data-view-target="practice" type="button" title="Latihan" data-tooltip="Latihan"><span class="nav-icon" aria-hidden="true"><svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span><span class="nav-label">Latihan</span></button>
+        <button class="side-link" data-view-target="review" type="button" title="Review" data-tooltip="Review"><span class="nav-icon" aria-hidden="true"><svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg></span><span class="nav-label">Review</span><span class="nav-count" id="nav-review-count">0</span></button>
+        <button class="side-link" data-view-target="progress" type="button" title="Progres" data-tooltip="Progres"><span class="nav-icon" aria-hidden="true"><svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span class="nav-label">Progres</span></button>
         <button class="side-compat-link" data-view-target="vocabulary" style="position:absolute;top:0;left:0;width:5px;height:5px;opacity:0.01;pointer-events:auto;z-index:999;" aria-hidden="true" tabindex="-1"></button>
         <button class="side-compat-link" data-view-target="reading" style="position:absolute;top:0;left:10px;width:5px;height:5px;opacity:0.01;pointer-events:auto;z-index:999;" aria-hidden="true" tabindex="-1"></button>
       </nav>
@@ -59,6 +65,10 @@
         <span id="nav-word-count">—</span><span id="nav-grammar-count">—</span><span id="nav-matching-count">0/6</span><span id="nav-reading-count">0/12</span>
       </div>
       <div class="sidebar-bottom">
+        <button class="sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Tutup menu navigasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Tutup navigasi</span>
+        </button>
         <div class="local-note"><span class="local-note-dot"></span><div><strong>Belajar di perangkatmu</strong><p>Masuk akun untuk melanjutkan progres di perangkat lain.</p></div></div>
         <a class="back-link" href="/index.html">← Tentang SinauuEnglish</a>
       </div>
@@ -66,7 +76,12 @@
 
     <main class="app-main" id="app-main">
       <header class="app-topbar">
-        <div class="topbar-context"><span class="topbar-overline">SINAUUENGLISH</span><strong id="topbar-current">Beranda</strong></div>
+        <div class="topbar-left">
+          <button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="app-sidebar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="topbar-context"><span class="topbar-overline">SINAUUENGLISH</span><strong id="topbar-current">Beranda</strong></div>
+        </div>
         <div class="topbar-actions">
           <span class="storage-indicator" id="storage-indicator"><i></i><span>Menyiapkan penyimpanan</span></span>
           <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Aktifkan tema gelap" aria-pressed="false">
@@ -400,11 +415,26 @@
               <button class="primary-action" type="button" data-open-practice-hub>Buka Hub Latihan ↗</button>
             </div>
             <div class="adventure-studios-portal-pills">
-              <button type="button" class="adventure-portal-pill" data-portal-practice="speaking"><span>🗣</span> Berbicara</button>
-              <button type="button" class="adventure-portal-pill" data-portal-practice="writing"><span>✍</span> Menulis</button>
-              <button type="button" class="adventure-portal-pill" data-portal-practice="reading-stories"><span>📖</span> Cerita</button>
-              <button type="button" class="adventure-portal-pill" data-portal-practice="listening"><span>🎧</span> Menyimak</button>
-              <button type="button" class="adventure-portal-pill" data-portal-practice="pronunciation"><span>🎙</span> Pengucapan</button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="speaking">
+                <span class="portal-pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+                <span>Berbicara</span>
+              </button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="writing">
+                <span class="portal-pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+                <span>Menulis</span>
+              </button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="reading-stories">
+                <span class="portal-pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg></span>
+                <span>Cerita</span>
+              </button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="listening">
+                <span class="portal-pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></span>
+                <span>Menyimak</span>
+              </button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="pronunciation">
+                <span class="portal-pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
+                <span>Pengucapan</span>
+              </button>
             </div>
           </section>
         </section>
@@ -416,6 +446,20 @@
               <span class="eyebrow">SINAUUENGLISH / HUB LATIHAN</span>
               <h1>Latihan Mandiri, <em>Tujuh Kemampuan.</em></h1>
               <p class="page-lede">Pilih materi yang ingin kamu perdalam secara terarah. Buka satu modul pada satu waktu agar fokus belajarmu tetap terjaga.</p>
+            </div>
+
+            <div class="practice-hub-controls">
+              <div class="practice-search-wrap">
+                <svg class="practice-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="search" class="practice-search-input" id="practice-search" placeholder="Cari modul (mis. Kosakata, Grammar, Cerita, Speaking)..." aria-label="Cari modul latihan">
+                <button type="button" class="practice-search-clear" id="practice-search-clear" aria-label="Hapus pencarian" hidden>×</button>
+              </div>
+              <div class="practice-quick-pills" id="practice-quick-pills" aria-label="Filter cepat modul">
+                <button type="button" class="practice-pill is-active" data-practice-filter="all">Semua (7)</button>
+                <button type="button" class="practice-pill" data-practice-filter="core">Dasar</button>
+                <button type="button" class="practice-pill" data-practice-filter="comprehension">Pemahaman</button>
+                <button type="button" class="practice-pill" data-practice-filter="production">Produksi</button>
+              </div>
             </div>
 
             <div class="practice-modules-grid" id="practice-modules-grid">
@@ -684,5 +728,66 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog class="goal-dialog" id="goal-dialog"><form method="dialog" id="goal-form"><h2>Target yang realistis.</h2><p>Pilih jumlah aktivitas belajar yang ingin kamu usahakan tiap hari.</p><label for="daily-goal-input">Aktivitas per hari</label><select id="daily-goal-input"><option value="5">5 aktivitas</option><option value="10">10 aktivitas</option><option value="15">15 aktivitas</option><option value="20">20 aktivitas</option></select><div class="dialog-actions"><button class="dialog-cancel" value="cancel">Batal</button><button class="dialog-save" id="save-goal" value="default">Simpan target</button></div></form></dialog>
+
+  <!-- Contextual Vocabulary Popover (Readlang-inspired) -->
+  <div class="contextual-vocab-popover" id="contextual-vocab-popover" hidden role="dialog" aria-modal="false" aria-labelledby="vocab-popover-lemma">
+    <div class="vocab-popover-arrow" id="vocab-popover-arrow" aria-hidden="true"></div>
+    <div class="vocab-popover-header">
+      <div class="vocab-popover-word-row">
+        <strong class="vocab-popover-lemma" id="vocab-popover-lemma">—</strong>
+        <span class="vocab-popover-badge" id="vocab-popover-level">A1</span>
+        <span class="vocab-popover-pos" id="vocab-popover-pos">—</span>
+        <button type="button" class="vocab-popover-audio" id="vocab-popover-audio" aria-label="Dengarkan pengucapan kata">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        </button>
+      </div>
+      <button type="button" class="vocab-popover-close" id="vocab-popover-close" aria-label="Tutup popup kosakata">×</button>
+    </div>
+    <div class="vocab-popover-body">
+      <div class="vocab-popover-meaning" id="vocab-popover-meaning">—</div>
+      <div class="vocab-popover-explanation" id="vocab-popover-explanation"></div>
+      <div class="vocab-popover-context-box">
+        <small class="vocab-popover-context-label">Konteks dalam teks:</small>
+        <p class="vocab-popover-sentence" id="vocab-popover-sentence">—</p>
+      </div>
+      <div class="vocab-popover-example-box" id="vocab-popover-example-box">
+        <small class="vocab-popover-context-label">Contoh kalimat:</small>
+        <p class="vocab-popover-example-en" id="vocab-popover-example-en">—</p>
+        <p class="vocab-popover-example-id" id="vocab-popover-example-id">—</p>
+      </div>
+      <div class="vocab-popover-collocations" id="vocab-popover-collocations" hidden></div>
+    </div>
+    <div class="vocab-popover-footer">
+      <button type="button" class="primary-action vocab-popover-save-btn" id="vocab-popover-save">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span id="vocab-popover-save-label">Simpan ke Kosakata Saya</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Multi-Voice Character Assignment Modal -->
+  <div class="story-voice-modal-backdrop" id="story-voice-modal-backdrop" hidden>
+    <div class="story-voice-modal" id="story-voice-modal" role="dialog" aria-modal="true" aria-labelledby="voice-modal-title">
+      <div class="voice-modal-header">
+        <div>
+          <span class="eyebrow">PENGATURAN SUARA SISTEM</span>
+          <h3 id="voice-modal-title">Pilih Suara Karakter</h3>
+        </div>
+        <button type="button" class="voice-modal-close" id="voice-modal-close" aria-label="Tutup modal pengaturan suara">×</button>
+      </div>
+      <p class="voice-modal-desc">Atur suara narator dan karakter menggunakan suara SpeechSynthesis yang tersedia di browsermu. Pengaturan tersimpan secara lokal.</p>
+      <div class="voice-modal-single-alert" id="voice-modal-single-alert" hidden>
+        <strong>Pemberitahuan Suara:</strong>
+        <span>Perangkat ini menyediakan 1 suara sistem. Modulasi nada (pitch & rate) digunakan otomatis agar setiap karakter terdengar berbeda.</span>
+      </div>
+      <div class="voice-character-list" id="voice-character-list">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="voice-modal-actions">
+        <button type="button" class="secondary-action" id="voice-modal-reset">Kembalikan ke Default</button>
+        <button type="button" class="primary-action" id="voice-modal-save">Terapkan Pengaturan</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

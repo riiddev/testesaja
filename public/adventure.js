@@ -502,13 +502,445 @@
     if (!curriculum || !curriculum.missions.some((item) => item.id === missionId)) return;
     selectedMissionId = missionId; currentFeedback = null; listenReady = false; listenTranscriptVisible = false; renderAll();
   }
+  const voiceManager = {
+    voices: [],
+    englishVoices: [],
+    charMap: {},
+    init() {
+      try {
+        if (typeof window === "undefined" || !window.speechSynthesis) return;
+        this.loadPersisted();
+        this.refresh();
+        if ("onvoiceschanged" in window.speechSynthesis) {
+          try {
+            window.speechSynthesis.onvoiceschanged = () => this.refresh();
+          } catch (_) {}
+        }
+      } catch (_) {}
+    },
+    loadPersisted() {
+      try {
+        this.charMap = JSON.parse(localStorage.getItem("sinauu-character-voices-v1") || "{}");
+      } catch (_) {
+        this.charMap = {};
+      }
+    },
+    savePersisted() {
+      try {
+        localStorage.setItem("sinauu-character-voices-v1", JSON.stringify(this.charMap));
+      } catch (_) {}
+    },
+    refresh() {
+      try {
+        if (!window.speechSynthesis || typeof window.speechSynthesis.getVoices !== "function") return;
+        this.voices = window.speechSynthesis.getVoices() || [];
+        this.englishVoices = this.voices.filter(v => v && v.lang && v.lang.toLowerCase().startsWith("en"));
+        if (!this.englishVoices.length) this.englishVoices = this.voices;
+      } catch (_) {
+        this.voices = [];
+        this.englishVoices = [];
+      }
+    },
+    getVoices() {
+      if (!this.voices.length) this.refresh();
+      return this.englishVoices.length ? this.englishVoices : this.voices;
+    },
+    hasSingleVoice() {
+      return this.getVoices().length <= 1;
+    },
+    getVoiceForSpeaker(speaker, indexHint = 0) {
+      const list = this.getVoices();
+      if (!list.length) return null;
+      if (this.charMap[speaker]) {
+        const found = list.find(v => v.voiceURI === this.charMap[speaker] || v.name === this.charMap[speaker]);
+        if (found) return found;
+      }
+      const hash = Array.from(speaker || "").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+      const idx = (hash + indexHint) % list.length;
+      return list[idx] || list[0];
+    },
+    getModulationForSpeaker(speaker) {
+      const isNarrator = !speaker || speaker.toLowerCase() === "narrator";
+      if (this.hasSingleVoice()) {
+        if (isNarrator) return { pitch: 1.0, rate: 0.95 };
+        const hash = Array.from(speaker || "").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+        const mod = hash % 3;
+        if (mod === 0) return { pitch: 1.18, rate: 1.0 };
+        if (mod === 1) return { pitch: 0.88, rate: 0.92 };
+        return { pitch: 1.25, rate: 1.03 };
+      }
+      if (isNarrator) return { pitch: 1.0, rate: 0.95 };
+      return { pitch: 1.05, rate: 0.98 };
+    },
+    setVoice(speaker, voiceURI) {
+      this.charMap[speaker] = voiceURI;
+      this.savePersisted();
+    },
+    reset() {
+      this.charMap = {};
+      try {
+        localStorage.removeItem("sinauu-character-voices-v1");
+      } catch (_) {}
+    }
+  };
+  voiceManager.init();
+
+  const storyNarration = {
+    active: false,
+    paused: false,
+    storyId: null,
+    sentences: [],
+    currentIndex: 0,
+    utterance: null
+  };
+
+  const dialogueNarration = {
+    active: false,
+    paused: false,
+    dialogueId: null,
+    lines: [],
+    currentIndex: 0,
+    utterance: null
+  };
+
+  function getStoryCharacters(story) {
+    const chars = new Set();
+    const text = (story.paragraphs || []).join(" ");
+    const knownNames = ["Rina", "Maya", "Arman", "Sari", "Bima", "Rafi", "Nisa", "Alex", "Nadia", "Librarian", "Students", "Manager", "Volunteers", "Staff"];
+    for (const name of knownNames) {
+      if (new RegExp(`\\b${name}\\b`, "i").test(text)) {
+        chars.add(name);
+      }
+    }
+    return Array.from(chars);
+  }
+
+  function getStorySentences(story) {
+    const results = [];
+    let globalIndex = 0;
+    const storyChars = getStoryCharacters(story);
+
+    (story.paragraphs || []).forEach((paragraph, pIdx) => {
+      const segs = paragraph.match(/[^.!?]+[.!?]+|\S[^.!?]*$/g) || [paragraph];
+      segs.forEach((seg, sIdx) => {
+        const trimmed = seg.trim();
+        if (!trimmed) return;
+
+        let speaker = "Narrator";
+        if (/[“"][^”"]+[”"]/.test(trimmed)) {
+          const found = storyChars.find(name => new RegExp(`\\b${name}\\b`, "i").test(trimmed));
+          speaker = found || (storyChars[0] || "Character");
+        }
+
+        results.push({
+          id: `story-${story.id}-p${pIdx}-s${sIdx}`,
+          globalIndex: globalIndex++,
+          paragraphIndex: pIdx,
+          sentenceIndex: sIdx,
+          text: trimmed,
+          speaker: speaker
+        });
+      });
+    });
+    return results;
+  }
+
+  function stopStoryNarration() {
+    storyNarration.active = false;
+    storyNarration.paused = false;
+    storyNarration.currentIndex = 0;
+    if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+    $$(".story-sentence").forEach(el => el.classList.remove("is-speaking-sentence"));
+    renderStoryLibrary();
+  }
+
+  function pauseStoryNarration() {
+    if (!storyNarration.active) return;
+    storyNarration.paused = true;
+    if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+    renderStoryLibrary();
+  }
+
+  function resumeStoryNarration() {
+    if (!storyNarration.active || !storyNarration.paused) return;
+    storyNarration.paused = false;
+    renderStoryLibrary();
+    playNextStorySentence();
+  }
+
+  function startStoryNarration() {
+    if (!storyRun || storyRun.stage !== "reading") return;
+    const story = stories.find((item) => item.id === storyRun.storyId);
+    if (!story) return;
+
+    if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") {
+      storyRun.audioUnavailable = true;
+      renderStoryLibrary();
+      return;
+    }
+
+    if (storyNarration.active && storyNarration.paused && storyNarration.storyId === story.id) {
+      resumeStoryNarration();
+      return;
+    }
+
+    stopDialogueNarration();
+    if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+
+    const sentences = getStorySentences(story);
+    storyNarration.active = true;
+    storyNarration.paused = false;
+    storyNarration.storyId = story.id;
+    storyNarration.sentences = sentences;
+    storyNarration.currentIndex = 0;
+
+    renderStoryLibrary();
+    playNextStorySentence();
+  }
+
+  function playNextStorySentence() {
+    if (!storyNarration.active || storyNarration.paused) return;
+    if (storyNarration.currentIndex >= storyNarration.sentences.length) {
+      stopStoryNarration();
+      return;
+    }
+
+    const s = storyNarration.sentences[storyNarration.currentIndex];
+    $$(".story-sentence").forEach(el => {
+      const active = el.dataset.storySentenceId === s.id;
+      el.classList.toggle("is-speaking-sentence", active);
+      if (active) {
+        el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+      }
+    });
+
+    const voice = voiceManager.getVoiceForSpeaker(s.speaker);
+    const modulation = voiceManager.getModulationForSpeaker(s.speaker);
+
+    const utt = new SpeechSynthesisUtterance(s.text);
+    if (voice) utt.voice = voice;
+    utt.pitch = modulation.pitch;
+    utt.rate = (progress.listeningRate || 0.9) * modulation.rate;
+    utt.lang = voice ? voice.lang : "en-US";
+
+    utt.onend = () => {
+      if (!storyNarration.active || storyNarration.paused) return;
+      storyNarration.currentIndex++;
+      setTimeout(() => {
+        if (storyNarration.active && !storyNarration.paused) {
+          playNextStorySentence();
+        }
+      }, 260);
+    };
+
+    utt.onerror = (e) => {
+      if (e.error === "canceled" || e.error === "interrupted") return;
+      storyNarration.currentIndex++;
+      playNextStorySentence();
+    };
+
+    storyNarration.utterance = utt;
+    if (window.speechSynthesis && typeof window.speechSynthesis.speak === "function") window.speechSynthesis.speak(utt);
+  }
+
+  function stopDialogueNarration() {
+    dialogueNarration.active = false;
+    dialogueNarration.paused = false;
+    dialogueNarration.currentIndex = 0;
+    if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+    $$(".dialogue-sentence").forEach(el => el.classList.remove("is-speaking-sentence"));
+    renderDialogueLibrary();
+  }
+
+  function pauseDialogueNarration() {
+    if (!dialogueNarration.active) return;
+    dialogueNarration.paused = true;
+    if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+    renderDialogueLibrary();
+  }
+
+  function resumeDialogueNarration() {
+    if (!dialogueNarration.active || !dialogueNarration.paused) return;
+    dialogueNarration.paused = false;
+    renderDialogueLibrary();
+    playNextDialogueLine();
+  }
+
+  function startDialogueNarration() {
+    if (!dialogueRun || dialogueRun.stage !== "roleplay") return;
+    const dialogue = dialogues.find((item) => item.id === dialogueRun.dialogueId);
+    if (!dialogue) return;
+
+    if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") {
+      dialogueRun.audioUnavailable = true;
+      dialogueRun.transcriptVisible = true;
+      renderDialogueLibrary();
+      return;
+    }
+
+    if (dialogueNarration.active && dialogueNarration.paused && dialogueNarration.dialogueId === dialogue.id) {
+      resumeDialogueNarration();
+      return;
+    }
+
+    stopStoryNarration();
+    if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+
+    dialogueRun.transcriptVisible = true;
+    dialogueNarration.active = true;
+    dialogueNarration.paused = false;
+    dialogueNarration.dialogueId = dialogue.id;
+    dialogueNarration.lines = dialogue.transcript;
+    dialogueNarration.currentIndex = 0;
+
+    renderDialogueLibrary();
+    playNextDialogueLine();
+  }
+
+  function playNextDialogueLine() {
+    if (!dialogueNarration.active || dialogueNarration.paused) return;
+    if (dialogueNarration.currentIndex >= dialogueNarration.lines.length) {
+      stopDialogueNarration();
+      return;
+    }
+
+    const line = dialogueNarration.lines[dialogueNarration.currentIndex];
+    $$(".dialogue-sentence").forEach(el => {
+      const active = Number(el.dataset.dialogueLineId) === dialogueNarration.currentIndex;
+      el.classList.toggle("is-speaking-sentence", active);
+      if (active) {
+        el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+      }
+    });
+
+    const voice = voiceManager.getVoiceForSpeaker(line.speaker);
+    const modulation = voiceManager.getModulationForSpeaker(line.speaker);
+
+    const utt = new SpeechSynthesisUtterance(line.text);
+    if (voice) utt.voice = voice;
+    utt.pitch = modulation.pitch;
+    utt.rate = (progress.listeningRate || 0.9) * modulation.rate;
+    utt.lang = voice ? voice.lang : "en-US";
+
+    utt.onend = () => {
+      if (!dialogueNarration.active || dialogueNarration.paused) return;
+      dialogueNarration.currentIndex++;
+      setTimeout(() => {
+        if (dialogueNarration.active && !dialogueNarration.paused) {
+          playNextDialogueLine();
+        }
+      }, 300);
+    };
+
+    utt.onerror = (e) => {
+      if (e.error === "canceled" || e.error === "interrupted") return;
+      dialogueNarration.currentIndex++;
+      playNextDialogueLine();
+    };
+
+    dialogueNarration.utterance = utt;
+    if (window.speechSynthesis && typeof window.speechSynthesis.speak === "function") window.speechSynthesis.speak(utt);
+  }
+
+  let activeVoiceModalContext = null;
+
+  function openVoiceModal(context) {
+    activeVoiceModalContext = context;
+    const backdrop = $("#story-voice-modal-backdrop");
+    const listEl = $("#voice-character-list");
+    const alertEl = $("#voice-modal-single-alert");
+    if (!backdrop || !listEl) return;
+
+    voiceManager.refresh();
+    const available = voiceManager.getVoices();
+    const hasSingle = voiceManager.hasSingleVoice();
+
+    if (alertEl) alertEl.hidden = !hasSingle;
+
+    let characters = [];
+    if (context === "story" && storyRun) {
+      const story = stories.find(s => s.id === storyRun.storyId);
+      characters = ["Narrator", ...(story ? getStoryCharacters(story) : [])];
+    } else if (context === "dialogue" && dialogueRun) {
+      const dialogue = dialogues.find(d => d.id === dialogueRun.dialogueId);
+      characters = dialogue ? Array.from(new Set(dialogue.transcript.map(l => l.speaker))) : ["Barista", "You"];
+    } else {
+      characters = ["Narrator", "Maya", "Rina", "Barista", "You"];
+    }
+
+    listEl.innerHTML = characters.map((char, cIdx) => {
+      const assigned = voiceManager.getVoiceForSpeaker(char, cIdx);
+      const options = available.map(v => {
+        const isSelected = assigned && (assigned.voiceURI === v.voiceURI || assigned.name === v.name);
+        return `<option value="${escapeHtml(v.voiceURI || v.name)}"${isSelected ? ' selected' : ''}>${escapeHtml(v.name)} (${escapeHtml(v.lang)})</option>`;
+      }).join("");
+
+      return `<div class="voice-character-card">
+        <div class="voice-character-name">${escapeHtml(char)}</div>
+        <select class="voice-select" data-character-voice-select="${escapeHtml(char)}" aria-label="Suara untuk ${escapeHtml(char)}">
+          ${options || '<option value="">Suara Default Browser</option>'}
+        </select>
+        <button type="button" class="voice-preview-btn secondary-action" data-preview-voice-char="${escapeHtml(char)}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg> Tes
+        </button>
+      </div>`;
+    }).join("");
+
+    backdrop.hidden = false;
+  }
+
+  function closeVoiceModal() {
+    const backdrop = $("#story-voice-modal-backdrop");
+    if (backdrop) backdrop.hidden = true;
+    activeVoiceModalContext = null;
+  }
+
+  function previewCharacterVoice(speaker) {
+    if (!window.speechSynthesis) return;
+    if (typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
+    const select = document.querySelector(`[data-character-voice-select="${speaker}"]`);
+    const voiceURI = select ? select.value : "";
+    const list = voiceManager.getVoices();
+    const voice = list.find(v => v.voiceURI === voiceURI || v.name === voiceURI) || voiceManager.getVoiceForSpeaker(speaker);
+    const modulation = voiceManager.getModulationForSpeaker(speaker);
+
+    const sampleText = speaker.toLowerCase() === "narrator"
+      ? "Once upon a time in a friendly neighborhood."
+      : `Hello! I am ${speaker}, practicing English dialogue with you.`;
+
+    const u = new SpeechSynthesisUtterance(sampleText);
+    if (voice) u.voice = voice;
+    u.pitch = modulation.pitch;
+    u.rate = (progress.listeningRate || 0.9) * modulation.rate;
+    u.lang = voice ? voice.lang : "en-US";
+    if (typeof window.speechSynthesis.speak === "function") window.speechSynthesis.speak(u);
+  }
+
+  function saveVoiceModalSettings() {
+    const selects = document.querySelectorAll("[data-character-voice-select]");
+    selects.forEach(select => {
+      const char = select.dataset.characterVoiceSelect;
+      if (char && select.value) {
+        voiceManager.setVoice(char, select.value);
+      }
+    });
+    closeVoiceModal();
+  }
+
+  function resetVoiceModalSettings() {
+    voiceManager.reset();
+    openVoiceModal(activeVoiceModalContext);
+  }
+
   function playText(text) {
     if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return false;
-    window.speechSynthesis.cancel();
+    if (typeof window.speechSynthesis.cancel === "function") window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text || "");
-    utterance.lang = "en-US";
+    const narratorVoice = voiceManager.getVoiceForSpeaker("Narrator");
+    if (narratorVoice) utterance.voice = narratorVoice;
+    utterance.lang = narratorVoice ? narratorVoice.lang : "en-US";
     utterance.rate = progress.listeningRate || 0.9;
-    window.speechSynthesis.speak(utterance);
+    if (typeof window.speechSynthesis.speak === "function") window.speechSynthesis.speak(utterance);
     return true;
   }
 
@@ -1689,15 +2121,35 @@
       const chosen = index === storyRun.selectedAnswer;
       return '<button type="button" class="adventure-story-option' + (answered && correct ? ' is-correct' : '') + (answered && chosen && !correct ? ' is-wrong' : '') + '" data-story-answer="' + index + '"' + (answered ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>';
     }).join("");
-    const paragraphs = story.paragraphs.map((paragraph) => '<p>' + escapeHtml(paragraph) + '</p>').join("");
+    const storySentences = getStorySentences(story);
+    const paragraphs = story.paragraphs.map((paragraph, pIdx) => {
+      const pSentences = storySentences.filter(s => s.paragraphIndex === pIdx);
+      const inner = pSentences.map(s => {
+        const wordsHtml = s.text.replace(/([A-Za-z]+(?:'[A-Za-z]+)?)/g, w => {
+          const isSaved = window.sinauuIsWordSaved ? window.sinauuIsWordSaved(w.toLowerCase()) : false;
+          return '<span class="context-word' + (isSaved ? ' is-saved' : '') + '" data-word="' + escapeHtml(w) + '" data-sentence="' + escapeHtml(s.text) + '" data-source="' + escapeHtml(story.title) + '" tabindex="0" role="button">' + escapeHtml(w) + '</span>';
+        });
+        const isSpeaking = storyNarration.active && storyNarration.currentIndex === s.globalIndex;
+        return '<span class="story-sentence' + (isSpeaking ? ' is-speaking-sentence' : '') + '" data-story-sentence-id="' + s.id + '">' + wordsHtml + '</span>';
+      }).join(" ");
+      return '<p>' + inner + '</p>';
+    }).join("");
     const vocabulary = story.focusWords.map((word) => '<span class="adventure-story-word"><strong>' + escapeHtml(word.word) + '</strong><span>' + escapeHtml(word.meaning) + '</span></span>').join("");
     const note = storyRun.audioUnavailable ? '<small>Suara browser tidak tersedia di perangkat ini. Kamu tetap bisa membaca cerita seperti biasa.</small>' : '<small>Suara dibuat oleh browser dan tidak direkam atau diunggah.</small>';
+    let audioControls = '';
+    if (!storyNarration.active) {
+      audioControls = '<button class="primary-action adventure-story-listen" type="button" data-story-listen><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg> Dengarkan cerita</button>';
+    } else {
+      audioControls = '<button class="primary-action" type="button" data-story-pause>' + (storyNarration.paused ? '▶ Lanjutkan' : '⏸ Jeda') + '</button>' +
+        '<button class="secondary-action" type="button" data-story-stop>⏹ Berhenti</button>';
+    }
+    audioControls += '<button class="secondary-action" type="button" data-open-voice-modal="story" title="Atur suara narator dan karakter"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Suara Karakter</button>';
     node.innerHTML =
       '<div class="adventure-story-reader" id="adventure-story-reader">' +
         '<div class="adventure-story-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(story.level) + '</span><span>·</span><span>' + escapeHtml(String(story.estimatedMinutes || 5)) + ' MENIT</span></div><button class="adventure-story-back" type="button" data-story-close>← Koleksi</button></div>' +
         '<h3 class="adventure-story-title">' + escapeHtml(story.title) + '</h3><p class="adventure-story-subtitle">' + escapeHtml(story.subtitle) + '</p>' +
         '<div class="adventure-story-text">' + paragraphs + '</div>' +
-        '<div class="adventure-story-audio"><button class="adventure-story-listen" type="button" data-story-listen>▶ Dengarkan cerita</button>' + note + '</div>' +
+        '<div class="adventure-story-audio"><div class="adventure-audio-actions">' + audioControls + '</div>' + note + '</div>' +
         '<div class="adventure-story-vocabulary">' + vocabulary + '</div>' +
         '<section class="adventure-story-quiz" aria-labelledby="adventure-story-question">' +
           '<div class="adventure-story-quiz-meta"><span>COMPREHENSION CHECK</span><span>SOAL ' + (storyRun.questionIndex + 1) + '/' + story.questions.length + '</span></div>' +
@@ -1738,6 +2190,7 @@
   }
 
   function openStory(storyId) {
+    stopStoryNarration();
     if (!stories.some((item) => item.id === storyId)) return;
     storyRun = { storyId, stage: "reading", questionIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, audioUnavailable: false };
     renderStoryLibrary();
@@ -2369,8 +2822,20 @@
       const chosen = index === dialogueRun.selectedAnswer;
       return '<button type="button" class="adventure-dialogue-option' + (answered && correct ? ' is-correct' : '') + (answered && chosen && !correct ? ' is-wrong' : '') + '" data-dialogue-answer="' + index + '"' + (answered ? ' disabled' : '') + '><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>';
     }).join("");
+    const dialogueAudioControls = '<button class="primary-action adventure-dialogue-listen" type="button" data-dialogue-listen><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg> Dengarkan percakapan</button>' +
+      '<button class="secondary-action adventure-dialogue-transcript-toggle" type="button" data-dialogue-transcript>' + (dialogueRun.transcriptVisible ? 'Sembunyikan transkrip' : 'Lihat transkrip') + '</button>';
+
     const transcript = dialogueRun.transcriptVisible
-      ? '<div class="adventure-dialogue-transcript" id="adventure-dialogue-transcript">' + dialogue.transcript.map((line) => '<p><strong>' + escapeHtml(line.speaker) + '</strong><span>' + escapeHtml(line.text) + '</span></p>').join("") + '</div>'
+      ? '<div class="adventure-dialogue-transcript" id="adventure-dialogue-transcript">' +
+          dialogue.transcript.map((line, idx) => {
+            const isSpeaking = dialogueNarration.active && dialogueNarration.currentIndex === idx;
+            const lineWords = line.text.replace(/([A-Za-z]+(?:'[A-Za-z]+)?)/g, w => {
+              const isSaved = window.sinauuIsWordSaved ? window.sinauuIsWordSaved(w.toLowerCase()) : false;
+              return '<span class="context-word' + (isSaved ? ' is-saved' : '') + '" data-word="' + escapeHtml(w) + '" data-sentence="' + escapeHtml(line.text) + '" data-source="' + escapeHtml(dialogue.title) + '" tabindex="0" role="button">' + escapeHtml(w) + '</span>';
+            });
+            return '<p class="dialogue-sentence' + (isSpeaking ? ' is-speaking-sentence' : '') + '" data-dialogue-line-id="' + idx + '"><strong>' + escapeHtml(line.speaker) + ':</strong> <span>' + lineWords + '</span></p>';
+          }).join("") +
+        '</div>'
       : '';
     const audioNote = dialogueRun.audioUnavailable
       ? '<small>Audio browser tidak tersedia di perangkat ini. Kamu tetap bisa membaca transkripnya.</small>'
@@ -2380,7 +2845,7 @@
       '<div class="adventure-dialogue-reader" id="adventure-dialogue-reader">' +
         '<div class="adventure-dialogue-reader-top"><div class="adventure-story-reader-meta"><span>' + escapeHtml(dialogue.level) + '</span><span>·</span><span>' + escapeHtml(String(dialogue.estimatedMinutes || 5)) + ' MENIT</span></div><button class="adventure-dialogue-back" type="button" data-dialogue-close>← Skenario</button></div>' +
         '<h3 class="adventure-dialogue-title">' + escapeHtml(dialogue.title) + '</h3><p class="adventure-dialogue-setting">' + escapeHtml(dialogue.setting) + '</p>' +
-        '<div class="adventure-dialogue-audio"><button class="adventure-dialogue-listen" type="button" data-dialogue-listen>▶ Dengarkan percakapan</button><button class="adventure-dialogue-transcript-toggle" type="button" data-dialogue-transcript>' + (dialogueRun.transcriptVisible ? 'Sembunyikan transkrip' : 'Lihat transkrip') + '</button>' + audioNote + '</div>' +
+        '<div class="adventure-dialogue-audio"><div class="adventure-audio-actions">' + dialogueAudioControls + '</div>' + audioNote + '</div>' +
         transcript +
         '<div class="adventure-dialogue-vocabulary">' + vocabulary + '</div>' +
         '<section class="adventure-dialogue-quiz" aria-labelledby="adventure-dialogue-question">' +
@@ -2427,6 +2892,7 @@
   }
 
   function openDialogue(dialogueId) {
+    stopDialogueNarration();
     if (!dialogues.some((item) => item.id === dialogueId)) return;
     window.sinauuOpenPracticeModule?.("listening");
     dialogueRun = { dialogueId, stage: "roleplay", turnIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, transcriptVisible: false, audioUnavailable: false };
@@ -2545,17 +3011,19 @@
       if (mistakeSkillFilter) { mistakeSkillFilterValue = mistakeSkillFilter.dataset.mistakeSkillFilter; renderMistakeJournal(); return; }
       const storyOpen = event.target.closest("[data-story-open]");
       if (storyOpen) { window.sinauuOpenPracticeModule?.("reading-stories"); openStory(storyOpen.dataset.storyOpen); return; }
-      if (event.target.closest("[data-story-close]")) { storyRun = null; renderStoryLibrary(); return; }
+      if (event.target.closest("[data-story-close]")) { stopStoryNarration(); storyRun = null; renderStoryLibrary(); return; }
       if (event.target.closest("[data-story-reload]")) { storyLoadError = ""; storiesLoaded = false; renderStoryLibrary(); void loadStories(); return; }
       const storyAnswer = event.target.closest("[data-story-answer]");
       if (storyAnswer) { answerStory(Number(storyAnswer.dataset.storyAnswer)); return; }
       if (event.target.closest("[data-story-next]")) { advanceStory(); return; }
       const storyRetry = event.target.closest("[data-story-retry]");
       if (storyRetry) { window.sinauuOpenPracticeModule?.("reading-stories"); openStory(storyRetry.dataset.storyRetry); return; }
-      if (event.target.closest("[data-story-listen]")) { listenToStory(); return; }
+      if (event.target.closest("[data-story-listen]")) { startStoryNarration(); return; }
+      if (event.target.closest("[data-story-pause]")) { if (storyNarration.paused) resumeStoryNarration(); else pauseStoryNarration(); return; }
+      if (event.target.closest("[data-story-stop]")) { stopStoryNarration(); return; }
       const dialogueOpen = event.target.closest("[data-dialogue-open]");
       if (dialogueOpen) { window.sinauuOpenPracticeModule?.("listening"); openDialogue(dialogueOpen.dataset.dialogueOpen); return; }
-      if (event.target.closest("[data-dialogue-close]")) { dialogueRun = null; renderDialogueLibrary(); return; }
+      if (event.target.closest("[data-dialogue-close]")) { stopDialogueNarration(); dialogueRun = null; renderDialogueLibrary(); return; }
       if (event.target.closest("[data-dialogue-reload]")) { dialogueLoadError = ""; dialoguesLoaded = false; renderDialogueLibrary(); void loadDialogues(); return; }
       const dialogueAnswer = event.target.closest("[data-dialogue-answer]");
       if (dialogueAnswer) { answerDialogue(Number(dialogueAnswer.dataset.dialogueAnswer)); return; }
@@ -2563,7 +3031,16 @@
       const dialogueRetry = event.target.closest("[data-dialogue-retry]");
       if (dialogueRetry) { window.sinauuOpenPracticeModule?.("listening"); openDialogue(dialogueRetry.dataset.dialogueRetry); return; }
       if (event.target.closest("[data-dialogue-listen]")) { listenToDialogue(); return; }
+      if (event.target.closest("[data-dialogue-pause]")) { if (dialogueNarration.paused) resumeDialogueNarration(); else pauseDialogueNarration(); return; }
+      if (event.target.closest("[data-dialogue-stop]")) { stopDialogueNarration(); return; }
       if (event.target.closest("[data-dialogue-transcript]")) { if (dialogueRun) { dialogueRun.transcriptVisible = !dialogueRun.transcriptVisible; renderDialogueLibrary(); } return; }
+      const openVoiceBtn = event.target.closest("[data-open-voice-modal]");
+      if (openVoiceBtn) { openVoiceModal(openVoiceBtn.dataset.openVoiceModal); return; }
+      if (event.target.closest("#voice-modal-close")) { closeVoiceModal(); return; }
+      const previewVoiceBtn = event.target.closest("[data-preview-voice-char]");
+      if (previewVoiceBtn) { previewCharacterVoice(previewVoiceBtn.dataset.previewVoiceChar); return; }
+      if (event.target.closest("#voice-modal-save")) { saveVoiceModalSettings(); return; }
+      if (event.target.closest("#voice-modal-reset")) { resetVoiceModalSettings(); return; }
       const dialogueSpeaking = event.target.closest("[data-dialogue-speaking]");
       if (dialogueSpeaking) { window.sinauuOpenPracticeModule?.("speaking"); openSpeakingFromDialogue(dialogueSpeaking.dataset.dialogueSpeaking); return; }
       const listeningOpen = event.target.closest("[data-listening-open]");
