@@ -776,13 +776,13 @@ function clearOfflineQueue(userId: string): void {
   writeOfflineQueue(queue);
 }
 
-async function syncNow(allowWhileSigningOut = false): Promise<void> {
+async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
   if (isVercelPreviewDeployment()) {
     setSyncBadge("Preview · lokal", "idle");
     setMessage("Mode preview: progres hanya disimpan di browser ini dan tidak ditulis ke Google Sheets.", "info");
-    return;
+    return true;
   }
-  if (!CLOUD_READY || !session || syncing || (signingOut && !allowWhileSigningOut)) return;
+  if (!CLOUD_READY || !session || syncing || (signingOut && !allowWhileSigningOut)) return false;
 
   if (!navigator.onLine) {
     try {
@@ -791,7 +791,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<void> {
     } catch (_) {}
     setSyncBadge("Offline · Tersimpan", "idle");
     setMessage("Offline: perubahan tersimpan di perangkat ini dan akan disinkronkan saat terhubung kembali.", "info");
-    return;
+    return false;
   }
 
   const syncUserId = session.user.id;
@@ -801,7 +801,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<void> {
   setSyncBadge("Menyinkronkan…", "syncing");
   try {
     await prepareLocalForAccount();
-    if (!stillSameAccount()) return;
+    if (!stillSameAccount()) return false;
     let local = await readLocalBundle();
 
     // Drain queued offline changes if any
@@ -813,12 +813,12 @@ async function syncNow(allowWhileSigningOut = false): Promise<void> {
     }
 
     const remote = await readCloudBundle();
-    if (!stillSameAccount()) return;
+    if (!stillSameAccount()) return false;
     const merged = remote ? mergeBundles(local, remote) : local;
     if (!remote || stable(merged) !== stable(remote)) await writeCloudBundle(merged);
-    if (!stillSameAccount()) return;
+    if (!stillSameAccount()) return false;
     if (stable(merged) !== stable(local)) await applyLocalBundle(merged);
-    if (!stillSameAccount()) return;
+    if (!stillSameAccount()) return false;
 
     clearOfflineQueue(syncUserId);
 
@@ -830,6 +830,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<void> {
     lastSuccessfulSync = new Date().toISOString();
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres tersinkron pada " + new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(new Date(lastSuccessfulSync)) + ". Kamu bisa lanjut di perangkat lain.", "success");
+    return true;
   } catch (error) {
     try {
       const local = await readLocalBundle();
@@ -837,6 +838,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<void> {
     } catch (_) {}
     setSyncBadge("Belum tersinkron · Coba lagi", "error");
     setMessage(error instanceof Error ? error.message : "Sinkronisasi belum berhasil. Progres lokal tetap tersimpan.", "error");
+    return false;
   } finally { syncing = false; }
 }
 
