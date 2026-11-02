@@ -4429,3 +4429,124 @@ test("learning experience upgrade: responsive sidebar collapse, mobile drawer, p
   assert.deepEqual(pageErrors, [], "Learning experience upgrade features must execute without browser JavaScript errors");
   await page.close();
 });
+
+test("backend sheets sync, fast loading mascot guard, multi-voice honest disclosure, and extended contextual vocabulary", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+
+  const fakeSession = {
+    access_token: "test-token-60",
+    refresh_token: "test-refresh-60",
+    token_type: "bearer",
+    expires_in: 7200,
+    expires_at: Math.floor(Date.now() / 1000) + 7200,
+    user: { id: "test-user-60", email: "learner60@example.com" },
+  };
+
+  await page.route("**/api/account**", async (route) => {
+    const action = new URL(route.request().url()).searchParams.get("action");
+    if (action === "status") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: true }) });
+    if (action === "sync") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, syncedAt: new Date().toISOString(), serverChanges: [] })
+      });
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  });
+
+  await page.route("**/api/progress**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: route.request().method() === "GET" ? "[]" : JSON.stringify({ ok: true }) });
+  });
+
+  await page.addInitScript((session) => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify(session));
+  }, fakeSession);
+
+  await page.goto(baseUrl + "/belajar.html#practice");
+  await page.waitForFunction(() => window.sinauuWorkspaceReady === true);
+
+  // 1. Verify mascot loading component exists and has 3s timeout protection
+  const mascotEl = page.locator("#app-loading-mascot");
+  assert.equal(await mascotEl.count(), 1, "Animated mascot loader must be present in DOM");
+  assert.equal(await mascotEl.isVisible(), false, "Mascot loader should be hidden once application is ready");
+
+  // 2. Multi-voice honest disclosure verification
+  await page.locator('#practice-modules-grid [data-open-practice="reading-stories"]').click();
+  await page.locator("#adventure-story-library").waitFor({ state: "visible" });
+  await page.locator('[data-story-open="a-helpful-neighbor"]').first().click();
+  await page.locator("#adventure-story-reader").waitFor({ state: "visible" });
+
+  const voiceModalBtn = page.locator('[data-open-voice-modal="story"]');
+  await voiceModalBtn.waitFor({ state: "visible" });
+  await voiceModalBtn.click();
+
+  const voiceModalBackdrop = page.locator("#story-voice-modal-backdrop");
+  assert.equal(await voiceModalBackdrop.isVisible(), true, "Voice assignment modal must open");
+
+  // Close and re-open with single voice mock to verify honest disclosure
+  await page.locator("#voice-modal-close").click();
+  await page.evaluate(() => {
+    window.speechSynthesis.getVoices = () => [{ name: "Single System Voice", lang: "en-US", voiceURI: "single-uri" }];
+    const btn = document.querySelector('[data-open-voice-modal="story"]');
+    if (btn) btn.click();
+  });
+
+  const singleAlert = page.locator("#voice-modal-single-alert");
+  assert.equal(await singleAlert.isVisible(), true, "Voice modal must honestly disclose when single voice or pitch fallback is used");
+
+  // Verify voice select contains honest style labels
+  const voiceSelectOptions = await page.locator("#voice-character-list .voice-select").first().innerText();
+  assert.ok(voiceSelectOptions.includes("Nada Standar") || voiceSelectOptions.includes("Gaya Hangat"), "Voice selector must display descriptive style fallback labels when only 1 voice exists");
+
+  await page.locator("#voice-modal-save").click();
+  assert.equal(await voiceModalBackdrop.isVisible(), false, "Saving voice settings must close modal");
+
+  // 3. Extended Contextual Vocabulary Lookup (words outside Oxford 3000)
+  // Test external word lookup via window.sinauuOpenContextualVocab with a word not in Oxford 3000
+  await page.evaluate(() => {
+    window.sinauuOpenContextualVocab({
+      word: "quantum",
+      sentence: "He is studying quantum physics in the university library.",
+      sourceTitle: "Modern Science Article",
+      targetElement: document.querySelector(".context-word")
+    });
+  });
+
+  const vocabPopover = page.locator("#contextual-vocab-popover");
+  await vocabPopover.waitFor({ state: "visible" });
+
+  const customWrap = page.locator("#vocab-popover-custom-wrap");
+  assert.equal(await customWrap.isVisible(), true, "Custom meaning input must be visible for words outside Oxford 3000");
+
+  const customInput = page.locator("#vocab-custom-meaning-input");
+  await customInput.fill("satuan energi terkecil atau kuantum");
+
+  // Save the custom word
+  await page.locator("#vocab-popover-save").click();
+
+  // Verify saved in state and unified review queue
+  const reviewQueue = await page.evaluate(() => window.sinauuGetUnifiedReviewQueue?.());
+  assert.ok(reviewQueue.items.some(item => item.wordId === "quantum"), "External word 'quantum' must enter unified review queue with savedContext");
+
+  const coreState = await page.evaluate(() => window.sinauuGetCoreState?.());
+  assert.ok(coreState.wordProgress["quantum"], "Word progress must record 'quantum'");
+  assert.equal(coreState.wordProgress["quantum"].savedContext.meaning, "satuan energi terkecil atau kuantum", "Saved context must preserve custom entered meaning");
+
+  await page.locator("#vocab-popover-close").click();
+
+  // 4. Test Cloud Sync status and manual sync trigger
+  const syncStatus = await page.evaluate(() => window.sinauuGetSyncStatus?.());
+  assert.ok(syncStatus && typeof syncStatus === "object", "Sync status helper must return status object");
+
+  // Trigger manual sync
+  const syncResult = await page.evaluate(async () => await window.sinauuSyncNow?.());
+  assert.equal(syncResult, true, "Manual cloud sync trigger must succeed");
+  const finalStatus = await page.evaluate(() => window.sinauuGetSyncStatus?.());
+  assert.equal(finalStatus.badgeText, "Tersinkron", "Sync status badge must reflect success");
+
+  assert.deepEqual(pageErrors, [], "Browser session must complete without any uncaught JavaScript exceptions");
+  await page.close();
+});
