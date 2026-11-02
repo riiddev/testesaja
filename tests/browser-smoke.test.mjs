@@ -4294,3 +4294,138 @@ test("Modular Learning Hub navigation renders five primary destinations, organiz
   assert.deepEqual(pageErrors, [], "Modular Learning Hub navigation must execute without browser JavaScript errors");
   await page.close();
 });
+
+test("learning experience upgrade: responsive sidebar collapse, mobile drawer, practice search, voice modal, and contextual vocabulary", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "upgrade-test-token",
+      refresh_token: "upgrade-refresh-token",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "upgrade-test-user", email: "upgrade-user@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // 1. Responsive Sidebar Collapse Toggle
+  const collapseBtn = page.locator("#sidebar-collapse-toggle");
+  await collapseBtn.waitFor({ state: "visible" });
+  await collapseBtn.click();
+  const isCollapsed = await page.evaluate(() => document.body.classList.contains("sidebar-collapsed"));
+  assert.equal(isCollapsed, true, "clicking sidebar collapse toggle must add .sidebar-collapsed class to body");
+
+  const persistedState = await page.evaluate(() => localStorage.getItem("sinauu-sidebar-collapsed"));
+  assert.equal(persistedState, "true", "sidebar collapsed state must be persisted in localStorage");
+
+  // Expand back
+  await collapseBtn.click();
+  const isExpanded = await page.evaluate(() => !document.body.classList.contains("sidebar-collapsed"));
+  assert.equal(isExpanded, true, "clicking toggle again must expand the sidebar");
+
+  // 2. Mobile Drawer Navigation
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileToggle = page.locator("#mobile-menu-toggle");
+  await mobileToggle.waitFor({ state: "visible" });
+  await mobileToggle.click();
+
+  const isDrawerOpen = await page.evaluate(() => document.querySelector("#app-sidebar")?.classList.contains("is-drawer-open"));
+  assert.equal(isDrawerOpen, true, "clicking mobile hamburger must open the sliding drawer");
+
+  const backdropVisible = await page.evaluate(() => !document.querySelector("#nav-backdrop")?.hidden);
+  assert.equal(backdropVisible, true, "opening mobile drawer must reveal the backdrop overlay");
+
+  // Dismiss drawer via Escape
+  await page.keyboard.press("Escape");
+  const isDrawerClosedEsc = await page.evaluate(() => !document.querySelector("#app-sidebar")?.classList.contains("is-drawer-open"));
+  assert.equal(isDrawerClosedEsc, true, "pressing Escape must close the mobile drawer");
+
+  // 3. Practice Hub Search and Filtering
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.locator(".side-nav [data-view-target='practice']").click();
+  await page.locator("#practice-hub-home").waitFor({ state: "visible" });
+
+  const initialCardCount = await page.locator("#practice-modules-grid .practice-card").count();
+  assert.equal(initialCardCount, 7, "Practice hub should default to all 7 modules");
+
+  // Search filter
+  await page.locator("#practice-search").fill("berbicara");
+  const filteredSearchCount = await page.locator("#practice-modules-grid .practice-card").count();
+  assert.equal(filteredSearchCount, 1, "searching 'berbicara' should filter to Speaking module");
+
+  // Clear search
+  await page.locator("#practice-search-clear").click();
+  const resetCount = await page.locator("#practice-modules-grid .practice-card").count();
+  assert.equal(resetCount, 7, "clearing search should restore all 7 modules");
+
+  // Quick filter pills
+  await page.locator('[data-practice-filter="production"]').click();
+  const productionCount = await page.locator("#practice-modules-grid .practice-card").count();
+  assert.equal(productionCount, 3, "Production pill should filter to 3 production skills");
+
+  await page.locator('[data-practice-filter="all"]').click();
+  assert.equal(await page.locator("#practice-modules-grid .practice-card").count(), 7);
+
+  // 4. Multi-Voice Narration and Character Assignment Modal
+  await page.locator('#practice-modules-grid [data-open-practice="reading-stories"]').click();
+  await page.locator("#adventure-story-library").waitFor({ state: "visible" });
+  await page.locator('[data-story-open="a-helpful-neighbor"]').first().click();
+  await page.locator("#adventure-story-reader").waitFor({ state: "visible" });
+
+  // Open voice settings modal
+  const voiceModalBtn = page.locator('[data-open-voice-modal="story"]');
+  await voiceModalBtn.waitFor({ state: "visible" });
+  await voiceModalBtn.click();
+
+  const voiceModalBackdrop = page.locator("#story-voice-modal-backdrop");
+  assert.equal(await voiceModalBackdrop.isVisible(), true, "Voice assignment modal must open");
+
+  const characters = await page.locator("#voice-character-list .voice-character-name").allInnerTexts();
+  assert.ok(characters.includes("Narrator"), "Story voice modal must list the Narrator");
+  assert.ok(characters.some((c) => ["Maya", "Rina"].includes(c)), "Story voice modal must list characters from the story");
+
+  // Save modal
+  await page.locator("#voice-modal-save").click();
+  assert.equal(await voiceModalBackdrop.isVisible(), false, "Saving voice settings must close the modal");
+
+  // 5. Contextual Vocabulary Popover and Add to My Vocabulary
+  const wordTokens = page.locator("#adventure-story-reader .context-word");
+  assert.ok((await wordTokens.count()) > 10, "Everyday Story words must be wrapped in interactive tokens");
+
+  // Click on a target word (e.g. "watering" or "neighbor")
+  const targetWord = page.locator('#adventure-story-reader .context-word[data-word="watering"], #adventure-story-reader .context-word[data-word="garden"]').first();
+  await targetWord.click();
+
+  const vocabPopover = page.locator("#contextual-vocab-popover");
+  await vocabPopover.waitFor({ state: "visible" });
+  const popoverLemma = await page.locator("#vocab-popover-lemma").innerText();
+  assert.ok(popoverLemma.length > 0, "Contextual popover must display the base lemma");
+
+  const saveActionBtn = page.locator("#vocab-popover-save");
+  await saveActionBtn.click();
+
+  // Verify word is saved and class is added
+  await page.waitForFunction(() => {
+    const btn = document.querySelector("#vocab-popover-save");
+    return Boolean(btn && btn.classList.contains("is-saved"));
+  });
+
+  // Verify review queue includes the saved word with context
+  const reviewQueue = await page.evaluate(() => window.sinauuGetUnifiedReviewQueue?.());
+  assert.ok(reviewQueue && Array.isArray(reviewQueue.items), "Unified review queue must be accessible");
+  assert.ok(reviewQueue.items.some(item => item.type === "vocabulary"), "Saved vocabulary item should be in review queue");
+
+  await page.locator("#vocab-popover-close").click();
+  assert.equal(await vocabPopover.isVisible(), false, "Closing popover must hide the dialog");
+
+  assert.deepEqual(pageErrors, [], "Learning experience upgrade features must execute without browser JavaScript errors");
+  await page.close();
+});

@@ -369,7 +369,7 @@
     const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
     return JSON.parse(await new Response(stream).text());
   }
-  function canStudyWord(w){return !!(w&&w.studyReady&&w.meaning&&w.example);}
+  function canStudyWord(w){return !!(w && (w.studyReady || state?.wordProgress?.[w.id]?.savedContext) && w.meaning && (w.example || state?.wordProgress?.[w.id]?.savedContext));}
   async function loadDatasets() {
     const paths=["A1","A2","B1","B2","UNCLASSIFIED"].map(level=>"/data/oxford3000/"+level+".json.gz.b64");
     const requests=await Promise.all([
@@ -433,6 +433,8 @@
   let activePracticeModule = null;
 
   function openPracticeModule(moduleId) {
+    closeMobileDrawer?.();
+    closeContextualVocab?.();
     if (["vocabulary", "grammar", "reading"].includes(moduleId)) {
       setView(moduleId);
       return;
@@ -483,6 +485,9 @@
     setView("practice");
   }
 
+  let practiceSearchQuery = "";
+  let practiceActiveFilter = "all";
+
   function renderPracticeHub() {
     const grid = $("#practice-modules-grid");
     if (!grid || !state) return;
@@ -509,7 +514,8 @@
     const modules = [
       {
         id: "vocabulary",
-        icon: "Aa",
+        category: "core",
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>',
         kicker: "KOSAKATA · OXFORD 3000",
         title: "Kosakata",
         desc: "3000+ kata penting dengan makna kontekstual, contoh kalimat, dan kolokasi.",
@@ -519,7 +525,8 @@
       },
       {
         id: "grammar",
-        icon: "¶",
+        category: "core",
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
         kicker: "TATA BAHASA · A1–B2",
         title: "Tata Bahasa",
         desc: "Aturan pola kalimat, rumus praktis, kesalahan umum, dan latihan soal terarah.",
@@ -529,7 +536,8 @@
       },
       {
         id: "reading",
-        icon: "▤",
+        category: "comprehension",
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>',
         kicker: "PEMAHAMAN BACAAN",
         title: "Pemahaman Bacaan",
         desc: "156 bacaan HABIT dan 8 cerita bertingkat dengan analisis dan pertanyaan teks.",
@@ -540,7 +548,8 @@
       },
       {
         id: "listening",
-        icon: ")))",
+        category: "comprehension",
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
         kicker: "MENYIMAK & DIALOG",
         title: "Menyimak",
         desc: "Listening Lab audio comprehension dan Everyday English percakapan dua arah.",
@@ -550,7 +559,8 @@
       },
       {
         id: "speaking",
-        icon: "🗣",
+        category: "production",
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
         kicker: "PERCAKAPAN DUA ARAH",
         title: "Berbicara",
         desc: "Speaking Studio: simulasi dialog kontekstual dengan panduan dan checklist mandiri.",
@@ -560,7 +570,8 @@
       },
       {
         id: "writing",
-        icon: "✍",
+        category: "production",
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="2" x2="22" y2="6"/><path d="m7.5 20.5 9-9L13 8l-9 9 1 4z"/></svg>',
         kicker: "MENULIS & REVISI",
         title: "Menulis",
         desc: "Writing Studio: panduan menyusun paragraf, revisi terarah, dan autosave draft lokal.",
@@ -570,7 +581,8 @@
       },
       {
         id: "pronunciation",
-        icon: "🎙",
+        category: "production",
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>',
         kicker: "FONETIK & INTONASI",
         title: "Pengucapan",
         desc: "Pronunciation Studio: 16 aktivitas fonetik bertingkat dengan analisis mikrofon lokal.",
@@ -580,13 +592,27 @@
       }
     ];
 
-    grid.innerHTML = modules.map(m => {
+    let filtered = modules;
+    if (practiceActiveFilter && practiceActiveFilter !== "all") {
+      filtered = filtered.filter(m => m.category === practiceActiveFilter);
+    }
+    if (practiceSearchQuery) {
+      const q = practiceSearchQuery.toLowerCase();
+      filtered = filtered.filter(m => m.title.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q) || m.kicker.toLowerCase().includes(q));
+    }
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="practice-empty-search"><p>Tidak ada modul latihan yang cocok dengan pencarian.</p><button type="button" class="secondary-action" id="practice-empty-reset" style="margin-top:10px;">Tampilkan Semua Modul</button></div>';
+      return;
+    }
+
+    grid.innerHTML = filtered.map(m => {
       const subBtn = m.subAction
         ? '<button type="button" class="secondary-action practice-open-sub-btn" data-open-practice="' + esc(m.subAction.id) + '">' + esc(m.subAction.text) + '</button>'
         : '';
       return '<article class="practice-card">' +
         '<div class="practice-card-top">' +
-          '<span class="practice-card-icon">' + esc(m.icon) + '</span>' +
+          '<span class="practice-card-icon">' + m.icon + '</span>' +
           '<div><span class="practice-card-kicker">' + esc(m.kicker) + '</span><h3 class="practice-card-title">' + esc(m.title) + '</h3></div>' +
         '</div>' +
         '<p class="practice-card-desc">' + esc(m.desc) + '</p>' +
@@ -600,6 +626,8 @@
   }
 
   function setView(next) {
+    closeMobileDrawer?.();
+    closeContextualVocab?.();
     if (["speaking", "writing", "listening", "pronunciation", "reading-stories"].includes(next)) {
       openPracticeModule(next);
       return;
@@ -1109,18 +1137,18 @@
         const pDone = Object.values(advExtras.pronunciationProgress || {}).filter(p => p && p.completed).length;
 
         const skillBadges = [
-          { name: "Kosakata", sym: "Aa", val: vTried + " kata", target: "vocabulary" },
-          { name: "Tata Bahasa", sym: "¶", val: gTried + " topik", target: "grammar" },
-          { name: "Bacaan", sym: "▤", val: rDone + " selesai", target: "reading" },
-          { name: "Menyimak", sym: ")))", val: lDone + " selesai", target: "listening" },
-          { name: "Berbicara", sym: "🗣", val: sSess + " sesi", target: "speaking" },
-          { name: "Menulis", sym: "✍", val: wSess + " sesi", target: "writing" },
-          { name: "Pengucapan", sym: "🎙", val: pDone + " selesai", target: "pronunciation" }
+          { name: "Kosakata", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>', val: vTried + " kata", target: "vocabulary" },
+          { name: "Tata Bahasa", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>', val: gTried + " topik", target: "grammar" },
+          { name: "Bacaan", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>', val: rDone + " selesai", target: "reading" },
+          { name: "Menyimak", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>', val: lDone + " selesai", target: "listening" },
+          { name: "Berbicara", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', val: sSess + " sesi", target: "speaking" },
+          { name: "Menulis", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><line x1="18" y1="2" x2="22" y2="6"/><path d="m7.5 20.5 9-9L13 8l-9 9 1 4z"/></svg>', val: wSess + " sesi", target: "writing" },
+          { name: "Pengucapan", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>', val: pDone + " selesai", target: "pronunciation" }
         ];
 
         skillsRow.innerHTML = skillBadges.map(b =>
           '<button type="button" class="home-skill-pill" data-home-skill="' + esc(b.target) + '">' +
-            '<div class="home-skill-pill-top"><span class="home-skill-pill-sym">' + esc(b.sym) + '</span><span class="home-skill-pill-arrow">↗</span></div>' +
+            '<div class="home-skill-pill-top"><span class="home-skill-pill-sym">' + b.icon + '</span><span class="home-skill-pill-arrow">↗</span></div>' +
             '<div class="home-skill-pill-name">' + esc(b.name) + '</div>' +
             '<div class="home-skill-pill-val">' + esc(b.val) + '</div>' +
           '</button>'
@@ -1441,7 +1469,9 @@
         const maxStage = 3;
 
         let reason = "";
-        if (category === "overdue") {
+        if (p.savedContext) {
+          reason = `Disimpan dari "${p.savedContext.sourceTitle || 'bacaan'}" (${category === "overdue" ? `terlambat ${delayDays} hari` : 'siap review berkala'}).`;
+        } else if (category === "overdue") {
           reason = `Terlambat ${delayDays} hari dari jadwal review berkala.`;
         } else if (isWeak) {
           reason = "Ada kesalahan pada sesi latihan sebelumnya; perlu pemantapan.";
@@ -2476,7 +2506,7 @@
       id: "pronunciation",
       title: "Pengucapan (Pronunciation)",
       shortName: "Pronunciation",
-      symbol: "🗣",
+      symbol: "Pr",
       status: pronStatus,
       statusLabel: pronStatus === "not-started" ? "Belum dimulai" : pronStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
       statusReason: pronStatusReason,
@@ -2647,7 +2677,7 @@
           listening: { id: "listening", name: "Menyimak", symbol: ")))", completed: 0, attempts: 0, correct: 0, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-listening-lab" },
           speaking: { id: "speaking", name: "Berbicara", symbol: "↗", completed: 0, attempts: 0, correct: null, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-speaking-studio" },
           writing: { id: "writing", name: "Menulis", symbol: "✎", completed: 0, attempts: 0, correct: null, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-writing-studio" },
-          pronunciation: { id: "pronunciation", name: "Pengucapan", symbol: "🗣", completed: 0, attempts: 0, correct: null, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-pronunciation-studio" }
+          pronunciation: { id: "pronunciation", name: "Pengucapan", symbol: "Pr", completed: 0, attempts: 0, correct: null, questionTotal: 0, accuracy: null, target: "adventure", sectionId: "adventure-pronunciation-studio" }
         },
         reviews: {
           vocabReviews: 0,
@@ -3486,12 +3516,346 @@
     }catch(e){$("#backup-status").textContent=e.message||"JSON tidak valid.";}
     finally{$("#import-backup").value="";}
   }
+  function closeMobileDrawer() {
+    const sidebar = $("#app-sidebar") || $(".sidebar");
+    const backdrop = $("#nav-backdrop");
+    const menuToggle = $("#mobile-menu-toggle");
+    if (sidebar) sidebar.classList.remove("is-drawer-open");
+    if (backdrop) backdrop.hidden = true;
+    if (menuToggle) menuToggle.setAttribute("aria-expanded", "false");
+  }
+
+  function openMobileDrawer() {
+    const sidebar = $("#app-sidebar") || $(".sidebar");
+    const backdrop = $("#nav-backdrop");
+    const menuToggle = $("#mobile-menu-toggle");
+    if (sidebar) sidebar.classList.add("is-drawer-open");
+    if (backdrop) backdrop.hidden = false;
+    if (menuToggle) menuToggle.setAttribute("aria-expanded", "true");
+  }
+
+  function toggleMobileDrawer() {
+    const sidebar = $("#app-sidebar") || $(".sidebar");
+    if (sidebar && sidebar.classList.contains("is-drawer-open")) {
+      closeMobileDrawer();
+    } else {
+      openMobileDrawer();
+    }
+  }
+
+  function toggleSidebarCollapse() {
+    const isCollapsed = document.body.classList.toggle("sidebar-collapsed");
+    try {
+      localStorage.setItem("sinauu-sidebar-collapsed", isCollapsed ? "true" : "false");
+    } catch (_) {}
+    const btn = $("#sidebar-collapse-toggle");
+    if (btn) {
+      btn.setAttribute("aria-expanded", String(!isCollapsed));
+      btn.setAttribute("title", isCollapsed ? "Perbesar bilah samping" : "Kecilkan bilah samping");
+    }
+  }
+
+  function normalizeWord(raw) {
+    return String(raw || "").toLowerCase().replace(/[^a-z'-]/g, "").replace(/^[-']+|[-']+$/g, "");
+  }
+
+  function findWordEntry(rawWord, wordList) {
+    const list = wordList || words || [];
+    if (!list.length) return null;
+    const clean = normalizeWord(rawWord);
+    if (!clean) return null;
+
+    let found = list.find(w => w.word && w.word.toLowerCase() === clean);
+    if (found) return { entry: found, lemma: found.word, original: rawWord };
+
+    found = list.find(w => Array.isArray(w.forms) && w.forms.some(f => f.form && f.form.toLowerCase() === clean));
+    if (found) return { entry: found, lemma: found.word, original: rawWord };
+
+    const candidates = [];
+    if (clean.endsWith("ing")) {
+      const base = clean.slice(0, -3);
+      candidates.push(base, base + "e");
+      if (base.length > 2 && base[base.length - 1] === base[base.length - 2]) candidates.push(base.slice(0, -1));
+      if (clean.endsWith("ying")) candidates.push(clean.slice(0, -4) + "ie");
+    }
+    if (clean.endsWith("ed")) {
+      const base = clean.slice(0, -2);
+      candidates.push(base, clean.slice(0, -1));
+      if (clean.endsWith("ied")) candidates.push(clean.slice(0, -3) + "y");
+      if (base.length > 2 && base[base.length - 1] === base[base.length - 2]) candidates.push(base.slice(0, -1));
+    }
+    if (clean.endsWith("ies")) candidates.push(clean.slice(0, -3) + "y");
+    else if (clean.endsWith("ves")) candidates.push(clean.slice(0, -3) + "f", clean.slice(0, -3) + "fe");
+    else if (clean.endsWith("es")) candidates.push(clean.slice(0, -2), clean.slice(0, -1));
+    else if (clean.endsWith("s") && !clean.endsWith("ss")) candidates.push(clean.slice(0, -1));
+
+    if (clean.endsWith("est")) {
+      const base = clean.slice(0, -3);
+      candidates.push(base, base + "e");
+      if (clean.endsWith("iest")) candidates.push(clean.slice(0, -4) + "y");
+    } else if (clean.endsWith("er")) {
+      const base = clean.slice(0, -2);
+      candidates.push(base, base + "e");
+      if (clean.endsWith("ier")) candidates.push(clean.slice(0, -3) + "y");
+    }
+    if (clean.endsWith("ly")) {
+      candidates.push(clean.slice(0, -2));
+      if (clean.endsWith("ily")) candidates.push(clean.slice(0, -3) + "y");
+    }
+
+    for (const cand of candidates) {
+      found = list.find(w => w.word && w.word.toLowerCase() === cand);
+      if (found) return { entry: found, lemma: found.word, original: rawWord };
+      found = list.find(w => Array.isArray(w.forms) && w.forms.some(f => f.form && f.form.toLowerCase() === cand));
+      if (found) return { entry: found, lemma: found.word, original: rawWord };
+    }
+
+    return { entry: null, lemma: clean, original: rawWord };
+  }
+
+  let activeVocabTarget = null;
+  let activeVocabData = null;
+
+  function isContextualWordSaved(wordId) {
+    if (!state || !state.wordProgress || !wordId) return false;
+    const p = state.wordProgress[wordId];
+    return Boolean(p && (p.savedContext || (Array.isArray(p.studiedDates) && p.studiedDates.length) || (Array.isArray(p.attempts) && p.attempts.length)));
+  }
+
+  function updateSaveButtonState(wordId) {
+    const saveBtn = $("#vocab-popover-save");
+    const saveLabel = $("#vocab-popover-save-label");
+    if (!saveBtn || !saveLabel) return;
+    const isSaved = isContextualWordSaved(wordId);
+    saveBtn.classList.toggle("is-saved", isSaved);
+    if (isSaved) {
+      saveLabel.textContent = "Tersimpan di Kosakata ✓";
+    } else {
+      saveLabel.textContent = "Simpan ke Kosakata Saya +";
+    }
+  }
+
+  function openContextualVocab({ word, sentence, sourceTitle, targetElement }) {
+    const popover = $("#contextual-vocab-popover");
+    if (!popover) return;
+
+    const result = findWordEntry(word, words);
+    const entry = result.entry;
+    const lemma = result.lemma || word;
+    activeVocabTarget = targetElement;
+    activeVocabData = { word, sentence, sourceTitle, entry, lemma };
+
+    const wordId = entry ? entry.id : lemma;
+
+    $("#vocab-popover-lemma").textContent = lemma;
+    $("#vocab-popover-level").textContent = entry ? (entry.level || "A1") : "KATA";
+    $("#vocab-popover-pos").textContent = entry ? (entry.partOfSpeech || "unclassified") : "";
+
+    const meaningEl = $("#vocab-popover-meaning");
+    const expEl = $("#vocab-popover-explanation");
+    if (entry) {
+      meaningEl.textContent = entry.meaning || lemma;
+      expEl.textContent = entry.definitionEn || "";
+      expEl.hidden = !entry.definitionEn;
+    } else {
+      meaningEl.textContent = "Definisi dalam konteks kalimat";
+      expEl.textContent = "";
+      expEl.hidden = true;
+    }
+
+    const sentenceEl = $("#vocab-popover-sentence");
+    if (sentence) {
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedWord})`, "gi");
+      sentenceEl.innerHTML = esc(sentence).replace(regex, "<mark>$1</mark>");
+    } else {
+      sentenceEl.textContent = "—";
+    }
+
+    const exBox = $("#vocab-popover-example-box");
+    if (entry && entry.example) {
+      exBox.hidden = false;
+      $("#vocab-popover-example-en").textContent = entry.example;
+      $("#vocab-popover-example-id").textContent = entry.translation || "";
+    } else {
+      exBox.hidden = true;
+    }
+
+    const colBox = $("#vocab-popover-collocations");
+    if (entry && Array.isArray(entry.collocations) && entry.collocations.length > 0) {
+      colBox.hidden = false;
+      colBox.innerHTML = entry.collocations.slice(0, 4).map(c => '<span class="vocab-collocation-chip">' + esc(c) + '</span>').join("");
+    } else {
+      colBox.hidden = true;
+      colBox.innerHTML = "";
+    }
+
+    updateSaveButtonState(wordId);
+
+    const audioBtn = $("#vocab-popover-audio");
+    if (audioBtn) {
+      audioBtn.onclick = () => {
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(lemma);
+          u.lang = "en-US";
+          u.rate = 0.9;
+          window.speechSynthesis.speak(u);
+        }
+      };
+    }
+
+    popover.hidden = false;
+    positionPopover(popover, targetElement);
+  }
+
+  function positionPopover(popover, targetElement) {
+    if (window.innerWidth <= 760) return;
+    if (!targetElement) return;
+
+    const rect = targetElement.getBoundingClientRect();
+    const popRect = popover.getBoundingClientRect();
+    const margin = 12;
+
+    let left = rect.left + rect.width / 2 - popRect.width / 2;
+    left = Math.max(margin, Math.min(window.innerWidth - popRect.width - margin, left));
+
+    let top = rect.bottom + 8;
+    if (top + popRect.height > window.innerHeight - margin) {
+      top = rect.top - popRect.height - 8;
+    }
+    top = Math.max(margin, top);
+
+    popover.style.left = Math.round(left) + "px";
+    popover.style.top = Math.round(top) + "px";
+  }
+
+  function closeContextualVocab() {
+    const popover = $("#contextual-vocab-popover");
+    if (popover) popover.hidden = true;
+    activeVocabTarget = null;
+    activeVocabData = null;
+  }
+
+  async function saveContextualWord({ wordId, originalWord, sentence, sourceTitle }) {
+    if (!state || !wordId) return false;
+    const p = ensureProgress(wordId);
+    const now = new Date();
+    const today = dayKey(now);
+    p.firstSeenDate ||= today;
+    if (!p.studiedDates.includes(today)) p.studiedDates.push(today);
+    p.savedContext = {
+      originalWord: originalWord || "",
+      sentence: sentence || "",
+      sourceTitle: sourceTitle || "",
+      savedAt: now.toISOString()
+    };
+    p.encounteredCount = (p.encounteredCount || 0) + 1;
+    if (!p.nextReviewAt) {
+      p.nextReviewAt = now.toISOString();
+    }
+    pushHistory({
+      type: "vocab-contextual",
+      skill: "vocab",
+      wordId: wordId,
+      originalWord: originalWord,
+      context: sentence,
+      source: sourceTitle
+    });
+    await save();
+    if (activeVocabTarget) {
+      activeVocabTarget.classList.add("is-saved");
+    }
+    updateSaveButtonState(wordId);
+    toast(`"${originalWord || wordId}" disimpan ke kosakata dan antrean review.`);
+    return true;
+  }
+
+  async function removeContextualWord(wordId) {
+    if (!state || !state.wordProgress || !state.wordProgress[wordId]) return false;
+    delete state.wordProgress[wordId].savedContext;
+    await save();
+    if (activeVocabTarget) {
+      activeVocabTarget.classList.remove("is-saved");
+    }
+    updateSaveButtonState(wordId);
+    toast("Kata dihapus dari simpanan.");
+    return true;
+  }
+
   function bindEvents() {
     window.addEventListener("sinauu:local-extras-saved",()=>{
       if(state && view==="overview")renderStudyPlan();
       if(state && view==="progress")renderProgress();
     });
     document.addEventListener("click",async e=>{
+      // Sidebar Collapse & Mobile Drawer
+      if (e.target.closest("#sidebar-collapse-toggle")) { toggleSidebarCollapse(); return; }
+      if (e.target.closest("#mobile-menu-toggle")) { toggleMobileDrawer(); return; }
+      if (e.target.closest("#sidebar-close-btn, #nav-backdrop")) { closeMobileDrawer(); return; }
+
+      // Practice Hub Search & Filter
+      if (e.target.closest("#practice-empty-reset")) {
+        practiceSearchQuery = "";
+        practiceActiveFilter = "all";
+        const inp = $("#practice-search");
+        if (inp) inp.value = "";
+        const clr = $("#practice-search-clear");
+        if (clr) clr.hidden = true;
+        $$(".practice-pill").forEach(p => p.classList.toggle("is-active", p.dataset.practiceFilter === "all"));
+        renderPracticeHub();
+        return;
+      }
+      const practicePill = e.target.closest("[data-practice-filter]");
+      if (practicePill) {
+        practiceActiveFilter = practicePill.dataset.practiceFilter;
+        $$(".practice-pill").forEach(p => p.classList.toggle("is-active", p === practicePill));
+        renderPracticeHub();
+        return;
+      }
+      if (e.target.closest("#practice-search-clear")) {
+        practiceSearchQuery = "";
+        const inp = $("#practice-search");
+        if (inp) inp.value = "";
+        const clr = $("#practice-search-clear");
+        if (clr) clr.hidden = true;
+        renderPracticeHub();
+        return;
+      }
+
+      // Contextual Vocabulary
+      const contextWord = e.target.closest(".context-word");
+      if (contextWord) {
+        const word = contextWord.dataset.word || contextWord.textContent.trim();
+        const sentence = contextWord.dataset.sentence || contextWord.closest(".story-sentence, .dialogue-sentence, p")?.textContent?.trim() || "";
+        const source = contextWord.dataset.source || "";
+        openContextualVocab({ word, sentence, sourceTitle: source, targetElement: contextWord });
+        return;
+      }
+      if (e.target.closest("#vocab-popover-close")) {
+        closeContextualVocab();
+        return;
+      }
+      if (e.target.closest("#vocab-popover-save")) {
+        if (activeVocabData) {
+          const wordId = activeVocabData.entry ? activeVocabData.entry.id : activeVocabData.lemma;
+          if (isContextualWordSaved(wordId)) {
+            await removeContextualWord(wordId);
+          } else {
+            await saveContextualWord({
+              wordId,
+              originalWord: activeVocabData.word,
+              sentence: activeVocabData.sentence,
+              sourceTitle: activeVocabData.sourceTitle
+            });
+          }
+        }
+        return;
+      }
+      if (!e.target.closest("#contextual-vocab-popover, .context-word")) {
+        closeContextualVocab();
+      }
+
       const readingModeBtn=e.target.closest("[data-reading-mode]");
       if(readingModeBtn){
         const mode=readingModeBtn.dataset.readingMode==="skills"?"skills":"habit";
@@ -3689,6 +4053,12 @@
         }
       }
     });
+    $("#practice-search")?.addEventListener("input",(e)=>{
+      practiceSearchQuery = e.target.value.trim();
+      const clr = $("#practice-search-clear");
+      if (clr) clr.hidden = !practiceSearchQuery;
+      renderPracticeHub();
+    });
     $("#vocab-search").addEventListener("input",()=>{vocabDetailOpen=false;renderVocabulary();});
     $("#vocab-load-more").addEventListener("click",()=>{listLimit+=100;renderVocabulary(false);});
     $("#level-filter").addEventListener("change",()=>{vocabDetailOpen=false;renderVocabulary();});
@@ -3702,6 +4072,15 @@
     $("#exit-study").addEventListener("click",()=>setView(activeStudy&&activeStudy.mode==="review"?"review":"vocabulary"));
     $("#speak-word")?.addEventListener("click",()=>speak("notice"));
     document.addEventListener("keydown",e=>{
+      if (e.key === "Escape") {
+        closeMobileDrawer();
+        closeContextualVocab();
+        $("#goal-dialog")?.close();
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) {
+        e.preventDefault();
+        toggleSidebarCollapse();
+      }
       const tab=e.target.closest(".learning-subnav [role='tab'], #reading-mode-switch [role='tab']");
       if(tab && ["ArrowLeft","ArrowRight","Home","End"].includes(e.key)){
         const group=tab.closest(".learning-subnav, #reading-mode-switch");
@@ -3716,7 +4095,6 @@
         return;
       }
       if(e.key==="/"&&view==="vocabulary"&&!["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)){e.preventDefault();$("#vocab-search").focus();}
-      if(e.key==="Escape")$("#goal-dialog")?.close();
     });
     window.addEventListener("sinauu:open-topic",(e)=>{
       if(e.detail?.topicId){activeTopic=e.detail.topicId;grammarDetailOpen=true;setView("grammar");renderGrammar();}
@@ -3731,6 +4109,15 @@
   async function init() {
     bindEvents();renderDate();
     try {
+      const savedCollapse = localStorage.getItem("sinauu-sidebar-collapsed");
+      if (savedCollapse === "true") {
+        document.body.classList.add("sidebar-collapsed");
+        const btn = $("#sidebar-collapse-toggle");
+        if (btn) {
+          btn.setAttribute("aria-expanded", "false");
+          btn.setAttribute("title", "Perbesar bilah samping");
+        }
+      }
       await loadDatasets();await loadState();await setTheme(state.settings.theme);
       renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
       window.sinauuExportLocalBundle = () => ({schemaVersion:2,core:state,extras:readExtraSnapshots()});
@@ -3746,6 +4133,15 @@
       window.sinauuGetWordList = () => words;
       window.sinauuGetTopicList = () => topics;
       window.sinauuGetCoreState = () => state;
+      window.sinauuFindWordEntry = (rawWord) => findWordEntry(rawWord, words);
+      window.sinauuOpenContextualVocab = openContextualVocab;
+      window.sinauuCloseContextualVocab = closeContextualVocab;
+      window.sinauuSaveContextualWord = saveContextualWord;
+      window.sinauuRemoveContextualWord = removeContextualWord;
+      window.sinauuIsWordSaved = isContextualWordSaved;
+      window.sinauuToggleSidebarCollapse = toggleSidebarCollapse;
+      window.sinauuToggleMobileDrawer = toggleMobileDrawer;
+      window.sinauuCloseMobileDrawer = closeMobileDrawer;
       window.sinauuGetWordContextQuestion = (word, qId) => {
         if(!word)return null;
         if(word.context&&word.context.id===qId)return word.context;

@@ -581,8 +581,18 @@
     const answers = habitProgress[passage.id] && habitProgress[passage.id].answers || {};
     const completed = questions.filter(function (q) { return !!answers[q.id]; }).length;
     const correctCount = questions.filter(function (q) { return answers[q.id] && answers[q.id].correct; }).length;
+    function tokenizeHabitParagraph(text, sourceTitle) {
+      const sentences = text.match(/[^.!?]+[.!?]+|\S[^.!?]*$/g) || [text];
+      return sentences.map(function(sentence) {
+        const wordsWrapped = sentence.replace(/([A-Za-z]+(?:'[A-Za-z]+)?)/g, function(w) {
+          const isSaved = window.sinauuIsWordSaved ? window.sinauuIsWordSaved(w.toLowerCase()) : false;
+          return '<span class="context-word' + (isSaved ? ' is-saved' : '') + '" data-word="' + escapeHtml(w) + '" data-sentence="' + escapeHtml(sentence.trim()) + '" data-source="' + escapeHtml(sourceTitle || "") + '" tabindex="0" role="button">' + escapeHtml(w) + '</span>';
+        });
+        return '<span class="habit-sentence">' + wordsWrapped + '</span>';
+      }).join(" ");
+    }
     const paragraphHtml = (passage.paragraphs || []).map(function (paragraph, index) {
-      return '<p><span class="habit-paragraph-number">' + String(index + 1).padStart(2, "0") + '</span><span>' + escapeHtml(paragraph) + '</span></p>';
+      return '<p><span class="habit-paragraph-number">' + String(index + 1).padStart(2, "0") + '</span><span>' + tokenizeHabitParagraph(paragraph, passage.title) + '</span></p>';
     }).join("");
     const questionHtml = questions.map(function (q, index) {
       const answer = answers[q.id];
