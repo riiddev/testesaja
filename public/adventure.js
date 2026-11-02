@@ -158,9 +158,11 @@
   function saveProgress() {
     progress.updatedAt = new Date().toISOString();
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      if (!window.sinauuIsCloudVerified?.()) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      }
       const note = $("#adventure-save-state");
-      if (note) note.textContent = "Tersimpan di perangkat ini · siap disinkronkan";
+      if (note) note.textContent = window.sinauuIsCloudVerified?.() ? "Tersimpan di cloud" : "Tersimpan di perangkat ini · siap disinkronkan";
       window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
       return true;
     } catch (_) {
@@ -1786,7 +1788,9 @@
                 closing: typeof savedPlan.closing === "string" ? savedPlan.closing.slice(0, 1200) : ""
               } : { opening: "", detail: "", closing: "" },
               checked: kind === "speaking" && !hasTurnProgress ? [] : Array.isArray(state.checked) ? Array.from(new Set(state.checked.filter((value) => Number.isInteger(value) && value >= 0 && value < 3))) : [],
-              turnIndex: kind === "speaking" && hasTurnProgress ? Math.max(0, Math.min(prompt.turns.length, state.turnIndex)) : 0
+              turnIndex: kind === "speaking" && hasTurnProgress ? Math.max(0, Math.min(prompt.turns.length, state.turnIndex)) : 0,
+              updatedAt: typeof state.updatedAt === "string" ? state.updatedAt : null,
+              completedAt: typeof state.completedAt === "string" ? state.completedAt : null
             };
           }
         }
@@ -1796,9 +1800,12 @@
   }
   function saveStudioDrafts() {
     try {
-      localStorage.setItem(studioStorageKey(), JSON.stringify(studioDrafts));
+      if (!window.sinauuIsCloudVerified?.()) {
+        localStorage.setItem(studioStorageKey(), JSON.stringify(studioDrafts));
+      }
       const status = $("#adventure-studio-save-state");
-      if (status) status.textContent = "Draft tersimpan lokal di perangkat ini.";
+      if (status) status.textContent = window.sinauuIsCloudVerified?.() ? "Draft tersimpan di cloud." : "Draft tersimpan lokal di perangkat ini.";
+      window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
     } catch (_) {
       const status = $("#adventure-studio-save-state");
       if (status) status.textContent = "Penyimpanan lokal penuh; salin draft penting ke tempat aman.";
@@ -1984,6 +1991,7 @@
     const card = kind === "speaking" ? $("#adventure-speaking-studio") : $("#adventure-writing-studio");
     state.checked = Array.from(card.querySelectorAll("[data-studio-check]:checked"), (item) => Number(item.dataset.studioCheck)).filter((value) => Number.isInteger(value));
     state.checked = Array.from(new Set(state.checked)).sort();
+    state.updatedAt = new Date().toISOString();
     saveStudioDrafts();
     updateStudioCompleteButton(kind);
   }
@@ -1991,6 +1999,7 @@
     if (!studioDrafts || !field) return;
     const promptId = field.dataset.studioPromptId || studioDrafts.writing.selectedPromptId;
     const state = studioState("writing", promptId);
+    state.updatedAt = new Date().toISOString();
     if (field.matches("[data-writing-plan]")) {
       const key = field.dataset.writingPlan;
       if (["opening", "detail", "closing"].includes(key)) state.plan[key] = String(field.value || "").slice(0, 1200);
@@ -3149,6 +3158,8 @@
   window.addEventListener("sinauu:workspace-ready", () => { syncExternalMistakes(); renderMistakeJournal(); });
   window.sinauuAdventureBackup = () => cloneProgress(progress);
   window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); syncExternalMistakes(); renderAll(); updateReviewActivePanel(); };
+  window.sinauuStudioDraftsBackup = () => studioDrafts || readStudioDrafts();
+  window.sinauuStudioDraftsRestore = (next) => { if (!next || typeof next !== "object") return; studioDrafts = next; if (typeof renderStudios === "function") renderStudios(); };
   window.sinauuRenderAdventure = () => { syncExternalMistakes(); if (curriculum) renderAll(); else void init(); updateReviewActivePanel(); };
   window.sinauuRecordMistake = recordMistake;
   window.sinauuSyncMistakes = syncExternalMistakes;

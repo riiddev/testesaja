@@ -25,6 +25,19 @@ export class LockBusyError extends Error {
   }
 }
 
+export class UncertainCommitError extends Error {
+  code = "UNCERTAIN_COMMIT";
+  readonly operationId: string;
+  readonly expectedRevision: number;
+
+  constructor(message: string, operationId: string, expectedRevision: number) {
+    super(message);
+    this.name = "UncertainCommitError";
+    this.operationId = operationId;
+    this.expectedRevision = expectedRevision;
+  }
+}
+
 function requiredEnv(name: string): string {
   const value = String(process.env[name] || "").trim();
   if (!value) throw new Error("Konfigurasi server belum lengkap. Admin perlu mengisi " + name + " di Environment Variables Vercel.");
@@ -83,11 +96,12 @@ async function callSinai(action: string, payload: Record<string, unknown> = {}):
     if (/tidak valid|wajib|harus|diizinkan|tidak dikenal/i.test(message)) throw new Error(message);
     throw new Error("Google Sheets gagal memproses permintaan. Periksa konfigurasi Apps Script.");
   }
-  return result.data;
+  return result.data !== undefined ? result.data : result;
 }
 
 export async function ensureSheetsReady(): Promise<void> {
   assertSheetsConfigured();
+  await callSinai("status");
 }
 
 export type AccountRow = {
@@ -154,8 +168,14 @@ function recordId(record: CollectionRecord): string {
  */
 export async function readProgress(userId: string): Promise<{ state: any; updatedAt: string; revision: number } | null> {
   const records = await listUserLists(userId);
-  const manifest = records.find((record) => recordId(record) === MANIFEST_ID);
-  const manifestData: Record<string, any> = manifest?.data || {};
+  const manifests = records.filter((record) => recordId(record) === MANIFEST_ID);
+  if (manifests.length > 1) {
+    throw new Error("Terdeteksi lebih dari satu manifes progres aktif di Google Sheets. Hubungi admin untuk perbaikan data.");
+  }
+  const manifest = manifests[0];
+  if (!manifest) return null;
+
+  const manifestData: Record<string, any> = manifest.data || {};
   const snapshotId = String(manifestData.snapshotId || "");
   const slot = String(manifestData.slot || manifestData.activeSlot || "");
   const revision = typeof manifestData.revision === "number" ? manifestData.revision : 0;
@@ -193,10 +213,67 @@ export async function readProgress(userId: string): Promise<{ state: any; update
   }
 }
 
+export type ReconcileResult =
+  | { status: "committed"; revision: number }
+  | { status: "conflict"; currentRevision: number }
+  | { status: "uncertain"; message: string };
+
+/**
+ * Reconciles uncertain commit outcome by inspecting the active manifest directly in Google Sheets.
+ */
+export async function reconcileCommit(
+  userId: string,
+  snapshotId: string,
+  expectedRevision: number,
+  newRevision: number
+): Promise<ReconcileResult> {
+  try {
+    const records = await listUserLists(userId);
+    const manifests = records.filter((r) => recordId(r) === MANIFEST_ID);
+    if (manifests.length > 1) {
+      throw new Error("Terdeteksi lebih dari satu manifes progres aktif di Google Sheets. Hubungi admin untuk perbaikan data.");
+    }
+    if (manifests.length === 0) {
+      return { status: "uncertain", message: "Manifes aktif belum ditemukan." };
+    }
+    const manifestData = manifests[0].data || {};
+    const activeSnapshotId = String(manifestData.snapshotId || "");
+    const activeRevision = typeof manifestData.revision === "number" ? manifestData.revision : 0;
+
+    // Confirmed commit: snapshotId and newRevision match active manifest
+    if (activeSnapshotId === snapshotId && activeRevision === newRevision) {
+      return { status: "committed", revision: activeRevision };
+    }
+
+    // Superseded or conflict: revision moved past intended newRevision or advanced by another snapshot
+    if (activeRevision >= newRevision || (activeRevision > expectedRevision && activeSnapshotId !== snapshotId)) {
+      return { status: "conflict", currentRevision: activeRevision };
+    }
+
+    // Manifest is still at expectedRevision (not committed yet)
+    if (activeRevision === expectedRevision && activeSnapshotId !== snapshotId) {
+      return { status: "uncertain", message: "Komit belum diaplikasikan di Google Sheets." };
+    }
+
+    return { status: "uncertain", message: "Status komit belum dapat dipastikan." };
+  } catch (err: any) {
+    if (err instanceof Error && /terdeteksi lebih dari satu/i.test(err.message)) {
+      throw err;
+    }
+    return { status: "uncertain", message: err?.message || "Gagal menghubungi Google Sheets untuk rekonsiliasi." };
+  }
+}
+
 /**
  * Writes progress using unique immutable chunk IDs and an atomic manifest CAS commit.
+ * Supports stable operation identity and server-side reconciliation for uncertain outcomes.
  */
-export async function writeProgress(userId: string, state: unknown, baseRevision: number = 0): Promise<{ revision: number; snapshotId: string }> {
+export async function writeProgress(
+  userId: string,
+  state: unknown,
+  baseRevision: number = 0,
+  operationId?: string
+): Promise<{ revision: number; snapshotId: string }> {
   const serialized = JSON.stringify(state);
   if (Buffer.byteLength(serialized, "utf8") > MAX_STATE_BYTES) {
     throw new Error("Snapshot progres terlalu besar. Ekspor cadangan belajar dan hubungi admin sebelum mencoba lagi.");
@@ -210,7 +287,12 @@ export async function writeProgress(userId: string, state: unknown, baseRevision
     throw new Error("Snapshot progres terlalu besar untuk disimpan di Google Sheets. Ekspor cadangan belajar sebelum mencoba lagi.");
   }
 
-  const snapshotId = randomUUID();
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const snapshotId = operationId ? String(operationId).trim() : randomUUID();
+  if (!UUID_REGEX.test(snapshotId)) {
+    throw new Error("operationId tidak valid. Harus berupa format UUID.");
+  }
+
   const updatedAt = new Date().toISOString();
 
   if (typeof baseRevision !== "number" || !Number.isFinite(baseRevision) || Math.floor(baseRevision) !== baseRevision || baseRevision < 0) {
@@ -226,39 +308,72 @@ export async function writeProgress(userId: string, state: unknown, baseRevision
       snapshotId,
       chunkIndex,
       partCount: parts.length,
-      updatedAt,
       payload
     },
   }));
 
   // Upload chunks in batches of at most 80 records per call
   for (let offset = 0; offset < chunks.length; offset += 80) {
-    await callSinai("collections.upsertBatch", {
+    try {
+      await callSinai("collections.upsertBatch", {
+        collection: "lists",
+        userId,
+        records: chunks.slice(offset, offset + 80),
+      });
+    } catch (err: any) {
+      if (/immutable/i.test(err?.message || "")) {
+        throw new Error("Operation ID '" + snapshotId + "' telah digunakan dengan konten yang berbeda.");
+      }
+      throw err;
+    }
+  }
+
+  // Atomic manifest activation via compare-and-swap with uncertain-commit reconciliation
+  try {
+    const commitResult = await callSinai("snapshot.commit", {
       collection: "lists",
       userId,
-      records: chunks.slice(offset, offset + 80),
+      snapshotId,
+      expectedRevision,
+      newRevision,
+      partCount: parts.length,
+      updatedAt,
     });
+
+    const committedRevision = commitResult?.revision;
+    if (typeof committedRevision !== "number" || !Number.isFinite(committedRevision) || committedRevision !== newRevision) {
+      throw new Error("Penyimpanan gagal: konfirmasi komit manifes dari Google Sheets tidak mengembalikan revisi yang valid.");
+    }
+
+    return {
+      revision: committedRevision,
+      snapshotId
+    };
+  } catch (commitErr: any) {
+    if (commitErr instanceof RevisionConflictError || commitErr instanceof LockBusyError) {
+      throw commitErr;
+    }
+
+    // Uncertain network outcome: reconcile with active manifest in spreadsheet
+    const reconciled = await reconcileCommit(userId, snapshotId, expectedRevision, newRevision);
+    if (reconciled.status === "committed") {
+      return {
+        revision: reconciled.revision,
+        snapshotId
+      };
+    }
+    if (reconciled.status === "conflict") {
+      throw new RevisionConflictError(
+        "Snapshot sudah diperbarui oleh operasi lain.",
+        reconciled.currentRevision
+      );
+    }
+
+    throw new UncertainCommitError(
+      reconciled.message || "Hasil komit snapshot belum dapat dipastikan karena batas waktu koneksi.",
+      snapshotId,
+      expectedRevision
+    );
   }
-
-  // Atomic manifest activation via compare-and-swap
-  const commitResult = await callSinai("snapshot.commit", {
-    collection: "lists",
-    userId,
-    snapshotId,
-    expectedRevision,
-    newRevision,
-    partCount: parts.length,
-    updatedAt,
-  });
-
-  const committedRevision = commitResult?.revision;
-  if (typeof committedRevision !== "number" || !Number.isFinite(committedRevision) || committedRevision !== newRevision) {
-    throw new Error("Penyimpanan gagal: konfirmasi komit manifes dari Google Sheets tidak mengembalikan revisi yang valid.");
-  }
-
-  return {
-    revision: committedRevision,
-    snapshotId
-  };
 }
 

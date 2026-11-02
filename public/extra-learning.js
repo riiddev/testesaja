@@ -28,7 +28,9 @@
   }
   function persistProgress() {
     try {
-      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+      if (!window.sinauuIsCloudVerified?.()) {
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+      }
       window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
       return true;
     } catch (_) {
@@ -429,7 +431,9 @@
   }
   function persistHabitLibraryProgress() {
     try {
-      localStorage.setItem(HABIT_PROGRESS_KEY, JSON.stringify(habitProgress));
+      if (!window.sinauuIsCloudVerified?.()) {
+        localStorage.setItem(HABIT_PROGRESS_KEY, JSON.stringify(habitProgress));
+      }
       window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
       return true;
     } catch (_) {

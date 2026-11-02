@@ -1,5 +1,16 @@
 type AnyRecord = Record<string, any>;
-type CloudBundle = { schemaVersion: 2; core: AnyRecord; extras: { extraLearning: AnyRecord; habitProgress: AnyRecord; adventureProgress: AnyRecord; [key: string]: any } };
+type CloudBundle = {
+  schemaVersion: 2;
+  core: AnyRecord;
+  extras: {
+    extraLearning: AnyRecord;
+    habitProgress: AnyRecord;
+    adventureProgress: AnyRecord;
+    studioDrafts?: AnyRecord;
+    preferences?: AnyRecord;
+    [key: string]: any;
+  };
+};
 type AuthUser = { id: string; email?: string };
 type AuthSession = { access_token: string; refresh_token: string; expires_at?: number; expires_in?: number; token_type?: string; user: AuthUser };
 
@@ -13,6 +24,8 @@ declare global {
     sinauuHabitLibraryBackup?: () => AnyRecord;
     sinauuAdventureRestore?: (next: AnyRecord) => void;
     sinauuAdventureBackup?: () => AnyRecord;
+    sinauuStudioDraftsRestore?: (next: AnyRecord) => void;
+    sinauuStudioDraftsBackup?: () => AnyRecord;
     sinauuRenderAdventure?: () => void;
     sinauuGetSkillPassport?: () => any;
     sinauuSkillPassportData?: any;
@@ -26,10 +39,13 @@ declare global {
     sinauuOpenHabitPassage?: (passageId: string) => void;
     sinauuRecordMistake?: (input: any) => void;
     sinauuSyncMistakes?: () => void;
+    sinauuIsCloudVerified?: () => boolean;
+    sinauuTriggerCloudSync?: () => Promise<boolean>;
   }
 }
 
 let CLOUD_READY = false;
+let isCloudVerified = false;
 const SESSION_KEY = "sinauu-cloud-session-v1";
 const LOCAL_DB = "sinauu-local-v1", LOCAL_STORE = "state", LOCAL_RECORD = "main";
 const CORE_FALLBACK = "sinauu-learning-state-v1", EXTRA_KEY = "sinauu-extra-learning-v1", HABIT_KEY = "sinauu-habit-library-v1", ADVENTURE_KEY = "sinauu-adventure-progress-v1";
@@ -67,11 +83,30 @@ function freshCore(): AnyRecord {
   return { schemaVersion: 1, settings: { theme: "light", dailyGoal: 10 }, wordProgress: {}, favorites: [], grammarProgress: {}, events: [], history: [], updatedAt: new Date().toISOString() };
 }
 
+function localStudioDrafts(): AnyRecord {
+  if (typeof window !== "undefined" && window.sinauuStudioDraftsBackup) {
+    try {
+      const live = window.sinauuStudioDraftsBackup();
+      if (live && typeof live === "object") return live;
+    } catch (_) {}
+  }
+  const userId = session?.user?.id;
+  const userKey = userId ? "sinauu-adventure-studio-drafts-v1:" + encodeURIComponent(userId) : null;
+  const raw = (userKey && parseStored<AnyRecord | null>(userKey, null)) ||
+              parseStored<AnyRecord | null>("sinauu-adventure-studio-drafts-v1:local", null);
+  if (raw && typeof raw === "object") return raw;
+  return {
+    speaking: { selectedPromptId: "first-introduction", prompts: {} },
+    writing: { selectedPromptId: "short-introduction", prompts: {} },
+  };
+}
+
 function localExtras(): CloudBundle["extras"] {
   return {
     extraLearning: parseStored<AnyRecord>(EXTRA_KEY, {}),
     habitProgress: parseStored<AnyRecord>(HABIT_KEY, {}),
     adventureProgress: parseStored<AnyRecord>(ADVENTURE_KEY, {}),
+    studioDrafts: localStudioDrafts(),
   };
 }
 
@@ -86,10 +121,29 @@ function normalizeBundle(raw: any): CloudBundle {
         extraLearning: incomingExtras.extraLearning && typeof incomingExtras.extraLearning === "object" ? incomingExtras.extraLearning : {},
         habitProgress: incomingExtras.habitProgress && typeof incomingExtras.habitProgress === "object" ? incomingExtras.habitProgress : {},
         adventureProgress: incomingExtras.adventureProgress && typeof incomingExtras.adventureProgress === "object" ? incomingExtras.adventureProgress : {},
+        studioDrafts: incomingExtras.studioDrafts && typeof incomingExtras.studioDrafts === "object" ? incomingExtras.studioDrafts : localStudioDrafts(),
       },
     };
   }
   return { schemaVersion: 2, core: raw && raw.schemaVersion === 1 ? raw : freshCore(), extras: localExtras() };
+}
+
+async function clearIndexedDbState(): Promise<boolean> {
+  if (!("indexedDB" in window)) return false;
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.open(LOCAL_DB, 1);
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(LOCAL_STORE)) { db.close(); resolve(true); return; }
+        const transaction = db.transaction(LOCAL_STORE, "readwrite");
+        transaction.objectStore(LOCAL_STORE).clear();
+        transaction.oncomplete = () => { db.close(); resolve(true); };
+        transaction.onerror = () => { db.close(); resolve(false); };
+      };
+      request.onerror = () => resolve(false);
+    } catch { resolve(false); }
+  });
 }
 
 async function readIndexedDbState(): Promise<AnyRecord | null> {
@@ -148,16 +202,21 @@ async function applyLocalBundle(bundle: CloudBundle): Promise<void> {
     if (window.sinauuApplyCloudBundle) {
       await window.sinauuApplyCloudBundle(bundle);
     } else {
-      try { await writeIndexedDbState(bundle.core); } catch { /* local fallback below */ }
-      try {
-        localStorage.setItem(CORE_FALLBACK, JSON.stringify(bundle.core));
-        localStorage.setItem(EXTRA_KEY, JSON.stringify(bundle.extras.extraLearning || {}));
-        localStorage.setItem(HABIT_KEY, JSON.stringify(bundle.extras.habitProgress || {}));
-        localStorage.setItem(ADVENTURE_KEY, JSON.stringify(bundle.extras.adventureProgress || {}));
-      } catch { /* The cloud copy remains available if local storage is full. */ }
+      if (!isCloudVerified) {
+        try { await writeIndexedDbState(bundle.core); } catch { /* local fallback below */ }
+        try {
+          localStorage.setItem(CORE_FALLBACK, JSON.stringify(bundle.core));
+          localStorage.setItem(EXTRA_KEY, JSON.stringify(bundle.extras.extraLearning || {}));
+          localStorage.setItem(HABIT_KEY, JSON.stringify(bundle.extras.habitProgress || {}));
+          localStorage.setItem(ADVENTURE_KEY, JSON.stringify(bundle.extras.adventureProgress || {}));
+        } catch { /* The cloud copy remains available if local storage is full. */ }
+      }
       window.sinauuExtraLearningRestore?.(bundle.extras.extraLearning || {});
       window.sinauuHabitLibraryRestore?.(bundle.extras.habitProgress || {});
       window.sinauuAdventureRestore?.(bundle.extras.adventureProgress || {});
+    }
+    if (bundle.extras.studioDrafts) {
+      window.sinauuStudioDraftsRestore?.(bundle.extras.studioDrafts);
     }
   } finally { applyingCloud = false; }
 }
@@ -321,7 +380,21 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
   const result: AnyRecord = { ...local, ...remote, schemaVersion: 1 };
   const localUpdatedAt = Date.parse(local.updatedAt || "") || 0;
   const remoteUpdatedAt = Date.parse(remote.updatedAt || "") || 0;
-  const preferRemoteRate = remoteUpdatedAt >= localUpdatedAt;
+  const localHasActivity = Boolean(
+    (local.missionProgress && Object.keys(local.missionProgress).length > 0) ||
+    (local.dailyQuests && Object.keys(local.dailyQuests).length > 0) ||
+    (local.mistakeJournal && Object.keys(local.mistakeJournal).length > 0)
+  );
+  const remoteHasActivity = Boolean(
+    (remote.missionProgress && Object.keys(remote.missionProgress).length > 0) ||
+    (remote.dailyQuests && Object.keys(remote.dailyQuests).length > 0) ||
+    (remote.mistakeJournal && Object.keys(remote.mistakeJournal).length > 0)
+  );
+  const preferRemoteRate = localHasActivity && !remoteHasActivity
+    ? false
+    : !localHasActivity && remoteHasActivity
+      ? true
+      : remoteUpdatedAt >= localUpdatedAt;
   const preferredRate = preferRemoteRate ? remote.listeningRate : local.listeningRate;
   const fallbackRate = preferRemoteRate ? local.listeningRate : remote.listeningRate;
   result.listeningRate = [0.75, 0.9, 1].includes(Number(preferredRate))
@@ -608,11 +681,45 @@ function mergePreferences(local: AnyRecord = {}, remote: AnyRecord = {}): AnyRec
   };
 }
 
+function mergeStudioDrafts(local: AnyRecord = {}, remote: AnyRecord = {}): AnyRecord {
+  const result: AnyRecord = {
+    speaking: { selectedPromptId: "first-introduction", prompts: {} },
+    writing: { selectedPromptId: "short-introduction", prompts: {} },
+  };
+  for (const kind of ["speaking", "writing"] as const) {
+    const locKind = local[kind] || {};
+    const remKind = remote[kind] || {};
+    result[kind].selectedPromptId = remKind.selectedPromptId || locKind.selectedPromptId || result[kind].selectedPromptId;
+    const allPrompts = new Set([...Object.keys(locKind.prompts || {}), ...Object.keys(remKind.prompts || {})]);
+    for (const pId of allPrompts) {
+      const a = locKind.prompts?.[pId];
+      const b = remKind.prompts?.[pId];
+      if (!a) { result[kind].prompts[pId] = b; continue; }
+      if (!b) { result[kind].prompts[pId] = a; continue; }
+      const aTime = Date.parse(a.updatedAt || a.completedAt || "") || 0;
+      const bTime = Date.parse(b.updatedAt || b.completedAt || "") || 0;
+      const hasContent = (d: any) => Boolean((d && typeof d.text === "string" && d.text.trim()) || (d && typeof d.revision === "string" && d.revision.trim()) || (d && Array.isArray(d.checked) && d.checked.length > 0) || (d && d.plan && (d.plan.opening || d.plan.detail || d.plan.closing)));
+      const newer = bTime >= aTime ? b : a;
+      const older = bTime >= aTime ? a : b;
+      const chosen = hasContent(newer) ? newer : (hasContent(older) ? older : newer);
+      result[kind].prompts[pId] = {
+        ...older,
+        ...chosen,
+        checked: Array.from(new Set([...(a.checked || []), ...(b.checked || [])])).sort(),
+        turnIndex: Math.max(Number(a.turnIndex) || 0, Number(b.turnIndex) || 0),
+        updatedAt: new Date(Math.max(aTime, bTime) || Date.now()).toISOString(),
+      };
+    }
+  }
+  return result;
+}
+
 function mergeBundles(local: CloudBundle, remote: CloudBundle): CloudBundle {
   const extras: CloudBundle["extras"] = {
     extraLearning: mergeExtraLearning(local.extras?.extraLearning, remote.extras?.extraLearning),
     habitProgress: mergeHabitProgress(local.extras?.habitProgress, remote.extras?.habitProgress),
     adventureProgress: mergeAdventureProgress(local.extras?.adventureProgress, remote.extras?.adventureProgress),
+    studioDrafts: mergeStudioDrafts(local.extras?.studioDrafts, remote.extras?.studioDrafts),
     preferences: mergePreferences(local.extras?.preferences, remote.extras?.preferences),
   };
   return { schemaVersion: 2, core: mergeCore(local.core, remote.core), extras };
@@ -734,22 +841,60 @@ async function readCloudBundle(): Promise<{ bundle: CloudBundle; revision: numbe
   return { bundle, revision };
 }
 
+type PendingSaveOperation = {
+  operationId: string;
+  baseRevision: number;
+  payloadDigest: string;
+};
+let pendingSaveOp: PendingSaveOperation | null = null;
+
 async function writeCloudBundle(bundle: CloudBundle): Promise<{ revision: number }> {
   if (!session) throw new Error("Masuk terlebih dahulu untuk menyinkronkan progres.");
-  const res = await cloudRequest("/user_learning_states?on_conflict=user_id", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify([{
-      user_id: session.user.id,
-      state: bundle,
-      updated_at: new Date().toISOString(),
-      baseRevision: lastCloudRevision ?? 0
-    }]),
-  });
-  const newRev = typeof res?.revision === "number" ? res.revision : ((lastCloudRevision ?? 0) + 1);
-  lastCloudRevision = newRev;
-  syncConflict = false;
-  return { revision: newRev };
+  const serialized = JSON.stringify(bundle);
+  const baseRev = lastCloudRevision ?? 0;
+
+  // Stable operation identity: keep same operationId across retries of the same pending save intent
+  let opId: string;
+  if (pendingSaveOp && pendingSaveOp.baseRevision === baseRev && pendingSaveOp.payloadDigest === serialized) {
+    opId = pendingSaveOp.operationId;
+  } else {
+    opId = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
+      ? crypto.randomUUID()
+      : ("10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
+          (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+        ));
+    pendingSaveOp = {
+      operationId: opId,
+      baseRevision: baseRev,
+      payloadDigest: serialized,
+    };
+  }
+
+  try {
+    const res = await cloudRequest("/user_learning_states?on_conflict=user_id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify([{
+        user_id: session.user.id,
+        state: bundle,
+        updated_at: new Date().toISOString(),
+        baseRevision: baseRev,
+        operationId: opId,
+      }]),
+    });
+    const newRev = typeof res?.revision === "number" ? res.revision : (baseRev + 1);
+    lastCloudRevision = newRev;
+    pendingSaveOp = null; // Confirmed commit clears pending operation
+    syncConflict = false;
+    return { revision: newRev };
+  } catch (err: any) {
+    // If definite revision conflict, clear pending operation to prevent retrying stale revision
+    if (err?.status === 409 || err?.code === "REVISION_CONFLICT") {
+      pendingSaveOp = null;
+      syncConflict = true;
+    }
+    throw err;
+  }
 }
 
 async function reloadLatestCloudProgress(): Promise<boolean> {
@@ -768,11 +913,12 @@ async function reloadLatestCloudProgress(): Promise<boolean> {
     }
     lastCloudRevision = remoteData.revision;
     syncConflict = false;
+    pendingSaveOp = null;
+    isCloudVerified = true;
     await applyLocalBundle(remoteData.bundle);
     try {
       localStorage.setItem(OWNER_KEY, session.user.id);
-      localStorage.setItem(ACCOUNT_CACHE_PREFIX + session.user.id, JSON.stringify(remoteData.bundle));
-    } catch { /* Local account cache is a convenience */ }
+    } catch { /* Local account metadata */ }
     lastSuccessfulSync = new Date().toISOString();
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres terbaru (revisi " + remoteData.revision + ") berhasil dimuat. Siap melanjutkan belajar.", "success");
@@ -792,13 +938,18 @@ async function prepareLocalForAccount(): Promise<void> {
   let owner: string | null = null;
   try { owner = localStorage.getItem(OWNER_KEY); } catch { owner = null; }
   if (!owner || owner === session.user.id) return;
-  const previous = await readLocalBundle();
-  try { localStorage.setItem(ACCOUNT_CACHE_PREFIX + owner, JSON.stringify(previous)); } catch { /* Keep the cloud copy as the durable backup. */ }
-  const target = parseStored<CloudBundle | null>(ACCOUNT_CACHE_PREFIX + session.user.id, null);
-  const next = target ? normalizeBundle(target) : {
+  const next = {
     schemaVersion: 2 as const,
     core: freshCore(),
-    extras: { extraLearning: {}, habitProgress: {}, adventureProgress: {} },
+    extras: {
+      extraLearning: {},
+      habitProgress: {},
+      adventureProgress: {},
+      studioDrafts: {
+        speaking: { selectedPromptId: "first-introduction", prompts: {} },
+        writing: { selectedPromptId: "short-introduction", prompts: {} },
+      },
+    },
   };
   await applyLocalBundle(next);
 }
@@ -817,22 +968,159 @@ function readOfflineQueue(): QueuedSync[] {
   return parseStored<QueuedSync[]>(OFFLINE_QUEUE_KEY, []);
 }
 
-function writeOfflineQueue(queue: QueuedSync[]): void {
+function clearOfflineQueue(userId: string): void {
   try {
-    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue.slice(-20)));
+    const queue = readOfflineQueue().filter(q => q.userId !== userId);
+    if (queue.length) localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue.slice(-20)));
+    else localStorage.removeItem(OFFLINE_QUEUE_KEY);
   } catch (_) {}
 }
 
-function enqueueOfflineSync(userId: string, bundle: CloudBundle): void {
-  const queue = readOfflineQueue();
-  const id = "sync-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
-  queue.push({ id, userId, timestamp: new Date().toISOString(), bundle, attempts: 0 });
-  writeOfflineQueue(queue);
+function hasLegacyProgress(userId: string): boolean {
+  if (typeof localStorage === "undefined") return false;
+  const legacyKeys = [
+    CORE_FALLBACK,
+    EXTRA_KEY,
+    HABIT_KEY,
+    ADVENTURE_KEY,
+    "sinauu-placement-check-v1",
+    "sinauu-placement-result-v1",
+    OFFLINE_QUEUE_KEY,
+    "sinauu-adventure-studio-drafts-v1:" + encodeURIComponent(userId),
+    "sinauu-adventure-studio-drafts-v1:local",
+    ACCOUNT_CACHE_PREFIX + userId,
+  ];
+  return legacyKeys.some((key) => {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null && val !== "" && val !== "null" && val !== "{}";
+    } catch { return false; }
+  });
 }
 
-function clearOfflineQueue(userId: string): void {
-  const queue = readOfflineQueue().filter(q => q.userId !== userId);
-  writeOfflineQueue(queue);
+async function collectLegacyBundle(userId: string): Promise<CloudBundle | null> {
+  let core: AnyRecord | null = null;
+  try { core = await readIndexedDbState(); } catch { core = null; }
+  if (!core) {
+    try { core = JSON.parse(localStorage.getItem(CORE_FALLBACK) || "null") as AnyRecord | null; }
+    catch { core = null; }
+  }
+  const placementRaw = parseStored<AnyRecord | null>("sinauu-placement-check-v1", null)
+    || parseStored<AnyRecord | null>("sinauu-placement-result-v1", null);
+
+  const base = core || freshCore();
+  if (placementRaw && !base.placementResult) {
+    base.placementResult = placementRaw;
+  }
+
+  const extras: CloudBundle["extras"] = {
+    extraLearning: parseStored<AnyRecord>(EXTRA_KEY, {}),
+    habitProgress: parseStored<AnyRecord>(HABIT_KEY, {}),
+    adventureProgress: parseStored<AnyRecord>(ADVENTURE_KEY, {}),
+    studioDrafts: parseStored<AnyRecord | null>("sinauu-adventure-studio-drafts-v1:" + encodeURIComponent(userId), null)
+      || parseStored<AnyRecord | null>("sinauu-adventure-studio-drafts-v1:local", null)
+      || localStudioDrafts(),
+  };
+
+  return normalizeBundle({ core: base, extras });
+}
+
+function isSafeToMigrate(userId: string): boolean {
+  try {
+    const owner = localStorage.getItem(OWNER_KEY);
+    if (!owner || owner === "local" || owner === userId) return true;
+    return false; // Stored data belongs to another user
+  } catch { return true; }
+}
+
+async function purgeLegacyStorage(userId: string): Promise<void> {
+  const keysToRemove = [
+    CORE_FALLBACK,
+    EXTRA_KEY,
+    HABIT_KEY,
+    ADVENTURE_KEY,
+    "sinauu-placement-check-v1",
+    "sinauu-placement-result-v1",
+    OFFLINE_QUEUE_KEY,
+    "sinauu-adventure-studio-drafts-v1:" + encodeURIComponent(userId),
+    "sinauu-adventure-studio-drafts-v1:local",
+    ACCOUNT_CACHE_PREFIX + userId,
+  ];
+  for (const key of keysToRemove) {
+    try { localStorage.removeItem(key); } catch (_) {}
+  }
+  try {
+    const allKeys = Object.keys(localStorage);
+    for (const key of allKeys) {
+      if (key.startsWith("sinauu-adventure-studio-drafts-v1:") || key.startsWith("sinauu-cloud-local-cache-v1:")) {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch (_) {}
+  await clearIndexedDbState();
+}
+
+async function migrateLegacyDataIfNeeded(userId: string): Promise<{ migrated: boolean; success: boolean }> {
+  if (!session || session.user.id !== userId) return { migrated: false, success: false };
+  if (!isSafeToMigrate(userId)) {
+    return { migrated: false, success: true };
+  }
+
+  const hasLocal = hasLegacyProgress(userId);
+  let idbHasState = false;
+  try {
+    const idbState = await readIndexedDbState();
+    idbHasState = Boolean(idbState && Object.keys(idbState.wordProgress || {}).length > 0);
+  } catch { idbHasState = false; }
+
+  if (!hasLocal && !idbHasState) {
+    return { migrated: false, success: true };
+  }
+
+  setMessage("Memigrasikan data belajar lokal ke cloud…", "info");
+  setSyncBadge("Migrasi data…", "syncing");
+
+  try {
+    const localCandidate = await collectLegacyBundle(userId);
+    if (!localCandidate) return { migrated: false, success: false };
+
+    // Fetch remote cloud bundle
+    const remoteData = await readCloudBundle();
+    const remote = remoteData?.bundle || null;
+    const baseRev = remoteData?.revision ?? 0;
+    lastCloudRevision = baseRev;
+
+    // Merge local candidate with remote
+    const merged = remote ? mergeBundles(localCandidate, remote) : localCandidate;
+
+    // Upload to cloud
+    const writeResult = await writeCloudBundle(merged);
+
+    // Verification readback
+    const readback = await readCloudBundle();
+    if (!readback || !readback.bundle) {
+      throw new Error("Verifikasi pembacaan ulang cloud gagal: data tidak ditemukan.");
+    }
+    if (readback.revision < writeResult.revision) {
+      throw new Error("Verifikasi pembacaan ulang cloud gagal: revisi tidak sesuai.");
+    }
+
+    // Verification SUCCESSFUL: now and only now purge legacy storage
+    await purgeLegacyStorage(userId);
+    isCloudVerified = true;
+    lastCloudRevision = readback.revision;
+    await applyLocalBundle(readback.bundle);
+
+    lastSuccessfulSync = new Date().toISOString();
+    setSyncBadge("Tersinkron", "success");
+    setMessage("Progres berhasil dimigrasikan ke cloud Google Sheets.", "success");
+    return { migrated: true, success: true };
+  } catch (err: any) {
+    // Verification or write failed: RETAIN all local data!
+    setSyncBadge("Migrasi tertunda", "error");
+    setMessage("Gagal memigrasikan data ke cloud: " + (err.message || String(err)) + ". Progres lokal dipertahankan.", "error");
+    return { migrated: true, success: false };
+  }
 }
 
 async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
@@ -849,12 +1137,8 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
   }
 
   if (!navigator.onLine) {
-    try {
-      const local = await readLocalBundle();
-      enqueueOfflineSync(session.user.id, local);
-    } catch (_) {}
-    setSyncBadge("Offline · Tersimpan", "idle");
-    setMessage("Offline: perubahan tersimpan di perangkat ini dan akan disinkronkan saat terhubung kembali.", "info");
+    setSyncBadge("Offline · Menunggu internet", "idle");
+    setMessage("Offline: perubahan tersimpan di memori browser ini dan akan disinkronkan saat terhubung kembali.", "info");
     return false;
   }
 
@@ -868,7 +1152,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
     if (!stillSameAccount()) return false;
     let local = await readLocalBundle();
 
-    // Drain queued offline changes if any
+    // Drain legacy queued offline changes if any
     const queued = readOfflineQueue().filter(q => q.userId === syncUserId);
     if (queued.length > 0) {
       for (const item of queued) {
@@ -893,11 +1177,11 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
 
     try {
       localStorage.setItem(OWNER_KEY, session.user.id);
-      localStorage.setItem(ACCOUNT_CACHE_PREFIX + session.user.id, JSON.stringify(merged));
-    } catch { /* Local account cache is a convenience, not the only cloud copy. */ }
+    } catch { /* Local account owner metadata */ }
 
     lastSuccessfulSync = new Date().toISOString();
     syncConflict = false;
+    isCloudVerified = true;
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres tersinkron pada " + new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(new Date(lastSuccessfulSync)) + ". Kamu bisa lanjut di perangkat lain.", "success");
     renderAccount();
@@ -910,12 +1194,8 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
       renderAccount();
       return false;
     }
-    try {
-      const local = await readLocalBundle();
-      enqueueOfflineSync(syncUserId, local);
-    } catch (_) {}
     setSyncBadge("Belum tersinkron · Coba lagi", "error");
-    setMessage(error instanceof Error ? error.message : "Sinkronisasi belum berhasil. Progres lokal tetap tersimpan.", "error");
+    setMessage(error instanceof Error ? error.message : "Sinkronisasi belum berhasil. Progres di memori tetap dipertahankan.", "error");
     return false;
   } finally { syncing = false; }
 }
@@ -1137,11 +1417,20 @@ async function signOut(): Promise<void> {
   // Invalidate older sync work so it cannot restore this account after local cleanup.
   sessionEpoch += 1;
   await syncNow(true);
-  try {
-    const current = await readLocalBundle();
-    localStorage.setItem(ACCOUNT_CACHE_PREFIX + signedInUserId, JSON.stringify(current));
-  } catch { /* Cloud state remains the primary saved copy. */ }
-  await applyLocalBundle({ schemaVersion: 2, core: freshCore(), extras: { extraLearning: {}, habitProgress: {}, adventureProgress: {} } });
+  isCloudVerified = false;
+  await applyLocalBundle({
+    schemaVersion: 2,
+    core: freshCore(),
+    extras: {
+      extraLearning: {},
+      habitProgress: {},
+      adventureProgress: {},
+      studioDrafts: {
+        speaking: { selectedPromptId: "first-introduction", prompts: {} },
+        writing: { selectedPromptId: "short-introduction", prompts: {} },
+      },
+    },
+  });
   try { localStorage.removeItem(OWNER_KEY); } catch { /* no-op */ }
   try {
     if (session && session.user.id === signedInUserId) {
@@ -1151,7 +1440,7 @@ async function signOut(): Promise<void> {
   } catch { /* A local sign-out still works if the network is unavailable. */ }
   setSession(null);
   signingOut = false;
-  setSyncBadge("Tersimpan di perangkat", "idle");
+  setSyncBadge("Tersimpan di cloud", "idle");
   setMessage("Kamu sudah keluar. Progres akunmu tetap tersimpan di cloud; masuk kembali untuk memuatnya. Sesi lokal dibersihkan agar tidak bercampur dengan akun lain.", "info");
 }
 
@@ -1191,7 +1480,8 @@ async function restoreSession(): Promise<void> {
         user: { id: "pending-auth-user" },
       };
       const user = await authRequest("/user", { method: "GET" }, fragmentAccess);
-      setSession({ ...fragmentSession, user });
+      const nextUser = (user && typeof user === "object" && typeof user.id === "string") ? { ...fragmentSession.user, ...user } : fragmentSession.user;
+      setSession({ ...fragmentSession, user: nextUser });
       recoveryMode = fragmentType === "recovery";
       history.replaceState(null, "", window.location.pathname + window.location.search);
       renderAccount();
@@ -1201,7 +1491,10 @@ async function restoreSession(): Promise<void> {
         setMessage("Tautan pemulihan valid. Buat kata sandi baru untuk melanjutkan.", "success");
       } else {
         setMessage("Akun terverifikasi. Memuat progres tersinkron…", "success");
-        await syncNow();
+        const migration = await migrateLegacyDataIfNeeded(nextUser.id);
+        if (!migration.migrated) {
+          await syncNow();
+        }
       }
       return;
     }
@@ -1211,9 +1504,13 @@ async function restoreSession(): Promise<void> {
     const active = await currentSession();
     if (!active) return;
     const user = await authRequest("/user", { method: "GET" }, active.access_token);
-    setSession({ ...active, user });
+    const nextUser = (user && typeof user === "object" && typeof user.id === "string") ? { ...active.user, ...user } : active.user;
+    setSession({ ...active, user: nextUser });
     setMessage("Akun dikenali. Memeriksa progres cloud…", "info");
-    await syncNow();
+    const migration = await migrateLegacyDataIfNeeded(active.user.id);
+    if (!migration.migrated) {
+      await syncNow();
+    }
   } catch (error) {
     setSession(null);
     setSyncBadge("Masuk kembali", "idle");
@@ -1281,11 +1578,14 @@ window.addEventListener("pagehide", () => { window.clearTimeout(syncTimer); wind
 (window as any).sinauuReloadLatestCloud = () => reloadLatestCloudProgress();
 (window as any).sinauuGetLastCloudRevision = () => lastCloudRevision;
 (window as any).sinauuHasSyncConflict = () => syncConflict;
+(window as any).sinauuIsCloudVerified = () => isCloudVerified;
+(window as any).sinauuTriggerCloudSync = () => syncNow();
+(window as any).sinauuMigrateLegacyData = (userId: string) => migrateLegacyDataIfNeeded(userId);
 (window as any).sinauuGetSyncStatus = () => ({
   syncing,
   lastSuccessfulSync,
   online: navigator.onLine,
-  queuedCount: readOfflineQueue().length,
+  isCloudVerified,
   badgeText: ($("#cloud-sync-badge") as HTMLElement | null)?.textContent || "",
   conflict: syncConflict,
   revision: lastCloudRevision,

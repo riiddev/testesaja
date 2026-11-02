@@ -120,11 +120,9 @@ function doGet(e) {
 // ==========================================
 
 function handleHealth() {
-  var ss = getSpreadsheet();
   return jsonResponse({
     ok: true,
     version: CONFIG.VERSION,
-    spreadsheetId: ss.getId(),
     timestamp: new Date().toISOString()
   });
 }
@@ -337,6 +335,12 @@ function payloadsMatch(a, b) {
   try {
     var objA = JSON.parse(a);
     var objB = JSON.parse(b);
+    if (objA && objB && objA.snapshotId && objB.snapshotId) {
+      return objA.snapshotId === objB.snapshotId &&
+             objA.chunkIndex === objB.chunkIndex &&
+             objA.partCount === objB.partCount &&
+             objA.payload === objB.payload;
+    }
     return JSON.stringify(objA) === JSON.stringify(objB);
   } catch (_) {
     return false;
