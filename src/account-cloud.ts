@@ -208,8 +208,20 @@ function mergeCore(local: AnyRecord, remote: AnyRecord): AnyRecord {
     const a = local.wordProgress?.[id], b = remote.wordProgress?.[id];
     if (!a || !b) { merged.wordProgress[id] = a || b; continue; }
     const preferred = remoteIsNewer ? b : a;
+    const isMastered = a.status === "mastered" || b.status === "mastered";
+    const maxSuccesses = Math.max(Number(a.reviewSuccesses) || 0, Number(b.reviewSuccesses) || 0);
+    const latestReview = [a.lastReviewedAt, b.lastReviewedAt].filter(Boolean).sort().reverse()[0] || null;
+    const nextReview = [a.nextReviewAt, b.nextReviewAt].filter(Boolean).sort().reverse()[0] || null;
+    const savedContext = a.savedContext || b.savedContext || null;
+
     merged.wordProgress[id] = {
-      ...(remoteIsNewer ? a : b), ...preferred,
+      ...(remoteIsNewer ? a : b),
+      ...preferred,
+      status: isMastered ? "mastered" : (preferred.status || a.status || b.status || "new"),
+      reviewSuccesses: maxSuccesses,
+      lastReviewedAt: latestReview,
+      nextReviewAt: nextReview,
+      savedContext: savedContext,
       attempts: mergeArrays(a.attempts || [], b.attempts || []),
       skillEvidence: {
         recall: Boolean(a.skillEvidence?.recall || b.skillEvidence?.recall),
@@ -230,6 +242,8 @@ function mergeCore(local: AnyRecord, remote: AnyRecord): AnyRecord {
     const item = { ...(remoteIsNewer ? a : b), ...(remoteIsNewer ? b : a) };
     item.answers = { ...(a.answers || {}), ...(b.answers || {}) };
     item.history = mergeArrays(a.history || [], b.history || []);
+    item.completedAt = earliestIso(a.completedAt, b.completedAt);
+    item.lastAttemptAt = [a.lastAttemptAt, b.lastAttemptAt].filter(Boolean).sort().reverse()[0] || null;
     if (item.history.length) {
       item.attempts = item.history.length;
       item.correct = item.history.filter((entry: any) => entry.correct === true).length;
@@ -238,6 +252,12 @@ function mergeCore(local: AnyRecord, remote: AnyRecord): AnyRecord {
       item.correct = Math.max(a.correct || 0, b.correct || 0);
     }
     merged.grammarProgress[id] = item;
+  }
+  if (local.placementResult || remote.placementResult) {
+    const aRes = local.placementResult, bRes = remote.placementResult;
+    merged.placementResult = (aRes && bRes)
+      ? (Date.parse(bRes.completedAt || "") >= Date.parse(aRes.completedAt || "") ? bRes : aRes)
+      : (bRes || aRes);
   }
   merged.history = mergeArrays(local.history || [], remote.history || []).slice(-1000);
   merged.events = mergeArrays(local.events || [], remote.events || []).slice(-5000);
@@ -381,14 +401,17 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
     const maxStage = Math.max(prevStage, nextStage);
     const resolvedAt = earliestIso(previous?.resolvedAt, next?.resolvedAt);
     const masteredAt = earliestIso(previous?.masteredAt, next?.masteredAt);
+    const nextReviewAt = [previous?.nextReviewAt, next?.nextReviewAt].filter(Boolean).sort().reverse()[0] || null;
     result.mistakeJournal[mistakeId] = previous ? {
       ...previous,
       ...next,
       reviewStage: maxStage,
+      reviewHistory: mergeArrays(previous.reviewHistory || [], next.reviewHistory || []),
+      nextReviewAt,
       masteredAt,
       recordedAt: earliestIso(previous.recordedAt, next.recordedAt),
       resolvedAt,
-      status: previous?.resolvedAt || next?.resolvedAt ? (next?.status === "mastered" || previous?.status === "mastered" || (masteredAt && maxStage >= 4) ? "mastered" : "resolved") : "open",
+      status: (masteredAt && maxStage >= 4) || previous?.status === "mastered" || next?.status === "mastered" ? "mastered" : (resolvedAt ? "resolved" : "open"),
     } : next;
   }
   for (const [mistakeId, mistake] of Object.entries(result.mistakeJournal)) {
@@ -534,17 +557,62 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
   return result;
 }
 
-function mergeBundles(local: CloudBundle, remote: CloudBundle): CloudBundle {
-  const localTime = Date.parse(local.core.updatedAt || "") || 0, remoteTime = Date.parse(remote.core.updatedAt || "") || 0;
-  const preferRemote = remoteTime >= localTime;
-  const extras: CloudBundle["extras"] = { extraLearning: {}, habitProgress: {}, adventureProgress: {} };
-  for (const key of new Set([...Object.keys(local.extras || {}), ...Object.keys(remote.extras || {})])) {
-    if (key === "adventureProgress") {
-      extras[key] = mergeAdventureProgress(local.extras?.[key] || {}, remote.extras?.[key] || {});
-    } else {
-      extras[key] = mergeDeep(local.extras?.[key] || {}, remote.extras?.[key] || {}, preferRemote);
+function mergeHabitProgress(local: AnyRecord = {}, remote: AnyRecord = {}): AnyRecord {
+  const result: AnyRecord = { ...local, ...remote };
+  result.readCount = Math.max(Number(local.readCount) || 0, Number(remote.readCount) || 0);
+  result.completedPassages = Array.from(new Set([...(local.completedPassages || []), ...(remote.completedPassages || [])]));
+  result.passageStats = {};
+  const localStats = local.passageStats || {}, remoteStats = remote.passageStats || {};
+  const allPassages = new Set([...Object.keys(localStats), ...Object.keys(remoteStats)]);
+  for (const id of allPassages) {
+    const a = localStats[id] || {}, b = remoteStats[id] || {};
+    result.passageStats[id] = {
+      ...a,
+      ...b,
+      readCount: Math.max(Number(a.readCount) || 0, Number(b.readCount) || 0),
+      completedAt: earliestIso(a.completedAt, b.completedAt),
+      lastReadAt: [a.lastReadAt, b.lastReadAt].filter(Boolean).sort().reverse()[0] || null,
+      quizAttempts: mergeArrays(a.quizAttempts || [], b.quizAttempts || []),
+      comprehensionAnswers: { ...(a.comprehensionAnswers || {}), ...(b.comprehensionAnswers || {}) },
+    };
+  }
+  return result;
+}
+
+function mergeExtraLearning(local: AnyRecord = {}, remote: AnyRecord = {}): AnyRecord {
+  const result: AnyRecord = { ...local, ...remote };
+  const moduleKeys = ["readingProgress", "readingLessonProgress", "listeningProgress", "pronunciationProgress", "speakingProgress", "writingProgress"];
+  for (const mod of moduleKeys) {
+    const aMod = local[mod] || {}, bMod = remote[mod] || {};
+    result[mod] = {};
+    for (const id of new Set([...Object.keys(aMod), ...Object.keys(bMod)])) {
+      const a = aMod[id] || {}, b = bMod[id] || {};
+      result[mod][id] = {
+        ...a,
+        ...b,
+        completedAt: earliestIso(a.completedAt, b.completedAt),
+        attempts: mergeArrays(a.attempts || [], b.attempts || []),
+      };
     }
   }
+  return result;
+}
+
+function mergePreferences(local: AnyRecord = {}, remote: AnyRecord = {}): AnyRecord {
+  return {
+    ...local,
+    ...remote,
+    characterVoices: { ...(local.characterVoices || {}), ...(remote.characterVoices || {}) },
+  };
+}
+
+function mergeBundles(local: CloudBundle, remote: CloudBundle): CloudBundle {
+  const extras: CloudBundle["extras"] = {
+    extraLearning: mergeExtraLearning(local.extras?.extraLearning, remote.extras?.extraLearning),
+    habitProgress: mergeHabitProgress(local.extras?.habitProgress, remote.extras?.habitProgress),
+    adventureProgress: mergeAdventureProgress(local.extras?.adventureProgress, remote.extras?.adventureProgress),
+    preferences: mergePreferences(local.extras?.preferences, remote.extras?.preferences),
+  };
   return { schemaVersion: 2, core: mergeCore(local.core, remote.core), extras };
 }
 
@@ -676,13 +744,56 @@ async function prepareLocalForAccount(): Promise<void> {
   await applyLocalBundle(next);
 }
 
-async function syncNow(allowWhileSigningOut = false): Promise<void> {
+const OFFLINE_QUEUE_KEY = "sinauu-offline-sync-queue-v1";
+
+type QueuedSync = {
+  id: string;
+  userId: string;
+  timestamp: string;
+  bundle: CloudBundle;
+  attempts: number;
+};
+
+function readOfflineQueue(): QueuedSync[] {
+  return parseStored<QueuedSync[]>(OFFLINE_QUEUE_KEY, []);
+}
+
+function writeOfflineQueue(queue: QueuedSync[]): void {
+  try {
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue.slice(-20)));
+  } catch (_) {}
+}
+
+function enqueueOfflineSync(userId: string, bundle: CloudBundle): void {
+  const queue = readOfflineQueue();
+  const id = "sync-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+  queue.push({ id, userId, timestamp: new Date().toISOString(), bundle, attempts: 0 });
+  writeOfflineQueue(queue);
+}
+
+function clearOfflineQueue(userId: string): void {
+  const queue = readOfflineQueue().filter(q => q.userId !== userId);
+  writeOfflineQueue(queue);
+}
+
+async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
   if (isVercelPreviewDeployment()) {
     setSyncBadge("Preview · lokal", "idle");
     setMessage("Mode preview: progres hanya disimpan di browser ini dan tidak ditulis ke Google Sheets.", "info");
-    return;
+    return true;
   }
-  if (!CLOUD_READY || !session || syncing || !navigator.onLine || (signingOut && !allowWhileSigningOut)) return;
+  if (!CLOUD_READY || !session || syncing || (signingOut && !allowWhileSigningOut)) return false;
+
+  if (!navigator.onLine) {
+    try {
+      const local = await readLocalBundle();
+      enqueueOfflineSync(session.user.id, local);
+    } catch (_) {}
+    setSyncBadge("Offline · Tersimpan", "idle");
+    setMessage("Offline: perubahan tersimpan di perangkat ini dan akan disinkronkan saat terhubung kembali.", "info");
+    return false;
+  }
+
   const syncUserId = session.user.id;
   const syncEpoch = sessionEpoch;
   const stillSameAccount = () => Boolean(session && session.user.id === syncUserId && sessionEpoch === syncEpoch);
@@ -690,25 +801,44 @@ async function syncNow(allowWhileSigningOut = false): Promise<void> {
   setSyncBadge("Menyinkronkan…", "syncing");
   try {
     await prepareLocalForAccount();
-    if (!stillSameAccount()) return;
-    const local = await readLocalBundle();
+    if (!stillSameAccount()) return false;
+    let local = await readLocalBundle();
+
+    // Drain queued offline changes if any
+    const queued = readOfflineQueue().filter(q => q.userId === syncUserId);
+    if (queued.length > 0) {
+      for (const item of queued) {
+        local = mergeBundles(local, item.bundle);
+      }
+    }
+
     const remote = await readCloudBundle();
-    if (!stillSameAccount()) return;
+    if (!stillSameAccount()) return false;
     const merged = remote ? mergeBundles(local, remote) : local;
     if (!remote || stable(merged) !== stable(remote)) await writeCloudBundle(merged);
-    if (!stillSameAccount()) return;
+    if (!stillSameAccount()) return false;
     if (stable(merged) !== stable(local)) await applyLocalBundle(merged);
-    if (!stillSameAccount()) return;
+    if (!stillSameAccount()) return false;
+
+    clearOfflineQueue(syncUserId);
+
     try {
       localStorage.setItem(OWNER_KEY, session.user.id);
       localStorage.setItem(ACCOUNT_CACHE_PREFIX + session.user.id, JSON.stringify(merged));
     } catch { /* Local account cache is a convenience, not the only cloud copy. */ }
+
     lastSuccessfulSync = new Date().toISOString();
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres tersinkron pada " + new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(new Date(lastSuccessfulSync)) + ". Kamu bisa lanjut di perangkat lain.", "success");
+    return true;
   } catch (error) {
-    setSyncBadge("Belum tersinkron", "error");
+    try {
+      const local = await readLocalBundle();
+      enqueueOfflineSync(syncUserId, local);
+    } catch (_) {}
+    setSyncBadge("Belum tersinkron · Coba lagi", "error");
     setMessage(error instanceof Error ? error.message : "Sinkronisasi belum berhasil. Progres lokal tetap tersimpan.", "error");
+    return false;
   } finally { syncing = false; }
 }
 
@@ -1065,5 +1195,14 @@ pollingTimer = window.setInterval(() => {
   if (session && document.visibilityState === "visible") void syncNow();
 }, 45_000);
 window.addEventListener("pagehide", () => { window.clearTimeout(syncTimer); window.clearInterval(pollingTimer); });
+
+(window as any).sinauuSyncNow = () => syncNow();
+(window as any).sinauuGetSyncStatus = () => ({
+  syncing,
+  lastSuccessfulSync,
+  online: navigator.onLine,
+  queuedCount: readOfflineQueue().length,
+  badgeText: ($("#cloud-sync-badge") as HTMLElement | null)?.textContent || "",
+});
 
 export {};

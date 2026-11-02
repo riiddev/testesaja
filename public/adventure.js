@@ -561,6 +561,12 @@
     },
     getModulationForSpeaker(speaker) {
       const isNarrator = !speaker || speaker.toLowerCase() === "narrator";
+      const choice = this.charMap[speaker];
+      if (choice === "style-warm") return { pitch: 0.88, rate: 0.92 };
+      if (choice === "style-bright") return { pitch: 1.20, rate: 1.02 };
+      if (choice === "style-calm") return { pitch: 0.95, rate: 0.85 };
+      if (choice === "style-default") return { pitch: 1.0, rate: 0.95 };
+
       if (this.hasSingleVoice()) {
         if (isNarrator) return { pitch: 1.0, rate: 0.95 };
         const hash = Array.from(speaker || "").reduce((acc, c) => acc + c.charCodeAt(0), 0);
@@ -869,11 +875,23 @@
     }
 
     listEl.innerHTML = characters.map((char, cIdx) => {
-      const assigned = voiceManager.getVoiceForSpeaker(char, cIdx);
-      const options = available.map(v => {
-        const isSelected = assigned && (assigned.voiceURI === v.voiceURI || assigned.name === v.name);
-        return `<option value="${escapeHtml(v.voiceURI || v.name)}"${isSelected ? ' selected' : ''}>${escapeHtml(v.name)} (${escapeHtml(v.lang)})</option>`;
-      }).join("");
+      let options = "";
+      const currentChoice = voiceManager.charMap[char] || "";
+      if (hasSingle) {
+        const baseVoice = available[0] ? available[0].name : "Suara Bawaan Sistem";
+        options = `
+          <option value="style-default"${currentChoice === 'style-default' || !currentChoice ? ' selected' : ''}>${escapeHtml(baseVoice)} — Nada Standar</option>
+          <option value="style-warm"${currentChoice === 'style-warm' ? ' selected' : ''}>${escapeHtml(baseVoice)} — Gaya Hangat (Pitch 0.88x)</option>
+          <option value="style-bright"${currentChoice === 'style-bright' ? ' selected' : ''}>${escapeHtml(baseVoice)} — Gaya Ceria (Pitch 1.20x)</option>
+          <option value="style-calm"${currentChoice === 'style-calm' ? ' selected' : ''}>${escapeHtml(baseVoice)} — Gaya Tenang (Tempo 0.85x)</option>
+        `;
+      } else {
+        const assigned = voiceManager.getVoiceForSpeaker(char, cIdx);
+        options = available.map(v => {
+          const isSelected = assigned && (assigned.voiceURI === v.voiceURI || assigned.name === v.name || currentChoice === v.voiceURI || currentChoice === v.name);
+          return `<option value="${escapeHtml(v.voiceURI || v.name)}"${isSelected ? ' selected' : ''}>${escapeHtml(v.name)} (${escapeHtml(v.lang)})</option>`;
+        }).join("");
+      }
 
       return `<div class="voice-character-card">
         <div class="voice-character-name">${escapeHtml(char)}</div>
@@ -901,8 +919,18 @@
     const select = document.querySelector(`[data-character-voice-select="${speaker}"]`);
     const voiceURI = select ? select.value : "";
     const list = voiceManager.getVoices();
-    const voice = list.find(v => v.voiceURI === voiceURI || v.name === voiceURI) || voiceManager.getVoiceForSpeaker(speaker);
+    let voice = null;
+    if (voiceURI && !voiceURI.startsWith("style-")) {
+      voice = list.find(v => v.voiceURI === voiceURI || v.name === voiceURI);
+    }
+    if (!voice) {
+      voice = voiceManager.getVoiceForSpeaker(speaker);
+    }
+
+    const prevChoice = voiceManager.charMap[speaker];
+    if (voiceURI) voiceManager.charMap[speaker] = voiceURI;
     const modulation = voiceManager.getModulationForSpeaker(speaker);
+    if (prevChoice) voiceManager.charMap[speaker] = prevChoice; else delete voiceManager.charMap[speaker];
 
     const sampleText = speaker.toLowerCase() === "narrator"
       ? "Once upon a time in a friendly neighborhood."

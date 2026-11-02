@@ -729,6 +729,38 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog class="goal-dialog" id="goal-dialog"><form method="dialog" id="goal-form"><h2>Target yang realistis.</h2><p>Pilih jumlah aktivitas belajar yang ingin kamu usahakan tiap hari.</p><label for="daily-goal-input">Aktivitas per hari</label><select id="daily-goal-input"><option value="5">5 aktivitas</option><option value="10">10 aktivitas</option><option value="15">15 aktivitas</option><option value="20">20 aktivitas</option></select><div class="dialog-actions"><button class="dialog-cancel" value="cancel">Batal</button><button class="dialog-save" id="save-goal" value="default">Simpan target</button></div></form></dialog>
 
+  <!-- Animated Mascot Loading Experience (Si Nauu) -->
+  <div class="app-loading-mascot" id="app-loading-mascot" hidden role="status" aria-live="polite">
+    <div class="mascot-card">
+      <svg class="mascot-svg" viewBox="0 0 120 120" width="84" height="84" aria-hidden="true">
+        <!-- Mascot Body -->
+        <ellipse cx="60" cy="65" rx="36" ry="42" fill="#0284c7" />
+        <ellipse cx="60" cy="72" rx="26" ry="30" fill="#e0f2fe" />
+        <!-- Eyes & Glasses -->
+        <g class="mascot-eyes">
+          <circle cx="48" cy="50" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="2" />
+          <circle class="mascot-pupil" cx="50" cy="50" r="5" fill="#0f172a" />
+          <circle cx="72" cy="50" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="2" />
+          <circle class="mascot-pupil" cx="70" cy="50" r="5" fill="#0f172a" />
+        </g>
+        <!-- Glasses Frame -->
+        <circle cx="48" cy="50" r="13" fill="none" stroke="#f59e0b" stroke-width="2" />
+        <circle cx="72" cy="50" r="13" fill="none" stroke="#f59e0b" stroke-width="2" />
+        <line x1="61" y1="50" x2="59" y2="50" stroke="#f59e0b" stroke-width="2" />
+        <!-- Beak -->
+        <polygon points="56,58 64,58 60,66" fill="#f97316" />
+        <!-- Wings -->
+        <path class="mascot-wing-left" d="M26 62 Q18 78 32 84" fill="#0369a1" />
+        <path class="mascot-wing-right" d="M94 62 Q102 78 88 84" fill="#0369a1" />
+        <!-- Little Study Book -->
+        <rect x="42" y="80" width="36" height="22" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" />
+        <line x1="60" y1="80" x2="60" y2="102" stroke="#0284c7" stroke-width="1.5" />
+      </svg>
+      <div class="mascot-label" id="mascot-loading-label">Menyiapkan materi belajar…</div>
+      <div class="mascot-progress-bar"><div class="mascot-progress-fill"></div></div>
+    </div>
+  </div>
+
   <!-- Contextual Vocabulary Popover (Readlang-inspired) -->
   <div class="contextual-vocab-popover" id="contextual-vocab-popover" hidden role="dialog" aria-modal="false" aria-labelledby="vocab-popover-lemma">
     <div class="vocab-popover-arrow" id="vocab-popover-arrow" aria-hidden="true"></div>
@@ -737,6 +769,8 @@
         <strong class="vocab-popover-lemma" id="vocab-popover-lemma">—</strong>
         <span class="vocab-popover-badge" id="vocab-popover-level">A1</span>
         <span class="vocab-popover-pos" id="vocab-popover-pos">—</span>
+        <span class="vocab-popover-phonetic" id="vocab-popover-phonetic"></span>
+        <span class="vocab-popover-source" id="vocab-popover-source" title="Sumber kamus">Oxford 3000</span>
         <button type="button" class="vocab-popover-audio" id="vocab-popover-audio" aria-label="Dengarkan pengucapan kata">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
         </button>
@@ -746,6 +780,13 @@
     <div class="vocab-popover-body">
       <div class="vocab-popover-meaning" id="vocab-popover-meaning">—</div>
       <div class="vocab-popover-explanation" id="vocab-popover-explanation"></div>
+      
+      <!-- Custom User Meaning Fallback when word is outside dictionary -->
+      <div class="vocab-popover-custom-wrap" id="vocab-popover-custom-wrap" hidden>
+        <label for="vocab-custom-meaning-input">Arti dalam bahasa Indonesia (bisa diedit):</label>
+        <input type="text" id="vocab-custom-meaning-input" class="vocab-custom-meaning-input" placeholder="Tuliskan arti kata ini...">
+      </div>
+
       <div class="vocab-popover-context-box">
         <small class="vocab-popover-context-label">Konteks dalam teks:</small>
         <p class="vocab-popover-sentence" id="vocab-popover-sentence">—</p>
@@ -777,8 +818,8 @@
       </div>
       <p class="voice-modal-desc">Atur suara narator dan karakter menggunakan suara SpeechSynthesis yang tersedia di browsermu. Pengaturan tersimpan secara lokal.</p>
       <div class="voice-modal-single-alert" id="voice-modal-single-alert" hidden>
-        <strong>Pemberitahuan Suara:</strong>
-        <span>Perangkat ini menyediakan 1 suara sistem. Modulasi nada (pitch & rate) digunakan otomatis agar setiap karakter terdengar berbeda.</span>
+        <strong>Keterbatasan Suara Sistem Perangkat:</strong>
+        <span>Browser/perangkat ini hanya menyediakan 1 suara sistem bahasa Inggris. Pilihan di bawah bukan suara asli yang berbeda, melainkan gaya suara alternatif menggunakan penyesuaian nada (pitch) dan ritme bicara (rate).</span>
       </div>
       <div class="voice-character-list" id="voice-character-list">
         <!-- Rendered dynamically -->

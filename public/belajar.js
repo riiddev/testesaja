@@ -371,10 +371,23 @@
   }
   function canStudyWord(w){return !!(w && (w.studyReady || state?.wordProgress?.[w.id]?.savedContext) && w.meaning && (w.example || state?.wordProgress?.[w.id]?.savedContext));}
   async function loadDatasets() {
+    const SESSION_DATASET_KEY = "sinauu_parsed_datasets_v2";
+    try {
+      const cached = sessionStorage.getItem(SESSION_DATASET_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed.words) && parsed.words.length > 500 && Array.isArray(parsed.topics)) {
+          words = parsed.words;
+          topics = parsed.topics;
+          return;
+        }
+      }
+    } catch (_) {}
+
     const paths=["A1","A2","B1","B2","UNCLASSIFIED"].map(level=>"/data/oxford3000/"+level+".json.gz.b64");
     const requests=await Promise.all([
-      fetch("/data/vocabulary.json",{cache:"no-cache"}),
-      fetch("/data/grammar.json",{cache:"no-cache"}),
+      fetch("/data/vocabulary.json"),
+      fetch("/data/grammar.json"),
       ...paths.map(loadGzipBase64),
       loadGzipBase64("/data/oxford3000/editorial-overrides.json.gz.b64")
     ]);
@@ -399,6 +412,36 @@
       if(!w.acceptedMeanings.length&&w.meaning)w.acceptedMeanings=w.meaning.split(/[;；]/).map(x=>x.trim()).filter(Boolean);
       if(!w.id||!w.word||ids.has(w.id)||lemmas.has(norm(w.word)))throw new Error("Audit dataset gagal: ID atau headword duplikat.");
       ids.add(w.id);lemmas.add(norm(w.word));
+    }
+    try {
+      sessionStorage.setItem(SESSION_DATASET_KEY, JSON.stringify({ words, topics }));
+    } catch (_) {}
+  }
+  function ensureWordEntryInList(id, p) {
+    if (!id || !Array.isArray(words)) return;
+    const cleanId = String(id).trim().toLowerCase();
+    const found = words.find(w => w.id === id || norm(w.word) === norm(cleanId));
+    if (!found) {
+      const lemma = p?.savedContext?.originalWord || id;
+      const meaning = p?.savedContext?.meaning || lemma;
+      const example = p?.savedContext?.sentence || "";
+      words.push({
+        id: id,
+        word: lemma,
+        level: "B2",
+        partOfSpeech: p?.savedContext?.pos || "unclassified",
+        meaning: meaning,
+        example: example,
+        translation: meaning,
+        phonetic: p?.savedContext?.phonetic || "",
+        isOxford3000: false,
+        studyReady: true,
+        contentStatus: "curated-complete",
+        source: { name: p?.savedContext?.sourceTitle || "Kamus Kontekstual", note: "Kosakata dari bacaan kontekstual" }
+      });
+    } else if (p?.savedContext?.meaning && (!found.meaning || found.meaning === found.word)) {
+      found.meaning = p.savedContext.meaning;
+      found.translation = p.savedContext.meaning;
     }
   }
   function ensureProgress(id) {
@@ -3635,6 +3678,75 @@
     }
   }
 
+  let activeExternalDictLookup = null;
+
+  async function fetchExternalDefinition(rawWord) {
+    const clean = String(rawWord || "").trim().toLowerCase();
+    if (!clean) return null;
+    const cacheKey = "sinauu-external-dict-cache-v1";
+    let cache = {};
+    try {
+      cache = JSON.parse(localStorage.getItem(cacheKey) || "{}");
+    } catch (_) { cache = {}; }
+
+    if (cache[clean]) {
+      return cache[clean];
+    }
+
+    let phonetic = "";
+    let pos = "noun";
+    let definitionEn = "";
+    let translation = "";
+
+    try {
+      const hasTimeout = typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function";
+      const dictPromise = fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(clean), {
+        signal: hasTimeout ? AbortSignal.timeout(3000) : undefined
+      }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+      const transPromise = fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(clean) + "&langpair=en|id", {
+        signal: hasTimeout ? AbortSignal.timeout(3000) : undefined
+      }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+      const [dictData, transData] = await Promise.all([dictPromise, transPromise]);
+
+      if (Array.isArray(dictData) && dictData[0]) {
+        const item = dictData[0];
+        phonetic = item.phonetic || item.phonetics?.find(p => p.text)?.text || "";
+        const m = item.meanings?.[0];
+        if (m) {
+          pos = m.partOfSpeech || pos;
+          definitionEn = m.definitions?.[0]?.definition || "";
+        }
+      }
+
+      if (transData && transData.responseData && transData.responseData.translatedText) {
+        const rawTrans = transData.responseData.translatedText.trim();
+        if (rawTrans.toLowerCase() !== clean && !rawTrans.startsWith("MYMEMORY WARNING")) {
+          translation = rawTrans;
+        }
+      }
+    } catch (_) {}
+
+    const result = {
+      lemma: clean,
+      phonetic: phonetic,
+      partOfSpeech: pos,
+      definitionEn: definitionEn,
+      translation: translation || definitionEn || clean,
+      source: "Kamus Eksternal"
+    };
+
+    try {
+      cache[clean] = result;
+      const keys = Object.keys(cache);
+      if (keys.length > 200) delete cache[keys[0]];
+      localStorage.setItem(cacheKey, JSON.stringify(cache));
+    } catch (_) {}
+
+    return result;
+  }
+
   function openContextualVocab({ word, sentence, sourceTitle, targetElement }) {
     const popover = $("#contextual-vocab-popover");
     if (!popover) return;
@@ -3651,16 +3763,67 @@
     $("#vocab-popover-level").textContent = entry ? (entry.level || "A1") : "KATA";
     $("#vocab-popover-pos").textContent = entry ? (entry.partOfSpeech || "unclassified") : "";
 
+    const sourceEl = $("#vocab-popover-source");
+    const phoneticEl = $("#vocab-popover-phonetic");
+    const customWrap = $("#vocab-popover-custom-wrap");
+    const customInput = $("#vocab-custom-meaning-input");
     const meaningEl = $("#vocab-popover-meaning");
     const expEl = $("#vocab-popover-explanation");
+
+    const existingProg = state?.wordProgress?.[wordId];
+    const existingCtx = existingProg?.savedContext;
+
+    if (sourceEl) {
+      sourceEl.textContent = entry ? (entry.isOxford3000 ? "Oxford 3000" : (entry.source?.name || "Sinauu")) : "Kamus Eksternal";
+    }
+
+    if (phoneticEl) {
+      phoneticEl.textContent = entry?.phonetic || existingCtx?.phonetic || "";
+    }
+
     if (entry) {
+      if (customWrap) customWrap.hidden = true;
       meaningEl.textContent = entry.meaning || lemma;
       expEl.textContent = entry.definitionEn || "";
       expEl.hidden = !entry.definitionEn;
     } else {
-      meaningEl.textContent = "Definisi dalam konteks kalimat";
-      expEl.textContent = "";
-      expEl.hidden = true;
+      // Word outside Oxford 3000 (e.g. "quantum")
+      if (customWrap) customWrap.hidden = false;
+      if (customInput) customInput.value = existingCtx?.meaning || "";
+
+      if (existingCtx && existingCtx.meaning) {
+        meaningEl.textContent = existingCtx.meaning;
+        expEl.textContent = existingCtx.definitionEn || "";
+        expEl.hidden = !existingCtx.definitionEn;
+        if (sourceEl) sourceEl.textContent = "Kamus Tersimpan";
+      } else {
+        meaningEl.textContent = "Mencari definisi…";
+        expEl.textContent = "";
+        expEl.hidden = true;
+
+        const currentLemma = lemma;
+        activeExternalDictLookup = currentLemma;
+        fetchExternalDefinition(lemma).then(ext => {
+          if (activeExternalDictLookup !== currentLemma) return;
+          if (ext) {
+            activeVocabData.pos = ext.partOfSpeech;
+            activeVocabData.phonetic = ext.phonetic;
+            activeVocabData.customMeaning = ext.translation;
+            if ($("#vocab-popover-lemma")?.textContent === currentLemma) {
+              $("#vocab-popover-pos").textContent = ext.partOfSpeech;
+              if (phoneticEl) phoneticEl.textContent = ext.phonetic;
+              if (meaningEl) meaningEl.textContent = ext.translation || ext.definitionEn || currentLemma;
+              if (expEl && ext.definitionEn) {
+                expEl.textContent = ext.definitionEn;
+                expEl.hidden = false;
+              }
+              if (customInput && !customInput.value) {
+                customInput.value = ext.translation || "";
+              }
+            }
+          }
+        });
+      }
     }
 
     const sentenceEl = $("#vocab-popover-sentence");
@@ -3737,19 +3900,25 @@
     activeVocabData = null;
   }
 
-  async function saveContextualWord({ wordId, originalWord, sentence, sourceTitle }) {
+  async function saveContextualWord({ wordId, originalWord, sentence, sourceTitle, customMeaning }) {
     if (!state || !wordId) return false;
     const p = ensureProgress(wordId);
     const now = new Date();
     const today = dayKey(now);
     p.firstSeenDate ||= today;
     if (!p.studiedDates.includes(today)) p.studiedDates.push(today);
+    const customInpVal = $("#vocab-custom-meaning-input")?.value?.trim();
+    const meaning = customMeaning || customInpVal || activeVocabData?.customMeaning || activeVocabData?.entry?.meaning || p.savedContext?.meaning || originalWord || wordId;
     p.savedContext = {
-      originalWord: originalWord || "",
-      sentence: sentence || "",
-      sourceTitle: sourceTitle || "",
-      savedAt: now.toISOString()
+      originalWord: originalWord || p.savedContext?.originalWord || wordId,
+      sentence: sentence || p.savedContext?.sentence || "",
+      sourceTitle: sourceTitle || p.savedContext?.sourceTitle || "",
+      savedAt: now.toISOString(),
+      meaning: meaning,
+      pos: activeVocabData?.entry?.partOfSpeech || activeVocabData?.pos || p.savedContext?.pos || "unclassified",
+      phonetic: activeVocabData?.entry?.phonetic || activeVocabData?.phonetic || p.savedContext?.phonetic || ""
     };
+    ensureWordEntryInList(wordId, p);
     p.encounteredCount = (p.encounteredCount || 0) + 1;
     if (!p.nextReviewAt) {
       p.nextReviewAt = now.toISOString();
@@ -3846,7 +4015,8 @@
               wordId,
               originalWord: activeVocabData.word,
               sentence: activeVocabData.sentence,
-              sourceTitle: activeVocabData.sourceTitle
+              sourceTitle: activeVocabData.sourceTitle,
+              customMeaning: $("#vocab-custom-meaning-input")?.value?.trim() || ""
             });
           }
         }
@@ -4108,6 +4278,14 @@
   }
   async function init() {
     bindEvents();renderDate();
+    const mascot = $("#app-loading-mascot");
+    let mascotTimer = null;
+    if (mascot) {
+      mascot.hidden = false;
+      mascotTimer = setTimeout(() => {
+        if (mascot) mascot.hidden = true;
+      }, 3000);
+    }
     try {
       const savedCollapse = localStorage.getItem("sinauu-sidebar-collapsed");
       if (savedCollapse === "true") {
@@ -4118,8 +4296,14 @@
           btn.setAttribute("title", "Perbesar bilah samping");
         }
       }
-      await loadDatasets();await loadState();await setTheme(state.settings.theme);
+      await loadDatasets();await loadState();
+      for (const [wId, p] of Object.entries(state.wordProgress || {})) {
+        if (p && p.savedContext) ensureWordEntryInList(wId, p);
+      }
+      await setTheme(state.settings.theme);
       renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
+      if (mascotTimer) clearTimeout(mascotTimer);
+      if (mascot) mascot.hidden = true;
       window.sinauuExportLocalBundle = () => ({schemaVersion:2,core:state,extras:readExtraSnapshots()});
       window.sinauuGetSkillPassport = () => aggregateSkillPassport(state, readExtraSnapshots(), words, topics);
       window.sinauuComputeWeeklyInsights = (refDate) => computeWeeklyInsights(state, readExtraSnapshots(), words, topics, refDate);
@@ -4153,6 +4337,9 @@
         cloudApplying = true;
         try {
           state = sanitize(bundle.core);
+          for (const [wId, p] of Object.entries(state.wordProgress || {})) {
+            if (p && p.savedContext) ensureWordEntryInList(wId, p);
+          }
           const extras = bundle.extras || {};
           localStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(extras.extraLearning || {}));
           localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(extras.habitProgress || {}));
