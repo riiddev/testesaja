@@ -54,7 +54,7 @@ function doPost(e) {
     var action = payload.action || (e && e.parameter && e.parameter.action) || "health";
 
     // Route actions
-    if (action === "health" || action === "status") {
+    if (action === "health" || action === "status" || action === "ping") {
       return handleHealth();
     } else if (action === "users.findByEmail") {
       return handleFindUserByEmail(payload);
@@ -99,7 +99,7 @@ function doPost(e) {
  */
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || "health";
-  if (action === "health" || action === "status") {
+  if (action === "health" || action === "status" || action === "ping") {
     return handleHealth();
   }
   return jsonResponse({
