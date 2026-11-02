@@ -31,7 +31,13 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
     sendError(res, 405, "Metode permintaan tidak didukung.");
     return;
   }
-  const action = queryValue(req.query?.action);
+  let action = queryValue(req.query?.action);
+  if (!action && (req as any).url) {
+    try {
+      const parsedUrl = new URL((req as any).url, "http://localhost");
+      action = parsedUrl.searchParams.get("action") || "";
+    } catch (_) {}
+  }
   try {
     assertSheetsConfigured();
     if (action === "status") {

@@ -734,22 +734,60 @@ async function readCloudBundle(): Promise<{ bundle: CloudBundle; revision: numbe
   return { bundle, revision };
 }
 
+type PendingSaveOperation = {
+  operationId: string;
+  baseRevision: number;
+  payloadDigest: string;
+};
+let pendingSaveOp: PendingSaveOperation | null = null;
+
 async function writeCloudBundle(bundle: CloudBundle): Promise<{ revision: number }> {
   if (!session) throw new Error("Masuk terlebih dahulu untuk menyinkronkan progres.");
-  const res = await cloudRequest("/user_learning_states?on_conflict=user_id", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify([{
-      user_id: session.user.id,
-      state: bundle,
-      updated_at: new Date().toISOString(),
-      baseRevision: lastCloudRevision ?? 0
-    }]),
-  });
-  const newRev = typeof res?.revision === "number" ? res.revision : ((lastCloudRevision ?? 0) + 1);
-  lastCloudRevision = newRev;
-  syncConflict = false;
-  return { revision: newRev };
+  const serialized = JSON.stringify(bundle);
+  const baseRev = lastCloudRevision ?? 0;
+
+  // Stable operation identity: keep same operationId across retries of the same pending save intent
+  let opId: string;
+  if (pendingSaveOp && pendingSaveOp.baseRevision === baseRev && pendingSaveOp.payloadDigest === serialized) {
+    opId = pendingSaveOp.operationId;
+  } else {
+    opId = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
+      ? crypto.randomUUID()
+      : ("10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
+          (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+        ));
+    pendingSaveOp = {
+      operationId: opId,
+      baseRevision: baseRev,
+      payloadDigest: serialized,
+    };
+  }
+
+  try {
+    const res = await cloudRequest("/user_learning_states?on_conflict=user_id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify([{
+        user_id: session.user.id,
+        state: bundle,
+        updated_at: new Date().toISOString(),
+        baseRevision: baseRev,
+        operationId: opId,
+      }]),
+    });
+    const newRev = typeof res?.revision === "number" ? res.revision : (baseRev + 1);
+    lastCloudRevision = newRev;
+    pendingSaveOp = null; // Confirmed commit clears pending operation
+    syncConflict = false;
+    return { revision: newRev };
+  } catch (err: any) {
+    // If definite revision conflict, clear pending operation to prevent retrying stale revision
+    if (err?.status === 409 || err?.code === "REVISION_CONFLICT") {
+      pendingSaveOp = null;
+      syncConflict = true;
+    }
+    throw err;
+  }
 }
 
 async function reloadLatestCloudProgress(): Promise<boolean> {
@@ -768,6 +806,7 @@ async function reloadLatestCloudProgress(): Promise<boolean> {
     }
     lastCloudRevision = remoteData.revision;
     syncConflict = false;
+    pendingSaveOp = null;
     await applyLocalBundle(remoteData.bundle);
     try {
       localStorage.setItem(OWNER_KEY, session.user.id);

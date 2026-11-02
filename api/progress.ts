@@ -1,4 +1,4 @@
-import { assertSheetsConfigured, readProgress, writeProgress, RevisionConflictError, LockBusyError } from "./_lib/sheets.ts";
+import { assertSheetsConfigured, readProgress, writeProgress, RevisionConflictError, LockBusyError, UncertainCommitError } from "./_lib/sheets.ts";
 import { bearerToken, verifyToken } from "./_lib/security.ts";
 
 type RequestLike = {
@@ -44,6 +44,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
 
     const incoming = Array.isArray(req.body) ? req.body[0]?.state : req.body?.state;
     const baseRevision = Array.isArray(req.body) ? req.body[0]?.baseRevision : req.body?.baseRevision;
+    const operationId = Array.isArray(req.body) ? req.body[0]?.operationId : req.body?.operationId;
 
     if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) {
       sendError(res, 400, "Snapshot progres tidak valid.");
@@ -54,7 +55,7 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       return;
     }
 
-    const result = await writeProgress(claims.sub, incoming, baseRevision);
+    const result = await writeProgress(claims.sub, incoming, baseRevision, operationId);
     res.status(200).json({ ok: true, revision: result.revision, snapshotId: result.snapshotId });
   } catch (error) {
     if (error instanceof RevisionConflictError) {
@@ -70,6 +71,16 @@ export default async function handler(req: RequestLike, res: ResponseLike): Prom
       res.status(503).json({
         ok: false,
         code: "LOCK_BUSY",
+        message: error.message
+      });
+      return;
+    }
+    if (error instanceof UncertainCommitError) {
+      res.status(504).json({
+        ok: false,
+        code: "UNCERTAIN_COMMIT",
+        operationId: error.operationId,
+        expectedRevision: error.expectedRevision,
         message: error.message
       });
       return;

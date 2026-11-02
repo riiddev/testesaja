@@ -2,14 +2,9 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [
-    {
-      "source": "/api/account",
-      "destination": "https://sinauuenglishclaudeapp.vercel.app/api/account"
-    },
-    {
-      "source": "/api/progress",
-      "destination": "https://sinauuenglishclaudeapp.vercel.app/api/progress"
+  "functions": {
+    "api/*.ts": {
+      "maxDuration": 30
     }
-  ]
+  }
 }

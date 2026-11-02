@@ -337,6 +337,12 @@ function payloadsMatch(a, b) {
   try {
     var objA = JSON.parse(a);
     var objB = JSON.parse(b);
+    if (objA && objB && objA.snapshotId && objB.snapshotId) {
+      return objA.snapshotId === objB.snapshotId &&
+             objA.chunkIndex === objB.chunkIndex &&
+             objA.partCount === objB.partCount &&
+             objA.payload === objB.payload;
+    }
     return JSON.stringify(objA) === JSON.stringify(objB);
   } catch (_) {
     return false;
