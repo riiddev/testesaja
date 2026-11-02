@@ -796,7 +796,8 @@ test("Speaking and Writing Studios persist local drafts but export only privacy-
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="speaking"]').click();
   await page.locator("#adventure-speaking-studio").waitFor({ state: "visible" });
   await page.locator('#adventure-speaking-studio [data-studio-prompt="ask-directions"]').click();
   for (let turn = 0; turn < 3; turn += 1) {
@@ -806,6 +807,8 @@ test("Speaking and Writing Studios persist local drafts but export only privacy-
   await page.locator('#adventure-speaking-studio [data-studio-check="1"]').check();
   await page.locator('#adventure-speaking-studio [data-studio-check="2"]').check();
   await page.locator('#adventure-speaking-studio [data-studio-complete]').click();
+  await page.locator('[data-practice-back]').click();
+  await page.locator('[data-open-practice="writing"]').click();
   await page.locator("#adventure-writing-studio").waitFor({ state: "visible" });
   await page.locator('#adventure-writing-studio [data-studio-prompt="weekend-story"]').click();
   const privateDraft = "Last weekend I visited my cousin in town. We walked around the old market and bought some fresh fruit. After that, we had lunch together at a small café. The weather was warm, and I felt happy because we had time to talk.";
@@ -831,7 +834,8 @@ test("Speaking and Writing Studios persist local drafts but export only privacy-
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="writing"]').click();
   await page.locator("#studio-writing-draft").waitFor({ state: "visible" });
   assert.equal(await page.locator("#studio-writing-draft").inputValue(), privateDraft, "the writing draft should survive reload locally");
   assert.deepEqual(pageErrors, [], "Studio interactions should not throw browser JavaScript errors");
@@ -939,7 +943,8 @@ test("Everyday Stories supports graded reading, comprehension feedback, and save
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="reading-stories"]').click();
   await page.locator("#adventure-story-library .adventure-story-card").first().waitFor({ state: "visible" });
   await page.locator('[data-story-open="a-helpful-neighbor"]').click();
 
@@ -963,7 +968,8 @@ test("Everyday Stories supports graded reading, comprehension feedback, and save
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="reading-stories"]').click();
   const completedCard = page.locator('[data-story-open="a-helpful-neighbor"]');
   await completedCard.waitFor({ state: "visible" });
   assert.match(await completedCard.innerText(), /Baca lagi/);
@@ -991,7 +997,8 @@ test("Everyday Stories includes a B2 reading with inference-based comprehension 
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="reading-stories"]').click();
 
   const storyCardButton = page.locator('[data-story-open="the-library-after-hours"]');
   const storyCard = storyCardButton.locator("xpath=ancestor::article");
@@ -1050,7 +1057,8 @@ test("Everyday English supports listening, natural responses, local progress, an
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="listening"]').click();
   const cardButton = page.locator('[data-dialogue-open="at-the-cafe"]');
   const card = cardButton.locator("xpath=ancestor::article");
   await cardButton.waitFor({ state: "visible" });
@@ -1115,7 +1123,8 @@ test("Everyday English includes a B2 discussion that evaluates evidence, alterna
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="listening"]').click();
   const open = page.locator('[data-dialogue-open="revising-a-project-proposal"]');
   const card = open.locator("xpath=ancestor::article");
   await open.waitFor({ state: "visible" });
@@ -1168,7 +1177,8 @@ test("Listening Lab teaches gist, detail, and inference with optional transcript
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="listening"]').click();
 
   const listeningCards = page.locator("#adventure-listening-lab .listening-lab-card");
   await listeningCards.first().waitFor({ state: "visible" });
@@ -1219,7 +1229,8 @@ test("Listening Lab teaches gist, detail, and inference with optional transcript
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="listening"]').click();
   const restoredCard = page.locator('[data-listening-open="missed-the-bus"]').locator("xpath=ancestor::article");
   await restoredCard.waitFor({ state: "visible" });
   assert.match(await restoredCard.innerText(), /SELESAI/);
@@ -1246,7 +1257,8 @@ test("Listening Lab B2 exercise asks learners to distinguish contrast and infer 
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="listening"]').click();
   const open = page.locator('[data-listening-open="reviewing-a-study-proposal"]');
   const card = open.locator("xpath=ancestor::article");
   await open.waitFor({ state: "visible" });
@@ -1288,7 +1300,8 @@ test("Listening Lab keeps the exercise usable when browser speech synthesis is u
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="listening"]').click();
   await page.locator('[data-listening-open="booking-a-study-room"]').click();
   await page.locator("#listening-lab-reader").waitFor({ state: "visible" });
   await page.locator("[data-listening-play]").click();
@@ -1354,7 +1367,8 @@ test("Pronunciation Studio analyses microphone signal locally and stores only co
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="pronunciation"]').click();
 
   const open = page.locator('[data-pronunciation-open="polite-help"]');
   const card = open.locator("xpath=ancestor::article");
@@ -1417,7 +1431,8 @@ test("Pronunciation Studio handles denied microphone access without breaking the
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="pronunciation"]').click();
   await page.locator('[data-pronunciation-open="weigh-the-benefits"]').click();
   await page.locator("[data-pronunciation-toggle]").click();
   await page.locator("#pronunciation-capture-note").getByText(/Izin mikrofon ditolak/i).waitFor();
@@ -1445,7 +1460,8 @@ test("Pronunciation Studio includes B2 guidance for contrast and long sentence r
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="pronunciation"]').click();
   await page.locator('[data-pronunciation-open="proposal-evidence"]').click();
   const reader = page.locator("#pronunciation-studio-reader");
   await reader.waitFor({ state: "visible" });
@@ -1483,7 +1499,8 @@ test("Speaking Studio guides an open conversation, keeps turn progress local, an
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="speaking"]').click();
 
   const studio = page.locator("#adventure-speaking-studio");
   await studio.getByText("Speaking Studio", { exact: true }).waitFor();
@@ -1497,7 +1514,8 @@ test("Speaking Studio guides an open conversation, keeps turn progress local, an
   assert.match(await studio.innerText(), /What do you like doing after class/);
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="speaking"]').click();
   assert.match(await studio.innerText(), /TURN 2 \/ 3/, "the current conversation turn should survive a reload");
 
   await studio.locator("[data-speaking-next-turn]").click();
@@ -1547,7 +1565,8 @@ test("Speaking Studio includes a B2 discussion with counterarguments and an evid
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="speaking"]').click();
   const studio = page.locator("#adventure-speaking-studio");
   await studio.locator('[data-studio-prompt="present-study-proposal"]').click();
   assert.match(await studio.innerText(), /B2/);
@@ -1579,7 +1598,8 @@ test("Writing Studio guides planning, drafting, revision, reflection, and keeps 
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="writing"]').click();
 
   const studio = page.locator("#adventure-writing-studio");
   await studio.getByText("Writing Studio", { exact: true }).waitFor();
@@ -1614,7 +1634,8 @@ test("Writing Studio guides planning, drafting, revision, reflection, and keeps 
   assert.ok(!JSON.stringify(cloud.extras.adventureProgress).includes(draft) && !JSON.stringify(cloud.extras.adventureProgress).includes(revised), "raw writing must stay out of CloudBundle");
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="writing"]').click();
   await page.locator("#studio-writing-revision").waitFor({ state: "visible" });
   assert.equal(await page.locator("#studio-writing-draft").inputValue(), draft);
   assert.equal(await page.locator("#studio-writing-revision").inputValue(), revised);
@@ -1641,7 +1662,8 @@ test("Writing Studio includes B1 and B2 tasks with appropriate targets and refle
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="writing"]').click();
   const studio = page.locator("#adventure-writing-studio");
   await studio.locator('[data-studio-prompt="study-reflection"]').click();
   assert.match(await studio.innerText(), /B1/);
@@ -1978,7 +2000,8 @@ test("Everyday Stories result links the learner to related listening, dialogue, 
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="reading-stories"]').click();
   await page.locator('[data-story-open="a-rainy-morning"]').waitFor({ state: "visible" });
   await page.locator('[data-story-open="a-rainy-morning"]').click();
   for (const answer of [0, 0, 0]) {
@@ -2031,7 +2054,8 @@ test("Pronunciation Studio contains four guided phrases at every CEFR band", asy
   });
   await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
-  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-view-target="practice"]').click();
+  await page.locator('[data-open-practice="pronunciation"]').click();
   const cards = page.locator("#adventure-pronunciation-studio [data-pronunciation-open]");
   await cards.first().waitFor({ state: "visible" });
   assert.equal(await cards.count(), 16);
@@ -2131,18 +2155,18 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   const primaryLabels = await page.locator(".side-nav .side-link").evaluateAll((nodes) =>
     nodes.map((node) => node.querySelectorAll("span")[1]?.textContent.trim())
   );
-  assert.deepEqual(primaryLabels, ["Beranda", "Belajar", "Bacaan", "Review", "Progres"]);
-  assert.equal(await page.locator(".side-nav [data-view-target='adventure']").count(), 0);
+  assert.deepEqual(primaryLabels, ["Beranda", "Petualangan", "Latihan", "Review", "Progres"]);
+  assert.equal(await page.locator(".side-nav [data-view-target='adventure']").count(), 1);
   assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
   assert.equal(await page.locator("#home-primary-label").innerText(), "Mulai sesi pertama");
   await page.locator("#home-primary-action").click();
   assert.equal(await page.locator("#view-study").isVisible(), true,
     "a new learner should be taken directly into their first guided session");
-  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator(".side-nav [data-view-target='practice']").click();
   assert.equal(await page.locator(".side-nav").evaluate(el => getComputedStyle(el).position), "fixed",
     "the primary navigation should remain thumb-reachable at the bottom on mobile");
 
-  await page.locator(".side-nav [data-view-target='vocabulary']").click();
+  await page.locator('#practice-modules-grid [data-open-practice="vocabulary"]').click();
   assert.equal(await page.locator("#view-vocabulary").isVisible(), true);
   await page.locator("#vocab-search").fill("hello");
   await page.waitForFunction(() => Boolean(document.querySelector("#vocab-list [data-select-word]")));
@@ -2158,13 +2182,14 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
     "closing a word detail should restore focus to the selected vocabulary row");
   await page.locator("#view-vocabulary [data-view-target='grammar']").click();
   assert.equal(await page.locator("#view-grammar").isVisible(), true);
-  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "vocabulary");
+  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "practice");
   assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), false);
   await page.locator(".side-nav [data-view-target='overview']").click();
   assert.equal(await page.locator("#home-primary-action").getAttribute("data-home-action"), "active-study",
     "an unfinished session should be resumable from the home CTA");
-  await page.locator(".side-nav [data-view-target='vocabulary']").click();
-  await page.locator("#view-vocabulary [data-view-target='grammar']").click();
+  await page.locator(".side-nav [data-view-target='practice']").click();
+  await page.locator('#practice-modules-grid [data-open-practice="grammar"]').click();
+  assert.equal(await page.locator("#view-grammar").isVisible(), true);
   await page.locator("#grammar-topic-list [data-topic-id]").first().click();
   assert.equal(await page.locator("#view-grammar .grammar-layout").evaluate(el => el.classList.contains("is-detail-open")), true);
   await page.locator("#lesson-panel .lesson-answer").first().click();
@@ -2175,7 +2200,8 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   assert.equal(await page.locator("#home-primary-label").innerText(), "Lanjutkan belajar",
     "a learner with saved activity should see the continue-learning CTA");
 
-  await page.locator(".side-nav [data-view-target='reading']").click();
+  await page.locator(".side-nav [data-view-target='practice']").click();
+  await page.locator('#practice-modules-grid [data-open-practice="reading"]').click();
   assert.equal(await page.locator("#habit-library-section").isVisible(), true);
   assert.equal(await page.locator("#reading-skills-section").isVisible(), false);
   await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"));
@@ -2214,7 +2240,7 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
   await page.locator(".side-nav [data-view-target='overview']").click();
   await page.locator("#home-adventure-link").click();
   assert.equal(await page.locator("#view-adventure").isVisible(), true);
-  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "overview");
+  assert.equal(await page.locator(".side-nav .side-link[aria-current='page']").getAttribute("data-view-target"), "adventure");
 
   for (const width of [360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 844 });
@@ -2958,7 +2984,7 @@ test("Adaptive study plan adapts to recommend reading when vocabulary activity i
   const actionBtn = step1.locator("[data-plan-adventure-section='adventure-story-library']");
   assert.equal(await actionBtn.count(), 1);
   await actionBtn.click();
-  await page.locator("#view-adventure.is-visible").waitFor({ state: "visible" });
+  await page.locator("#view-practice.is-visible").waitFor({ state: "visible" });
   await page.locator("#adventure-story-library").waitFor({ state: "visible" });
 
   assert.deepEqual(pageErrors, [], "reading recommendation should navigate smoothly without errors");
@@ -4174,5 +4200,97 @@ test("Weekly Learning Insights connects to Adaptive Study Plan, handles malforme
   assert.ok(await weeklySection.locator(".weekly-skills-table").isVisible());
 
   assert.deepEqual(pageErrors, [], "Adaptive study plan connection, timestamp safety, and mobile layout must execute without errors");
+  await page.close();
+});
+
+test("Modular Learning Hub navigation renders five primary destinations, organizes all seven skills, and opens modules independently", async () => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "hub-test-token",
+      refresh_token: "hub-refresh-token",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "hub-test-user", email: "hub-user@example.com" },
+    }));
+  });
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // 1. Verify five primary navigation destinations
+  const destinations = await page.locator(".side-nav .side-link").evaluateAll((nodes) =>
+    nodes.map((node) => node.querySelectorAll("span")[1]?.textContent.trim())
+  );
+  assert.deepEqual(destinations, ["Beranda", "Petualangan", "Latihan", "Review", "Progres"],
+    "the workspace must expose the five intended primary IA destinations");
+
+  // 2. Home overview compactness and widgets
+  assert.ok(await page.locator("#home-player-card").isVisible(), "Home must render the player rank summary");
+  assert.ok(await page.locator("#home-quest-card").isVisible(), "Home must render the compact Daily Quest status");
+  assert.ok(await page.locator("#home-skills-summary").isVisible(), "Home must render the compact 7 skills progress summary");
+
+  // 3. Navigate to Practice Hub
+  await page.locator(".side-nav [data-view-target='practice']").click();
+  assert.equal(await page.locator("#view-practice").isVisible(), true);
+  assert.equal(await page.locator("#practice-hub-home").isVisible(), true);
+  assert.equal(await page.locator("#practice-module-panel").isVisible(), false);
+
+  // Practice hub should display exactly seven skill cards
+  const cards = page.locator("#practice-modules-grid .practice-card");
+  assert.equal(await cards.count(), 7, "Practice Hub must organize all seven skills as compact cards");
+
+  // Verify heavy studio content is NOT rendered on the Practice overview
+  assert.equal(await page.locator("#adventure-story-library").isVisible(), false,
+    "Everyday Stories shelf should not be displayed on the Practice Hub overview");
+  assert.equal(await page.locator("#adventure-listening-lab").isVisible(), false,
+    "Listening Lab should not be displayed on the Practice Hub overview");
+  assert.equal(await page.locator("#adventure-pronunciation-studio").isVisible(), false,
+    "Pronunciation Studio should not be displayed on the Practice Hub overview");
+
+  // 4. Open Speaking Studio independently
+  await page.locator('#practice-modules-grid [data-open-practice="speaking"]').click();
+  assert.equal(await page.locator("#practice-hub-home").isVisible(), false);
+  assert.equal(await page.locator("#practice-module-panel").isVisible(), true);
+  assert.equal(await page.locator("#adventure-speaking-studio").isVisible(), true);
+  assert.equal(await page.locator("#adventure-writing-studio").isVisible(), false);
+  assert.equal(await page.locator("#adventure-pronunciation-studio").isVisible(), false);
+
+  // 5. Test back button returns to Practice Hub
+  await page.locator("#practice-back-btn").click();
+  assert.equal(await page.locator("#practice-hub-home").isVisible(), true);
+  assert.equal(await page.locator("#practice-module-panel").isVisible(), false);
+  assert.equal(await page.locator("#adventure-speaking-studio").isVisible(), false);
+
+  // 6. Test Writing Studio draft persistence when switching destinations
+  await page.locator('#practice-modules-grid [data-open-practice="writing"]').click();
+  assert.equal(await page.locator("#adventure-writing-studio").isVisible(), true);
+  await page.locator('#adventure-writing-studio [data-studio-prompt="weekend-story"]').click();
+  const testDraft = "This is a persistent draft in Writing Studio to verify IA navigation integrity.";
+  await page.locator("#studio-writing-draft").fill(testDraft);
+
+  // Switch to Home overview
+  await page.locator(".side-nav [data-view-target='overview']").click();
+  assert.equal(await page.locator("#view-overview").isVisible(), true);
+
+  // Return to Writing Studio via Practice
+  await page.locator(".side-nav [data-view-target='practice']").click();
+  await page.locator('#practice-modules-grid [data-open-practice="writing"]').click();
+  assert.equal(await page.locator("#adventure-writing-studio").isVisible(), true);
+  assert.equal(await page.locator("#studio-writing-draft").inputValue(), testDraft,
+    "Writing Studio drafts must be preserved when navigating between destinations");
+
+  // 7. Verify mobile viewport has no horizontal overflow
+  for (const width of [360, 375, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(overflow <= 1, `modular hub should not overflow horizontally at ${width}px`);
+  }
+
+  assert.deepEqual(pageErrors, [], "Modular Learning Hub navigation must execute without browser JavaScript errors");
   await page.close();
 });

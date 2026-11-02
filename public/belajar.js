@@ -430,11 +430,199 @@
     if (state.history.length > 1000) state.history.length = 1000;
   }
   function activityToday() { return state.history.filter(x => x.date === dayKey()).length; }
+  let activePracticeModule = null;
+
+  function openPracticeModule(moduleId) {
+    if (["vocabulary", "grammar", "reading"].includes(moduleId)) {
+      setView(moduleId);
+      return;
+    }
+    view = "practice";
+    activePracticeModule = moduleId;
+    $$(".view").forEach(el => el.classList.toggle("is-visible", el.dataset.view === "practice"));
+    $$(".side-link").forEach(el => {
+      const active = el.dataset.viewTarget === "practice";
+      el.classList.toggle("is-active", active);
+      if (active) el.setAttribute("aria-current", "page");
+      else el.removeAttribute("aria-current");
+    });
+
+    const hubHome = $("#practice-hub-home");
+    const panel = $("#practice-module-panel");
+    const kicker = $("#practice-module-kicker");
+    const title = $("#practice-module-title");
+
+    if (hubHome) hubHome.hidden = true;
+    if (panel) panel.hidden = false;
+
+    $$(".practice-submodule").forEach(el => {
+      el.hidden = el.dataset.practiceSubmodule !== moduleId;
+    });
+
+    const meta = {
+      "speaking": { kicker: "BERBICARA", title: "Speaking Studio" },
+      "writing": { kicker: "MENULIS", title: "Writing Studio" },
+      "reading-stories": { kicker: "BACAAN", title: "Everyday Stories" },
+      "listening": { kicker: "MENYIMAK", title: "Listening Lab & Everyday English" },
+      "pronunciation": { kicker: "PENGUCAPAN", title: "Pronunciation Studio" }
+    };
+    if (meta[moduleId]) {
+      if (kicker) kicker.textContent = meta[moduleId].kicker;
+      if (title) title.textContent = meta[moduleId].title;
+    }
+    const topbarCurrent = $("#topbar-current");
+    if (topbarCurrent) topbarCurrent.textContent = "Latihan · " + (meta[moduleId]?.title || "Modul");
+
+    window.sinauuRenderAdventure?.();
+    if (window.sinauMotionScrollToTop) window.sinauMotionScrollToTop();
+    else window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+  }
+
+  function closePracticeModule() {
+    activePracticeModule = null;
+    setView("practice");
+  }
+
+  function renderPracticeHub() {
+    const grid = $("#practice-modules-grid");
+    if (!grid || !state) return;
+    const extras = readExtraSnapshots();
+    const extraLearn = extras.extraLearning || {};
+    const adv = extras.adventureProgress || {};
+
+    const vocabCount = words.filter(w => statusOf(w) !== "new").length;
+    const masteredCount = words.filter(w => statusOf(w) === "mastered").length;
+    const dueCount = dueWords().length;
+
+    const topicsTried = topics.filter(t => Object.keys((state.grammarProgress[t.id] && state.grammarProgress[t.id].answers) || {}).length > 0).length;
+
+    const habitDone = Object.values(window.sinauuExtraLearningBackup?.().reading || {}).filter(r => r && r.completed).length;
+    const storiesDone = Object.values(adv.storyProgress || {}).filter(s => s && s.completed).length;
+
+    const listeningDone = Object.values(adv.listeningLabProgress || {}).filter(l => l && l.completed).length +
+      Object.values(adv.everydayEnglishProgress || {}).filter(d => d && d.completed).length;
+
+    const speakingSessions = (adv.studioSessions || []).filter(s => s.studioType === "speaking").length;
+    const writingSessions = (adv.studioSessions || []).filter(s => s.studioType === "writing").length;
+    const pronunciationDone = Object.values(adv.pronunciationProgress || {}).filter(p => p && p.completed).length;
+
+    const modules = [
+      {
+        id: "vocabulary",
+        icon: "Aa",
+        kicker: "KOSAKATA · OXFORD 3000",
+        title: "Kosakata",
+        desc: "3000+ kata penting dengan makna kontekstual, contoh kalimat, dan kolokasi.",
+        statVal: vocabCount > 0 ? (masteredCount + " mastered · " + dueCount + " review") : "Belum mulai",
+        statNote: vocabCount > 0 ? (vocabCount + " kata dicoba") : "Mulai sesi pertama",
+        actionText: "Buka Kosakata →"
+      },
+      {
+        id: "grammar",
+        icon: "¶",
+        kicker: "TATA BAHASA · A1–B2",
+        title: "Tata Bahasa",
+        desc: "Aturan pola kalimat, rumus praktis, kesalahan umum, dan latihan soal terarah.",
+        statVal: topicsTried + "/" + topics.length,
+        statNote: "topik sudah dicoba",
+        actionText: "Buka Tata Bahasa →"
+      },
+      {
+        id: "reading",
+        icon: "▤",
+        kicker: "PEMAHAMAN BACAAN",
+        title: "Pemahaman Bacaan",
+        desc: "156 bacaan HABIT dan 8 cerita bertingkat dengan analisis dan pertanyaan teks.",
+        statVal: (habitDone + storiesDone) + " bacaan & cerita",
+        statNote: habitDone + " HABIT · " + storiesDone + " cerita",
+        actionText: "Buka Koleksi HABIT →",
+        subAction: { id: "reading-stories", text: "Buka Cerita ↗" }
+      },
+      {
+        id: "listening",
+        icon: ")))",
+        kicker: "MENYIMAK & DIALOG",
+        title: "Menyimak",
+        desc: "Listening Lab audio comprehension dan Everyday English percakapan dua arah.",
+        statVal: listeningDone + " aktivitas selesai",
+        statNote: "Audio, transkrip, & dialog",
+        actionText: "Buka Menyimak →"
+      },
+      {
+        id: "speaking",
+        icon: "🗣",
+        kicker: "PERCAKAPAN DUA ARAH",
+        title: "Berbicara",
+        desc: "Speaking Studio: simulasi dialog kontekstual dengan panduan dan checklist mandiri.",
+        statVal: speakingSessions + " sesi selesai",
+        statNote: "Lokal & tanpa rekam suara",
+        actionText: "Buka Speaking Studio →"
+      },
+      {
+        id: "writing",
+        icon: "✍",
+        kicker: "MENULIS & REVISI",
+        title: "Menulis",
+        desc: "Writing Studio: panduan menyusun paragraf, revisi terarah, dan autosave draft lokal.",
+        statVal: writingSessions + " sesi selesai",
+        statNote: "Draft tersimpan lokal",
+        actionText: "Buka Writing Studio →"
+      },
+      {
+        id: "pronunciation",
+        icon: "🎙",
+        kicker: "FONETIK & INTONASI",
+        title: "Pengucapan",
+        desc: "Pronunciation Studio: 16 aktivitas fonetik bertingkat dengan analisis mikrofon lokal.",
+        statVal: pronunciationDone + "/16 aktivitas selesai",
+        statNote: "Umpan balik lokal browser",
+        actionText: "Buka Pronunciation Studio →"
+      }
+    ];
+
+    grid.innerHTML = modules.map(m => {
+      const subBtn = m.subAction
+        ? '<button type="button" class="secondary-action practice-open-sub-btn" data-open-practice="' + esc(m.subAction.id) + '">' + esc(m.subAction.text) + '</button>'
+        : '';
+      return '<article class="practice-card">' +
+        '<div class="practice-card-top">' +
+          '<span class="practice-card-icon">' + esc(m.icon) + '</span>' +
+          '<div><span class="practice-card-kicker">' + esc(m.kicker) + '</span><h3 class="practice-card-title">' + esc(m.title) + '</h3></div>' +
+        '</div>' +
+        '<p class="practice-card-desc">' + esc(m.desc) + '</p>' +
+        '<div class="practice-card-stat"><strong>' + esc(m.statVal) + '</strong><span>' + esc(m.statNote) + '</span></div>' +
+        '<div class="practice-card-actions">' +
+          '<button type="button" class="primary-action practice-open-btn" data-open-practice="' + esc(m.id) + '">' + esc(m.actionText) + '</button>' +
+          subBtn +
+        '</div>' +
+      '</article>';
+    }).join("");
+  }
+
   function setView(next) {
+    if (["speaking", "writing", "listening", "pronunciation", "reading-stories"].includes(next)) {
+      openPracticeModule(next);
+      return;
+    }
+    if (next === "practice") {
+      activePracticeModule = null;
+      const hubHome = $("#practice-hub-home");
+      const panel = $("#practice-module-panel");
+      if (panel) panel.hidden = true;
+      if (hubHome) hubHome.hidden = false;
+      $$(".practice-submodule").forEach(el => { el.hidden = true; });
+    }
     if (!$('#view-' + next)) return;
     view = next;
     $$(".view").forEach(el => el.classList.toggle("is-visible",el.dataset.view === next));
-    const activeTopView = ["grammar","matching","study"].includes(next) ? "vocabulary" : ["adventure","placement"].includes(next) ? "overview" : next;
+    const activeTopView = [
+      "practice", "vocabulary", "grammar", "matching", "study", "reading",
+      "speaking", "writing", "listening", "pronunciation", "reading-stories"
+    ].includes(next)
+      ? "practice"
+      : ["placement"].includes(next)
+        ? "overview"
+        : next;
     $$(".side-link").forEach(el => {
       const active = el.dataset.viewTarget === activeTopView;
       el.classList.toggle("is-active", active);
@@ -447,12 +635,31 @@
       el.setAttribute("aria-selected", String(active));
       el.setAttribute("tabindex", active ? "0" : "-1");
     });
-    const topbarLabels = {overview:"Beranda",vocabulary:"Belajar · Kosakata",grammar:"Belajar · Grammar",matching:"Belajar · Matching",study:"Sesi belajar",reading:"Bacaan",adventure:"Beranda · Petualangan",review:"Review",placement:"Beranda · Cek level",progress:"Progres"};
+    const topbarLabels = {
+      overview: "Beranda",
+      adventure: "Petualangan",
+      practice: "Hub Latihan",
+      vocabulary: "Latihan · Kosakata",
+      grammar: "Latihan · Tata Bahasa",
+      matching: "Latihan · Matching",
+      study: "Latihan · Sesi Kosakata",
+      reading: "Latihan · Pemahaman Bacaan",
+      listening: "Latihan · Menyimak",
+      speaking: "Latihan · Speaking Studio",
+      writing: "Latihan · Writing Studio",
+      pronunciation: "Latihan · Pronunciation Studio",
+      "reading-stories": "Latihan · Everyday Stories",
+      review: "Review",
+      placement: "Beranda · Cek level",
+      progress: "Progres"
+    };
     const topbarCurrent = $("#topbar-current");
     if (topbarCurrent) topbarCurrent.textContent = topbarLabels[next] || "Ruang belajar";
     if (next === "overview") renderOverview();
+    if (next === "practice") renderPracticeHub();
     if (next === "vocabulary") renderVocabulary();
     if (next === "grammar") renderGrammar();
+    if (next === "reading") window.sinauuLoadHabitLibrary?.();
     if (next === "review") renderReview();
     else window.sinauuUpdateReviewActivePanel?.();
     if (next === "placement") renderPlacementView();
@@ -842,6 +1049,84 @@
     renderHomePrimaryAction();
     renderPlacementTeaser();
     renderStudyPlan();
+
+    // Render Home Player Rank & XP:
+    try {
+      const advSnapshot = window.sinauuAdventureBackup?.() || JSON.parse(localStorage.getItem("sinauu-adventure-progress-v1") || "{}");
+      const xp = Number(advSnapshot.playerXp) || 0;
+      const rankData = [
+        { title: "Seed Explorer", min: 0, next: 100 },
+        { title: "Trail Scout", min: 100, next: 250 },
+        { title: "Island Ranger", min: 250, next: 500 },
+        { title: "Harbor Guide", min: 500, next: 850 },
+        { title: "Summit Scholar", min: 850, next: null }
+      ];
+      const curRank = [...rankData].reverse().find(r => xp >= r.min) || rankData[0];
+      const rankIdx = rankData.indexOf(curRank) + 1;
+      const nextRank = rankData[rankIdx];
+      const avatarEl = $("#home-rank-avatar");
+      if (avatarEl) avatarEl.textContent = ["I", "II", "III", "IV", "V"][rankIdx - 1] || "I";
+      const rankEl = $("#home-player-rank");
+      if (rankEl) rankEl.textContent = curRank.title;
+      const xpLineEl = $("#home-player-xp-line");
+      const xpFillEl = $("#home-player-xp-fill");
+      if (nextRank) {
+        const span = nextRank.min - curRank.min;
+        const prog = xp - curRank.min;
+        const pct = Math.min(100, Math.max(0, Math.round((prog / span) * 100)));
+        if (xpLineEl) xpLineEl.textContent = xp + " XP · " + prog + " / " + span + " menuju " + nextRank.title;
+        if (xpFillEl) xpFillEl.style.width = pct + "%";
+      } else {
+        if (xpLineEl) xpLineEl.textContent = xp + " XP · Rank Maksimal";
+        if (xpFillEl) xpFillEl.style.width = "100%";
+      }
+
+      // Render Home Daily Quest:
+      const today = dayKey();
+      const quest = advSnapshot.dailyQuests && advSnapshot.dailyQuests[today];
+      const qTotal = Array.isArray(quest?.stepIds) ? quest.stepIds.length : 3;
+      const qDone = Array.isArray(quest?.completedStepIds) ? quest.completedStepIds.length : 0;
+      const questCountEl = $("#home-quest-count");
+      if (questCountEl) {
+        questCountEl.textContent = quest?.completedAt
+          ? "Selesai · Semua tantangan tuntas"
+          : Math.min(qDone, qTotal) + "/" + qTotal + " tantangan selesai";
+      }
+
+      // Render Home 7 Skills compact summary:
+      const skillsRow = $("#home-skills-row");
+      if (skillsRow) {
+        const extras = readExtraSnapshots();
+        const advExtras = extras.adventureProgress || {};
+        const vTried = words.filter(w => statusOf(w) !== "new").length;
+        const gTried = topics.filter(t => Object.keys((state.grammarProgress[t.id] && state.grammarProgress[t.id].answers) || {}).length > 0).length;
+        const rDone = Object.values(window.sinauuExtraLearningBackup?.().reading || {}).filter(r => r && r.completed).length +
+          Object.values(advExtras.storyProgress || {}).filter(s => s && s.completed).length;
+        const lDone = Object.values(advExtras.listeningLabProgress || {}).filter(l => l && l.completed).length +
+          Object.values(advExtras.everydayEnglishProgress || {}).filter(d => d && d.completed).length;
+        const sSess = (advExtras.studioSessions || []).filter(s => s.studioType === "speaking").length;
+        const wSess = (advExtras.studioSessions || []).filter(s => s.studioType === "writing").length;
+        const pDone = Object.values(advExtras.pronunciationProgress || {}).filter(p => p && p.completed).length;
+
+        const skillBadges = [
+          { name: "Kosakata", sym: "Aa", val: vTried + " kata", target: "vocabulary" },
+          { name: "Tata Bahasa", sym: "¶", val: gTried + " topik", target: "grammar" },
+          { name: "Bacaan", sym: "▤", val: rDone + " selesai", target: "reading" },
+          { name: "Menyimak", sym: ")))", val: lDone + " selesai", target: "listening" },
+          { name: "Berbicara", sym: "🗣", val: sSess + " sesi", target: "speaking" },
+          { name: "Menulis", sym: "✍", val: wSess + " sesi", target: "writing" },
+          { name: "Pengucapan", sym: "🎙", val: pDone + " selesai", target: "pronunciation" }
+        ];
+
+        skillsRow.innerHTML = skillBadges.map(b =>
+          '<button type="button" class="home-skill-pill" data-home-skill="' + esc(b.target) + '">' +
+            '<div class="home-skill-pill-top"><span class="home-skill-pill-sym">' + esc(b.sym) + '</span><span class="home-skill-pill-arrow">↗</span></div>' +
+            '<div class="home-skill-pill-name">' + esc(b.name) + '</div>' +
+            '<div class="home-skill-pill-val">' + esc(b.val) + '</div>' +
+          '</button>'
+        ).join("");
+      }
+    } catch (_) {}
   }
   function renderVocabulary(resetList=true) {
     if(resetList)listLimit=100;
@@ -2009,7 +2294,7 @@
       ],
       primaryAction: {
         label: "Buka Listening Lab ↗",
-        viewTarget: "adventure"
+        viewTarget: "listening"
       }
     };
 
@@ -2084,7 +2369,7 @@
       ],
       primaryAction: {
         label: "Buka Speaking Studio ↗",
-        viewTarget: "adventure"
+        viewTarget: "speaking"
       }
     };
 
@@ -2145,7 +2430,7 @@
       ],
       primaryAction: {
         label: "Buka Writing Studio ↗",
-        viewTarget: "adventure"
+        viewTarget: "writing"
       }
     };
 
@@ -2210,7 +2495,7 @@
       ],
       primaryAction: {
         label: "Buka Pronunciation Studio ↗",
-        viewTarget: "adventure"
+        viewTarget: "pronunciation"
       }
     };
 
@@ -3243,8 +3528,16 @@
         if(action==="grammar"&&homePrimary.dataset.homeTopic){activeTopic=homePrimary.dataset.homeTopic;grammarDetailOpen=true;setView("grammar");return;}
         if(action==="reading"){setView("reading");return;}
         if(action==="adventure-section"&&homePrimary.dataset.homeSection){
-          setView("adventure");
-          $("#"+homePrimary.dataset.homeSection)?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+          const sec = homePrimary.dataset.homeSection;
+          if (sec === "adventure-story-library") openPracticeModule("reading-stories");
+          else if (sec === "adventure-listening-lab") openPracticeModule("listening");
+          else if (sec === "adventure-speaking-studio") openPracticeModule("speaking");
+          else if (sec === "adventure-writing-studio") openPracticeModule("writing");
+          else if (sec === "adventure-pronunciation-studio") openPracticeModule("pronunciation");
+          else {
+            setView("adventure");
+            $("#"+sec)?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+          }
           return;
         }
         if(action==="adventure"){
@@ -3253,6 +3546,20 @@
           return;
         }
         setView("vocabulary");
+        return;
+      }
+      const openPracticeBtn=e.target.closest("[data-open-practice],[data-home-skill],[data-portal-practice]");
+      if(openPracticeBtn){
+        openPracticeModule(openPracticeBtn.dataset.openPractice || openPracticeBtn.dataset.homeSkill || openPracticeBtn.dataset.portalPractice);
+        return;
+      }
+      if(e.target.closest("[data-open-practice-hub]")){
+        setView("practice");
+        return;
+      }
+      const practiceBackBtn=e.target.closest("[data-practice-back],[data-hub-back]");
+      if(practiceBackBtn){
+        closePracticeModule();
         return;
       }
       const planVocabulary=e.target.closest("[data-plan-vocabulary]");
@@ -3269,20 +3576,34 @@
       const planAdvSection=e.target.closest("[data-plan-adventure-section]");
       if(planAdvSection){
         const secId=planAdvSection.dataset.planAdventureSection;
-        setView("adventure");
-        $("#"+secId)?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+        if (secId === "adventure-story-library") openPracticeModule("reading-stories");
+        else if (secId === "adventure-listening-lab") openPracticeModule("listening");
+        else if (secId === "adventure-speaking-studio") openPracticeModule("speaking");
+        else if (secId === "adventure-writing-studio") openPracticeModule("writing");
+        else if (secId === "adventure-pronunciation-studio") openPracticeModule("pronunciation");
+        else {
+          setView("adventure");
+          $("#"+secId)?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+        }
         return;
       }
       const weeklyBtn=e.target.closest("[data-weekly-target]");
       if(weeklyBtn){
         const targetView = weeklyBtn.dataset.weeklyTarget;
         const targetSec = weeklyBtn.dataset.weeklySection;
+        if (targetSec === "adventure-story-library") { openPracticeModule("reading-stories"); return; }
+        if (targetSec === "adventure-listening-lab") { openPracticeModule("listening"); return; }
+        if (targetSec === "adventure-speaking-studio") { openPracticeModule("speaking"); return; }
+        if (targetSec === "adventure-writing-studio") { openPracticeModule("writing"); return; }
+        if (targetSec === "adventure-pronunciation-studio") { openPracticeModule("pronunciation"); return; }
         setView(targetView);
         if(targetSec){
           $("#"+targetSec)?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
         }
         return;
       }
+      const openAdvBtn=e.target.closest("[data-open-adventure],#home-adventure-link");
+      if(openAdvBtn){setView("adventure");return;}
       const passportBtn=e.target.closest("[data-passport-target]");
       if(passportBtn){setView(passportBtn.dataset.passportTarget);return;}
       const viewBtn=e.target.closest("[data-view-target]");
@@ -3419,6 +3740,9 @@
       window.sinauuGetAdaptiveStudyPlan = (today) => getAdaptiveStudyPlan(today || dayKey());
       window.sinauuGetUnifiedReviewQueue = (now) => getUnifiedReviewQueue(state, readExtraSnapshots(), words, topics, null, now);
       window.sinauuRenderReview = () => renderReview();
+      window.sinauuOpenPracticeModule = (moduleId) => openPracticeModule(moduleId);
+      window.sinauuClosePracticeModule = () => closePracticeModule();
+      window.sinauuRenderPracticeHub = () => renderPracticeHub();
       window.sinauuGetWordList = () => words;
       window.sinauuGetTopicList = () => topics;
       window.sinauuGetCoreState = () => state;
@@ -3447,6 +3771,10 @@
         } finally { cloudApplying = false; }
       };
       window.sinauuWorkspaceReady = true;
+      const initialHash = window.location.hash.replace(/^#/, "");
+      if (initialHash && ["overview", "adventure", "practice", "vocabulary", "grammar", "reading", "review", "progress", "placement", "speaking", "writing", "listening", "pronunciation"].includes(initialHash)) {
+        setView(initialHash);
+      }
       window.dispatchEvent(new CustomEvent("sinauu:workspace-ready"));
       const stale=Object.keys(state.wordProgress).filter(id=>!words.some(w=>w.id===id));
       if(stale.length)toast(stale.length+" catatan kata lama tersimpan tetapi tidak ada dalam korpus versi ini.");

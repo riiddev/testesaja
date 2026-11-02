@@ -2428,6 +2428,7 @@
 
   function openDialogue(dialogueId) {
     if (!dialogues.some((item) => item.id === dialogueId)) return;
+    window.sinauuOpenPracticeModule?.("listening");
     dialogueRun = { dialogueId, stage: "roleplay", turnIndex: 0, answers: [], locked: false, selectedAnswer: null, isCorrect: false, transcriptVisible: false, audioUnavailable: false };
     renderDialogueLibrary();
   }
@@ -2495,6 +2496,7 @@
     if (!dialogue || !studioDrafts) return;
     dialogueRun = null;
     renderDialogueLibrary();
+    window.sinauuOpenPracticeModule?.("speaking");
     selectStudioPrompt("speaking", dialogue.speakingPromptId);
     $("#adventure-speaking-studio")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -2542,30 +2544,30 @@
       const mistakeSkillFilter = event.target.closest("[data-mistake-skill-filter]");
       if (mistakeSkillFilter) { mistakeSkillFilterValue = mistakeSkillFilter.dataset.mistakeSkillFilter; renderMistakeJournal(); return; }
       const storyOpen = event.target.closest("[data-story-open]");
-      if (storyOpen) { openStory(storyOpen.dataset.storyOpen); return; }
+      if (storyOpen) { window.sinauuOpenPracticeModule?.("reading-stories"); openStory(storyOpen.dataset.storyOpen); return; }
       if (event.target.closest("[data-story-close]")) { storyRun = null; renderStoryLibrary(); return; }
       if (event.target.closest("[data-story-reload]")) { storyLoadError = ""; storiesLoaded = false; renderStoryLibrary(); void loadStories(); return; }
       const storyAnswer = event.target.closest("[data-story-answer]");
       if (storyAnswer) { answerStory(Number(storyAnswer.dataset.storyAnswer)); return; }
       if (event.target.closest("[data-story-next]")) { advanceStory(); return; }
       const storyRetry = event.target.closest("[data-story-retry]");
-      if (storyRetry) { openStory(storyRetry.dataset.storyRetry); return; }
+      if (storyRetry) { window.sinauuOpenPracticeModule?.("reading-stories"); openStory(storyRetry.dataset.storyRetry); return; }
       if (event.target.closest("[data-story-listen]")) { listenToStory(); return; }
       const dialogueOpen = event.target.closest("[data-dialogue-open]");
-      if (dialogueOpen) { openDialogue(dialogueOpen.dataset.dialogueOpen); return; }
+      if (dialogueOpen) { window.sinauuOpenPracticeModule?.("listening"); openDialogue(dialogueOpen.dataset.dialogueOpen); return; }
       if (event.target.closest("[data-dialogue-close]")) { dialogueRun = null; renderDialogueLibrary(); return; }
       if (event.target.closest("[data-dialogue-reload]")) { dialogueLoadError = ""; dialoguesLoaded = false; renderDialogueLibrary(); void loadDialogues(); return; }
       const dialogueAnswer = event.target.closest("[data-dialogue-answer]");
       if (dialogueAnswer) { answerDialogue(Number(dialogueAnswer.dataset.dialogueAnswer)); return; }
       if (event.target.closest("[data-dialogue-next]")) { advanceDialogue(); return; }
       const dialogueRetry = event.target.closest("[data-dialogue-retry]");
-      if (dialogueRetry) { openDialogue(dialogueRetry.dataset.dialogueRetry); return; }
+      if (dialogueRetry) { window.sinauuOpenPracticeModule?.("listening"); openDialogue(dialogueRetry.dataset.dialogueRetry); return; }
       if (event.target.closest("[data-dialogue-listen]")) { listenToDialogue(); return; }
       if (event.target.closest("[data-dialogue-transcript]")) { if (dialogueRun) { dialogueRun.transcriptVisible = !dialogueRun.transcriptVisible; renderDialogueLibrary(); } return; }
       const dialogueSpeaking = event.target.closest("[data-dialogue-speaking]");
-      if (dialogueSpeaking) { openSpeakingFromDialogue(dialogueSpeaking.dataset.dialogueSpeaking); return; }
+      if (dialogueSpeaking) { window.sinauuOpenPracticeModule?.("speaking"); openSpeakingFromDialogue(dialogueSpeaking.dataset.dialogueSpeaking); return; }
       const listeningOpen = event.target.closest("[data-listening-open]");
-      if (listeningOpen) { openListening(listeningOpen.dataset.listeningOpen); return; }
+      if (listeningOpen) { window.sinauuOpenPracticeModule?.("listening"); openListening(listeningOpen.dataset.listeningOpen); return; }
       if (event.target.closest("[data-listening-close]")) { listeningRun = null; renderListeningLab(); return; }
       if (event.target.closest("[data-listening-reload]")) { listeningLoadError = ""; listeningLoaded = false; renderListeningLab(); void loadListeningLab(); return; }
       if (event.target.closest("[data-listening-play]")) { playListeningStage(); return; }
@@ -2576,9 +2578,9 @@
       if (listeningAnswer) { answerListening(Number(listeningAnswer.dataset.listeningAnswer)); return; }
       if (event.target.closest("[data-listening-next]")) { advanceListening(); return; }
       const listeningRetry = event.target.closest("[data-listening-retry]");
-      if (listeningRetry) { openListening(listeningRetry.dataset.listeningRetry); return; }
+      if (listeningRetry) { window.sinauuOpenPracticeModule?.("listening"); openListening(listeningRetry.dataset.listeningRetry); return; }
       const pronunciationOpen = event.target.closest("[data-pronunciation-open]");
-      if (pronunciationOpen) { openPronunciation(pronunciationOpen.dataset.pronunciationOpen); return; }
+      if (pronunciationOpen) { window.sinauuOpenPracticeModule?.("pronunciation"); openPronunciation(pronunciationOpen.dataset.pronunciationOpen); return; }
       if (event.target.closest("[data-pronunciation-close]")) { closePronunciationStudio(); return; }
       if (event.target.closest("[data-pronunciation-reload]")) { pronunciationLoadError = ""; pronunciationLoaded = false; renderPronunciationStudio(); void loadPronunciationStudio(); return; }
       if (event.target.closest("[data-pronunciation-reference]")) {
@@ -2592,7 +2594,11 @@
       if (event.target.closest("[data-speaking-restart]")) { restartSpeakingPractice(); return; }
       if (event.target.closest("[data-writing-build-outline]")) { buildWritingOutline(); return; }
       const studioPrompt = event.target.closest("[data-studio-prompt]");
-      if (studioPrompt) { selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt); return; }
+      if (studioPrompt) {
+        if (studioPrompt.dataset.studioKind) window.sinauuOpenPracticeModule?.(studioPrompt.dataset.studioKind);
+        selectStudioPrompt(studioPrompt.dataset.studioKind, studioPrompt.dataset.studioPrompt);
+        return;
+      }
       const studioComplete = event.target.closest("[data-studio-complete]");
       if (studioComplete) { completeStudioPractice(studioComplete.dataset.studioKind); return; }
       const studioClear = event.target.closest("[data-studio-clear]");
