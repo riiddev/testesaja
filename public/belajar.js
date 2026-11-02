@@ -911,6 +911,796 @@
     $("#nav-review-count").textContent=due.length;
     $("#review-list").innerHTML=due.length?due.map(w=>'<div class="review-row"><span class="review-due-label">JATUH TEMPO</span><div><h3>'+esc(w.word)+' · '+esc(w.level)+'</h3><p>'+esc(w.meaning)+' · '+(state.wordProgress[w.id].reviewSuccesses||0)+'/3 review beruntun</p></div><button type="button" data-review-word="'+esc(w.id)+'">Mulai review →</button></div>').join(""):'<div class="review-empty"><h2>Belum ada review yang jatuh tempo.</h2><p>Setelah kamu mempelajari kata, jadwal review akan muncul di sini. Jadwal memakai hari yang benar-benar berlalu; membuka halaman berulang kali tidak mempercepatnya.</p><button class="primary-action" type="button" data-view-target="vocabulary">Pelajari kata baru ↗</button></div>';
   }
+  function aggregateSkillPassport(coreState, extras, wordList, topicList) {
+    const core = coreState || {};
+    const wordProg = core.wordProgress && typeof core.wordProgress === "object" ? core.wordProgress : {};
+    const grammarProg = core.grammarProgress && typeof core.grammarProgress === "object" ? core.grammarProgress : {};
+    const history = Array.isArray(core.history) ? core.history : [];
+
+    const extraLearning = (extras && extras.extraLearning && typeof extras.extraLearning === "object") ? extras.extraLearning : {};
+    const habitProg = (extras && extras.habitProgress && typeof extras.habitProgress === "object") ? extras.habitProgress : {};
+    const adventureProg = (extras && extras.adventureProgress && typeof extras.adventureProgress === "object") ? extras.adventureProgress : {};
+
+    const studioSessions = Array.isArray(adventureProg.studioSessions) ? adventureProg.studioSessions : [];
+    const skillEvidence = (adventureProg.skillEvidence && typeof adventureProg.skillEvidence === "object") ? adventureProg.skillEvidence : {};
+
+    function cleanDate(val) {
+      if (!val) return null;
+      const d = new Date(val);
+      return !isNaN(d.getTime()) ? d : null;
+    }
+    function latestDate(dates) {
+      let max = null;
+      for (const item of dates) {
+        const d = cleanDate(item);
+        if (d && (!max || d.getTime() > max.getTime())) max = d;
+      }
+      return max ? max.toISOString() : null;
+    }
+    function formatLastPracticed(iso) {
+      if (!iso) return "Belum pernah";
+      const d = cleanDate(iso);
+      if (!d) return "Belum pernah";
+      return fmtDate(d, { day: "numeric", month: "short", year: "numeric" }) + " · " +
+        new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(d);
+    }
+    function distinctDays(dates) {
+      const set = new Set();
+      for (const item of dates) {
+        const d = cleanDate(item);
+        if (d) set.add(d.toISOString().slice(0, 10));
+      }
+      return set.size;
+    }
+
+    // 1. VOCABULARY
+    const vocabDates = [];
+    let vocabWordsPracticed = 0;
+    let vocabTotalAttempts = 0;
+    let vocabMasteredCount = 0;
+    let vocabReviewAttempts = 0;
+    let vocabReviewCorrect = 0;
+
+    const allWordKeys = new Set(Object.keys(wordProg));
+    if (Array.isArray(wordList)) {
+      for (const w of wordList) {
+        if (w && w.id) allWordKeys.add(w.id);
+      }
+    }
+
+    for (const key of allWordKeys) {
+      const p = wordProg[key];
+      if (!p || typeof p !== "object") continue;
+      const attemptsCount = Array.isArray(p.attempts) ? p.attempts.length : 0;
+      const isPracticed = attemptsCount > 0 || (Array.isArray(p.studiedDates) && p.studiedDates.length > 0) || p.firstSeenDate || (Array.isArray(p.reviewDates) && p.reviewDates.length > 0);
+      if (isPracticed) vocabWordsPracticed++;
+      vocabTotalAttempts += attemptsCount;
+      if (masteryGate(p) || p.masteredAt) vocabMasteredCount++;
+      if (Array.isArray(p.reviewHistory)) {
+        vocabReviewAttempts += p.reviewHistory.length;
+        vocabReviewCorrect += p.reviewHistory.filter(r => r && r.correct).length;
+        p.reviewHistory.forEach(r => { if (r && r.at) vocabDates.push(r.at); });
+      }
+      if (p.lastSeenAt) vocabDates.push(p.lastSeenAt);
+      if (Array.isArray(p.studiedDates)) p.studiedDates.forEach(d => { if (d) vocabDates.push(d); });
+    }
+
+    const matching = extraLearning.matching || {};
+    const matchingMatches = Number(matching.totalMatches) || 0;
+    const matchingMistakes = Number(matching.totalMistakes) || 0;
+    const matchingAttempts = matchingMatches + matchingMistakes;
+    vocabTotalAttempts += matchingAttempts;
+    vocabReviewAttempts += matchingAttempts;
+    vocabReviewCorrect += matchingMatches;
+
+    const vocabEv = Array.isArray(skillEvidence.vocabulary) ? skillEvidence.vocabulary : [];
+    vocabTotalAttempts += vocabEv.length;
+    vocabEv.forEach(e => { if (e && e.recordedAt) vocabDates.push(e.recordedAt); });
+
+    history.filter(h => h && ["vocabulary", "matching"].includes(h.type)).forEach(h => {
+      if (h.at) vocabDates.push(h.at);
+    });
+
+    const vocabDays = distinctDays(vocabDates);
+    const vocabStatus = (vocabWordsPracticed === 0 && vocabTotalAttempts === 0)
+      ? "not-started"
+      : (vocabWordsPracticed >= 10 || vocabMasteredCount >= 1 || vocabDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const vocabStatusReason = vocabStatus === "not-started"
+      ? "Belum ada kata yang dipelajari atau direview."
+      : vocabStatus === "consistent"
+        ? "Telah mempelajari ≥10 kata atau memiliki catatan latihan bertahap."
+        : "Telah memulai latihan kosakata awal.";
+
+    const vocabAccuracy = vocabReviewAttempts > 0
+      ? {
+          percentage: Math.round((vocabReviewCorrect / vocabReviewAttempts) * 100),
+          correct: vocabReviewCorrect,
+          total: vocabReviewAttempts,
+          note: "Akurasi review berkala & matching"
+        }
+      : null;
+
+    const vocabEntry = {
+      id: "vocabulary",
+      title: "Kosakata (Vocabulary)",
+      shortName: "Kosakata",
+      symbol: "Aa",
+      status: vocabStatus,
+      statusLabel: vocabStatus === "not-started" ? "Belum dimulai" : vocabStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: vocabStatusReason,
+      attemptsCount: vocabTotalAttempts,
+      completedCount: vocabWordsPracticed,
+      completedLabel: vocabWordsPracticed + " kata dipelajari",
+      accuracy: vocabAccuracy,
+      accuracyNote: "Hanya dinilai saat sesi review & matching",
+      mastery: {
+        count: vocabMasteredCount,
+        label: vocabMasteredCount > 0 ? (vocabMasteredCount + " kata mastered (lulus kriteria review berjeda)") : "0 kata mastered (butuh 3 review sukses & interval 12 hari)"
+      },
+      lastPracticedAt: latestDate(vocabDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(vocabDates)),
+      evidenceDetails: [
+        vocabWordsPracticed + " kata dipelajari di korpus",
+        vocabReviewAttempts + " soal review & matching dikerjakan",
+        vocabDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Latih Kosakata ↗",
+        viewTarget: dueWords().length > 0 ? "review" : "vocabulary"
+      }
+    };
+
+    // 2. GRAMMAR
+    const grammarDates = [];
+    let grammarTopicsAttempted = 0;
+    let grammarTotalAttempts = 0;
+    let grammarTotalCorrect = 0;
+
+    const allTopicKeys = new Set(Object.keys(grammarProg));
+    if (Array.isArray(topicList)) {
+      for (const t of topicList) {
+        if (t && t.id) allTopicKeys.add(t.id);
+      }
+    }
+
+    for (const key of allTopicKeys) {
+      const p = grammarProg[key];
+      if (!p || typeof p !== "object") continue;
+      const att = Number(p.attempts) || 0;
+      const cor = Number(p.correct) || 0;
+      const answersCount = p.answers && typeof p.answers === "object" ? Object.keys(p.answers).length : 0;
+      if (att > 0 || answersCount > 0) grammarTopicsAttempted++;
+      grammarTotalAttempts += att;
+      grammarTotalCorrect += cor;
+      if (p.answers && typeof p.answers === "object") {
+        Object.values(p.answers).forEach(a => { if (a && a.at) grammarDates.push(a.at); });
+      }
+      if (Array.isArray(p.history)) {
+        p.history.forEach(h => { if (h && h.at) grammarDates.push(h.at); });
+      }
+    }
+
+    const grammarEv = Array.isArray(skillEvidence.grammar) ? skillEvidence.grammar : [];
+    grammarTotalAttempts += grammarEv.length;
+    grammarEv.forEach(e => { if (e && e.recordedAt) grammarDates.push(e.recordedAt); });
+
+    history.filter(h => h && h.type === "grammar").forEach(h => {
+      if (h.at) grammarDates.push(h.at);
+    });
+
+    const grammarDays = distinctDays(grammarDates);
+    const grammarStatus = (grammarTotalAttempts === 0)
+      ? "not-started"
+      : ((grammarTopicsAttempted >= 2 && grammarTotalAttempts >= 6) || grammarDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const grammarStatusReason = grammarStatus === "not-started"
+      ? "Belum ada soal grammar yang dicoba."
+      : grammarStatus === "consistent"
+        ? "Telah menyelesaikan latihan di minimal 2 topik grammar."
+        : "Telah menjawab latihan soal grammar.";
+
+    const grammarAccuracy = grammarTotalAttempts > 0
+      ? {
+          percentage: Math.round((grammarTotalCorrect / grammarTotalAttempts) * 100),
+          correct: grammarTotalCorrect,
+          total: grammarTotalAttempts,
+          note: "Akurasi soal latihan grammar"
+        }
+      : null;
+
+    const grammarEntry = {
+      id: "grammar",
+      title: "Tata Bahasa (Grammar)",
+      shortName: "Grammar",
+      symbol: "¶",
+      status: grammarStatus,
+      statusLabel: grammarStatus === "not-started" ? "Belum dimulai" : grammarStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: grammarStatusReason,
+      attemptsCount: grammarTotalAttempts,
+      completedCount: grammarTopicsAttempted,
+      completedLabel: grammarTopicsAttempted + " topik dicoba",
+      accuracy: grammarAccuracy,
+      accuracyNote: "Dihitung dari jawaban soal topik grammar",
+      mastery: null,
+      lastPracticedAt: latestDate(grammarDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(grammarDates)),
+      evidenceDetails: [
+        grammarTopicsAttempted + " topik tata bahasa dipraktikkan",
+        grammarTotalAttempts + " butir latihan dijawab (" + grammarTotalCorrect + " tepat)",
+        grammarDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Pelajari Grammar ↗",
+        viewTarget: "grammar"
+      }
+    };
+
+    // 3. READING
+    const readingDates = [];
+    let readingCompletedCount = 0;
+    let readingAttemptsCount = 0;
+    let readingCorrectCount = 0;
+
+    const readingSkills = extraLearning.reading && typeof extraLearning.reading === "object" ? extraLearning.reading : {};
+    Object.values(readingSkills).forEach(s => {
+      if (!s || typeof s !== "object") return;
+      const att = Number(s.attempts) || 0;
+      const cor = Number(s.correct) || 0;
+      readingAttemptsCount += att;
+      readingCorrectCount += cor;
+      if (s.completed) readingCompletedCount++;
+    });
+
+    Object.values(habitProg).forEach(p => {
+      if (!p || typeof p !== "object" || !p.answers) return;
+      const answers = Object.values(p.answers);
+      answers.forEach(a => {
+        if (!a || typeof a !== "object") return;
+        readingAttemptsCount++;
+        if (a.correct) readingCorrectCount++;
+        if (a.answeredAt) readingDates.push(a.answeredAt);
+      });
+      if (answers.length >= 3) readingCompletedCount++;
+    });
+
+    const storyProg = adventureProg.storyProgress && typeof adventureProg.storyProgress === "object" ? adventureProg.storyProgress : {};
+    Object.values(storyProg).forEach(s => {
+      if (!s || typeof s !== "object") return;
+      if (Array.isArray(s.attempts)) {
+        s.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          const tot = Number(a.total) || 1;
+          const sco = Number(a.score) || 0;
+          readingAttemptsCount += tot;
+          readingCorrectCount += sco;
+          if (a.completedAt) readingDates.push(a.completedAt);
+        });
+      }
+      if (s.completedAt || (Array.isArray(s.attempts) && s.attempts.some(a => a && a.passed))) {
+        readingCompletedCount++;
+      }
+      if (s.updatedAt) readingDates.push(s.updatedAt);
+    });
+
+    const readingEv = Array.isArray(skillEvidence.reading) ? skillEvidence.reading : [];
+    readingAttemptsCount += readingEv.length;
+    readingEv.forEach(e => { if (e && e.recordedAt) readingDates.push(e.recordedAt); });
+
+    history.filter(h => h && h.type === "reading").forEach(h => {
+      if (h.at) readingDates.push(h.at);
+    });
+
+    const readingDays = distinctDays(readingDates);
+    const readingStatus = (readingAttemptsCount === 0 && readingCompletedCount === 0)
+      ? "not-started"
+      : (readingCompletedCount >= 2 || readingDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const readingStatusReason = readingStatus === "not-started"
+      ? "Belum ada bacaan HABIT, skill, atau cerita yang diselesaikan."
+      : readingStatus === "consistent"
+        ? "Telah menyelesaikan minimal 2 aktivitas bacaan atau berlatih berkala."
+        : "Telah memulai latihan pemahaman bacaan.";
+
+    const readingAccuracy = readingAttemptsCount > 0
+      ? {
+          percentage: Math.round((readingCorrectCount / readingAttemptsCount) * 100),
+          correct: readingCorrectCount,
+          total: readingAttemptsCount,
+          note: "Akurasi soal pemahaman teks (HABIT, Skills, Stories)"
+        }
+      : null;
+
+    const readingEntry = {
+      id: "reading",
+      title: "Membaca (Reading)",
+      shortName: "Reading",
+      symbol: "▤",
+      status: readingStatus,
+      statusLabel: readingStatus === "not-started" ? "Belum dimulai" : readingStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: readingStatusReason,
+      attemptsCount: readingAttemptsCount,
+      completedCount: readingCompletedCount,
+      completedLabel: readingCompletedCount + " aktivitas bacaan selesai",
+      accuracy: readingAccuracy,
+      accuracyNote: "Dihitung dari soal pemahaman teks",
+      mastery: null,
+      lastPracticedAt: latestDate(readingDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(readingDates)),
+      evidenceDetails: [
+        readingCompletedCount + " bacaan selesai (HABIT, Stories, Reading Skills)",
+        readingAttemptsCount + " butir pemahaman dijawab (" + readingCorrectCount + " tepat)",
+        readingDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Buka Bacaan ↗",
+        viewTarget: "reading"
+      }
+    };
+
+    // 4. LISTENING
+    const listeningDates = [];
+    let listeningCompletedCount = 0;
+    let listeningAttemptsCount = 0;
+    let listeningTotalScore = 0;
+    let listeningTotalPossible = 0;
+
+    const listeningProg = adventureProg.listeningProgress && typeof adventureProg.listeningProgress === "object" ? adventureProg.listeningProgress : {};
+    Object.values(listeningProg).forEach(e => {
+      if (!e || typeof e !== "object") return;
+      if (Array.isArray(e.attempts)) {
+        e.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          listeningAttemptsCount++;
+          listeningTotalScore += (Number(a.score) || 0);
+          listeningTotalPossible += (Number(a.total) || 0);
+          if (a.completedAt) listeningDates.push(a.completedAt);
+        });
+      }
+      if (e.completedAt || (Array.isArray(e.attempts) && e.attempts.some(a => a && a.passed))) {
+        listeningCompletedCount++;
+      }
+      if (e.updatedAt) listeningDates.push(e.updatedAt);
+    });
+
+    const listeningEv = Array.isArray(skillEvidence.listening) ? skillEvidence.listening : [];
+    listeningAttemptsCount += listeningEv.length;
+    listeningEv.forEach(ev => { if (ev && ev.recordedAt) listeningDates.push(ev.recordedAt); });
+
+    const listeningDays = distinctDays(listeningDates);
+    const listeningStatus = (listeningAttemptsCount === 0 && listeningCompletedCount === 0)
+      ? "not-started"
+      : (listeningCompletedCount >= 2 || listeningDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const listeningStatusReason = listeningStatus === "not-started"
+      ? "Belum ada latihan Listening Lab atau audio yang dicoba."
+      : listeningStatus === "consistent"
+        ? "Telah menyelesaikan minimal 2 latihan Listening Lab."
+        : "Telah mencoba latihan menyimak.";
+
+    const listeningAccuracy = listeningTotalPossible > 0
+      ? {
+          percentage: Math.round((listeningTotalScore / listeningTotalPossible) * 100),
+          correct: listeningTotalScore,
+          total: listeningTotalPossible,
+          note: "Akurasi tahap Listening Lab"
+        }
+      : null;
+
+    const listeningEntry = {
+      id: "listening",
+      title: "Menyimak (Listening)",
+      shortName: "Listening",
+      symbol: ")))",
+      status: listeningStatus,
+      statusLabel: listeningStatus === "not-started" ? "Belum dimulai" : listeningStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: listeningStatusReason,
+      attemptsCount: listeningAttemptsCount,
+      completedCount: listeningCompletedCount,
+      completedLabel: listeningCompletedCount + " latihan audio selesai",
+      accuracy: listeningAccuracy,
+      accuracyNote: "Dihitung dari soal Listening Lab",
+      mastery: null,
+      lastPracticedAt: latestDate(listeningDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(listeningDates)),
+      evidenceDetails: [
+        listeningCompletedCount + " latihan Listening Lab selesai",
+        listeningAttemptsCount + " percobaan menyimak tercatat",
+        listeningDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Buka Listening Lab ↗",
+        viewTarget: "adventure"
+      }
+    };
+
+    // 5. SPEAKING
+    const speakingDates = [];
+    let speakingCompletedCount = 0;
+    let speakingAttemptsCount = 0;
+    let speakingChecklistTotal = 0;
+
+    const speakingSessions = studioSessions.filter(s => s && s.studioType === "speaking");
+    speakingSessions.forEach(s => {
+      speakingAttemptsCount++;
+      speakingCompletedCount++;
+      speakingChecklistTotal += (Number(s.checklistCompleted) || 0);
+      if (s.completedAt) speakingDates.push(s.completedAt);
+      if (s.updatedAt) speakingDates.push(s.updatedAt);
+    });
+
+    const dialogueProg = adventureProg.dialogueProgress && typeof adventureProg.dialogueProgress === "object" ? adventureProg.dialogueProgress : {};
+    Object.values(dialogueProg).forEach(d => {
+      if (!d || typeof d !== "object") return;
+      if (Array.isArray(d.attempts)) {
+        d.attempts.forEach(a => {
+          if (!a || typeof a !== "object") return;
+          speakingAttemptsCount++;
+          if (a.completedAt) speakingDates.push(a.completedAt);
+        });
+      }
+      if (d.completedAt || (Array.isArray(d.attempts) && d.attempts.some(a => a && a.passed))) {
+        speakingCompletedCount++;
+      }
+      if (d.updatedAt) speakingDates.push(d.updatedAt);
+    });
+
+    const speakingEv = Array.isArray(skillEvidence.speaking) ? skillEvidence.speaking : [];
+    speakingAttemptsCount += speakingEv.length;
+    speakingEv.forEach(ev => { if (ev && ev.recordedAt) speakingDates.push(ev.recordedAt); });
+
+    const speakingDays = distinctDays(speakingDates);
+    const speakingStatus = (speakingAttemptsCount === 0 && speakingCompletedCount === 0)
+      ? "not-started"
+      : (speakingCompletedCount >= 2 || speakingDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const speakingStatusReason = speakingStatus === "not-started"
+      ? "Belum ada sesi Speaking Studio atau percakapan yang dicoba."
+      : speakingStatus === "consistent"
+        ? "Telah menyelesaikan minimal 2 sesi berbicara atau percakapan."
+        : "Telah mencoba sesi berbicara/roleplay.";
+
+    const speakingEntry = {
+      id: "speaking",
+      title: "Berbicara (Speaking)",
+      shortName: "Speaking",
+      symbol: "↗",
+      status: speakingStatus,
+      statusLabel: speakingStatus === "not-started" ? "Belum dimulai" : speakingStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: speakingStatusReason,
+      attemptsCount: speakingAttemptsCount,
+      completedCount: speakingCompletedCount,
+      completedLabel: speakingCompletedCount + " sesi berbicara selesai",
+      accuracy: null,
+      accuracyNote: "Evaluasi refleksi mandiri, tanpa skor otomatis",
+      mastery: null,
+      lastPracticedAt: latestDate(speakingDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(speakingDates)),
+      evidenceDetails: [
+        speakingSessions.length + " sesi Speaking Studio mandiri",
+        speakingChecklistTotal + " kriteria checklist self-review terpenuhi",
+        speakingDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Buka Speaking Studio ↗",
+        viewTarget: "adventure"
+      }
+    };
+
+    // 6. WRITING
+    const writingDates = [];
+    let writingCompletedCount = 0;
+    let writingAttemptsCount = 0;
+    let writingWordsTotal = 0;
+    let writingChecklistTotal = 0;
+
+    const writingSessions = studioSessions.filter(s => s && s.studioType === "writing");
+    writingSessions.forEach(s => {
+      writingAttemptsCount++;
+      writingCompletedCount++;
+      writingWordsTotal += (Number(s.wordCount) || 0);
+      writingChecklistTotal += (Number(s.checklistCompleted) || 0);
+      if (s.completedAt) writingDates.push(s.completedAt);
+      if (s.updatedAt) writingDates.push(s.updatedAt);
+    });
+
+    const writingEv = Array.isArray(skillEvidence.writing) ? skillEvidence.writing : [];
+    writingAttemptsCount += writingEv.length;
+    writingEv.forEach(ev => { if (ev && ev.recordedAt) writingDates.push(ev.recordedAt); });
+
+    const writingDays = distinctDays(writingDates);
+    const writingStatus = (writingAttemptsCount === 0 && writingCompletedCount === 0)
+      ? "not-started"
+      : (writingCompletedCount >= 2 || writingDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const writingStatusReason = writingStatus === "not-started"
+      ? "Belum ada sesi Writing Studio yang diselesaikan."
+      : writingStatus === "consistent"
+        ? "Telah menyelesaikan minimal 2 sesi menulis dengan refleksi."
+        : "Telah membuat draft tulisan dan refleksi awal.";
+
+    const writingEntry = {
+      id: "writing",
+      title: "Menulis (Writing)",
+      shortName: "Writing",
+      symbol: "✎",
+      status: writingStatus,
+      statusLabel: writingStatus === "not-started" ? "Belum dimulai" : writingStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: writingStatusReason,
+      attemptsCount: writingAttemptsCount,
+      completedCount: writingCompletedCount,
+      completedLabel: writingCompletedCount + " sesi tulisan selesai",
+      accuracy: null,
+      accuracyNote: "Evaluasi refleksi mandiri, tanpa skor otomatis",
+      mastery: null,
+      lastPracticedAt: latestDate(writingDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(writingDates)),
+      evidenceDetails: [
+        writingSessions.length + " sesi Writing Studio selesai",
+        writingWordsTotal + " kata disusun dalam sesi tersimpan",
+        writingChecklistTotal + " kriteria checklist self-review terpenuhi"
+      ],
+      primaryAction: {
+        label: "Buka Writing Studio ↗",
+        viewTarget: "adventure"
+      }
+    };
+
+    // 7. PRONUNCIATION
+    const pronDates = [];
+    let pronPhrasesPracticed = 0;
+    let pronTotalAttempts = 0;
+    let pronTotalDurationMs = 0;
+
+    const pronProg = adventureProg.pronunciationProgress && typeof adventureProg.pronunciationProgress === "object" ? adventureProg.pronunciationProgress : {};
+    Object.values(pronProg).forEach(p => {
+      if (!p || typeof p !== "object") return;
+      const attempts = Array.isArray(p.attempts) ? p.attempts : [];
+      if (attempts.length > 0) pronPhrasesPracticed++;
+      attempts.forEach(a => {
+        if (!a || typeof a !== "object") return;
+        pronTotalAttempts++;
+        pronTotalDurationMs += (Number(a.durationMs) || 0);
+        if (a.completedAt) pronDates.push(a.completedAt);
+      });
+      if (p.updatedAt) pronDates.push(p.updatedAt);
+    });
+
+    const pronDays = distinctDays(pronDates);
+    const pronStatus = (pronTotalAttempts === 0)
+      ? "not-started"
+      : (pronPhrasesPracticed >= 3 || pronTotalAttempts >= 5 || pronDays >= 2)
+        ? "consistent"
+        : "practicing";
+
+    const pronStatusReason = pronStatus === "not-started"
+      ? "Belum ada rekaman artikulasi frasa yang dicatat."
+      : pronStatus === "consistent"
+        ? "Telah melatih ≥3 frasa pengucapan secara berkala."
+        : "Telah merekam latihan artikulasi frasa.";
+
+    const pronSeconds = Math.round(pronTotalDurationMs / 1000);
+    const pronDurationFormatted = pronSeconds >= 60
+      ? (Math.floor(pronSeconds / 60) + " m " + (pronSeconds % 60) + " d")
+      : (pronSeconds + " detik");
+
+    const pronEntry = {
+      id: "pronunciation",
+      title: "Pengucapan (Pronunciation)",
+      shortName: "Pronunciation",
+      symbol: "🗣",
+      status: pronStatus,
+      statusLabel: pronStatus === "not-started" ? "Belum dimulai" : pronStatus === "consistent" ? "Konsisten" : "Sedang berlatih",
+      statusReason: pronStatusReason,
+      attemptsCount: pronTotalAttempts,
+      completedCount: pronPhrasesPracticed,
+      completedLabel: pronPhrasesPracticed + " frasa dipraktikkan",
+      accuracy: null,
+      accuracyNote: "Analisis audio lokal, tanpa skor persentase otomatis",
+      mastery: null,
+      lastPracticedAt: latestDate(pronDates),
+      lastPracticedLabel: formatLastPracticed(latestDate(pronDates)),
+      evidenceDetails: [
+        pronPhrasesPracticed + " frasa pengucapan dicoba",
+        pronTotalAttempts + " rekaman latihan artikulasi (" + pronDurationFormatted + " total rekaman)",
+        pronDays + " hari aktif tercatat"
+      ],
+      primaryAction: {
+        label: "Buka Pronunciation Studio ↗",
+        viewTarget: "adventure"
+      }
+    };
+
+    const skills = [vocabEntry, grammarEntry, readingEntry, listeningEntry, speakingEntry, writingEntry, pronEntry];
+
+    // Compute Overall Insight
+    const activeSkills = skills.filter(s => s.status !== "not-started" || s.attemptsCount > 0 || s.completedCount > 0);
+    let insight = null;
+
+    if (activeSkills.length === 0) {
+      insight = {
+        emptyState: true,
+        mostPracticed: null,
+        leastPracticed: null,
+        insufficientDataReason: null,
+        nextAction: {
+          text: "Mulai sesi kosakata pertamamu untuk meletakkan fondasi kata dasar dalam konteks.",
+          target: "vocabulary",
+          label: "Mulai Kosakata ↗"
+        }
+      };
+    } else if (activeSkills.length === 1) {
+      const active = activeSkills[0];
+      const nextSkill = skills.find(s => s.id !== active.id && s.id !== "pronunciation") || skills[1];
+      insight = {
+        emptyState: false,
+        mostPracticed: {
+          name: active.title,
+          detail: active.completedLabel + " · " + active.attemptsCount + " percobaan"
+        },
+        leastPracticed: null,
+        insufficientDataReason: "Data perbandingan belum cukup: baru 1 dari 7 keterampilan yang aktif. Latih minimal satu keterampilan lain (misalnya Grammar atau Bacaan) untuk melihat peta keseimbangan belajar.",
+        nextAction: {
+          text: "Seimbangkan latihanmu dengan mulai mempelajari " + nextSkill.shortName + ".",
+          target: nextSkill.primaryAction.viewTarget,
+          label: nextSkill.primaryAction.label
+        }
+      };
+    } else {
+      const sorted = activeSkills.slice().sort((a, b) => {
+        const scoreA = a.completedCount * 3 + a.attemptsCount;
+        const scoreB = b.completedCount * 3 + b.attemptsCount;
+        return scoreB - scoreA;
+      });
+      const top = sorted[0];
+      const least = sorted[sorted.length - 1];
+
+      let nextAction = null;
+      const dueCount = typeof dueWords === "function" ? dueWords().length : 0;
+      if (dueCount > 0) {
+        nextAction = {
+          text: "Ada " + dueCount + " kata yang jatuh tempo untuk direview hari ini agar retensi memori tetap kuat.",
+          target: "review",
+          label: "Mulai Review ↗"
+        };
+      } else {
+        const unstarted = skills.find(s => s.status === "not-started");
+        if (unstarted) {
+          nextAction = {
+            text: "Coba keterampilan " + unstarted.shortName + " untuk memperluas variasi kemampuan komunikasimu.",
+            target: unstarted.primaryAction.viewTarget,
+            label: unstarted.primaryAction.label
+          };
+        } else {
+          nextAction = {
+            text: "Fokuskan latihan berikutnya pada " + least.shortName + " agar perkembangan belajarmu merata di semua aspek.",
+            target: least.primaryAction.viewTarget,
+            label: least.primaryAction.label
+          };
+        }
+      }
+
+      insight = {
+        emptyState: false,
+        mostPracticed: {
+          name: top.title,
+          detail: top.completedLabel + " · " + top.attemptsCount + " percobaan"
+        },
+        leastPracticed: {
+          name: least.title,
+          detail: least.completedLabel + " · " + least.attemptsCount + " percobaan"
+        },
+        insufficientDataReason: null,
+        nextAction: nextAction
+      };
+    }
+
+    return {
+      skills,
+      insight,
+      totalActiveSkills: activeSkills.length,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  function renderSkillPassport() {
+    const passportContainer = $("#skill-passport-section");
+    if (!passportContainer) return;
+    const extras = readExtraSnapshots();
+    const passport = aggregateSkillPassport(state, extras, words, topics);
+    window.sinauuSkillPassportData = passport;
+
+    const insightEl = $("#passport-insight-card");
+    const gridEl = $("#passport-skills-grid");
+    if (!insightEl || !gridEl) return;
+
+    if (passport.insight.emptyState) {
+      insightEl.innerHTML = '<div class="passport-empty-state">' +
+        '<div class="passport-empty-copy">' +
+          '<span class="passport-empty-kicker">MEMULAI PERJALANAN</span>' +
+          '<h3>Paspor Kemampuan masih menunggu langkah pertamamu.</h3>' +
+          '<p>Setiap bukti latihan dari kosakata, grammar, bacaan, menyimak, berbicara, menulis, hingga artikulasi akan tercatat di sini secara transparan. Tidak ada skor buatan atau tebakan algoritma.</p>' +
+        '</div>' +
+        '<div class="passport-empty-action">' +
+          '<button type="button" class="primary-action" data-passport-target="' + esc(passport.insight.nextAction.target) + '">' + esc(passport.insight.nextAction.label) + '</button>' +
+        '</div>' +
+      '</div>';
+    } else {
+      insightEl.innerHTML = '<div class="passport-insight-grid">' +
+        '<div class="passport-insight-col">' +
+          '<span class="passport-insight-label">FOKUS TERBANYAK</span>' +
+          '<strong class="passport-insight-highlight">' + esc(passport.insight.mostPracticed.name) + '</strong>' +
+          '<p class="passport-insight-desc">' + esc(passport.insight.mostPracticed.detail) + '</p>' +
+        '</div>' +
+        '<div class="passport-insight-col">' +
+          '<span class="passport-insight-label">PERLU DILATIH</span>' +
+          (passport.insight.leastPracticed ? (
+            '<strong class="passport-insight-highlight">' + esc(passport.insight.leastPracticed.name) + '</strong>' +
+            '<p class="passport-insight-desc">' + esc(passport.insight.leastPracticed.detail) + '</p>'
+          ) : (
+            '<strong class="passport-insight-highlight passport-insufficient-data">Data Belum Cukup</strong>' +
+            '<p class="passport-insight-desc">' + esc(passport.insight.insufficientDataReason) + '</p>'
+          )) +
+        '</div>' +
+        '<div class="passport-insight-col passport-insight-action-col">' +
+          '<span class="passport-insight-label">LANGKAH BERIKUTNYA</span>' +
+          '<p class="passport-insight-action-text">' + esc(passport.insight.nextAction.text) + '</p>' +
+          '<button type="button" class="secondary-action passport-next-btn" data-passport-target="' + esc(passport.insight.nextAction.target) + '">' + esc(passport.insight.nextAction.label) + '</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    gridEl.innerHTML = passport.skills.map(s => {
+      const accuracyHtml = s.accuracy
+        ? '<strong>' + s.accuracy.percentage + '%</strong> <small>(' + s.accuracy.correct + '/' + s.accuracy.total + ' tepat · ' + esc(s.accuracy.note) + ')</small>'
+        : '<span class="metric-na">— <small>' + esc(s.accuracyNote) + '</small></span>';
+
+      const masteryHtml = s.mastery
+        ? '<strong>' + s.mastery.count + ' kata</strong> <small>' + esc(s.mastery.label) + '</small>'
+        : '<span class="metric-na">— <small>Tidak didefinisikan modul</small></span>';
+
+      const evidenceHtml = s.evidenceDetails && s.evidenceDetails.length
+        ? '<div class="passport-evidence-box"><span class="passport-evidence-label">Bukti Rekaman:</span><ul class="passport-evidence-list">' +
+            s.evidenceDetails.map(d => '<li>' + esc(d) + '</li>').join("") +
+          '</ul></div>'
+        : '';
+
+      return '<article class="passport-skill-card" data-skill-id="' + esc(s.id) + '">' +
+        '<div class="passport-skill-header">' +
+          '<div class="passport-skill-title-group">' +
+            '<span class="passport-skill-symbol" aria-hidden="true">' + esc(s.symbol) + '</span>' +
+            '<div><h3 class="passport-skill-name">' + esc(s.title) + '</h3><span class="passport-skill-sub">' + esc(s.shortName) + '</span></div>' +
+          '</div>' +
+          '<span class="passport-status-pill status-' + esc(s.status) + '">' + esc(s.statusLabel) + '</span>' +
+        '</div>' +
+        '<p class="passport-status-reason">' + esc(s.statusReason) + '</p>' +
+        '<div class="passport-metrics-table">' +
+          '<div class="passport-metric-row"><span class="metric-key">Aktivitas Selesai</span><span class="metric-val"><strong>' + esc(s.completedLabel) + '</strong></span></div>' +
+          '<div class="passport-metric-row"><span class="metric-key">Total Percobaan</span><span class="metric-val">' + s.attemptsCount + ' percobaan</span></div>' +
+          '<div class="passport-metric-row"><span class="metric-key">Akurasi Soal</span><span class="metric-val">' + accuracyHtml + '</span></div>' +
+          '<div class="passport-metric-row"><span class="metric-key">Status Mastery</span><span class="metric-val">' + masteryHtml + '</span></div>' +
+          '<div class="passport-metric-row"><span class="metric-key">Terakhir Dilatih</span><span class="metric-val">' + esc(s.lastPracticedLabel) + '</span></div>' +
+        '</div>' +
+        evidenceHtml +
+        '<div class="passport-card-footer">' +
+          '<button type="button" class="plain-action passport-card-action" data-passport-target="' + esc(s.primaryAction.viewTarget) + '">' + esc(s.primaryAction.label) + '</button>' +
+        '</div>' +
+      '</article>';
+    }).join("");
+  }
+
   function renderProgress() {
     const stats=levelStats();
     $("#progress-words-tried").textContent=String(words.filter(w=>statusOf(w)!=="new").length);
@@ -924,6 +1714,7 @@
     }).join("");
     const history=state.history.slice(0,18);
     $("#history-list").innerHTML=history.length?history.map(x=>'<div class="history-row"><time>'+esc(fmtDate(new Date(x.at),{day:"2-digit",month:"short"}))+' · '+esc(new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(new Date(x.at)))+'</time><div><strong>'+esc((x.type==="vocabulary"?"Kosakata: ":x.type==="grammar"?"Grammar: ":x.type==="matching"?"Matching: ":x.type==="reading"?"Reading: ":"Aktivitas: ")+x.title)+'</strong><small>'+esc(x.detail||"")+'</small></div><span class="history-result">'+(x.correct===true?"BENAR":x.correct===false?"PERLU ULANG":"")+'</span></div>').join(""):'<div class="empty-state">Belum ada aktivitas. Latihan pertamamu akan tercatat di sini.</div>';
+    renderSkillPassport();
   }
   function exportBackup() {
     const extras=readExtraSnapshots();
@@ -963,6 +1754,7 @@
   function bindEvents() {
     window.addEventListener("sinauu:local-extras-saved",()=>{
       if(state && view==="overview")renderStudyPlan();
+      if(state && view==="progress")renderProgress();
     });
     document.addEventListener("click",async e=>{
       const readingModeBtn=e.target.closest("[data-reading-mode]");
@@ -1016,6 +1808,8 @@
         $("#adventure-daily-quest")?.scrollIntoView({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
         return;
       }
+      const passportBtn=e.target.closest("[data-passport-target]");
+      if(passportBtn){setView(passportBtn.dataset.passportTarget);return;}
       const viewBtn=e.target.closest("[data-view-target]");
       if(viewBtn){setView(viewBtn.dataset.viewTarget);return;}
       const wordBtn=e.target.closest("[data-select-word]");
@@ -1073,6 +1867,7 @@
       await loadDatasets();await loadState();await setTheme(state.settings.theme);
       renderDate();renderOverview();renderVocabulary();renderGrammar();renderReview();renderProgress();
       window.sinauuExportLocalBundle = () => ({schemaVersion:2,core:state,extras:readExtraSnapshots()});
+      window.sinauuGetSkillPassport = () => aggregateSkillPassport(state, readExtraSnapshots(), words, topics);
       window.sinauuApplyCloudBundle = async (bundle) => {
         if (!bundle || !bundle.core || !state) return;
         cloudApplying = true;

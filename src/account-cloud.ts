@@ -14,6 +14,8 @@ declare global {
     sinauuAdventureRestore?: (next: AnyRecord) => void;
     sinauuAdventureBackup?: () => AnyRecord;
     sinauuRenderAdventure?: () => void;
+    sinauuGetSkillPassport?: () => any;
+    sinauuSkillPassportData?: any;
   }
 }
 

@@ -261,7 +261,57 @@ p{color:var(--body)}
 .review-empty{padding:32px 0;border-bottom:1px solid var(--line)}
 .review-empty h2{font-size:2rem}
 .review-empty p{max-width:520px;font-size:.76rem;line-height:1.8}
-.progress-levels-block,.grammar-progress-block,.history-block{margin-bottom:38px}
+.progress-levels-block,.grammar-progress-block,.history-block,.skill-passport-block{margin-bottom:38px}
+.passport-block-heading{margin-bottom:18px}
+.passport-lede{margin-top:6px;margin-bottom:18px;color:var(--body);font-size:.82rem;max-width:680px;line-height:1.55}
+.passport-loading{padding:20px;color:var(--muted);font-size:.8rem}
+.passport-insight-card{background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:20px 24px;margin-bottom:24px}
+.passport-empty-state{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px}
+.passport-empty-copy{max-width:580px}
+.passport-empty-kicker{display:block;font:600 .58rem "Plus Jakarta Sans",monospace;letter-spacing:.08em;color:var(--sage-deep);margin-bottom:6px}
+.passport-empty-copy h3{font:400 1.25rem "Lora",Georgia,serif;margin-bottom:6px}
+.passport-empty-copy p{margin:0;color:var(--muted);font-size:.78rem;line-height:1.6}
+.passport-empty-action .primary-action{cursor:pointer}
+.passport-insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.passport-insight-col{display:flex;flex-direction:column;gap:6px}
+.passport-insight-col+.passport-insight-col{border-left:1px solid var(--line);padding-left:20px}
+.passport-insight-label{font:600 .58rem "Plus Jakarta Sans",monospace;letter-spacing:.08em;color:var(--muted)}
+.passport-insight-highlight{font:500 1.12rem "Lora",Georgia,serif;color:var(--ink)}
+.passport-insight-highlight.passport-insufficient-data{color:var(--muted);font-style:italic}
+.passport-insight-desc{margin:0;font-size:.74rem;color:var(--body);line-height:1.5}
+.passport-insight-action-text{margin:0;font-size:.74rem;color:var(--body);line-height:1.5;margin-bottom:8px}
+.passport-next-btn{padding:6px 12px;font-size:.72rem;align-self:flex-start;cursor:pointer;border:1px solid var(--line);background:var(--paper);border-radius:2px}
+.passport-next-btn:hover{background:var(--paper-deep)}
+.passport-skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-bottom:16px}
+.passport-skill-card{background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.passport-skill-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.passport-skill-title-group{display:flex;align-items:center;gap:10px}
+.passport-skill-symbol{width:34px;height:34px;border-radius:50%;background:var(--paper);border:1px solid var(--line);display:grid;place-items:center;font:500 .85rem "Lora",Georgia,serif;color:var(--sage-deep);flex-shrink:0}
+.passport-skill-name{margin:0;font:500 .92rem "Lora",Georgia,serif;color:var(--ink)}
+.passport-skill-sub{font-size:.65rem;color:var(--muted);font-family:"Plus Jakarta Sans",monospace}
+.passport-status-pill{padding:3px 8px;border-radius:12px;font:600 .58rem "Plus Jakarta Sans",monospace;letter-spacing:.04em;white-space:nowrap}
+.status-not-started{background:var(--paper-deep);color:var(--muted);border:1px solid var(--line)}
+.status-practicing{background:color-mix(in srgb,var(--yellow) 40%,transparent);color:var(--ink);border:1px solid color-mix(in srgb,var(--yellow) 80%,var(--line))}
+.status-consistent{background:var(--sage);color:var(--ink);border:1px solid color-mix(in srgb,var(--sage-deep) 30%,transparent);font-weight:700}
+.passport-status-reason{margin:0;font-size:.68rem;color:var(--muted);line-height:1.45;border-bottom:1px solid var(--line);padding-bottom:10px}
+.passport-metrics-table{display:flex;flex-direction:column;gap:7px;font-size:.72rem}
+.passport-metric-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.passport-metric-row .metric-key{color:var(--muted);font-size:.68rem}
+.passport-metric-row .metric-val{text-align:right;color:var(--ink)}
+.passport-metric-row .metric-val strong{font-weight:600}
+.passport-metric-row .metric-val small{color:var(--muted);font-size:.64rem;margin-left:3px}
+.passport-metric-row .metric-na{color:var(--muted);font-style:italic}
+.passport-evidence-box{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:10px 12px;margin-top:2px}
+.passport-evidence-label{display:block;font:600 .56rem "Plus Jakarta Sans",monospace;color:var(--muted);letter-spacing:.05em;margin-bottom:4px}
+.passport-evidence-list{margin:0;padding-left:14px;font-size:.66rem;color:var(--body);line-height:1.5}
+.passport-card-footer{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+.passport-card-action{font-size:.72rem;color:var(--sage-deep);padding:4px 6px;cursor:pointer;border:0;background:transparent;font-weight:600}
+.passport-card-action:hover{text-decoration:underline;color:var(--ink)}
+.passport-evidence-footnote{margin-top:14px;font-size:.68rem;color:var(--muted);line-height:1.55}
+@media(max-width:860px){
+  .passport-insight-grid{grid-template-columns:1fr;gap:16px}
+  .passport-insight-col+.passport-insight-col{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:16px}
+}
 .detailed-levels{max-width:700px}
 .grammar-progress-list{border-top:1px solid var(--line)}
 .grammar-progress-row{display:grid;grid-template-columns:50px minmax(0,1fr) 110px;gap:15px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}

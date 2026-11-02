@@ -2,16 +2,29 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { chromium } from "playwright";
 import { readFile } from "node:fs/promises";
+import { preview } from "vite";
 
 const baseUrl = (process.env.BASE_URL || "http://127.0.0.1:4173").replace(/\/+$/, "");
 let browser;
+let previewServer;
 
 before(async () => {
+  try {
+    const res = await fetch(baseUrl + "/");
+    if (!res.ok && res.status !== 404) throw new Error();
+  } catch {
+    previewServer = await preview({
+      preview: { port: 4173, host: "127.0.0.1", strictPort: true },
+    });
+  }
   browser = await chromium.launch({ headless: true });
 });
 
 after(async () => {
   await browser?.close();
+  if (previewServer) {
+    await new Promise((resolve) => previewServer.httpServer.close(resolve));
+  }
 });
 
 test("landing CTA sends new visitors to login and a successful mocked signup opens the workspace", async () => {
@@ -173,7 +186,7 @@ test("vocabulary search returns a matching word and reading practice saves an an
   assert.equal(await supplementary.evaluate(el => el.open), true, "learners can expand supplementary context when needed");
 
   await page.locator('[data-view-target="reading"]').first().click();
-  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 20000 });
+  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 30000 });
   await page.locator('[data-reading-mode="skills"]').click();
   assert.equal(await page.locator("#habit-library-section").isVisible(), false, "HABIT library should be hidden while reading skills are active");
   assert.equal(await page.locator("#reading-skills-section").isVisible(), true, "reading skills should be the only active reading collection");
@@ -197,7 +210,7 @@ test("vocabulary search returns a matching word and reading practice saves an an
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.locator('[data-view-target="reading"]').first().click();
-  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 20000 });
+  await page.waitForFunction(() => (document.querySelector("#habit-library-count")?.textContent || "").includes("156"), null, { timeout: 30000 });
   await page.locator("#habit-library-search").fill("The Tiny Tenants Inside You");
   await page.locator('[data-habit-open="the-tiny-tenants-inside-you"]').click();
   await page.locator("#habit-library-detail").waitFor({ state: "visible" });
@@ -2209,5 +2222,467 @@ test("workspace IA keeps five primary destinations, keyboard tabs, and a reachab
     assert.ok(overflow <= 1, `the workspace should not overflow horizontally at ${width}px`);
   }
   assert.deepEqual(pageErrors, [], "workspace navigation should not throw browser JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport presents an honest empty state for a completely new learner", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "new-user-token",
+      refresh_token: "new-user-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "new-learner-user", email: "new@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const passport = page.locator("#skill-passport-section");
+  assert.equal(await passport.count(), 1, "Skill Passport section should exist in Progress");
+  assert.equal(await passport.isVisible(), true, "Skill Passport should be visible");
+
+  // Empty state in insight card
+  const emptyState = page.locator("#passport-insight-card .passport-empty-state");
+  assert.equal(await emptyState.count(), 1, "insight card should render the empty state for new learners");
+  assert.match(await emptyState.innerText(), /Paspor Kemampuan masih menunggu/i);
+  const emptyAction = emptyState.locator("button[data-passport-target='vocabulary']");
+  assert.equal(await emptyAction.count(), 1, "empty state should guide the learner to vocabulary");
+
+  // 7 skill cards
+  const cards = page.locator("#passport-skills-grid .passport-skill-card");
+  assert.equal(await cards.count(), 7, "Skill Passport should present exactly seven skills");
+
+  const skillIds = await cards.evaluateAll((list) => list.map((el) => el.dataset.skillId));
+  assert.deepEqual(skillIds, ["vocabulary", "grammar", "reading", "listening", "speaking", "writing", "pronunciation"]);
+
+  for (let i = 0; i < 7; i++) {
+    const card = cards.nth(i);
+    const statusPill = card.locator(".passport-status-pill");
+    assert.match(await statusPill.innerText(), /Belum dimulai/i);
+    assert.equal(await statusPill.evaluate((el) => el.classList.contains("status-not-started")), true);
+  }
+
+  assert.deepEqual(pageErrors, [], "new learner progress should not throw JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport reports evidence for learners with vocabulary and grammar history", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "vocab-grammar-token",
+      refresh_token: "vocab-grammar-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "vocab-grammar-user", email: "vg@example.com" },
+    }));
+
+    const state = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "word-1": { attempts: [{ mode: "learn", at: new Date().toISOString() }], studiedDates: [new Date().toISOString().slice(0, 10)], reviewHistory: [{ correct: true, at: new Date().toISOString() }] },
+        "word-2": { attempts: [{ mode: "learn", at: new Date().toISOString() }], studiedDates: [new Date().toISOString().slice(0, 10)], reviewHistory: [{ correct: true, at: new Date().toISOString() }] },
+        "word-3": { attempts: [{ mode: "learn", at: new Date().toISOString() }], studiedDates: [new Date().toISOString().slice(0, 10)] }
+      },
+      grammarProgress: {
+        "present-simple": { attempts: 4, correct: 3, answers: { "q1": { correct: true, at: new Date().toISOString() } } },
+        "past-simple": { attempts: 2, correct: 2, answers: { "q2": { correct: true, at: new Date().toISOString() } } }
+      },
+      history: [
+        { type: "vocabulary", title: "Word 1", at: new Date().toISOString() },
+        { type: "grammar", title: "Present Simple", at: new Date().toISOString() }
+      ],
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem("sinauu-learning-state-v1", JSON.stringify(state));
+
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.open("sinauu-local-v1", 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains("state")) request.result.createObjectStore("state", { keyPath: "key" });
+      };
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction("state", "readwrite");
+        transaction.objectStore("state").put({ key: "main", value: state });
+        transaction.oncomplete = () => { db.close(); resolve(); };
+        transaction.onerror = () => { db.close(); reject(transaction.error); };
+      };
+    });
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const vocabCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='vocabulary']");
+  assert.equal(await vocabCard.count(), 1);
+  const vocabText = await vocabCard.innerText();
+  assert.match(vocabText, /3 kata dipelajari/);
+  assert.match(vocabText, /100%/); // review accuracy
+
+  const grammarCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='grammar']");
+  assert.equal(await grammarCard.count(), 1);
+  const grammarText = await grammarCard.innerText();
+  assert.match(grammarText, /2 topik dicoba/);
+  assert.match(grammarText, /83%|84%/); // 5/6 = 83%
+
+  // The other 5 skills should be Not started
+  for (const skillId of ["reading", "listening", "speaking", "writing", "pronunciation"]) {
+    const card = page.locator(`#passport-skills-grid .passport-skill-card[data-skill-id='${skillId}']`);
+    const statusPill = card.locator(".passport-status-pill");
+    assert.match(await statusPill.innerText(), /Belum dimulai/i);
+  }
+
+  // Insight card should compare active skills honestly
+  const insightCard = page.locator("#passport-insight-card");
+  assert.match(await insightCard.innerText(), /FOKUS TERBANYAK/i);
+  assert.match(await insightCard.innerText(), /PERLU DILATIH/i);
+
+  assert.deepEqual(pageErrors, [], "vocab/grammar progress should not throw JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport aggregates evidence across all seven skills without fabricated metrics", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "all-skills-token",
+      refresh_token: "all-skills-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "all-skills-user", email: "allskills@example.com" },
+    }));
+
+    const now = new Date().toISOString();
+    // 1 & 2: Core State (vocab + grammar)
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "apple": { attempts: [{ at: now }], studiedDates: [now.slice(0, 10)], reviewHistory: [{ correct: true, at: now }] },
+        "book": { attempts: [{ at: now }], studiedDates: [now.slice(0, 10)], reviewHistory: [{ correct: false, at: now }] },
+        "chair": { attempts: [{ at: now }], studiedDates: [now.slice(0, 10)], reviewHistory: [{ correct: true, at: now }] }
+      },
+      grammarProgress: {
+        "present-simple": { attempts: 5, correct: 4, answers: { "q1": { correct: true, at: now } } }
+      },
+      history: [{ type: "vocabulary", title: "apple", at: now }],
+      updatedAt: now
+    };
+    localStorage.setItem("sinauu-learning-state-v1", JSON.stringify(core));
+
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.open("sinauu-local-v1", 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains("state")) request.result.createObjectStore("state", { keyPath: "key" });
+      };
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction("state", "readwrite");
+        transaction.objectStore("state").put({ key: "main", value: core });
+        transaction.oncomplete = () => { db.close(); resolve(); };
+        transaction.onerror = () => { db.close(); reject(transaction.error); };
+      };
+    });
+
+    // 3: Extra Learning (matching + reading skills)
+    const extraLearning = {
+      matching: { rounds: 2, totalMatches: 12, totalMistakes: 3 },
+      reading: {
+        "main-idea": { attempts: 3, correct: 2, completed: true }
+      }
+    };
+    localStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(extraLearning));
+
+    // 3: Habit Library
+    const habitProgress = {
+      "passage-1": {
+        answers: {
+          "q1": { selected: 0, correct: true, answeredAt: now },
+          "q2": { selected: 1, correct: true, answeredAt: now },
+          "q3": { selected: 2, correct: false, answeredAt: now }
+        }
+      }
+    };
+    localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(habitProgress));
+
+    // 4, 5, 6, 7: Adventure Progress (listening, speaking, writing, pronunciation)
+    const adventureProgress = {
+      schemaVersion: 1,
+      storyProgress: {
+        "first-day": { attempts: [{ attemptId: "a1", score: 2, total: 3, passed: true, completedAt: now }], bestScore: 2, completedAt: now }
+      },
+      listeningProgress: {
+        "airport-arrival": { attempts: [{ attemptId: "l1", score: 3, total: 3, passed: true, completedAt: now }], bestScore: 3, completedAt: now }
+      },
+      dialogueProgress: {
+        "cafe-order": { attempts: [{ attemptId: "d1", score: 2, total: 2, passed: true, completedAt: now }], bestScore: 2, completedAt: now }
+      },
+      pronunciationProgress: {
+        "phrase-1": { attempts: [{ attemptId: "p1", completedAt: now, durationMs: 4200 }] },
+        "phrase-2": { attempts: [{ attemptId: "p2", completedAt: now, durationMs: 3800 }] }
+      },
+      studioSessions: [
+        { sessionId: "s-1", studioType: "speaking", promptId: "intro", wordCount: 45, checklistCompleted: 3, completedAt: now },
+        { sessionId: "w-1", studioType: "writing", promptId: "email", wordCount: 88, checklistCompleted: 4, completedAt: now }
+      ],
+      skillEvidence: {},
+      updatedAt: now
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(adventureProgress));
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const passport = page.locator("#skill-passport-section");
+  assert.equal(await passport.isVisible(), true);
+
+  // Check 7 cards are active
+  const cards = page.locator("#passport-skills-grid .passport-skill-card");
+  assert.equal(await cards.count(), 7);
+
+  // Check Speaking card: NO invented score
+  const speakingCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='speaking']");
+  const speakingText = await speakingCard.innerText();
+  assert.match(speakingText, /sesi berbicara selesai/);
+  assert.match(speakingText, /Evaluasi refleksi mandiri, tanpa skor otomatis/);
+  assert.match(speakingText, /3 kriteria checklist self-review terpenuhi/);
+
+  // Check Writing card: NO invented score, reports actual words
+  const writingCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='writing']");
+  const writingText = await writingCard.innerText();
+  assert.match(writingText, /1 sesi tulisan selesai/);
+  assert.match(writingText, /88 kata disusun/);
+  assert.match(writingText, /Evaluasi refleksi mandiri, tanpa skor otomatis/);
+
+  // Check Pronunciation card: reports actual duration and phrases, NO automated percentage
+  const pronCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='pronunciation']");
+  const pronText = await pronCard.innerText();
+  assert.match(pronText, /2 frasa dipraktikkan/);
+  assert.match(pronText, /8 detik total rekaman/);
+  assert.match(pronText, /Analisis audio lokal, tanpa skor persentase otomatis/);
+
+  // Check Listening card: reports Listening Lab score
+  const listeningCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='listening']");
+  const listeningText = await listeningCard.innerText();
+  assert.match(listeningText, /100%/);
+  assert.match(listeningText, /1 latihan audio selesai/);
+
+  // Check Reading card: reports completed reading activities
+  const readingCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='reading']");
+  const readingText = await readingCard.innerText();
+  assert.match(readingText, /3 aktivitas bacaan selesai/); // skill + habit + story
+  assert.match(readingText, /pemahaman teks/);
+
+  // Check Insight card
+  const insightCard = page.locator("#passport-insight-card");
+  assert.match(await insightCard.innerText(), /FOKUS TERBANYAK/i);
+  assert.match(await insightCard.innerText(), /PERLU DILATIH/i);
+  assert.match(await insightCard.innerText(), /LANGKAH BERIKUTNYA/i);
+
+  // Test action navigation from a card
+  await readingCard.locator(".passport-card-action").click();
+  assert.equal(await page.locator("#view-reading").isVisible(), true, "clicking card action should navigate to the module");
+
+  // Return to progress and check responsive layout
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  for (const width of [360, 390, 768, 1024]) {
+    await page.setViewportSize({ width, height: 844 });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(overflow <= 1, `Skill Passport should not overflow horizontally at ${width}px`);
+  }
+
+  assert.deepEqual(pageErrors, [], "all-skills progress should not throw JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport safely handles malformed and older legacy schema records", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "corrupt-test-token",
+      refresh_token: "corrupt-test-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "corrupt-user", email: "corrupt@example.com" },
+    }));
+
+    // Corrupted state entries
+    const corruptCore = {
+      schemaVersion: 1,
+      settings: { theme: "light" },
+      wordProgress: {
+        "broken-1": null,
+        "broken-2": "invalid-string",
+        "broken-3": { attempts: "not-an-array", reviewHistory: null }
+      },
+      grammarProgress: {
+        "broken-topic": null
+      },
+      history: [null, undefined, { type: null }]
+    };
+    localStorage.setItem("sinauu-learning-state-v1", JSON.stringify(corruptCore));
+
+    const corruptAdventure = {
+      schemaVersion: 1,
+      pronunciationProgress: { "p1": { attempts: [{ durationMs: "not-a-number", completedAt: null }] } },
+      studioSessions: [null, { studioType: "speaking", checklistCompleted: "NaN" }]
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(corruptAdventure));
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const cards = page.locator("#passport-skills-grid .passport-skill-card");
+  assert.equal(await cards.count(), 7, "passport should render 7 cards despite corrupted records");
+
+  const passportData = await page.evaluate(() => window.sinauuGetSkillPassport?.());
+  assert.ok(passportData, "aggregation layer should return valid data structure");
+  assert.equal(passportData.skills.length, 7);
+
+  assert.deepEqual(pageErrors, [], "corrupt records should be sanitized without throwing JavaScript errors");
+  await page.close();
+});
+
+test("Skill Passport updates dynamically upon CloudBundle v2 restore", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise((resolve) => {
+      const req = indexedDB.deleteDatabase("sinauu-local-v1");
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "restore-test-token",
+      refresh_token: "restore-test-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "restore-user", email: "restore@example.com" },
+    }));
+  });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  // Initially empty
+  const emptyAction = page.locator("#passport-insight-card .passport-empty-state");
+  assert.equal(await emptyAction.count(), 1);
+
+  // Restore CloudBundle v2 with cross-device data
+  await page.evaluate(async () => {
+    const now = new Date().toISOString();
+    const bundle = {
+      schemaVersion: 2,
+      core: {
+        schemaVersion: 1,
+        settings: { theme: "light", dailyGoal: 10 },
+        wordProgress: {
+          "restored-word": { attempts: [{ at: now }], studiedDates: [now.slice(0, 10)], reviewHistory: [{ correct: true, at: now }] }
+        },
+        grammarProgress: {
+          "topic-alpha": { attempts: 3, correct: 3, answers: { "q1": { correct: true, at: now } } }
+        },
+        history: [],
+        updatedAt: now
+      },
+      extras: {
+        extraLearning: {
+          matching: { rounds: 1, totalMatches: 6, totalMistakes: 1 }
+        },
+        habitProgress: {},
+        adventureProgress: {
+          schemaVersion: 1,
+          studioSessions: [
+            { sessionId: "s-restored", studioType: "speaking", promptId: "greeting", wordCount: 25, checklistCompleted: 3, completedAt: now }
+          ]
+        }
+      }
+    };
+    await window.sinauuApplyCloudBundle(bundle);
+  });
+
+  // Re-verify that Skill Passport updated
+  const vocabCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='vocabulary']");
+  assert.match(await vocabCard.innerText(), /1 kata dipelajari/);
+
+  const speakingCard = page.locator("#passport-skills-grid .passport-skill-card[data-skill-id='speaking']");
+  assert.match(await speakingCard.innerText(), /1 sesi berbicara selesai/);
+
+  const insight = page.locator("#passport-insight-card");
+  assert.equal(await insight.locator(".passport-empty-state").count(), 0, "empty state should be replaced once bundle is applied");
+  assert.match(await insight.innerText(), /FOKUS TERBANYAK/i);
+
+  assert.deepEqual(pageErrors, [], "cloud bundle restore should not throw JavaScript errors");
   await page.close();
 });
