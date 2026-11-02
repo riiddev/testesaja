@@ -1403,8 +1403,11 @@ h1,h2,h3{overflow-wrap:break-word}
 .adventure-journal-count{min-width:43px;padding-left:12px;border-left:1px solid var(--line);color:var(--ink);font:400 1.65rem/1 "Lora",Georgia,serif;text-align:right}
 .adventure-journal-count small{display:block;margin-top:5px;color:var(--muted);font:700 .42rem "Plus Jakarta Sans",sans-serif;letter-spacing:.07em;white-space:nowrap}
 .adventure-journal-filters{display:flex;flex-wrap:wrap;gap:5px;margin:15px 0 10px}
+.adventure-journal-filters.adventure-journal-skill-filters{margin-top:4px}
 .adventure-journal-filters button{padding:6px 9px;border:1px solid var(--line);background:transparent;color:var(--body);font-size:.54rem;cursor:pointer}
 .adventure-journal-filters button.is-active{border-color:var(--sage-deep);background:var(--sage);color:var(--sage-deep);font-weight:700}
+.adventure-mistake-source-link{padding:4px 7px;border:1px solid var(--line);border-radius:4px;background:var(--sheet);color:var(--muted);font-size:.48rem;font-weight:600;cursor:pointer}
+.adventure-mistake-source-link:hover{border-color:var(--sage-deep);color:var(--ink)}
 .adventure-mistake-row{padding:12px 0;border-top:1px solid var(--line)}
 .adventure-mistake-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--muted);font-size:.45rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
 .adventure-mistake-top span:last-child{color:var(--peach-ink)}

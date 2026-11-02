@@ -17,6 +17,15 @@ declare global {
     sinauuGetSkillPassport?: () => any;
     sinauuSkillPassportData?: any;
     sinauuGetAdaptiveStudyPlan?: (today?: string) => any;
+    sinauuGetWordList?: () => any[];
+    sinauuGetTopicList?: () => any[];
+    sinauuGetCoreState?: () => any;
+    sinauuGetWordContextQuestion?: (word: any, qId: string) => any;
+    sinauuGetHabitLibrary?: () => any;
+    sinauuGetHabitQuestions?: (passage: any) => any[];
+    sinauuOpenHabitPassage?: (passageId: string) => void;
+    sinauuRecordMistake?: (input: any) => void;
+    sinauuSyncMistakes?: () => void;
   }
 }
 
@@ -367,17 +376,24 @@ function mergeAdventureProgress(local: AnyRecord = {}, remote: AnyRecord = {}): 
   for (const [mistakeId, mistake] of Object.entries(remoteMistakes)) {
     const previous = result.mistakeJournal[mistakeId] as AnyRecord | undefined;
     const next = mistake as AnyRecord;
+    const prevStage = typeof previous?.reviewStage === "number" ? previous.reviewStage : 0;
+    const nextStage = typeof next?.reviewStage === "number" ? next.reviewStage : 0;
+    const maxStage = Math.max(prevStage, nextStage);
+    const resolvedAt = earliestIso(previous?.resolvedAt, next?.resolvedAt);
+    const masteredAt = earliestIso(previous?.masteredAt, next?.masteredAt);
     result.mistakeJournal[mistakeId] = previous ? {
       ...previous,
       ...next,
+      reviewStage: maxStage,
+      masteredAt,
       recordedAt: earliestIso(previous.recordedAt, next.recordedAt),
-      resolvedAt: earliestIso(previous.resolvedAt, next.resolvedAt),
-      status: previous.resolvedAt || next.resolvedAt ? "resolved" : "open",
+      resolvedAt,
+      status: previous?.resolvedAt || next?.resolvedAt ? (next?.status === "mastered" || previous?.status === "mastered" || (masteredAt && maxStage >= 4) ? "mastered" : "resolved") : "open",
     } : next;
   }
   for (const [mistakeId, mistake] of Object.entries(result.mistakeJournal)) {
     const item = mistake as AnyRecord;
-    item.status = item.resolvedAt ? "resolved" : "open";
+    item.status = (item.masteredAt && item.reviewStage >= 4) || item.status === "mastered" ? "mastered" : (item.resolvedAt ? "resolved" : "open");
   }
 
   const studioById = new Map<string, AnyRecord>();

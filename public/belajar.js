@@ -848,7 +848,7 @@
     $("#vocab-layout")?.classList.toggle("is-detail-open",vocabDetailOpen);
     $("#view-vocabulary")?.classList.toggle("is-detail-view",vocabDetailOpen);
     more.textContent="Tampilkan "+Math.min(100,filtered.length-shown.length)+" kata berikutnya ↓ · "+(filtered.length-shown.length).toLocaleString("id-ID")+" tersisa";
-    if(selectedWord&&shown.some(w=>w.id===selectedWord))renderWordDetail(selectedWord);
+    if(selectedWord&&words.some(w=>w.id===selectedWord))renderWordDetail(selectedWord);
     else if(shown.length){selectedWord=shown[0].id;renderWordDetail(selectedWord);$$(".vocab-row").forEach(b=>b.classList.toggle("is-selected",b.dataset.selectWord===selectedWord));}
     else $("#word-detail").innerHTML='<div class="detail-empty"><span class="detail-empty-mark">Aa</span><h2>Belum ada hasil</h2><p>Coba ubah kata pencarian atau filter.</p></div>';
   }
@@ -975,6 +975,22 @@
     if(activeStudy.mode==="review"&&!correct)activeStudy.reviewFailed=true;
     pushHistory({type:"vocabulary",title:w.word,detail:""});
     const last=state.history[0];last.detail=({recall:"Recall arti",context:"Pengenalan konteks",production:"Penggunaan aktif"})[skill]+(correct?" · benar":" · perlu dilatih");last.correct=correct;last.wordId=w.id;last.skill=skill;last.mode=activeStudy.mode;
+    if(!correct && (skill === "recall" || skill === "context") && typeof window.sinauuRecordMistake === "function"){
+      const isRecall=skill==="recall";
+      const ctx=isRecall?null:(w.context&&w.context.id===questionId?w.context:null);
+      window.sinauuRecordMistake({
+        sourceType: "vocab",
+        sourceId: w.id,
+        wordId: w.id,
+        questionId: questionId,
+        skill: "vocabulary",
+        prompt: isRecall?("Tuliskan arti kata: "+w.word):(ctx?ctx.prompt:("Konteks kalimat untuk: "+w.word)),
+        wrongAnswer: String(response),
+        correctAnswer: isRecall?w.meaning:(ctx&&ctx.options?ctx.options[ctx.answer]:(w.meaning||"")),
+        explanation: isRecall?("Definisi terverifikasi: "+w.meaning+(w.partOfSpeech?" ("+w.partOfSpeech+")":"")):(ctx?ctx.explanation:""),
+        mistakeId: "vocab:" + w.id + ":" + questionId
+      });
+    }
     await save();
   }
   async function finishStudy() {
@@ -1053,6 +1069,20 @@
     p.answers ||= {};p.answers[q.id]={correct,response:String(response).slice(0,500),at:new Date().toISOString()};
     p.history ||= [];p.history.push({questionId:q.id,correct,at:new Date().toISOString()});if(p.history.length>250)p.history=p.history.slice(-250);
     pushHistory({type:"grammar",title:t.title,detail:"Soal: "+q.id,correct,topicId:t.id,questionId:q.id});
+    if(!correct && typeof window.sinauuRecordMistake === "function"){
+      window.sinauuRecordMistake({
+        sourceType: "grammar",
+        sourceId: t.id,
+        topicId: t.id,
+        questionId: q.id,
+        skill: "grammar",
+        prompt: q.prompt,
+        wrongAnswer: String(response),
+        correctAnswer: expected || (Array.isArray(q.options) && Number.isInteger(q.answer) ? q.options[q.answer] : q.answer),
+        explanation: q.explanation || "",
+        mistakeId: "grammar:" + t.id + ":" + q.id
+      });
+    }
     await save();
   }
   function renderReview() {
@@ -1994,6 +2024,12 @@
       if(topic){activeTopic=topic.dataset.topicId;grammarDetailOpen=true;renderGrammar();return;}
       const openTopic=e.target.closest("[data-open-topic]");
       if(openTopic){activeTopic=openTopic.dataset.openTopic;grammarDetailOpen=true;setView("grammar");return;}
+      const openGrammar=e.target.closest("[data-open-grammar-topic]");
+      if(openGrammar){activeTopic=openGrammar.dataset.openGrammarTopic;grammarDetailOpen=true;setView("grammar");renderGrammar();return;}
+      const openWord=e.target.closest("[data-open-vocab-word]");
+      if(openWord){selectedWord=openWord.dataset.openVocabWord;vocabDetailOpen=true;setView("vocabulary");renderVocabulary(false);return;}
+      const openHabit=e.target.closest("[data-open-habit-passage]");
+      if(openHabit){setView("reading");if(typeof window.sinauuOpenHabitPassage==="function"){window.sinauuOpenHabitPassage(openHabit.dataset.openHabitPassage);}return;}
       const review=e.target.closest("[data-review-word]");
       if(review){startStudy(review.dataset.reviewWord,"review");return;}
     });
@@ -2026,6 +2062,15 @@
       if(e.key==="/"&&view==="vocabulary"&&!["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)){e.preventDefault();$("#vocab-search").focus();}
       if(e.key==="Escape")$("#goal-dialog")?.close();
     });
+    window.addEventListener("sinauu:open-topic",(e)=>{
+      if(e.detail?.topicId){activeTopic=e.detail.topicId;grammarDetailOpen=true;setView("grammar");renderGrammar();}
+    });
+    window.addEventListener("sinauu:open-word",(e)=>{
+      if(e.detail?.wordId){selectedWord=e.detail.wordId;vocabDetailOpen=true;setView("vocabulary");renderVocabulary(false);}
+    });
+    window.addEventListener("sinauu:open-habit",(e)=>{
+      if(e.detail?.passageId){setView("reading");if(typeof window.sinauuOpenHabitPassage==="function"){window.sinauuOpenHabitPassage(e.detail.passageId);}}
+    });
   }
   async function init() {
     bindEvents();renderDate();
@@ -2035,6 +2080,15 @@
       window.sinauuExportLocalBundle = () => ({schemaVersion:2,core:state,extras:readExtraSnapshots()});
       window.sinauuGetSkillPassport = () => aggregateSkillPassport(state, readExtraSnapshots(), words, topics);
       window.sinauuGetAdaptiveStudyPlan = (today) => getAdaptiveStudyPlan(today || dayKey());
+      window.sinauuGetWordList = () => words;
+      window.sinauuGetTopicList = () => topics;
+      window.sinauuGetCoreState = () => state;
+      window.sinauuGetWordContextQuestion = (word, qId) => {
+        if(!word)return null;
+        if(word.context&&word.context.id===qId)return word.context;
+        const p=ensureProgress(word.id);
+        return contextQuestion(word,p);
+      };
       window.sinauuApplyCloudBundle = async (bundle) => {
         if (!bundle || !bundle.core || !state) return;
         cloudApplying = true;

@@ -3128,3 +3128,287 @@ test("Adaptive study plan preserves task continuity, marks completed steps, and 
   assert.deepEqual(pageErrors, [], "plan reload should maintain stability without errors");
   await page.close();
 });
+
+test("Universal Mistake Journal maps grammar, vocab, and habit reading mistakes with retry, filters, and honest module handling", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = new Date().toISOString();
+  await page.addInitScript(() => {
+    const timestamp = new Date().toISOString();
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "universal-mistake-access",
+      refresh_token: "universal-mistake-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "universal-mistake-user", email: "mistake@example.com" },
+    }));
+
+    // 1. Core State with Grammar mistake and Vocab mistake
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-1", wordId: "a1-hello", skill: "recall", correct: false, response: "selamat tinggal", at: timestamp }],
+          studiedDates: [timestamp.slice(0, 10)],
+          reviewHistory: [],
+          weak: true
+        }
+      },
+      grammarProgress: {
+        "present-simple": {
+          attempts: 2,
+          correct: 1,
+          answers: {
+            "ps-1": { correct: false, response: "walks", at: timestamp }
+          },
+          history: [{ questionId: "ps-1", correct: false, at: timestamp }]
+        }
+      },
+      events: [
+        { id: "ev-1", wordId: "a1-hello", word: "hello", skill: "recall", correct: false, response: "selamat tinggal", questionId: "typed-meaning", at: timestamp }
+      ],
+      history: [
+        { type: "grammar", title: "Present Simple", detail: "Soal: ps-1", correct: false, topicId: "present-simple", questionId: "ps-1" },
+        { type: "vocabulary", title: "hello", detail: "Recall arti • perlu dilatih", correct: false, wordId: "a1-hello" }
+      ],
+      updatedAt: timestamp
+    };
+    localStorage.setItem("sinauu-learning-state-v1", JSON.stringify(core));
+
+    // 2. Extra Learning & HABIT Reading with a mistake
+    const habitProgress = {
+      "habit-passage-1": {
+        answers: {
+          "habit-passage-1-detail-1": { selected: 1, correct: false, answeredAt: timestamp }
+        }
+      }
+    };
+    localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(habitProgress));
+
+    // 3. Adventure with existing adventure mistake and modules without question-level evidence
+    const adventureProgress = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "adv-mistake-1": {
+          mistakeId: "adv-mistake-1",
+          sourceType: "mission",
+          sourceId: "meet-your-new-neighbors",
+          missionId: "meet-your-new-neighbors",
+          stepId: "word-neighbor",
+          skill: "vocabulary",
+          prompt: "Which word describes someone who lives next door to you?",
+          wrongAnswer: "A passenger",
+          correctAnswer: "A neighbor",
+          explanation: "A neighbor lives near you.",
+          recordedAt: timestamp,
+          resolvedAt: null,
+          status: "open",
+          reviewStage: 0,
+          nextReviewAt: timestamp,
+          reviewHistory: []
+        }
+      },
+      // Modules with only aggregate stats
+      storyProgress: {
+        "first-day": { attempts: [{ attemptId: "s1", score: 2, total: 3, passed: true, completedAt: timestamp }], bestScore: 2, completedAt: timestamp }
+      },
+      listeningProgress: {
+        "airport-arrival": { attempts: [{ attemptId: "l1", score: 2, total: 3, passed: true, completedAt: timestamp }], bestScore: 2, completedAt: timestamp }
+      },
+      studioSessions: [
+        { sessionId: "spk-1", studioType: "speaking", promptId: "intro", wordCount: 40, checklistCompleted: 3, completedAt: timestamp },
+        { sessionId: "wrt-1", studioType: "writing", promptId: "email", wordCount: 65, checklistCompleted: 3, completedAt: timestamp }
+      ],
+      pronunciationProgress: {
+        "phrase-1": { attempts: [{ attemptId: "pr-1", completedAt: timestamp, durationMs: 3400 }] }
+      },
+      updatedAt: timestamp
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(adventureProgress));
+  });
+
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // Navigate to Adventure tab
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-mistake-journal").waitFor({ state: "visible" });
+
+  // 1. Verify rows exist for grammar, vocab, habit, and adventure
+  const rows = page.locator("#adventure-mistake-journal .adventure-mistake-row");
+  const rowCount = await rows.count();
+  assert.ok(rowCount >= 4, `expected at least 4 mistakes (adventure, grammar, habit, vocab), found ${rowCount}`);
+
+  // Check that modules without question-level evidence do NOT create fake mistake rows
+  const journalText = await page.locator("#adventure-mistake-journal").innerText();
+  assert.ok(!journalText.includes("first-day"), "Everyday Stories without question-level mistake evidence must not appear in Mistake Journal");
+  assert.ok(!journalText.includes("airport-arrival"), "Listening Lab without question-level mistake evidence must not appear in Mistake Journal");
+
+  // 2. Skill filtering: Grammar filter
+  await page.locator('[data-mistake-skill-filter="grammar"]').click();
+  const grammarRows = page.locator("#adventure-mistake-journal .adventure-mistake-row");
+  assert.equal(await grammarRows.count(), 1, "grammar skill filter should show exactly 1 grammar mistake");
+  assert.match(await grammarRows.first().innerText(), /grammar/i);
+  assert.match(await grammarRows.first().innerText(), /present-simple|Present simple|grammar-article|Soal grammar/i);
+
+  // 3. Context Reopen Action for Grammar
+  const grammarReopen = grammarRows.first().locator("[data-open-grammar-topic]");
+  assert.ok(await grammarReopen.isVisible(), "grammar mistake row must have an action to reopen grammar topic");
+  await grammarReopen.click();
+  // Expect view to switch to grammar lesson
+  await page.waitForFunction(() => document.querySelector("#view-grammar") && !document.querySelector("#view-grammar").hidden);
+  assert.match(await page.locator("#lesson-panel h2").innerText(), /Present simple/i);
+
+  // 4. Return to Adventure & test Vocab filter and Reopen Action
+  await page.locator('.side-link[data-view-target="overview"]').click();
+  await page.locator('#home-adventure-link').click();
+  await page.locator('[data-mistake-skill-filter="vocabulary"]').click();
+  const vocabRows = page.locator("#adventure-mistake-journal .adventure-mistake-row");
+  assert.ok((await vocabRows.count()) >= 1, "vocabulary skill filter should show vocabulary mistakes");
+  const vocabReopen = page.locator("#adventure-mistake-journal [data-open-vocab-word='a1-hello']");
+  if (await vocabReopen.isVisible()) {
+    await vocabReopen.click();
+    await page.waitForFunction(() => document.querySelector("#view-vocabulary") && !document.querySelector("#view-vocabulary").hidden);
+    assert.match(await page.locator("#word-detail").innerText(), /hello/i);
+    await page.locator('.side-link[data-view-target="overview"]').click();
+    await page.locator('#home-adventure-link').click();
+  }
+
+  // 5. Test targeted retry on a due mistake
+  await page.locator('[data-mistake-skill-filter="all"]').click();
+  await page.locator('[data-mistake-filter="all"]').click();
+  const retryBtn = page.locator("#adventure-mistake-journal [data-mistake-review-one]").first();
+  await retryBtn.waitFor({ state: "visible" });
+  await retryBtn.click();
+
+  const reviewPanel = page.locator("#adventure-mistake-journal .adventure-mistake-review");
+  await reviewPanel.waitFor({ state: "visible" });
+  assert.match(await reviewPanel.innerText(), /SPACED RETRIEVAL/i);
+
+  // Close review panel
+  await page.locator("[data-mistake-review-close]").click();
+
+  // 6. Deduplication: repeated sync should not create duplicate entries
+  await page.evaluate(() => {
+    if (typeof window.sinauuSyncMistakes === "function") {
+      window.sinauuSyncMistakes();
+      window.sinauuSyncMistakes();
+    }
+  });
+  const afterRepeatedSyncCount = await page.locator("#adventure-mistake-journal .adventure-mistake-row").count();
+  assert.equal(afterRepeatedSyncCount, rowCount, "repeated sync calls must not duplicate entries");
+
+  assert.deepEqual(pageErrors, [], "Universal Mistake Journal should operate without console errors");
+  await page.close();
+});
+
+test("Universal Mistake Journal handles malformed legacy records, mobile viewports, and targeted recall retention across reloads", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.evaluate(async () => {
+    localStorage.clear();
+    const now = new Date().toISOString();
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "robust-journal-access",
+      refresh_token: "robust-journal-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "robust-journal-user", email: "robust@example.com" },
+    }));
+
+    // Seed malformed and older legacy records
+    const adventureProgress = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "legacy-incomplete": {
+          mistakeId: "legacy-incomplete",
+          sourceType: "mission",
+          recordedAt: "invalid-date",
+        },
+        "grammar-due-item": {
+          mistakeId: "grammar:present-simple:ps-1",
+          sourceType: "grammar",
+          sourceId: "present-simple",
+          topicId: "present-simple",
+          questionId: "ps-1",
+          skill: "grammar",
+          prompt: "Choose the correct sentence.",
+          wrongAnswer: "He walk to class every day.",
+          correctAnswer: "He walks to class every day.",
+          explanation: "He adalah subjek orang ketiga tunggal, jadi kata kerja positif memakai -s: walks.",
+          recordedAt: new Date(Date.now() - 86400000).toISOString(),
+          resolvedAt: null,
+          status: "open",
+          reviewStage: 0,
+          nextReviewAt: new Date(Date.now() - 3600000).toISOString(),
+          reviewHistory: []
+        }
+      },
+      updatedAt: now
+    };
+    localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(adventureProgress));
+  });
+
+  // Test mobile viewport (360x640)
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto(baseUrl + "/belajar.html", { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator("#adventure-mistake-journal").waitFor({ state: "visible" });
+
+  // 1. Verify malformed records did not crash rendering
+  assert.ok(await page.locator("#adventure-mistake-journal").isVisible());
+  const measurements = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+    journalWidth: document.querySelector("#adventure-mistake-journal")?.getBoundingClientRect().width || 0,
+  }));
+  assert.ok(measurements.scrollWidth <= measurements.viewport + 1, "journal must not cause horizontal viewport overflow on 360px mobile");
+
+  // 2. Perform targeted review on the grammar due item
+  const retryBtn = page.locator("#adventure-mistake-journal [data-mistake-review-one]").first();
+  await retryBtn.waitFor({ state: "visible" });
+  await retryBtn.click();
+
+  const reviewPanel = page.locator("#adventure-mistake-journal .adventure-mistake-review");
+  await reviewPanel.waitFor({ state: "visible" });
+  assert.equal(await reviewPanel.locator("[data-mistake-answer]").count(), 3);
+
+  // Pick wrong option first
+  await reviewPanel.locator('[data-mistake-answer="0"]').click();
+  assert.match(await reviewPanel.innerText(), /Belum tepat/i);
+
+  // Pick correct option (option 1: "He walks to class every day.")
+  await reviewPanel.locator('[data-mistake-answer="1"]').click();
+  assert.match(await reviewPanel.innerText(), /Review 1\/4 berhasil/i);
+
+  // 3. Close panel and verify status updated to reviewing
+  await page.locator("[data-mistake-review-close]").click();
+  await page.locator('[data-mistake-filter="reviewing"]').click();
+  assert.equal(await page.locator("#adventure-mistake-journal .adventure-mistake-row.is-reviewing").count(), 1);
+
+  // 4. Reload page and verify spaced review stage survives
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="adventure"]').click();
+  await page.locator('[data-mistake-filter="reviewing"]').click();
+  const reloadedReviewingRow = page.locator("#adventure-mistake-journal .adventure-mistake-row.is-reviewing");
+  assert.equal(await reloadedReviewingRow.count(), 1, "reviewStage 1 must persist across page reload");
+  assert.match(await reloadedReviewingRow.first().innerText(), /REVIEW 1 \/ 4/i);
+
+  assert.deepEqual(pageErrors, [], "Universal Mistake Journal must not throw errors during mobile rendering and Spaced Retrieval");
+  await page.close();
+});
