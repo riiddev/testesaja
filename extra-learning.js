@@ -630,8 +630,9 @@
     })();
     return habitLibraryPromise;
   }
+  window.sinauuLoadHabitLibrary = loadHabitLibrary;
   document.addEventListener("click", function (event) {
-    if (event.target.closest('[data-view-target="reading"]')) { void loadHabitLibrary(); return; }
+    if (event.target.closest('[data-view-target="reading"],[data-open-practice="reading"]')) { void loadHabitLibrary(); return; }
     const open = event.target.closest("[data-habit-open]");
     if (open) {
       activeHabitPassageId = open.dataset.habitOpen;

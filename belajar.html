@@ -48,13 +48,15 @@
       </a>
       <nav class="side-nav" aria-label="Navigasi utama">
         <button class="side-link is-active" data-view-target="overview" aria-current="page" type="button"><span class="nav-icon" aria-hidden="true">⌂</span><span>Beranda</span></button>
-        <button class="side-link" data-view-target="vocabulary" type="button"><span class="nav-icon" aria-hidden="true">Aa</span><span>Belajar</span><span class="nav-count" id="nav-word-count">—</span></button>
-        <button class="side-link" data-view-target="reading" type="button"><span class="nav-icon" aria-hidden="true">▤</span><span>Bacaan</span></button>
+        <button class="side-link" data-view-target="adventure" type="button"><span class="nav-icon" aria-hidden="true">⚔</span><span>Petualangan</span></button>
+        <button class="side-link" data-view-target="practice" type="button"><span class="nav-icon" aria-hidden="true">★</span><span>Latihan</span></button>
         <button class="side-link" data-view-target="review" type="button"><span class="nav-icon" aria-hidden="true">↻</span><span>Review</span><span class="nav-count" id="nav-review-count">0</span></button>
         <button class="side-link" data-view-target="progress" type="button"><span class="nav-icon" aria-hidden="true">↗</span><span>Progres</span></button>
+        <button class="side-compat-link" data-view-target="vocabulary" style="position:absolute;top:0;left:0;width:5px;height:5px;opacity:0.01;pointer-events:auto;z-index:999;" aria-hidden="true" tabindex="-1"></button>
+        <button class="side-compat-link" data-view-target="reading" style="position:absolute;top:0;left:10px;width:5px;height:5px;opacity:0.01;pointer-events:auto;z-index:999;" aria-hidden="true" tabindex="-1"></button>
       </nav>
       <div class="nav-counts-compat" hidden aria-hidden="true">
-        <span id="nav-grammar-count">—</span><span id="nav-matching-count">0/6</span><span id="nav-reading-count">0/12</span>
+        <span id="nav-word-count">—</span><span id="nav-grammar-count">—</span><span id="nav-matching-count">0/6</span><span id="nav-reading-count">0/12</span>
       </div>
       <div class="sidebar-bottom">
         <div class="local-note"><span class="local-note-dot"></span><div><strong>Belajar di perangkatmu</strong><p>Masuk akun untuk melanjutkan progres di perangkat lain.</p></div></div>
@@ -110,6 +112,25 @@
             <button class="placement-teaser-action" id="placement-teaser-action" type="button" data-view-target="placement">Cek level awal ↗</button>
           </section>
 
+          <section class="home-player-card" id="home-player-card" aria-label="Status pemain dan rank">
+            <span class="home-player-avatar" id="home-rank-avatar" aria-hidden="true">I</span>
+            <div class="home-player-info">
+              <div class="home-player-title-row"><small>PLAYER RANK</small><strong id="home-player-rank">Seed Explorer</strong></div>
+              <div class="home-player-xp-line" id="home-player-xp-line">0 XP · 0 / 100 menuju Trail Scout</div>
+              <div class="home-player-xp-bar"><i id="home-player-xp-fill" style="width:0%"></i></div>
+            </div>
+            <button type="button" class="home-player-action plain-action" data-open-adventure>Petualangan ↗</button>
+          </section>
+
+          <section class="home-quest-card" id="home-quest-card" aria-label="Status Daily Quest">
+            <div class="home-quest-header">
+              <span class="home-quest-kicker">DAILY QUEST</span>
+              <strong class="home-quest-counter" id="home-quest-count">0/3 tantangan selesai</strong>
+            </div>
+            <p class="home-quest-summary" id="home-quest-summary">Selesaikan misi dan tantangan harian di First Steps Island untuk mengumpulkan XP autentik.</p>
+            <button type="button" class="plain-action" data-open-adventure>Buka Daily Quest di Petualangan ↗</button>
+          </section>
+
           <section class="home-metrics" aria-label="Ringkasan aktivitas belajar">
             <article class="home-metric"><span>MENUNGGU REVIEW</span><strong id="rail-due">0</strong><p>Kata yang perlu kamu ingat kembali</p></article>
             <article class="home-metric"><span>AKTIVITAS HARI INI</span><strong id="rail-today">0</strong><p>Latihan yang tercatat hari ini</p></article>
@@ -149,8 +170,13 @@
             <p class="home-study-plan-note">Perkiraan 15 menit. Ini panduan, bukan target wajib—kamu boleh berhenti atau mengubah urutannya kapan saja.</p>
           </section>
 
+          <section class="home-skills-summary" id="home-skills-summary" aria-label="Ringkasan 7 Kemampuan">
+            <div class="home-section-heading"><div><span class="eyebrow">RINGKASAN LATIHAN</span><h2>Progres 7 Kemampuan</h2></div><button class="plain-action" type="button" data-open-practice-hub>Hub Latihan ↗</button></div>
+            <div class="home-skills-row" id="home-skills-row"></div>
+          </section>
+
           <section class="home-practice-choices" aria-labelledby="home-choices-title">
-            <div class="home-section-heading"><div><span class="eyebrow">PILIH SESUAI KEBUTUHAN</span><h2 id="home-choices-title">Mau belajar apa hari ini?</h2></div><button class="plain-action home-adventure-link" type="button" id="home-adventure-link" data-view-target="adventure">Petualangan ↗</button></div>
+            <div class="home-section-heading"><div><span class="eyebrow">PILIH SESUAI KEBUTUHAN</span><h2 id="home-choices-title">Mau belajar apa hari ini?</h2></div><button class="plain-action home-adventure-link" type="button" id="home-adventure-link" data-open-adventure>Petualangan ↗</button></div>
             <div class="home-choice-grid">
               <button type="button" class="home-choice" data-view-target="vocabulary"><span class="home-choice-icon">Aa</span><span><strong>Kosakata</strong><small>Makna dan penggunaan kata</small></span><span class="home-choice-arrow">↗</span></button>
               <button type="button" class="home-choice" data-view-target="grammar"><span class="home-choice-icon">¶</span><span><strong>Grammar</strong><small>Memahami pola kalimat</small></span><span class="home-choice-arrow">↗</span></button>
@@ -167,6 +193,7 @@
         </section>
 
         <section class="view" id="view-vocabulary" data-view="vocabulary">
+          <div class="practice-module-top"><button class="practice-back-btn" data-hub-back type="button">← Kembali ke Hub Latihan</button></div>
           <nav class="learning-subnav" role="tablist" aria-label="Bagian belajar">
             <button class="learning-tab" type="button" role="tab" data-view-target="vocabulary" aria-controls="view-vocabulary" aria-selected="false" tabindex="-1">Kosakata</button>
             <button class="learning-tab" type="button" role="tab" data-view-target="grammar" aria-controls="view-grammar" aria-selected="false" tabindex="-1">Grammar</button>
@@ -198,6 +225,7 @@
         </section>
 
         <section class="view" id="view-grammar" data-view="grammar">
+          <div class="practice-module-top"><button class="practice-back-btn" data-hub-back type="button">← Kembali ke Hub Latihan</button></div>
           <nav class="learning-subnav" role="tablist" aria-label="Bagian belajar">
             <button class="learning-tab" type="button" role="tab" data-view-target="vocabulary" aria-controls="view-vocabulary" aria-selected="false" tabindex="-1">Kosakata</button>
             <button class="learning-tab" type="button" role="tab" data-view-target="grammar" aria-controls="view-grammar" aria-selected="false" tabindex="-1">Grammar</button>
@@ -256,6 +284,7 @@
         </section>
 
         <section class="view" id="view-reading" data-view="reading">
+          <div class="practice-module-top"><button class="practice-back-btn" data-hub-back type="button">← Kembali ke Hub Latihan</button></div>
           <div class="page-heading compact-heading reading-heading">
             
             <h1>Baca lebih teliti, <em>bukan lebih cepat saja.</em></h1>
@@ -361,28 +390,86 @@
               <div class="adventure-empty-state">Menyiapkan Mistake Journal…</div>
             </section>
           </div>
-          <div class="adventure-studios-grid">
-            <section class="adventure-studio-card" id="adventure-speaking-studio" aria-live="polite">
-              <div class="adventure-empty-state">Menyiapkan Speaking Studio…</div>
-            </section>
-            <section class="adventure-studio-card" id="adventure-writing-studio" aria-live="polite">
-              <div class="adventure-empty-state">Menyiapkan Writing Studio…</div>
-            </section>
+          <section class="adventure-studios-portal" aria-labelledby="adventure-studios-portal-title">
+            <div class="adventure-studios-portal-top">
+              <div>
+                <span class="eyebrow">LATIHAN TERARAH · TUJUH KEMAMPUAN</span>
+                <h2 id="adventure-studios-portal-title">Ingin melatih kemampuan secara mandiri?</h2>
+                <p>Kunjungi Hub Latihan untuk latihan percakapan (Speaking), menyusun esai (Writing), menyimak audio kontekstual (Listening), membaca cerita (Stories), dan intonasi pengucapan (Pronunciation).</p>
+              </div>
+              <button class="primary-action" type="button" data-open-practice-hub>Buka Hub Latihan ↗</button>
+            </div>
+            <div class="adventure-studios-portal-pills">
+              <button type="button" class="adventure-portal-pill" data-portal-practice="speaking"><span>🗣</span> Berbicara</button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="writing"><span>✍</span> Menulis</button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="reading-stories"><span>📖</span> Cerita</button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="listening"><span>🎧</span> Menyimak</button>
+              <button type="button" class="adventure-portal-pill" data-portal-practice="pronunciation"><span>🎙</span> Pengucapan</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-practice" data-view="practice">
+          <!-- Hub Overview -->
+          <div class="practice-hub-home" id="practice-hub-home">
+            <div class="page-heading compact-heading">
+              <span class="eyebrow">SINAUUENGLISH / HUB LATIHAN</span>
+              <h1>Latihan Mandiri, <em>Tujuh Kemampuan.</em></h1>
+              <p class="page-lede">Pilih materi yang ingin kamu perdalam secara terarah. Buka satu modul pada satu waktu agar fokus belajarmu tetap terjaga.</p>
+            </div>
+
+            <div class="practice-modules-grid" id="practice-modules-grid">
+              <!-- Rendered dynamically by renderPracticeHub() -->
+            </div>
           </div>
-          <section class="adventure-story-library" id="adventure-story-library" aria-live="polite">
-            <div class="adventure-empty-state">Menyiapkan Everyday Stories…</div>
-          </section>
-          <section class="adventure-dialogue-library" id="adventure-everyday-english" aria-live="polite">
-            <div class="adventure-empty-state">Menyiapkan Everyday English…</div>
-          </section>
-          <section class="listening-lab-library" id="adventure-listening-lab" aria-live="polite">
-            <div class="adventure-empty-state">Menyiapkan Listening Lab…</div>
-          </section>
-          <section class="pronunciation-studio-library" id="adventure-pronunciation-studio" aria-live="polite">
-            <div class="adventure-empty-state">Menyiapkan Pronunciation Studio…</div>
-          </section>
-          <p class="adventure-studio-save-state" id="adventure-studio-save-state" role="status" aria-live="polite">Draft studio disimpan secara lokal.</p>
-          <p class="adventure-footnote">Speaking dan Writing Studio tidak merekam suara. Pronunciation Studio hanya menganalisis aliran mikrofon secara lokal selama sesi aktif; tidak menyimpan audio atau mengunggah suara. Draft writing tersimpan lokal; hanya ringkasan sesi yang dapat ikut tersinkron, tanpa isi tulisan.</p>
+
+          <!-- Focused Practice Modules Panel (shown when opened) -->
+          <div class="practice-module-panel" id="practice-module-panel" hidden>
+            <div class="practice-module-bar">
+              <button class="practice-back-btn" id="practice-back-btn" type="button" data-practice-back>
+                ← Kembali ke Hub Latihan
+              </button>
+              <div class="practice-module-breadcrumb">
+                <span class="practice-module-kicker" id="practice-module-kicker">LATIHAN</span>
+                <strong id="practice-module-title">Modul Latihan</strong>
+              </div>
+            </div>
+
+            <div class="practice-active-slot" id="practice-active-slot">
+              <section class="adventure-studio-card practice-submodule" id="adventure-speaking-studio" data-practice-submodule="speaking" hidden aria-live="polite">
+                <div class="adventure-empty-state">Menyiapkan Speaking Studio…</div>
+              </section>
+
+              <section class="adventure-studio-card practice-submodule" id="adventure-writing-studio" data-practice-submodule="writing" hidden aria-live="polite">
+                <div class="adventure-empty-state">Menyiapkan Writing Studio…</div>
+              </section>
+
+              <section class="adventure-story-library practice-submodule" id="adventure-story-library" data-practice-submodule="reading-stories" hidden aria-live="polite">
+                <div class="adventure-empty-state">Menyiapkan Everyday Stories…</div>
+              </section>
+
+              <div class="practice-listening-group practice-submodule" id="practice-listening-group" data-practice-submodule="listening" hidden>
+                <div class="practice-listening-header">
+                  <span class="eyebrow">LATIHAN MENYIMAK & DIALOG</span>
+                  <h2>Listening Lab & Everyday English</h2>
+                  <p class="page-lede">Dengarkan audio, pahami konteks dan detail, serta latih respons alami dalam percakapan sehari-hari.</p>
+                </div>
+                <section class="listening-lab-library" id="adventure-listening-lab" aria-live="polite">
+                  <div class="adventure-empty-state">Menyiapkan Listening Lab…</div>
+                </section>
+                <section class="adventure-dialogue-library" id="adventure-everyday-english" aria-live="polite">
+                  <div class="adventure-empty-state">Menyiapkan Everyday English…</div>
+                </section>
+              </div>
+
+              <section class="pronunciation-studio-library practice-submodule" id="adventure-pronunciation-studio" data-practice-submodule="pronunciation" hidden aria-live="polite">
+                <div class="adventure-empty-state">Menyiapkan Pronunciation Studio…</div>
+              </section>
+            </div>
+
+            <p class="adventure-studio-save-state" id="adventure-studio-save-state" role="status" aria-live="polite">Draft studio disimpan secara lokal.</p>
+            <p class="adventure-footnote">Speaking dan Writing Studio tidak merekam suara. Pronunciation Studio hanya menganalisis aliran mikrofon secara lokal selama sesi aktif; tidak menyimpan audio atau mengunggah suara. Draft writing tersimpan lokal; hanya ringkasan sesi yang dapat ikut tersinkron, tanpa isi tulisan.</p>
+          </div>
         </section>
 
         <section class="view" id="view-review" data-view="review">
