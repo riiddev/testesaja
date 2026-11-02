@@ -16,6 +16,7 @@ declare global {
     sinauuRenderAdventure?: () => void;
     sinauuGetSkillPassport?: () => any;
     sinauuSkillPassportData?: any;
+    sinauuGetAdaptiveStudyPlan?: (today?: string) => any;
   }
 }
 
