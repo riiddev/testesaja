@@ -249,6 +249,7 @@
 
   let words = [], topics = [], state, db = null, storageMode = "loading";
   let view = "overview", selectedWord = null, activeStudy = null, activeTopic = null, listLimit = 100, vocabDetailOpen = false, grammarDetailOpen = false, cloudApplying = false;
+  let reviewFilterTab = "due", reviewSkillFilter = "all";
   const grammarUI = {};
 
   function freshState() {
@@ -453,6 +454,7 @@
     if (next === "vocabulary") renderVocabulary();
     if (next === "grammar") renderGrammar();
     if (next === "review") renderReview();
+    else window.sinauuUpdateReviewActivePanel?.();
     if (next === "placement") renderPlacementView();
     if (next === "progress") renderProgress();
     if (next === "adventure") window.sinauuRenderAdventure?.();
@@ -1085,12 +1087,505 @@
     }
     await save();
   }
+  function formatUpcomingDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    const diffDays = Math.ceil((d.getTime() - Date.now()) / 86400000);
+    if (diffDays <= 1) return "Besok (" + fmtDate(d, { day: "numeric", month: "short" }) + ")";
+    return fmtDate(d, { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function getUnifiedReviewQueue(coreState, extras, wordList, topicList, habitLibrary, now = Date.now()) {
+    const core = coreState || {};
+    const wordProg = (core.wordProgress && typeof core.wordProgress === "object") ? core.wordProgress : {};
+    const wordsArr = Array.isArray(wordList) ? wordList : [];
+    const topicsArr = Array.isArray(topicList) ? topicList : [];
+    const adv = (extras && extras.adventureProgress && typeof extras.adventureProgress === "object") ? extras.adventureProgress : {};
+    const mistakeJournal = (adv.mistakeJournal && typeof adv.mistakeJournal === "object") ? adv.mistakeJournal : {};
+
+    const nowDate = new Date(now);
+    const nowMs = nowDate.getTime();
+    const todayStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate()).getTime();
+
+    const items = [];
+    const completedItems = [];
+
+    // 1. Vocabulary
+    for (const w of wordsArr) {
+      if (!w || !w.id || !canStudyWord(w)) continue;
+      const p = wordProg[w.id];
+      if (!p) continue;
+
+      const status = statusOf(w);
+      const nextReviewTime = p.nextReviewAt ? Date.parse(p.nextReviewAt) : NaN;
+      const isDue = Number.isFinite(nextReviewTime) && nextReviewTime <= nowMs;
+      const isWeak = Boolean(p.weak);
+
+      if (status !== "mastered" && (isDue || isWeak)) {
+        let category = "dueToday";
+        let delayDays = 0;
+
+        if (isDue) {
+          if (nextReviewTime < todayStart) {
+            category = "overdue";
+            delayDays = Math.max(1, Math.floor((todayStart - nextReviewTime) / 86400000));
+          } else {
+            category = "dueToday";
+          }
+        } else if (isWeak) {
+          category = "needsPractice";
+        }
+
+        const stage = Math.max(0, Math.min(3, Math.floor(Number(p.reviewSuccesses) || 0)));
+        const maxStage = 3;
+
+        let reason = "";
+        if (category === "overdue") {
+          reason = `Terlambat ${delayDays} hari dari jadwal review berkala.`;
+        } else if (isWeak) {
+          reason = "Ada kesalahan pada sesi latihan sebelumnya; perlu pemantapan.";
+        } else if (stage === 0) {
+          reason = "Review retensi tahap 1/3 (jeda 1 hari setelah dipelajari).";
+        } else if (stage === 1) {
+          reason = "Review retensi tahap 2/3 (jeda 3 hari penguatan).";
+        } else {
+          reason = "Review retensi tahap 3/3 (jeda 7 hari retensi jangka panjang).";
+        }
+
+        let consequence = "";
+        if (isWeak) {
+          consequence = "Review benar akan membersihkan label kata lemah.";
+        } else if (stage >= 2) {
+          consequence = "Jika 3 skill, 4 hari aktif, dan rentang 12 hari terpenuhi, kata berstatus Mastered.";
+        } else if (stage === 1) {
+          consequence = "Review benar akan menjadwalkan review tahap 3/3 dengan jeda 7 hari.";
+        } else {
+          consequence = "Review benar akan menjadwalkan review tahap 2/3 dengan jeda 3 hari.";
+        }
+
+        let urgencyScore = 0;
+        if (category === "overdue") {
+          urgencyScore = 3000000000000 - nextReviewTime;
+        } else if (category === "dueToday") {
+          urgencyScore = 2000000000000 - nextReviewTime;
+        } else {
+          urgencyScore = 1000000000000 - (Number.isFinite(nextReviewTime) ? nextReviewTime : 0);
+        }
+
+        items.push({
+          id: `vocab:${w.id}`,
+          type: "vocabulary",
+          wordId: w.id,
+          skill: "vocabulary",
+          skillLabel: "Kosakata",
+          level: w.level ? w.level.toUpperCase() : "A1",
+          title: w.word,
+          subtitle: (w.partOfSpeech ? `[${w.partOfSpeech}] ` : "") + (w.meaning || ""),
+          category,
+          delayDays,
+          dueAt: p.nextReviewAt || null,
+          stage,
+          maxStage,
+          reason,
+          consequence,
+          urgencyScore,
+          sourceLinkLabel: "Buka kamus kata ↗",
+          sourceTarget: "vocabulary",
+          raw: { word: w, progress: p }
+        });
+      }
+
+      if (Array.isArray(p.reviewHistory)) {
+        for (const entry of p.reviewHistory) {
+          if (!entry || !entry.correct || !entry.at) continue;
+          const entryTime = Date.parse(entry.at);
+          if (Number.isFinite(entryTime)) {
+            completedItems.push({
+              id: `completed:vocab:${w.id}:${entry.at}`,
+              type: "vocabulary",
+              wordId: w.id,
+              skill: "vocabulary",
+              skillLabel: "Kosakata",
+              level: w.level ? w.level.toUpperCase() : "A1",
+              title: w.word,
+              subtitle: w.meaning || "",
+              category: "completed",
+              stage: Math.min(3, p.reviewSuccesses || 1),
+              maxStage: 3,
+              completedAt: entry.at,
+              timestamp: entryTime,
+              reason: "Review kosakata berhasil dipanggil kembali.",
+              consequence: status === "mastered" ? "Kata telah tuntas dikuasai (Mastered)." : "Jeda berikutnya dijadwalkan."
+            });
+          }
+        }
+      }
+    }
+
+    // 2. Mistake Journal items
+    for (const m of Object.values(mistakeJournal)) {
+      if (!m || !m.mistakeId || typeof m.mistakeId !== "string") continue;
+
+      const isMastered = Boolean(m.masteredAt || (Number(m.reviewStage) >= 4));
+      const stage = Math.max(0, Math.min(4, Math.floor(Number(m.reviewStage) || 0)));
+      const maxStage = 4;
+
+      let skillKey = "adventure";
+      let skillLabel = "Petualangan";
+      if (m.sourceType === "grammar" || m.topicId || (m.mistakeId && m.mistakeId.startsWith("grammar:"))) {
+        skillKey = "grammar";
+        skillLabel = "Tata Bahasa";
+      } else if (m.sourceType === "habit" || m.passageId || (m.mistakeId && m.mistakeId.startsWith("habit:"))) {
+        skillKey = "reading";
+        skillLabel = "Pemahaman Bacaan";
+      } else if (m.sourceType === "vocab" || m.wordId || (m.mistakeId && m.mistakeId.startsWith("vocab:"))) {
+        skillKey = "vocabulary";
+        skillLabel = "Kosakata";
+      } else if (String(m.skill).toLowerCase() === "listening") {
+        skillKey = "listening";
+        skillLabel = "Menyimak";
+      } else if (String(m.skill).toLowerCase() === "reading") {
+        skillKey = "reading";
+        skillLabel = "Pemahaman Bacaan";
+      }
+
+      const reviewDueTime = Date.parse(m.nextReviewAt || m.recordedAt || "");
+      const isDue = !isMastered && (!Number.isFinite(reviewDueTime) || reviewDueTime <= nowMs);
+
+      if (!isMastered) {
+        let category = "dueToday";
+        let delayDays = 0;
+
+        if (isDue) {
+          if (Number.isFinite(reviewDueTime) && reviewDueTime < todayStart) {
+            category = "overdue";
+            delayDays = Math.max(1, Math.floor((todayStart - reviewDueTime) / 86400000));
+          } else {
+            category = "dueToday";
+          }
+        } else if (stage === 0 || !m.resolvedAt) {
+          category = "needsPractice";
+        } else {
+          category = "scheduledFuture";
+        }
+
+        if (category === "overdue" || category === "dueToday" || category === "needsPractice") {
+          let reason = "";
+          if (category === "overdue") {
+            reason = `Terlambat ${delayDays} hari dari jadwal pengulangan bertahap.`;
+          } else if (stage === 0 || !m.resolvedAt) {
+            reason = "Belum diperbaiki setelah kesalahan awal; perlu pemantapan tanpa kunci.";
+          } else if (stage === 1) {
+            reason = "Review retensi tahap 2/4 (jeda 1 hari pemanggilan ulang).";
+          } else if (stage === 2) {
+            reason = "Review retensi tahap 3/4 (jeda 3 hari penguatan).";
+          } else {
+            reason = "Review retensi tahap 4/4 (jeda 7 hari penguasaan permanen).";
+          }
+
+          let consequence = "";
+          if (stage >= 3) {
+            consequence = "Jawaban tepat akan menuntaskan (master) catatan kesalahan ini secara permanen.";
+          } else if (stage === 2) {
+            consequence = "Jawaban tepat akan memajukan ke tahap 4/4 dengan jeda 7 hari.";
+          } else if (stage === 1) {
+            consequence = "Jawaban tepat akan memajukan ke tahap 3/4 dengan jeda 3 hari.";
+          } else {
+            consequence = "Jawaban tepat akan menjadwalkan review tahap 2/4 dengan jeda 1 hari.";
+          }
+
+          let urgencyScore = 0;
+          if (category === "overdue") {
+            urgencyScore = 3000000000000 - (Number.isFinite(reviewDueTime) ? reviewDueTime : 0);
+          } else if (category === "dueToday") {
+            urgencyScore = 2000000000000 - (Number.isFinite(reviewDueTime) ? reviewDueTime : 0);
+          } else {
+            urgencyScore = 1000000000000 - Date.parse(m.recordedAt || "");
+          }
+
+          let sourceTitle = m.sourceTitle || m.title || "Latihan Terkait";
+          if (skillKey === "grammar") {
+            const topicId = m.topicId || (m.mistakeId.split(":")[1]);
+            const t = topicsArr.find(entry => entry.id === topicId);
+            if (t) sourceTitle = t.title;
+          }
+
+          items.push({
+            id: `mistake:${m.mistakeId}`,
+            type: "mistake",
+            mistakeId: m.mistakeId,
+            skill: skillKey,
+            skillLabel,
+            level: m.level || null,
+            title: m.prompt ? (m.prompt.length > 70 ? m.prompt.slice(0, 68) + "…" : m.prompt) : sourceTitle,
+            subtitle: `Sumber: ${sourceTitle} · Jawaban sebelumnya: ${m.wrongAnswer || "—"}`,
+            category,
+            delayDays,
+            dueAt: m.nextReviewAt || null,
+            stage,
+            maxStage,
+            reason,
+            consequence,
+            urgencyScore,
+            sourceLinkLabel: "Buka sumber latihan ↗",
+            sourceTarget: skillKey,
+            raw: m
+          });
+        }
+      }
+
+      if (Array.isArray(m.reviewHistory)) {
+        for (const entry of m.reviewHistory) {
+          if (!entry || !entry.correct || !entry.reviewedAt) continue;
+          const entryTime = Date.parse(entry.reviewedAt);
+          if (Number.isFinite(entryTime)) {
+            completedItems.push({
+              id: `completed:mistake:${m.mistakeId}:${entry.reviewedAt}`,
+              type: "mistake",
+              mistakeId: m.mistakeId,
+              skill: skillKey,
+              skillLabel,
+              level: m.level || null,
+              title: m.prompt || "Review kesalahan",
+              subtitle: `Jawaban tepat dipanggil kembali pada tahap ${entry.stage || stage} / 4`,
+              category: "completed",
+              stage: entry.stage || stage,
+              maxStage: 4,
+              completedAt: entry.reviewedAt,
+              timestamp: entryTime,
+              reason: "Pengulangan Spaced Retrieval berhasil dijawab dengan tepat.",
+              consequence: entry.stage >= 4 ? "Catatan kesalahan tuntas (Mastered)." : "Jadwal jeda berikutnya diperbarui."
+            });
+          }
+        }
+      }
+    }
+
+    items.sort((a, b) => {
+      if (b.urgencyScore !== a.urgencyScore) {
+        return b.urgencyScore - a.urgencyScore;
+      }
+      return String(a.id).localeCompare(String(b.id));
+    });
+
+    completedItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+    const overdueCount = items.filter(x => x.category === "overdue").length;
+    const todayCount = items.filter(x => x.category === "dueToday").length;
+    const practiceCount = items.filter(x => x.category === "needsPractice").length;
+    const totalDue = overdueCount + todayCount;
+
+    const focusedSession = items.slice(0, 5);
+
+    return {
+      items,
+      completedItems: completedItems.slice(0, 15),
+      focusedSession,
+      counts: {
+        totalDue,
+        overdue: overdueCount,
+        today: todayCount,
+        practice: practiceCount,
+        completed: completedItems.length
+      }
+    };
+  }
+
   function renderReview() {
-    const due=dueWords().sort((a,b)=>new Date(state.wordProgress[a.id].nextReviewAt)-new Date(state.wordProgress[b.id].nextReviewAt));
-    $("#review-due-total").textContent=due.length;
-    $("#review-success-total").textContent=Object.values(state.wordProgress).reduce((n,p)=>n+(p.reviewHistory||[]).filter(x=>x.correct).length,0);
-    $("#nav-review-count").textContent=due.length;
-    $("#review-list").innerHTML=due.length?due.map(w=>'<div class="review-row"><span class="review-due-label">JATUH TEMPO</span><div><h3>'+esc(w.word)+' · '+esc(w.level)+'</h3><p>'+esc(w.meaning)+' · '+(state.wordProgress[w.id].reviewSuccesses||0)+'/3 review beruntun</p></div><button type="button" data-review-word="'+esc(w.id)+'">Mulai review →</button></div>').join(""):'<div class="review-empty"><h2>Belum ada review yang jatuh tempo.</h2><p>Setelah kamu mempelajari kata, jadwal review akan muncul di sini. Jadwal memakai hari yang benar-benar berlalu; membuka halaman berulang kali tidak mempercepatnya.</p><button class="primary-action" type="button" data-view-target="vocabulary">Pelajari kata baru ↗</button></div>';
+    const queue = getUnifiedReviewQueue(state, readExtraSnapshots(), words, topics, null);
+    const counts = queue.counts;
+
+    const dueTotal = $("#review-due-total");
+    if (dueTotal) dueTotal.textContent = counts.totalDue;
+    const overdueTotal = $("#review-overdue-total");
+    if (overdueTotal) overdueTotal.textContent = counts.overdue;
+    const todayTotal = $("#review-today-total");
+    if (todayTotal) todayTotal.textContent = counts.today;
+    const practiceTotal = $("#review-practice-total");
+    if (practiceTotal) practiceTotal.textContent = counts.practice;
+    const successTotal = $("#review-success-total");
+    if (successTotal) successTotal.textContent = counts.completed;
+    const navCount = $("#nav-review-count");
+    if (navCount) navCount.textContent = counts.totalDue;
+
+    const tabDue = $("#review-tab-due-count");
+    if (tabDue) tabDue.textContent = counts.totalDue;
+    const tabOverdue = $("#review-tab-overdue-count");
+    if (tabOverdue) tabOverdue.textContent = counts.overdue;
+    const tabToday = $("#review-tab-today-count");
+    if (tabToday) tabToday.textContent = counts.today;
+    const tabPractice = $("#review-tab-practice-count");
+    if (tabPractice) tabPractice.textContent = counts.practice;
+    const tabCompleted = $("#review-tab-completed-count");
+    if (tabCompleted) tabCompleted.textContent = counts.completed;
+
+    $$(".review-filter-btn").forEach(btn => {
+      const active = btn.dataset.reviewFilter === reviewFilterTab;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", String(active));
+    });
+    $$(".review-skill-pill").forEach(pill => {
+      const active = pill.dataset.reviewSkill === reviewSkillFilter;
+      pill.classList.toggle("is-active", active);
+    });
+
+    const focusCard = $("#review-focus-card");
+    if (focusCard) {
+      if (queue.focusedSession.length > 0 && reviewFilterTab !== "completed") {
+        focusCard.hidden = false;
+        const focusTitle = $("#review-focus-title");
+        if (focusTitle) focusTitle.textContent = `${queue.focusedSession.length} Materi Prioritas`;
+        const focusDesc = $("#review-focus-desc");
+        if (focusDesc) {
+          const overdueNum = queue.focusedSession.filter(x => x.category === "overdue").length;
+          focusDesc.textContent = overdueNum > 0
+            ? `${overdueNum} materi terlambat diprioritaskan di awal sesi agar ingatan tidak pudar.`
+            : "Materi teratas dipilih agar sesi belajarmu tetap terarah dan tidak membebani.";
+        }
+        const focusPills = $("#review-focus-pills");
+        if (focusPills) {
+          focusPills.innerHTML = queue.focusedSession.map(item => `
+            <span class="review-focus-pill">
+              <strong>${esc(item.title)}</strong>
+              <small>${esc(item.skillLabel)} · ${esc(item.category === 'overdue' ? 'Terlambat' : item.category === 'dueToday' ? 'Hari Ini' : 'Pemantapan')}</small>
+            </span>
+          `).join("");
+        }
+      } else {
+        focusCard.hidden = true;
+      }
+    }
+
+    window.sinauuUpdateReviewActivePanel?.();
+
+    let sourceList = [];
+    if (reviewFilterTab === "due") {
+      sourceList = queue.items.filter(x => x.category === "overdue" || x.category === "dueToday");
+    } else if (reviewFilterTab === "overdue") {
+      sourceList = queue.items.filter(x => x.category === "overdue");
+    } else if (reviewFilterTab === "today") {
+      sourceList = queue.items.filter(x => x.category === "dueToday");
+    } else if (reviewFilterTab === "practice") {
+      sourceList = queue.items.filter(x => x.category === "needsPractice");
+    } else if (reviewFilterTab === "completed") {
+      sourceList = queue.completedItems;
+    }
+
+    if (reviewSkillFilter !== "all") {
+      sourceList = sourceList.filter(x => x.skill === reviewSkillFilter);
+    }
+
+    const reviewList = $("#review-list");
+    if (!reviewList) return;
+
+    if (!sourceList.length) {
+      if (reviewFilterTab === "completed") {
+        reviewList.innerHTML = `<div class="review-empty">
+          <h2>Belum ada review yang baru selesai.</h2>
+          <p>Selesaikan review pada antrean Jatuh Tempo untuk membangun riwayat pengulangan berkala di perangkat ini.</p>
+          <div class="review-empty-actions">
+            <button class="primary-action" type="button" data-review-filter="due">Buka antrean jatuh tempo →</button>
+          </div>
+        </div>`;
+      } else if (counts.totalDue > 0 || counts.practice > 0) {
+        reviewList.innerHTML = `<div class="review-empty">
+          <h2>Tidak ada materi pada kategori ini.</h2>
+          <p>Pilih kategori atau filter kemampuan lain untuk melihat materi yang memerlukan review.</p>
+          <div class="review-empty-actions">
+            <button class="primary-action" type="button" data-review-filter="due">Lihat semua jatuh tempo (${counts.totalDue}) →</button>
+          </div>
+        </div>`;
+      } else {
+        let earliestUpcoming = null;
+        for (const w of words) {
+          const p = state.wordProgress[w.id];
+          if (p && p.nextReviewAt) {
+            const t = Date.parse(p.nextReviewAt);
+            if (Number.isFinite(t) && t > Date.now() && (!earliestUpcoming || t < earliestUpcoming)) earliestUpcoming = t;
+          }
+        }
+        const extras = readExtraSnapshots();
+        const mistakes = extras.adventureProgress?.mistakeJournal || {};
+        for (const m of Object.values(mistakes)) {
+          if (m && m.nextReviewAt && !window.sinauuIsMistakeMastered?.(m)) {
+            const t = Date.parse(m.nextReviewAt);
+            if (Number.isFinite(t) && t > Date.now() && (!earliestUpcoming || t < earliestUpcoming)) earliestUpcoming = t;
+          }
+        }
+
+        if (earliestUpcoming) {
+          const formattedDate = formatUpcomingDate(new Date(earliestUpcoming).toISOString());
+          reviewList.innerHTML = `<div class="review-empty">
+            <h2>Belum ada review yang jatuh tempo.</h2>
+            <p>Semua materi review saat ini masih dalam masa jeda ingatan. Jadwal review terdekat berikutnya: <strong>${esc(formattedDate)}</strong>. Jadwal memakai hari yang benar-benar berlalu; membuka halaman berulang kali tidak mempercepatnya.</p>
+            <div class="review-empty-actions">
+              <button class="primary-action" type="button" data-view-target="vocabulary">Pelajari kata baru ↗</button>
+            </div>
+          </div>`;
+        } else {
+          reviewList.innerHTML = `<div class="review-empty">
+            <h2>Belum ada review yang jatuh tempo.</h2>
+            <p>Setelah kamu mempelajari kata atau menyelesaikan misi, sistem Spaced Retrieval akan menjadwalkan review di sini secara otomatis. Jadwal memakai hari yang benar-benar berlalu; membuka halaman berulang kali tidak mempercepatnya.</p>
+            <div class="review-empty-actions">
+              <button class="primary-action" type="button" data-view-target="vocabulary">Pelajari kata baru ↗</button>
+            </div>
+          </div>`;
+        }
+      }
+    } else {
+      reviewList.innerHTML = sourceList.map(item => {
+        const cardCls = item.category === "overdue" ? "is-overdue" :
+          item.category === "dueToday" ? "is-due-today" :
+          item.category === "needsPractice" ? "is-practice" : "is-completed";
+        const urgencyCls = item.category === "overdue" ? "review-urgency-overdue" :
+          item.category === "dueToday" ? "review-urgency-today" :
+          item.category === "needsPractice" ? "review-urgency-practice" : "review-urgency-completed";
+        const urgencyLabel = item.category === "overdue" ? `TERLAMBAT ${item.delayDays > 0 ? item.delayDays + ' HARI' : ''}`.trim() :
+          item.category === "dueToday" ? "JATUH HARI INI" :
+          item.category === "needsPractice" ? "PERLU PEMANTAPAN" : "SELESAI";
+        const stagePercent = Math.min(100, Math.round((item.stage / item.maxStage) * 100));
+
+        return `<article class="review-queue-card ${cardCls}" data-review-item-id="${esc(item.id)}">
+          <div class="review-card-top">
+            <div class="review-card-meta">
+              <span class="review-skill-badge review-skill-${esc(item.skill)}">${esc(item.skillLabel)}</span>
+              ${item.level ? `<span class="review-level-badge">${esc(item.level)}</span>` : ""}
+              <span class="review-urgency-badge ${urgencyCls}">${esc(urgencyLabel)}</span>
+            </div>
+            <div class="review-card-stage">
+              <span class="review-stage-text">Tahap ${item.stage} / ${item.maxStage}</span>
+              <span class="review-stage-meter" aria-hidden="true"><i style="width:${stagePercent}%"></i></span>
+            </div>
+          </div>
+          <div class="review-card-main">
+            <h3 class="review-card-title">${esc(item.title)}</h3>
+            ${item.subtitle ? `<p class="review-card-subtitle">${esc(item.subtitle)}</p>` : ""}
+          </div>
+          <div class="review-card-qa-grid">
+            <div class="review-qa-cell review-qa-reason">
+              <span class="review-qa-label">MENGAPA JATUH TEMPO?</span>
+              <p class="review-qa-text">${esc(item.reason)}</p>
+            </div>
+            <div class="review-qa-cell review-qa-consequence">
+              <span class="review-qa-label">DAMPAK JIKA SELESAI:</span>
+              <p class="review-qa-text">${esc(item.consequence)}</p>
+            </div>
+          </div>
+          <div class="review-card-actions">
+            <div>
+              ${item.type === "vocabulary" ? `<button class="review-source-link" type="button" data-review-open-source="vocab:${esc(item.wordId)}">Buka kamus kata ↗</button>` :
+                item.type === "mistake" ? `<button class="review-source-link" type="button" data-review-open-source="mistake:${esc(item.mistakeId)}">${esc(item.sourceLinkLabel || "Buka materi asal ↗")}</button>` : ""}
+            </div>
+            <div>
+              ${item.category === "completed" ? `<span class="review-urgency-badge review-urgency-completed">✓ Selesai direview</span>` :
+                item.type === "vocabulary" ? `<button class="review-action-btn" type="button" data-review-word="${esc(item.wordId)}">Mulai review →</button>` :
+                `<button class="review-action-btn" type="button" data-review-mistake="${esc(item.mistakeId)}">Mulai review →</button>`}
+            </div>
+          </div>
+        </article>`;
+      }).join("");
+    }
   }
   function aggregateSkillPassport(coreState, extras, wordList, topicList) {
     const core = coreState || {};
@@ -2032,6 +2527,62 @@
       if(openHabit){setView("reading");if(typeof window.sinauuOpenHabitPassage==="function"){window.sinauuOpenHabitPassage(openHabit.dataset.openHabitPassage);}return;}
       const review=e.target.closest("[data-review-word]");
       if(review){startStudy(review.dataset.reviewWord,"review");return;}
+      const reviewFilter=e.target.closest("[data-review-filter]");
+      if(reviewFilter){reviewFilterTab=reviewFilter.dataset.reviewFilter;renderReview();return;}
+      const reviewSkill=e.target.closest("[data-review-skill]");
+      if(reviewSkill){reviewSkillFilter=reviewSkill.dataset.reviewSkill;renderReview();return;}
+      const startFocus=e.target.closest("#review-start-focus");
+      if(startFocus){
+        const queue=getUnifiedReviewQueue(state,readExtraSnapshots(),words,topics,null);
+        const first=queue.focusedSession&&queue.focusedSession[0];
+        if(first){
+          if(first.type==="vocabulary"){startStudy(first.wordId,"review");}
+          else if(first.type==="mistake"){
+            window.sinauuOpenMistakeReview?.(first.mistakeId);
+            window.sinauuUpdateReviewActivePanel?.();
+            $("#review-active-panel")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+          }
+        }
+        return;
+      }
+      const reviewMistake=e.target.closest("[data-review-mistake]");
+      if(reviewMistake){
+        window.sinauuOpenMistakeReview?.(reviewMistake.dataset.reviewMistake);
+        window.sinauuUpdateReviewActivePanel?.();
+        $("#review-active-panel")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+        return;
+      }
+      const openSource=e.target.closest("[data-review-open-source]");
+      if(openSource){
+        const itemId=openSource.dataset.reviewOpenSource;
+        if(itemId.startsWith("vocab:")){
+          selectedWord=itemId.replace("vocab:","");
+          vocabDetailOpen=true;
+          setView("vocabulary");
+          renderVocabulary(false);
+          return;
+        }else if(itemId.startsWith("mistake:")){
+          const mistakeId=itemId.replace("mistake:","");
+          const item=window.sinauuGetMistakeRecord?.(mistakeId);
+          if(item){
+            if(item.sourceType==="grammar"||item.topicId){
+              const topicId=item.topicId||(item.mistakeId.split(":")[1]);
+              if(topicId){activeTopic=topicId;grammarDetailOpen=true;setView("grammar");renderGrammar();return;}
+            }else if(item.sourceType==="habit"||item.passageId){
+              const passageId=item.passageId||(item.mistakeId.split(":")[1]);
+              setView("reading");
+              if(typeof window.sinauuOpenHabitPassage==="function"){window.sinauuOpenHabitPassage(passageId);}
+              return;
+            }else if(item.sourceType==="vocab"||item.wordId){
+              const wordId=item.wordId||(item.mistakeId.split(":")[1]);
+              if(wordId){selectedWord=wordId;vocabDetailOpen=true;setView("vocabulary");renderVocabulary(false);return;}
+            }
+          }
+          setView("adventure");
+          window.sinauuRenderAdventure?.();
+          return;
+        }
+      }
     });
     $("#vocab-search").addEventListener("input",()=>{vocabDetailOpen=false;renderVocabulary();});
     $("#vocab-load-more").addEventListener("click",()=>{listLimit+=100;renderVocabulary(false);});
@@ -2080,6 +2631,8 @@
       window.sinauuExportLocalBundle = () => ({schemaVersion:2,core:state,extras:readExtraSnapshots()});
       window.sinauuGetSkillPassport = () => aggregateSkillPassport(state, readExtraSnapshots(), words, topics);
       window.sinauuGetAdaptiveStudyPlan = (today) => getAdaptiveStudyPlan(today || dayKey());
+      window.sinauuGetUnifiedReviewQueue = (now) => getUnifiedReviewQueue(state, readExtraSnapshots(), words, topics, null, now);
+      window.sinauuRenderReview = () => renderReview();
       window.sinauuGetWordList = () => words;
       window.sinauuGetTopicList = () => topics;
       window.sinauuGetCoreState = () => state;
@@ -2129,6 +2682,12 @@
     renderOverview();
     renderProgress();
   };
+  window.sinauuOnMistakeReviewChanged = () => {
+    if (view === "review") renderReview();
+  };
+  window.addEventListener("sinauu:local-extras-saved", () => {
+    if (view === "review") renderReview();
+  });
   init();
 })();
 

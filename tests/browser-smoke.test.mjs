@@ -3412,3 +3412,394 @@ test("Universal Mistake Journal handles malformed legacy records, mobile viewpor
   assert.deepEqual(pageErrors, [], "Universal Mistake Journal must not throw errors during mobile rendering and Spaced Retrieval");
   await page.close();
 });
+
+test("Unified Review Queue aggregates overdue vocabulary, due today vocabulary, and spaced mistake journal items with honest empty states", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  // 1. Test clean / empty learner state
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "review-queue-access",
+      refresh_token: "review-queue-refresh",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "review-queue-user", email: "review@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // Navigate to Review view
+  await page.locator('[data-view-target="review"]').click();
+  const reviewView = page.locator("#view-review");
+  await reviewView.waitFor({ state: "visible" });
+
+  // In empty state, review list displays honest empty message and metric totals are 0
+  assert.equal(await page.locator("#review-due-total").innerText(), "0");
+  assert.equal(await page.locator("#review-success-total").innerText(), "0");
+  assert.match(await page.locator("#review-list").innerText(), /Belum ada review yang jatuh tempo/i);
+
+  // 2. Populate records with overdue vocab, due today vocab, weak word, and due grammar mistake via CloudBundle apply
+  const now = Date.now();
+  const overdueIso = new Date(now - 3 * 86400000).toISOString();
+  const todayDueIso = new Date(now - 2 * 3600000).toISOString();
+  const timestamp = new Date(now).toISOString();
+
+  await page.evaluate(({ overdueIso, todayDueIso, timestamp }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-hello", at: overdueIso, correct: true }],
+          nextReviewAt: overdueIso,
+          reviewSuccesses: 1,
+          reviewDates: ["2026-10-28"],
+          reviewHistory: [{ date: "2026-10-28", at: overdueIso, correct: true }],
+          weak: false,
+          skillEvidence: { recall: true, context: true, production: false }
+        },
+        "a1-usually": {
+          attempts: [{ id: "att-usually", at: todayDueIso, correct: true }],
+          nextReviewAt: todayDueIso,
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [],
+          weak: false,
+          skillEvidence: { recall: true, context: false, production: false }
+        },
+        "a1-enough": {
+          attempts: [{ id: "att-enough", at: timestamp, correct: false }],
+          nextReviewAt: null,
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [],
+          weak: true,
+          skillEvidence: { recall: false, context: false, production: false }
+        }
+      },
+      grammarProgress: {},
+      events: [],
+      history: [],
+      updatedAt: timestamp
+    };
+
+    const adventure = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "grammar:present-simple:ps-1": {
+          mistakeId: "grammar:present-simple:ps-1",
+          sourceType: "grammar",
+          topicId: "present-simple",
+          stepId: "ps-1",
+          skill: "Grammar",
+          level: "A1",
+          prompt: "Pilih kalimat yang menggunakan present simple dengan benar.",
+          wrongAnswer: "walks",
+          correctAnswer: "He walks to class every day.",
+          explanation: "Subjek tunggal membutuhkan kata kerja berakhiran -s.",
+          recordedAt: overdueIso,
+          resolvedAt: overdueIso,
+          nextReviewAt: overdueIso,
+          reviewStage: 1,
+          reviewHistory: [{ reviewedAt: overdueIso, correct: true, stage: 1 }]
+        }
+      },
+      updatedAt: timestamp
+    };
+    window.sinauuApplyCloudBundle({ core, extras: { adventureProgress: adventure } });
+  }, { overdueIso, todayDueIso, timestamp });
+
+  await page.locator('[data-view-target="review"]').click();
+  await reviewView.waitFor({ state: "visible" });
+
+  // 3. Verify aggregated metric cards
+  // Total due = 2 overdue (hello + grammar mistake) + 1 today (usually) = 3
+  assert.equal(await page.locator("#review-due-total").innerText(), "3");
+  assert.equal(await page.locator("#review-overdue-total").innerText(), "2");
+  assert.equal(await page.locator("#review-today-total").innerText(), "1");
+  assert.equal(await page.locator("#review-practice-total").innerText(), "1");
+  assert.equal(await page.locator("#nav-review-count").innerText(), "3");
+
+  assert.deepEqual(pageErrors, [], "Unified Review Queue empty state and metric counters must load without errors");
+  await page.close();
+});
+
+test("Unified Review Queue provides deterministic prioritization, manageable focused session, category and skill filtering, and transparent explanations", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = Date.now();
+  const overdueIso = new Date(now - 4 * 86400000).toISOString();
+  const todayDueIso = new Date(now - 1 * 3600000).toISOString();
+  const timestamp = new Date(now).toISOString();
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "review-queue-access-2",
+      refresh_token: "review-queue-refresh-2",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "review-queue-user-2", email: "review2@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.evaluate(({ overdueIso, todayDueIso, timestamp }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-hello-2", at: overdueIso, correct: true }],
+          nextReviewAt: overdueIso,
+          reviewSuccesses: 1,
+          reviewDates: ["2026-10-27"],
+          reviewHistory: [{ date: "2026-10-27", at: overdueIso, correct: true }],
+          weak: false,
+          skillEvidence: { recall: true, context: true, production: false }
+        },
+        "a1-usually": {
+          attempts: [{ id: "att-usually-2", at: todayDueIso, correct: true }],
+          nextReviewAt: todayDueIso,
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [],
+          weak: false,
+          skillEvidence: { recall: true, context: false, production: false }
+        },
+        "a1-enough": {
+          attempts: [{ id: "att-enough-2", at: timestamp, correct: false }],
+          nextReviewAt: null,
+          reviewSuccesses: 0,
+          reviewDates: [],
+          reviewHistory: [],
+          weak: true,
+          skillEvidence: { recall: false, context: false, production: false }
+        }
+      },
+      grammarProgress: {},
+      events: [],
+      history: [],
+      updatedAt: timestamp
+    };
+
+    const adventure = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "grammar:present-simple:ps-1": {
+          mistakeId: "grammar:present-simple:ps-1",
+          sourceType: "grammar",
+          topicId: "present-simple",
+          stepId: "ps-1",
+          skill: "Grammar",
+          level: "A1",
+          prompt: "Pilih kalimat yang menggunakan present simple dengan benar.",
+          wrongAnswer: "walks",
+          correctAnswer: "He walks to class every day.",
+          explanation: "Subjek tunggal membutuhkan kata kerja berakhiran -s.",
+          recordedAt: overdueIso,
+          resolvedAt: overdueIso,
+          nextReviewAt: overdueIso,
+          reviewStage: 1,
+          reviewHistory: [{ reviewedAt: overdueIso, correct: true, stage: 1 }]
+        }
+      },
+      updatedAt: timestamp
+    };
+    window.sinauuApplyCloudBundle({ core, extras: { adventureProgress: adventure } });
+  }, { overdueIso, todayDueIso, timestamp });
+
+  await page.locator('[data-view-target="review"]').click();
+
+  // 1. Focused session card is displayed with capped items
+  const focusCard = page.locator("#review-focus-card");
+  await focusCard.waitFor({ state: "visible" });
+  assert.match(await focusCard.locator("#review-focus-title").innerText(), /Materi Prioritas/i);
+  assert.ok(await focusCard.locator("#review-focus-pills .review-focus-pill").count() >= 2);
+
+  // 2. Check cards in active queue
+  const queueCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await queueCards.count(), 3, "default 'due' tab shows overdue and due today items");
+
+  // The first cards must be overdue (deterministic prioritization)
+  assert.ok(await queueCards.nth(0).evaluate(el => el.classList.contains("is-overdue")), "first card should be overdue");
+
+  // Verify the 3 key questions are answered on each card:
+  const firstCard = queueCards.first();
+  assert.ok(await firstCard.locator(".review-card-title").isVisible(), "must answer: what to review");
+  assert.ok(await firstCard.locator(".review-qa-reason .review-qa-text").isVisible(), "must answer: why is it due");
+  assert.match(await firstCard.locator(".review-qa-reason .review-qa-text").innerText(), /Terlambat/i);
+  assert.ok(await firstCard.locator(".review-qa-consequence .review-qa-text").isVisible(), "must answer: what will happen when completed");
+
+  // 3. Category filtering
+  // Click 'Terlambat' tab
+  await page.locator('[data-review-filter="overdue"]').click();
+  const overdueCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await overdueCards.count(), 2);
+
+  // Click 'Hari Ini' tab
+  await page.locator('[data-review-filter="today"]').click();
+  const todayCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await todayCards.count(), 1);
+  assert.match(await todayCards.first().locator(".review-card-title").innerText(), /usually/i);
+
+  // Click 'Perlu Pemantapan' tab
+  await page.locator('[data-review-filter="practice"]').click();
+  const practiceCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await practiceCards.count(), 1);
+  assert.match(await practiceCards.first().locator(".review-card-title").innerText(), /enough/i);
+
+  // 4. Skill filtering
+  // Reset to due filter, filter by Grammar
+  await page.locator('[data-review-filter="due"]').click();
+  await page.locator('[data-review-skill="grammar"]').click();
+  const grammarCards = page.locator("#review-list .review-queue-card");
+  assert.equal(await grammarCards.count(), 1);
+  assert.match(await grammarCards.first().locator(".review-skill-badge").innerText(), /Tata Bahasa|Grammar/i);
+
+  // Reset to all skills
+  await page.locator('[data-review-skill="all"]').click();
+  assert.equal(await page.locator("#review-list .review-queue-card").count(), 3);
+
+  assert.deepEqual(pageErrors, [], "Unified Review Queue filtering and explanations must execute without errors");
+  await page.close();
+});
+
+test("Unified Review Queue allows in-place mistake retrieval and direct vocab study without false mastery, and persists across reload", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = Date.now();
+  const overdueIso = new Date(now - 3 * 86400000).toISOString();
+  const timestamp = new Date(now).toISOString();
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "review-queue-access-3",
+      refresh_token: "review-queue-refresh-3",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "review-queue-user-3", email: "review3@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.evaluate(({ overdueIso, timestamp }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-hello-3", at: overdueIso, correct: true }],
+          nextReviewAt: overdueIso,
+          reviewSuccesses: 1,
+          reviewDates: ["2026-10-27"],
+          reviewHistory: [{ date: "2026-10-27", at: overdueIso, correct: true }],
+          weak: false,
+          skillEvidence: { recall: true, context: true, production: false }
+        }
+      },
+      grammarProgress: {},
+      events: [],
+      history: [],
+      updatedAt: timestamp
+    };
+
+    const adventure = {
+      schemaVersion: 1,
+      mistakeJournal: {
+        "grammar:present-simple:ps-1": {
+          mistakeId: "grammar:present-simple:ps-1",
+          sourceType: "grammar",
+          topicId: "present-simple",
+          stepId: "ps-1",
+          skill: "Grammar",
+          level: "A1",
+          prompt: "Pilih kalimat yang menggunakan present simple dengan benar.",
+          wrongAnswer: "walks",
+          correctAnswer: "He walks to class every day.",
+          explanation: "Subjek tunggal membutuhkan kata kerja berakhiran -s.",
+          recordedAt: overdueIso,
+          resolvedAt: overdueIso,
+          nextReviewAt: overdueIso,
+          reviewStage: 1,
+          reviewHistory: [{ reviewedAt: overdueIso, correct: true, stage: 1 }]
+        }
+      },
+      updatedAt: timestamp
+    };
+    window.sinauuApplyCloudBundle({ core, extras: { adventureProgress: adventure } });
+  }, { overdueIso, timestamp });
+
+  await page.locator('[data-view-target="review"]').click();
+
+  // 1. In-place mistake review
+  const mistakeActionBtn = page.locator('#review-list [data-review-mistake="grammar:present-simple:ps-1"]');
+  await mistakeActionBtn.waitFor({ state: "visible" });
+  await mistakeActionBtn.click();
+
+  // Active panel renders in-place inside #view-review
+  const activePanel = page.locator("#review-active-panel .adventure-mistake-review");
+  await activePanel.waitFor({ state: "visible" });
+
+  // Pick incorrect answer first (index 0)
+  await activePanel.locator('[data-mistake-answer="0"]').click();
+  assert.match(await activePanel.innerText(), /Belum tepat/i);
+
+  // Pick correct answer (index 1: "He walks to class every day.")
+  // Since wrong answer reset stage to 0, correct retry advances it to 1
+  await activePanel.locator('[data-mistake-answer="1"]').click();
+  assert.match(await activePanel.innerText(), /Review 1\/4 berhasil/i);
+
+  // Close in-place review card
+  await activePanel.locator("[data-mistake-review-close]").click();
+  await page.waitForFunction(() => document.getElementById("review-active-panel")?.hidden === true);
+
+  // 2. Reload and verify reviewStage 1 persists
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator('[data-view-target="review"]').click();
+
+  const mistakeStage = await page.evaluate(() => {
+    const journal = window.sinauuGetMistakeJournal?.() || {};
+    return journal["grammar:present-simple:ps-1"]?.reviewStage;
+  });
+  assert.equal(mistakeStage, 1, "reviewStage 1 after reset and retry must persist in storage across page reload");
+
+  // Verify false mastery is NOT granted (stage 1 of 4 is not mastered)
+  const isMastered = await page.evaluate(() => {
+    const journal = window.sinauuGetMistakeJournal?.() || {};
+    const item = journal["grammar:present-simple:ps-1"];
+    return window.sinauuIsMistakeMastered?.(item);
+  });
+  assert.equal(isMastered, false, "intermediate spaced review stage must NOT grant false mastery");
+
+  // 3. Verify 'Buka materi asal' context navigation
+  const openSourceBtn = page.locator('#review-list [data-review-open-source="vocab:a1-hello"]');
+  await openSourceBtn.waitFor({ state: "visible" });
+  await openSourceBtn.click();
+  await page.locator("#view-vocabulary").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#view-vocabulary").isVisible(), true);
+
+  assert.deepEqual(pageErrors, [], "In-place mistake review and source navigation must execute cleanly without errors");
+  await page.close();
+});

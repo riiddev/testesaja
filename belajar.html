@@ -386,8 +386,76 @@
         </section>
 
         <section class="view" id="view-review" data-view="review">
-          <div class="page-heading compact-heading"><h1>Kembali saat <em>waktunya.</em></h1><p class="page-lede">Review terjadwal membantu mengecek apakah kata masih bisa kamu ingat setelah jeda. Jawaban benar hari ini saja tidak membuat kata langsung mastered.</p></div>
-          <div class="review-summary"><div><span class="metric-label">JATUH TEMPO</span><strong id="review-due-total">0</strong></div><div><span class="metric-label">REVIEW BERHASIL</span><strong id="review-success-total">0</strong></div><p>Review diatur dari tanggal sesi yang tercatat pada perangkat ini. Mengubah tanggal sistem dapat memengaruhi jadwal.</p></div>
+          <div class="page-heading compact-heading review-heading">
+            <div>
+              <span class="eyebrow">SINAUUENGLISH / REVIEW TERPADU</span>
+              <h1>Kembali saat <em>waktunya.</em></h1>
+            </div>
+            <p class="page-lede">Pusat pengulangan berkala lintas materi: kosakata, tata bahasa, dan pemahaman teks. Pengulangan aktif setelah jeda waktu menguji daya ingat autentik, bukan sekadar hafalan sesaat.</p>
+          </div>
+
+          <div class="review-summary" aria-label="Ringkasan antrean review">
+            <div class="review-metric-card" data-metric="due">
+              <span class="metric-label">TOTAL JATUH TEMPO</span>
+              <strong id="review-due-total">0</strong>
+              <small>Kosakata & kesalahan</small>
+            </div>
+            <div class="review-metric-card review-metric-urgent" data-metric="overdue">
+              <span class="metric-label">TERLAMBAT</span>
+              <strong id="review-overdue-total">0</strong>
+              <small>Perlu diprioritaskan</small>
+            </div>
+            <div class="review-metric-card" data-metric="today">
+              <span class="metric-label">JATUH HARI INI</span>
+              <strong id="review-today-total">0</strong>
+              <small>Sesuai jadwal</small>
+            </div>
+            <div class="review-metric-card" data-metric="practice">
+              <span class="metric-label">PERLU PEMANTAPAN</span>
+              <strong id="review-practice-total">0</strong>
+              <small>Belum tuntas diperbaiki</small>
+            </div>
+            <div class="review-metric-card" data-metric="success">
+              <span class="metric-label">REVIEW BERHASIL</span>
+              <strong id="review-success-total">0</strong>
+              <small>Riwayat pengulangan</small>
+            </div>
+          </div>
+
+          <div class="review-focus-card" id="review-focus-card" hidden>
+            <div class="review-focus-header">
+              <div>
+                <span class="review-focus-badge">SESI FOKUS HARI INI</span>
+                <h2 id="review-focus-title">5 Materi Prioritas</h2>
+              </div>
+              <button class="primary-action" id="review-start-focus" type="button">Mulai Sesi Fokus →</button>
+            </div>
+            <p class="review-focus-desc" id="review-focus-desc">Disiapkan dari materi yang paling mendesak agar sesi review terarah dan tidak membebani.</p>
+            <div class="review-focus-pills" id="review-focus-pills"></div>
+          </div>
+
+          <div class="review-active-card-container" id="review-active-panel" hidden aria-live="polite"></div>
+
+          <div class="review-controls">
+            <div class="review-filter-tabs" role="tablist" aria-label="Kategori review">
+              <button class="review-filter-btn is-active" type="button" role="tab" aria-selected="true" data-review-filter="due">Jatuh Tempo (<span id="review-tab-due-count">0</span>)</button>
+              <button class="review-filter-btn" type="button" role="tab" aria-selected="false" data-review-filter="overdue">Terlambat (<span id="review-tab-overdue-count">0</span>)</button>
+              <button class="review-filter-btn" type="button" role="tab" aria-selected="false" data-review-filter="today">Hari Ini (<span id="review-tab-today-count">0</span>)</button>
+              <button class="review-filter-btn" type="button" role="tab" aria-selected="false" data-review-filter="practice">Perlu Pemantapan (<span id="review-tab-practice-count">0</span>)</button>
+              <button class="review-filter-btn" type="button" role="tab" aria-selected="false" data-review-filter="completed">Baru Selesai (<span id="review-tab-completed-count">0</span>)</button>
+            </div>
+
+            <div class="review-skill-filters" role="group" aria-label="Filter kemampuan">
+              <button class="review-skill-pill is-active" type="button" data-review-skill="all">Semua</button>
+              <button class="review-skill-pill" type="button" data-review-skill="vocabulary">Kosakata</button>
+              <button class="review-skill-pill" type="button" data-review-skill="grammar">Tata Bahasa</button>
+              <button class="review-skill-pill" type="button" data-review-skill="reading">Pemahaman Bacaan</button>
+              <button class="review-skill-pill" type="button" data-review-skill="adventure">Petualangan</button>
+            </div>
+          </div>
+
+          <p class="review-disclaimer">Review diatur dari catatan sesi di perangkat ini. Jawaban benar hari ini saja tidak otomatis memberikan status mastery.</p>
+
           <div class="review-list" id="review-list"></div>
         </section>
 

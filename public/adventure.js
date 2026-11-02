@@ -991,6 +991,26 @@
     return progress.mistakeJournal[id] || Object.values(progress.mistakeJournal).find((x) => x && x.mistakeId === id) || null;
   }
 
+  function updateReviewActivePanel() {
+    const panel = $("#review-active-panel");
+    if (!panel) return;
+    const reviewView = $("#view-review");
+    const isReviewVisible = reviewView && reviewView.classList.contains("is-visible");
+    if (!isReviewVisible) {
+      panel.innerHTML = "";
+      panel.hidden = true;
+      return;
+    }
+    const selected = selectedMistakeReviewId ? findMistakeRecord(selectedMistakeReviewId) : null;
+    if (selected && !isMistakeMastered(selected) && (isMistakeDue(selected) || (mistakeReviewFeedback && mistakeReviewFeedback.mistakeId === selected.mistakeId))) {
+      panel.innerHTML = renderMistakeReview(selected);
+      panel.hidden = false;
+    } else {
+      panel.innerHTML = "";
+      panel.hidden = true;
+    }
+  }
+
   function openMistakeReview(mistakeId) {
     const item = findMistakeRecord(mistakeId);
     if (!item || isMistakeMastered(item) || !isMistakeDue(item) || !mistakeStep(item)) return;
@@ -999,6 +1019,8 @@
     mistakeReviewTranscriptVisible = false;
     mistakeReviewListenReady = false;
     renderMistakeJournal();
+    updateReviewActivePanel();
+    if (typeof window.sinauuOnMistakeReviewChanged === "function") window.sinauuOnMistakeReviewChanged();
   }
 
   function closeMistakeReview() {
@@ -1008,6 +1030,8 @@
     mistakeReviewListenReady = false;
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     renderMistakeJournal();
+    updateReviewActivePanel();
+    if (typeof window.sinauuOnMistakeReviewChanged === "function") window.sinauuOnMistakeReviewChanged();
   }
 
   function listenToMistakeReview() {
@@ -1017,6 +1041,7 @@
     mistakeReviewListenReady = true;
     mistakeReviewTranscriptVisible = !playText(match.step.audioText);
     renderMistakeJournal();
+    updateReviewActivePanel();
   }
 
   function toggleMistakeReviewTranscript() {
@@ -1026,6 +1051,7 @@
     mistakeReviewListenReady = true;
     mistakeReviewTranscriptVisible = !mistakeReviewTranscriptVisible;
     renderMistakeJournal();
+    updateReviewActivePanel();
   }
 
   function answerMistakeReview(mistakeId, answerIndex) {
@@ -1042,11 +1068,15 @@
       renderMistakeJournal();
       renderSkillProfile();
       renderAchievements();
+      updateReviewActivePanel();
+      if (typeof window.sinauuOnMistakeReviewChanged === "function") window.sinauuOnMistakeReviewChanged();
     } else {
       resetMistakeReviewAfterWrong(item);
       mistakeReviewFeedback = { mistakeId, kind: "try-again" };
       saveProgress();
       renderMistakeJournal();
+      updateReviewActivePanel();
+      if (typeof window.sinauuOnMistakeReviewChanged === "function") window.sinauuOnMistakeReviewChanged();
     }
   }
 
@@ -2607,10 +2637,18 @@
   window.addEventListener("sinauu:local-extras-saved", () => { syncExternalMistakes(); renderMistakeJournal(); });
   window.addEventListener("sinauu:workspace-ready", () => { syncExternalMistakes(); renderMistakeJournal(); });
   window.sinauuAdventureBackup = () => cloneProgress(progress);
-  window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); syncExternalMistakes(); renderAll(); };
-  window.sinauuRenderAdventure = () => { syncExternalMistakes(); if (curriculum) renderAll(); else void init(); };
+  window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); syncExternalMistakes(); renderAll(); updateReviewActivePanel(); };
+  window.sinauuRenderAdventure = () => { syncExternalMistakes(); if (curriculum) renderAll(); else void init(); updateReviewActivePanel(); };
   window.sinauuRecordMistake = recordMistake;
   window.sinauuSyncMistakes = syncExternalMistakes;
+  window.sinauuGetMistakeJournal = () => progress.mistakeJournal;
+  window.sinauuGetMistakeRecord = (id) => findMistakeRecord(id);
+  window.sinauuOpenMistakeReview = (id) => { openMistakeReview(id); };
+  window.sinauuCloseMistakeReview = () => { closeMistakeReview(); };
+  window.sinauuIsMistakeDue = (item, now) => isMistakeDue(item, now);
+  window.sinauuIsMistakeMastered = (item) => isMistakeMastered(item);
+  window.sinauuRenderMistakeReviewHtml = (item) => renderMistakeReview(item);
+  window.sinauuUpdateReviewActivePanel = () => updateReviewActivePanel();
 
   // Adventure uses only its own small curriculum and local extras. Do not wait for
   // the large Oxford corpus before showing Daily Quest, Mistake Journal, or Studios.
