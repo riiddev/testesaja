@@ -3803,3 +3803,376 @@ test("Unified Review Queue allows in-place mistake retrieval and direct vocab st
   assert.deepEqual(pageErrors, [], "In-place mistake review and source navigation must execute cleanly without errors");
   await page.close();
 });
+
+test("Weekly Learning Insights presents an honest empty state for a new learner and an honest single-day state", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "weekly-preview-access-1",
+      refresh_token: "weekly-preview-refresh-1",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "weekly-preview-user-1", email: "weekly1@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // 1. Open Progress view - empty state
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  const weeklySection = page.locator("#weekly-insights-section");
+  await weeklySection.waitFor({ state: "visible" });
+
+  const emptyState = weeklySection.locator(".weekly-empty-state");
+  await emptyState.waitFor({ state: "visible" });
+  assert.match(await emptyState.locator(".weekly-empty-kicker").innerText(), /BELUM ADA AKTIVITAS MINGGUAN/i);
+  assert.match(await emptyState.locator("h3").innerText(), /Belum ada aktivitas belajar/i);
+
+  // Click CTA to start first practice
+  const emptyCta = emptyState.locator('[data-weekly-target="vocabulary"]');
+  await emptyCta.click();
+  await page.locator("#view-vocabulary.is-visible").waitFor({ state: "visible" });
+
+  // 2. Single-day learner
+  const now = Date.now();
+  const todayIso = new Date(now).toISOString();
+  const today = todayIso.slice(0, 10);
+
+  await page.evaluate(async ({ today, todayIso }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-1", at: todayIso, correct: true }],
+          studiedDates: [today],
+          reviewHistory: [{ at: todayIso, date: today, correct: true }],
+          nextReviewAt: null
+        }
+      },
+      grammarProgress: {
+        "present-simple": {
+          attempts: 2,
+          correct: 2,
+          answers: {
+            "ps-1": { correct: true, at: todayIso }
+          }
+        }
+      },
+      events: [],
+      history: [{
+        id: "hist-1",
+        date: today,
+        at: todayIso,
+        type: "vocabulary",
+        title: "hello",
+        correct: true
+      }],
+      updatedAt: todayIso
+    };
+    await window.sinauuApplyCloudBundle({ core, extras: {} });
+  }, { today, todayIso });
+
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  await weeklySection.waitFor({ state: "visible" });
+
+  // Active days card shows 1 / 7 hari
+  const activeDaysVal = weeklySection.locator("#weekly-active-days");
+  await activeDaysVal.waitFor({ state: "visible" });
+  assert.match(await activeDaysVal.innerText(), /1/);
+  assert.match(await activeDaysVal.innerText(), /7 hari/);
+
+  // Narrative notes single active day honestly without false trends
+  const narrative = weeklySection.locator(".weekly-narrative");
+  assert.match(await narrative.innerText(), /1 hari/i);
+
+  assert.deepEqual(pageErrors, [], "Weekly Learning Insights empty state and single-day state must execute without browser errors");
+  await page.close();
+});
+
+test("Weekly Learning Insights aggregates multi-skill activity, computes fair week-over-week comparisons, accuracy trends, and honest disclosures", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = Date.now();
+  const dayMs = 86400000;
+  // Current week timestamps: days 0, 1, 2, 4 prior
+  const d0 = new Date(now).toISOString();
+  const d1 = new Date(now - 1 * dayMs).toISOString();
+  const d2 = new Date(now - 2 * dayMs).toISOString();
+  const d4 = new Date(now - 4 * dayMs).toISOString();
+
+  // Previous week timestamps: days 8, 10 prior
+  const d8 = new Date(now - 8 * dayMs).toISOString();
+  const d10 = new Date(now - 10 * dayMs).toISOString();
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "weekly-preview-access-2",
+      refresh_token: "weekly-preview-refresh-2",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "weekly-preview-user-2", email: "weekly2@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  await page.evaluate(async ({ d0, d1, d2, d4, d8, d10 }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [{ id: "att-hello-1", at: d0, correct: true }],
+          studiedDates: [d0.slice(0, 10)],
+          reviewHistory: [
+            { id: "rh-1", at: d0, date: d0.slice(0, 10), correct: true },
+            { id: "rh-2", at: d1, date: d1.slice(0, 10), correct: true }
+          ]
+        },
+        "a1-usually": {
+          attempts: [{ id: "att-usually-1", at: d2, correct: true }],
+          studiedDates: [d2.slice(0, 10)],
+          reviewHistory: [{ id: "rh-3", at: d2, date: d2.slice(0, 10), correct: false }]
+        },
+        "a1-enough": {
+          attempts: [{ id: "att-enough-old", at: d8, correct: true }],
+          studiedDates: [d8.slice(0, 10)],
+          reviewHistory: [{ id: "rh-4", at: d8, date: d8.slice(0, 10), correct: true }]
+        }
+      },
+      grammarProgress: {
+        "present-simple": {
+          attempts: 6,
+          correct: 5,
+          answers: {
+            "ps-1": { correct: true, at: d1 },
+            "ps-2": { correct: true, at: d1 },
+            "ps-3": { correct: false, at: d2 },
+            "ps-4": { correct: true, at: d4 }
+          }
+        },
+        "past-simple": {
+          attempts: 5,
+          correct: 3,
+          answers: {
+            "pst-1": { correct: true, at: d8 },
+            "pst-2": { correct: false, at: d8 },
+            "pst-3": { correct: false, at: d10 },
+            "pst-4": { correct: true, at: d10 }
+          }
+        }
+      },
+      events: [],
+      history: [],
+      updatedAt: d0
+    };
+
+    const extras = {
+      habitProgress: {
+        "habit-page-1": {
+          answers: {
+            "q1": { correct: true, answeredAt: d0 },
+            "q2": { correct: true, answeredAt: d0 },
+            "q3": { correct: true, answeredAt: d0 }
+          }
+        }
+      },
+      adventureProgress: {
+        schemaVersion: 1,
+        studioSessions: [
+          {
+            studioType: "speaking",
+            promptId: "ordering-cafe",
+            completedAt: d1,
+            checklistCompleted: 3
+          }
+        ],
+        pronunciationProgress: {
+          "phrase-1": {
+            attempts: [{ completedAt: d4, durationMs: 4200, matchCount: 5 }]
+          }
+        },
+        mistakeJournal: {
+          "grammar:present-simple:ps-3": {
+            mistakeId: "grammar:present-simple:ps-3",
+            sourceType: "grammar",
+            topicId: "present-simple",
+            stepId: "ps-3",
+            reviewHistory: [{ reviewedAt: d0, correct: true, stage: 1 }]
+          }
+        }
+      }
+    };
+
+    await window.sinauuApplyCloudBundle({ core, extras });
+  }, { d0, d1, d2, d4, d8, d10 });
+
+  await page.locator(".side-nav [data-view-target='progress']").click();
+  const weeklySection = page.locator("#weekly-insights-section");
+  await weeklySection.waitFor({ state: "visible" });
+
+  // 1. Metric grid checks
+  // Active days: 4 days in current week (d0, d1, d2, d4) vs 2 in previous week (d8, d10)
+  const activeDaysEl = weeklySection.locator("#weekly-active-days");
+  assert.match(await activeDaysEl.innerText(), /4/);
+  assert.match(await weeklySection.locator(".weekly-metric-item").nth(0).innerText(), /\+2 hari dibanding minggu lalu/i);
+
+  // Activities & Reviews
+  const totalReviewsEl = weeklySection.locator("#weekly-total-reviews");
+  // 3 vocab reviews + 1 mistake journal review = 4
+  assert.equal(await totalReviewsEl.innerText(), "4");
+
+  // Accuracy Trend: both current and previous have >= 5 objective questions
+  const accuracyEl = weeklySection.locator("#weekly-accuracy-value");
+  assert.match(await accuracyEl.innerText(), /%/);
+  const accuracyCompEl = weeklySection.locator(".weekly-metric-item").nth(3).locator(".weekly-metric-comparison");
+  assert.match(await accuracyCompEl.innerText(), /%/);
+
+  // 2. Skill breakdown table checks
+  const table = weeklySection.locator(".weekly-skills-table");
+  assert.equal(await table.locator("tbody tr").count(), 7, "must list all 7 core skills");
+
+  // Check honest disclosure for Speaking & Pronunciation
+  assert.match(await table.innerText(), /Refleksi mandiri/i);
+  assert.match(await table.innerText(), /Analisis audio lokal/i);
+
+  // 3. Highlights
+  const mostPracticed = weeklySection.locator("#weekly-most-practiced");
+  assert.ok((await mostPracticed.innerText()).length > 0);
+  const leastPracticed = weeklySection.locator("#weekly-least-practiced");
+  assert.ok((await leastPracticed.innerText()).length > 0);
+
+  // 4. Actionable recommendations
+  const recList = weeklySection.locator(".weekly-recommendation-list .weekly-rec-card");
+  assert.ok(await recList.count() >= 1);
+  const recBtn = recList.first().locator(".weekly-rec-btn");
+  assert.ok(await recBtn.isVisible());
+
+  assert.deepEqual(pageErrors, [], "Multi-skill Weekly Learning Insights aggregation must execute cleanly without browser errors");
+  await page.close();
+});
+
+test("Weekly Learning Insights connects to Adaptive Study Plan, handles malformed timestamps, and persists across reload", async () => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.route("**/api/account**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ready: false }) });
+  });
+
+  const now = Date.now();
+  const todayIso = new Date(now).toISOString();
+  const yesterdayIso = new Date(now - 86400000).toISOString();
+
+  await page.addInitScript(() => {
+    localStorage.setItem("sinauu-cloud-session-v1", JSON.stringify({
+      access_token: "weekly-preview-access-3",
+      refresh_token: "weekly-preview-refresh-3",
+      token_type: "bearer",
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+      user: { id: "weekly-preview-user-3", email: "weekly3@example.com" },
+    }));
+  });
+
+  await page.goto(`${baseUrl}/belajar.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+
+  // 1. Inject state with malformed timestamps and neglected listening skill
+  await page.evaluate(async ({ todayIso, yesterdayIso }) => {
+    const core = {
+      schemaVersion: 1,
+      settings: { theme: "light", dailyGoal: 10 },
+      wordProgress: {
+        "a1-hello": {
+          attempts: [
+            { id: "att-good", at: todayIso, correct: true },
+            { id: "att-malformed-1", at: "not-a-valid-date", correct: true },
+            { id: "att-malformed-2", at: null, correct: false },
+            { id: "att-malformed-3", at: "", correct: false }
+          ],
+          studiedDates: [todayIso.slice(0, 10)],
+          reviewHistory: [{ at: todayIso, date: todayIso.slice(0, 10), correct: true }]
+        },
+        "a1-usually": {
+          attempts: [{ id: "att-u", at: yesterdayIso, correct: true }],
+          studiedDates: [yesterdayIso.slice(0, 10)],
+          reviewHistory: [{ at: yesterdayIso, date: yesterdayIso.slice(0, 10), correct: true }]
+        }
+      },
+      grammarProgress: {
+        "present-simple": {
+          attempts: 4,
+          correct: 4,
+          answers: {
+            "ps-1": { correct: true, at: todayIso },
+            "ps-2": { correct: true, at: yesterdayIso },
+            "ps-bad": { correct: true, at: "invalid-timestamp" }
+          }
+        }
+      },
+      events: [{ at: "corrupted", type: "unknown" }],
+      history: [],
+      updatedAt: todayIso
+    };
+
+    const extras = {
+      extraLearning: {
+        reading: {
+          "sk-1": { lastAttempt: todayIso, completed: true, attempts: 2, correct: 2 }
+        }
+      },
+      adventureProgress: {
+        schemaVersion: 1,
+        listeningProgress: {} // Neglected listening!
+      }
+    };
+
+    await window.sinauuApplyCloudBundle({ core, extras });
+  }, { todayIso, yesterdayIso });
+
+  // 2. Check that malformed timestamps did not break computation
+  const weeklyData = await page.evaluate(() => window.sinauuComputeWeeklyInsights?.());
+  assert.ok(weeklyData, "computeWeeklyInsights must return valid result despite malformed timestamps");
+  assert.equal(weeklyData.current.activeDaysCount, 2, "only valid days should count as active days");
+
+  // 3. Verify Adaptive Study Plan adapts based on weekly insights (recommends listening because reading & vocab were active)
+  await page.locator(".side-nav [data-view-target='overview']").click();
+  const planSteps = page.locator("#home-study-plan-steps .home-study-plan-step");
+  await planSteps.first().waitFor({ state: "visible" });
+  assert.equal(await planSteps.count(), 3);
+
+  const step2Text = await planSteps.nth(1).innerText();
+  assert.match(step2Text, /Listening Lab|Menyimak/i, "adaptive study plan should recommend listening when neglected in weekly review");
+
+  // 4. Persistence across reload
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.sinauuWorkspaceReady));
+  await page.locator(".side-nav [data-view-target='progress']").click();
+
+  const persistedActiveDays = await page.locator("#weekly-insights-section #weekly-active-days").innerText();
+  assert.match(persistedActiveDays, /2/);
+
+  // 5. Mobile viewport accessibility
+  await page.setViewportSize({ width: 375, height: 667 });
+  const weeklySection = page.locator("#weekly-insights-section");
+  await weeklySection.waitFor({ state: "visible" });
+  assert.ok(await weeklySection.locator(".weekly-metric-grid").isVisible());
+  assert.ok(await weeklySection.locator(".weekly-skills-table").isVisible());
+
+  assert.deepEqual(pageErrors, [], "Adaptive study plan connection, timestamp safety, and mobile layout must execute without errors");
+  await page.close();
+});
