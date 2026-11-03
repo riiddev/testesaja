@@ -273,7 +273,10 @@
     return a && b && !Number.isNaN(a.getTime()) && !Number.isNaN(b.getTime()) ? Math.floor((b-a)/86400000) : 0;
   }
   function plusDays(date, days) { const d = new Date(date); d.setDate(d.getDate()+days); return d; }
-  function fmtDate(d, opts) { return new Intl.DateTimeFormat("id-ID", opts || { day:"2-digit", month:"short" }).format(d); }
+  function fmtDate(d, opts) {
+    if (!d || !(d instanceof Date) || Number.isNaN(d.getTime())) return "-";
+    return new Intl.DateTimeFormat("id-ID", opts || { day:"2-digit", month:"short" }).format(d);
+  }
   function uid() { return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8); }
   function toast(message) {
     const node = $("#toast"); if (!node) return;
@@ -283,7 +286,16 @@
   function labelStorage() {
     const el = $("#storage-indicator"); if (!el) return;
     el.classList.toggle("is-fallback", storageMode !== "indexedDB" && storageMode !== "cloud");
-    $("span", el).textContent = storageMode === "cloud" ? "Tersimpan di cloud" : storageMode === "indexedDB" ? "Tersimpan di perangkat" : storageMode === "localStorage" ? "Penyimpanan cadangan" : "Penyimpanan terbatas";
+    $("span", el).textContent = storageMode === "cloud" ? "Tersimpan di cloud"
+      : storageMode === "memory" ? "Tersimpan di memori"
+      : storageMode === "waiting" ? "Menunggu sinkronisasi"
+      : storageMode === "syncing" ? "Menyinkronkan…"
+      : storageMode === "offline" ? "Offline · Menunggu internet"
+      : storageMode === "conflict" ? "Konflik revisi"
+      : storageMode === "error" ? "Gagal menyimpan"
+      : storageMode === "indexedDB" ? "Tersimpan di perangkat"
+      : storageMode === "localStorage" ? "Penyimpanan cadangan"
+      : "Penyimpanan terbatas";
   }
   function openDB() {
     return new Promise((resolve, reject) => {
@@ -313,27 +325,58 @@
     const s = freshState(), settings = raw.settings && typeof raw.settings === "object" ? raw.settings : {};
     s.settings.theme = settings.theme === "dark" ? "dark" : "light";
     s.settings.dailyGoal = [5,10,15,20].includes(Number(settings.dailyGoal)) ? Number(settings.dailyGoal) : 10;
-    s.wordProgress = raw.wordProgress && typeof raw.wordProgress === "object" && !Array.isArray(raw.wordProgress) ? raw.wordProgress : {};
+    s.wordProgress = {};
+    if (raw.wordProgress && typeof raw.wordProgress === "object" && !Array.isArray(raw.wordProgress)) {
+      for (const [k, v] of Object.entries(raw.wordProgress)) {
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          s.wordProgress[k] = v;
+        }
+      }
+    }
     s.favorites = Array.isArray(raw.favorites) ? raw.favorites.filter(x => typeof x === "string").slice(0,10000) : [];
-    s.grammarProgress = raw.grammarProgress && typeof raw.grammarProgress === "object" && !Array.isArray(raw.grammarProgress) ? raw.grammarProgress : {};
+    s.grammarProgress = {};
+    if (raw.grammarProgress && typeof raw.grammarProgress === "object" && !Array.isArray(raw.grammarProgress)) {
+      for (const [k, v] of Object.entries(raw.grammarProgress)) {
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          s.grammarProgress[k] = v;
+        }
+      }
+    }
     s.events = Array.isArray(raw.events) ? raw.events.filter(x => x && typeof x === "object").slice(-5000) : [];
     s.history = Array.isArray(raw.history) ? raw.history.filter(x => x && typeof x === "object").slice(-1000) : [];
     s.updatedAt = typeof raw.updatedAt === "string" ? raw.updatedAt : new Date().toISOString();
     return s;
   }
   async function loadState() {
+    const hasSession = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem("sinauu-cloud-session-v1") || "null");
+        return Boolean(s && s.access_token);
+      } catch { return false; }
+    })();
+
     try {
       db = await openDB();
-      const raw = await readDB(db);
+      let raw = await readDB(db);
+      if (!raw) {
+        try {
+          const fb = localStorage.getItem(FALLBACK);
+          if (fb) {
+            raw = JSON.parse(fb);
+            await writeDB(db, sanitize(raw));
+          }
+        } catch (_) {}
+      }
       state = raw ? sanitize(raw) : freshState();
-      storageMode = "indexedDB";
-      if (!raw) await writeDB(db, state);
+      storageMode = hasSession ? (navigator.onLine ? "syncing" : "offline") : "indexedDB";
+      if (!raw && !hasSession) await writeDB(db, state);
     } catch (_) {
-      db = null; storageMode = "localStorage";
+      db = null;
       try {
         const raw = localStorage.getItem(FALLBACK);
         state = raw ? sanitize(JSON.parse(raw)) : freshState();
-        if (!raw) localStorage.setItem(FALLBACK, JSON.stringify(state));
+        storageMode = hasSession ? (navigator.onLine ? "syncing" : "offline") : "localStorage";
+        if (!raw && !hasSession) localStorage.setItem(FALLBACK, JSON.stringify(state));
       } catch (_) {
         storageMode = "unavailable"; state = freshState();
       }
@@ -399,15 +442,29 @@
     let stored = false;
     if (window.sinauuIsCloudVerified?.()) {
       stored = true;
-      storageMode = "cloud";
+      storageMode = navigator.onLine ? "memory" : "offline";
       labelStorage();
     } else {
       try {
-        if (storageMode === "indexedDB" && db) { await writeDB(db,state); labelStorage(); stored = true; }
-        else { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); stored = true; }
+        if (db) {
+          await writeDB(db, state);
+          labelStorage();
+          stored = true;
+        } else {
+          localStorage.setItem(FALLBACK, JSON.stringify(state));
+          storageMode = "localStorage";
+          labelStorage();
+          stored = true;
+        }
       } catch (_) {
-        try { localStorage.setItem(FALLBACK,JSON.stringify(state)); storageMode = "localStorage"; labelStorage(); stored = true; }
-        catch (_) { storageMode = "unavailable"; labelStorage(); toast("Browser tidak dapat menyimpan progres. Coba ekspor backup."); }
+        try {
+          localStorage.setItem(FALLBACK, JSON.stringify(state));
+          storageMode = "localStorage";
+          labelStorage();
+          stored = true;
+        } catch (_) {
+          storageMode = "unavailable"; labelStorage(); toast("Browser tidak dapat menyimpan progres. Coba ekspor backup.");
+        }
       }
     }
     if (stored) notifyCloudState();
@@ -826,17 +883,17 @@
     if (hasTodayActivity) return false;
 
     const dates = [
-      ...state.history.map(item => item.date || (item.at ? item.at.slice(0, 10) : null)),
-      ...state.events.map(item => item.date || (item.at ? item.at.slice(0, 10) : null)),
-      ...Object.values(state.wordProgress || {}).flatMap(p => [
-        ...(p.studiedDates || []),
-        ...(p.reviewDates || []),
-        ...(p.attempts || []).map(a => a.at ? a.at.slice(0, 10) : null)
+      ...state.history.filter(Boolean).map(item => (typeof item.date === "string" ? item.date : (typeof item.at === "string" ? item.at.slice(0, 10) : null))),
+      ...state.events.filter(Boolean).map(item => (typeof item.date === "string" ? item.date : (typeof item.at === "string" ? item.at.slice(0, 10) : null))),
+      ...Object.values(state.wordProgress || {}).filter(p => p && typeof p === "object").flatMap(p => [
+        ...(Array.isArray(p.studiedDates) ? p.studiedDates : []),
+        ...(Array.isArray(p.reviewDates) ? p.reviewDates : []),
+        ...(Array.isArray(p.attempts) ? p.attempts.filter(a => a && typeof a === "object").map(a => typeof a.at === "string" ? a.at.slice(0, 10) : null) : [])
       ]),
-      ...Object.values(state.grammarProgress || {}).flatMap(p => [
-        ...Object.values(p.answers || {}).map(a => a.at ? a.at.slice(0, 10) : null)
+      ...Object.values(state.grammarProgress || {}).filter(p => p && typeof p === "object").flatMap(p => [
+        ...(p.answers && typeof p.answers === "object" ? Object.values(p.answers).filter(a => a && typeof a === "object").map(a => typeof a.at === "string" ? a.at.slice(0, 10) : null) : [])
       ])
-    ].filter(Boolean).filter(d => d < todayStr).sort();
+    ].filter(Boolean).filter(d => typeof d === "string" && d < todayStr).sort();
     if (!dates.length) return false;
     const last = dates[dates.length - 1];
     const diffDays = Math.floor((new Date(todayStr).getTime() - new Date(last).getTime()) / 86400000);
@@ -1280,7 +1337,7 @@
   }
   function renderWordDetail(id) {
     const w=words.find(x=>x.id===id);if(!w)return;
-    const p=state.wordProgress[id],evidence=p?p.skillEvidence:{},ready=canStudyWord(w),si=ready?statusInfo[statusOf(w)]:{label:"BELUM SIAP",cls:"status-incomplete"};
+    const p=state.wordProgress[id],evidence=(p&&p.skillEvidence)||{},ready=canStudyWord(w),si=ready?statusInfo[statusOf(w)]:{label:"BELUM SIAP",cls:"status-incomplete"};
     const exampleHtml=w.example?'<div class="detail-example"><p>'+esc(w.example)+'</p>'+(w.translation?'<p class="translation">'+esc(w.translation)+'</p>':'<p class="translation">Terjemahan contoh belum tersedia.</p>')+'</div>':'<p class="study-unavailable">Contoh penggunaan belum tersedia. Kata ini masih dapat dicari, tetapi belum bisa dilatih.</p>';
     const hasUnreviewedContext=(w.contextVariants||[]).some(v=>v.translation&&v.translationStatus&&v.translationStatus!=="human-reviewed"&&v.translationStatus!=="curated");
     const noteHtml=!ready?'<div class="content-status-note">Entri ini termasuk daftar headword sumber, tetapi materi latihannya belum lengkap. Sesi belajar baru dibuka setelah arti dan contoh penggunaan dapat dipakai.</div>':(w.translationStatus==="machine-generated-unreviewed"?'<div class="content-status-note">Terjemahan contoh berasal dari korpus kamus atau terjemahan mesin dan belum ditinjau satu per satu.</div>':(w.translationStatus==="assistant-curated-draft"?'<div class="content-status-note">Arti dan terjemahan ini sudah dikurasi sebagai draf editorial SinauuEnglish, tetapi belum diverifikasi secara independen oleh penutur manusia.</div>':(hasUnreviewedContext?'<div class="content-status-note">Beberapa contoh tambahan dan terjemahannya berasal dari korpus kamus atau draf editorial yang belum diverifikasi satu per satu.</div>':"")));
@@ -3573,7 +3630,14 @@
       return '<div class="grammar-progress-row"><span class="topic-code">'+esc(t.level)+'</span><div><strong>'+esc(t.title)+'</strong><p>'+n+'/'+t.questions.length+' soal unik dicoba · '+p.attempts+' percobaan total</p></div><span class="grammar-score">'+(score===null?"Belum dicoba":score+"% akurasi")+'</span></div>';
     }).join("");
     const history=state.history.slice(0,18);
-    $("#history-list").innerHTML=history.length?history.map(x=>'<div class="history-row"><time>'+esc(fmtDate(new Date(x.at),{day:"2-digit",month:"short"}))+' · '+esc(new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(new Date(x.at)))+'</time><div><strong>'+esc((x.type==="vocabulary"?"Kosakata: ":x.type==="grammar"?"Grammar: ":x.type==="matching"?"Matching: ":x.type==="reading"?"Reading: ":"Aktivitas: ")+x.title)+'</strong><small>'+esc(x.detail||"")+'</small></div><span class="history-result">'+(x.correct===true?"BENAR":x.correct===false?"PERLU ULANG":"")+'</span></div>').join(""):'<div class="empty-state">Belum ada aktivitas. Latihan pertamamu akan tercatat di sini.</div>';
+    $("#history-list").innerHTML=history.length?history.map(x=>{
+      const atDate = x && (x.at || x.date) ? new Date(x.at || x.date) : null;
+      const validDate = atDate && !Number.isNaN(atDate.getTime());
+      const timeLabel = validDate
+        ? (fmtDate(atDate,{day:"2-digit",month:"short"})+' · '+new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(atDate))
+        : "-";
+      return '<div class="history-row"><time>'+esc(timeLabel)+'</time><div><strong>'+esc((x.type==="vocabulary"?"Kosakata: ":x.type==="grammar"?"Grammar: ":x.type==="matching"?"Matching: ":x.type==="reading"?"Reading: ":"Aktivitas: ")+(x.title||""))+'</strong><small>'+esc(x.detail||"")+'</small></div><span class="history-result">'+(x.correct===true?"BENAR":x.correct===false?"PERLU ULANG":"")+'</span></div>';
+    }).join(""):'<div class="empty-state">Belum ada aktivitas. Latihan pertamamu akan tercatat di sini.</div>';
     renderWeeklyInsights();
     renderSkillPassport();
   }
@@ -4411,8 +4475,8 @@
             localStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(extras.extraLearning || {}));
             localStorage.setItem("sinauu-habit-library-v1", JSON.stringify(extras.habitProgress || {}));
             localStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(extras.adventureProgress || {}));
-            if (storageMode === "indexedDB" && db) await writeDB(db,state);
-            else localStorage.setItem(FALLBACK,JSON.stringify(state));
+            if (db) await writeDB(db, state);
+            try { localStorage.setItem(FALLBACK, JSON.stringify(state)); } catch (_) {}
           } else {
             storageMode = "cloud";
             labelStorage();
@@ -4458,6 +4522,32 @@
   };
   window.addEventListener("sinauu:local-extras-saved", () => {
     if (view === "review") renderReview();
+  });
+  window.addEventListener("sinauu:cloud-sync-success", () => {
+    storageMode = "cloud";
+    labelStorage();
+  });
+  window.addEventListener("sinauu:cloud-sync-waiting", () => {
+    if (window.sinauuIsCloudVerified?.()) {
+      storageMode = "waiting";
+      labelStorage();
+    }
+  });
+  window.addEventListener("sinauu:cloud-sync-syncing", () => {
+    storageMode = "syncing";
+    labelStorage();
+  });
+  window.addEventListener("sinauu:cloud-sync-conflict", () => {
+    storageMode = "conflict";
+    labelStorage();
+  });
+  window.addEventListener("sinauu:cloud-sync-error", () => {
+    storageMode = "error";
+    labelStorage();
+  });
+  window.addEventListener("sinauu:cloud-sync-offline", () => {
+    storageMode = "offline";
+    labelStorage();
   });
   init();
 })();

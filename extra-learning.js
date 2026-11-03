@@ -555,7 +555,7 @@
     const completed = $("#habit-library-completed");
     const status = $("#habit-library-status");
     if (count) count.textContent = filtered.length + " dari " + habitLibrary.passages.length + " bacaan";
-    if (completed) completed.textContent = finished + " bacaan selesai · progres tersimpan di perangkat";
+    if (completed) completed.textContent = finished + " bacaan selesai · progres " + (window.sinauuIsCloudVerified?.() ? "tersinkron cloud" : "tersimpan di perangkat");
     if (status) status.textContent = "Semua teks dari HABIT.pdf sudah dimasukkan. Pilih bacaan untuk membuka teks lengkap dan 3 soal pemahaman berbasis bukti.";
     const visible = filtered.slice(0, habitVisibleCount);
     list.innerHTML = visible.length ? visible.map(function (passage) {

@@ -256,6 +256,203 @@ function mergeDeep(a: any, b: any, preferB: boolean): any {
   return preferB ? (b === undefined ? a : b) : (a === undefined ? b : a);
 }
 
+function dayDistance(d1: any, d2: any): number {
+  const a = d1 ? new Date(d1) : null, b = d2 ? new Date(d2) : null;
+  return a && b && !Number.isNaN(a.getTime()) && !Number.isNaN(b.getTime()) ? Math.floor((b.getTime() - a.getTime()) / 86400000) : 0;
+}
+
+function parseTime(val: any): number {
+  if (typeof val === "string" || typeof val === "number") {
+    const t = Date.parse(String(val));
+    if (Number.isFinite(t)) return t;
+  }
+  return NaN;
+}
+
+function getWordActivityTimestamp(w: AnyRecord, fallback: number): number {
+  if (!w || typeof w !== "object") return fallback;
+  let maxT = 0;
+  if (Array.isArray(w.reviewHistory)) {
+    for (const r of w.reviewHistory) {
+      if (r) {
+        const t = parseTime(r.at || r.date);
+        if (Number.isFinite(t) && t > maxT) maxT = t;
+      }
+    }
+  }
+  if (Array.isArray(w.attempts)) {
+    for (const a of w.attempts) {
+      if (a) {
+        const t = parseTime(a.at || a.date);
+        if (Number.isFinite(t) && t > maxT) maxT = t;
+      }
+    }
+  }
+  const lr = parseTime(w.lastReviewedAt);
+  if (Number.isFinite(lr) && lr > maxT) maxT = lr;
+  const ls = parseTime(w.lastSeenAt);
+  if (Number.isFinite(ls) && ls > maxT) maxT = ls;
+  const ma = parseTime(w.masteredAt);
+  if (Number.isFinite(ma) && ma > maxT) maxT = ma;
+  return maxT > 0 ? maxT : fallback;
+}
+
+function mergeWordProgressItem(a: AnyRecord, b: AnyRecord, remoteIsNewer: boolean, localTime: number, remoteTime: number): AnyRecord {
+  const timeA = getWordActivityTimestamp(a, localTime);
+  const timeB = getWordActivityTimestamp(b, remoteTime);
+  const bIsNewer = timeB > timeA ? true : (timeA > timeB ? false : remoteIsNewer);
+  const preferred = bIsNewer ? b : a;
+  const older = bIsNewer ? a : b;
+
+  // 1. Skill evidence: union of all evidence
+  const skillEvidence = {
+    recall: Boolean(a.skillEvidence?.recall || b.skillEvidence?.recall),
+    context: Boolean(a.skillEvidence?.context || b.skillEvidence?.context),
+    production: Boolean(a.skillEvidence?.production || b.skillEvidence?.production),
+  };
+
+  // 2. Dates, questions, and attempts
+  const studiedDates = Array.from(new Set([...(a.studiedDates || []), ...(b.studiedDates || [])])).filter(Boolean).sort();
+  const contextQuestionIds = Array.from(new Set([...(a.contextQuestionIds || []), ...(b.contextQuestionIds || [])])).filter(Boolean);
+  const attempts = mergeArrays(a.attempts || [], b.attempts || []);
+  const savedContext = b.savedContext || a.savedContext || null;
+  const firstSeenDate = earliestIso(a.firstSeenDate, b.firstSeenDate) || studiedDates[0] || null;
+
+  // 3. Deduplicate review history
+  const rawHistory: any[] = [...(a.reviewHistory || []), ...(b.reviewHistory || [])];
+  const seenReviews = new Set<string>();
+  const deduplicatedHistory: any[] = [];
+  for (const r of rawHistory) {
+    if (!r || typeof r !== "object") continue;
+    const rAt = typeof r.at === "string" ? r.at : "";
+    const rDate = typeof r.date === "string" ? r.date : "";
+    const rCorrect = r.correct === true ? "1" : (r.correct === false ? "0" : "u");
+    const rSession = typeof r.sessionId === "string" ? r.sessionId : "";
+    const key = rAt ? `${rAt}_${rCorrect}_${rSession}` : `${rDate}_${rCorrect}_${rSession}_${stable(r)}`;
+    if (!seenReviews.has(key)) {
+      seenReviews.add(key);
+      deduplicatedHistory.push(r);
+    }
+  }
+
+  // Sort chronologically by review timestamp
+  deduplicatedHistory.sort((x, y) => {
+    const tx = parseTime(x.at || x.date);
+    const ty = parseTime(y.at || y.date);
+    const xValid = Number.isFinite(tx);
+    const yValid = Number.isFinite(ty);
+    if (xValid && yValid) return tx - ty;
+    if (xValid && !yValid) return 1;
+    if (!xValid && yValid) return -1;
+    return 0;
+  });
+
+  // 4. Trace lapses and review progression
+  let lastLapseIndex = -1;
+  for (let i = 0; i < deduplicatedHistory.length; i++) {
+    if (deduplicatedHistory[i].correct === false) {
+      lastLapseIndex = i;
+    }
+  }
+
+  const latestReview = [a.lastReviewedAt, b.lastReviewedAt].filter(Boolean).sort().reverse()[0] || null;
+  const nextReview = bIsNewer ? (preferred.nextReviewAt || older.nextReviewAt || null) : (older.nextReviewAt || preferred.nextReviewAt || null);
+
+  let status = preferred.status || older.status || "new";
+  let weak = Boolean(preferred.weak !== undefined ? preferred.weak : older.weak);
+  let reviewSuccesses = Math.max(Number(preferred.reviewSuccesses) || 0, 0);
+  let reviewDates = Array.from(new Set([...(a.reviewDates || []), ...(b.reviewDates || [])])).filter(Boolean).sort();
+  let masteredAt: string | null = earliestIso(a.masteredAt, b.masteredAt) || preferred.masteredAt || older.masteredAt || null;
+  let consecutiveErrors = Math.max(Number(preferred.consecutiveErrors) || 0, Number(older.consecutiveErrors) || 0);
+
+  if (deduplicatedHistory.length > 0 && lastLapseIndex >= 0) {
+    const reviewsAfterLapse = deduplicatedHistory.slice(lastLapseIndex + 1).filter(e => e.correct === true);
+    if (reviewsAfterLapse.length === 0) {
+      // The most recent review outcome was a LAPSE: reset retention and cancel mastery!
+      weak = true;
+      reviewSuccesses = 0;
+      reviewDates = [];
+      status = "weak";
+      masteredAt = null;
+      consecutiveErrors = Math.max(1, Number(preferred.consecutiveErrors) || 1);
+    } else {
+      // Relearning after lapse: count consecutive successes achieved since the lapse
+      weak = false;
+      reviewSuccesses = reviewsAfterLapse.length;
+      reviewDates = Array.from(new Set(reviewsAfterLapse.map(e => e.date).filter(Boolean))).sort();
+      consecutiveErrors = 0;
+      const meetsMastery = skillEvidence.recall && skillEvidence.context && skillEvidence.production &&
+        reviewSuccesses >= 3 && reviewDates.length >= 3 &&
+        dayDistance(firstSeenDate, reviewDates[reviewDates.length - 1]) >= 12 &&
+        studiedDates.length >= 4 && !weak;
+      if (meetsMastery) {
+        status = "mastered";
+        masteredAt = preferred.masteredAt || older.masteredAt || new Date().toISOString();
+      } else {
+        masteredAt = null;
+        status = (nextReview && parseTime(nextReview) <= Date.now()) ? "due" : "learning";
+      }
+    }
+  } else if (deduplicatedHistory.length > 0) {
+    // Only successful reviews recorded
+    reviewSuccesses = Math.max(Number(a.reviewSuccesses) || 0, Number(b.reviewSuccesses) || 0, deduplicatedHistory.length);
+    weak = false;
+    consecutiveErrors = 0;
+    const meetsMastery = (skillEvidence.recall && skillEvidence.context && skillEvidence.production &&
+      reviewSuccesses >= 3 && reviewDates.length >= 3 &&
+      dayDistance(firstSeenDate, reviewDates[reviewDates.length - 1]) >= 12 &&
+      studiedDates.length >= 4 && !weak) || (preferred.status === "mastered" || older.status === "mastered");
+    if (meetsMastery) {
+      status = "mastered";
+      masteredAt = earliestIso(a.masteredAt, b.masteredAt) || preferred.masteredAt || older.masteredAt || new Date().toISOString();
+    } else {
+      status = (nextReview && parseTime(nextReview) <= Date.now()) ? "due" : (preferred.status || "learning");
+    }
+  } else {
+    // No review history on either device: respect newer device outcome
+    if (preferred.status === "weak" || preferred.weak) {
+      weak = true;
+      status = "weak";
+      reviewSuccesses = 0;
+      masteredAt = null;
+      reviewDates = [];
+    } else if (preferred.status === "mastered") {
+      weak = false;
+      status = "mastered";
+      reviewSuccesses = Math.max(Number(a.reviewSuccesses) || 0, Number(b.reviewSuccesses) || 0, 3);
+      masteredAt = preferred.masteredAt || older.masteredAt || new Date().toISOString();
+    } else if (older.status === "mastered" && !bIsNewer) {
+      status = "mastered";
+      weak = false;
+    } else {
+      status = preferred.status || older.status || "learning";
+      weak = Boolean(preferred.weak);
+      if (status !== "mastered") masteredAt = null;
+      reviewSuccesses = Math.max(Number(preferred.reviewSuccesses) || 0, Number(older.reviewSuccesses) || 0);
+    }
+  }
+
+  return {
+    ...older,
+    ...preferred,
+    status,
+    weak,
+    reviewSuccesses,
+    firstSeenDate,
+    lastReviewedAt: latestReview,
+    nextReviewAt: nextReview,
+    savedContext,
+    masteredAt,
+    consecutiveErrors,
+    attempts,
+    skillEvidence,
+    studiedDates,
+    reviewDates,
+    reviewHistory: deduplicatedHistory.slice(-150),
+    contextQuestionIds,
+  };
+}
+
 function mergeCore(local: AnyRecord, remote: AnyRecord): AnyRecord {
   const localTime = Date.parse(local.updatedAt || "") || 0, remoteTime = Date.parse(remote.updatedAt || "") || 0;
   const remoteIsNewer = remoteTime >= localTime;
@@ -268,32 +465,7 @@ function mergeCore(local: AnyRecord, remote: AnyRecord): AnyRecord {
   for (const id of wordIds) {
     const a = local.wordProgress?.[id], b = remote.wordProgress?.[id];
     if (!a || !b) { merged.wordProgress[id] = a || b; continue; }
-    const preferred = remoteIsNewer ? b : a;
-    const isMastered = a.status === "mastered" || b.status === "mastered";
-    const maxSuccesses = Math.max(Number(a.reviewSuccesses) || 0, Number(b.reviewSuccesses) || 0);
-    const latestReview = [a.lastReviewedAt, b.lastReviewedAt].filter(Boolean).sort().reverse()[0] || null;
-    const nextReview = [a.nextReviewAt, b.nextReviewAt].filter(Boolean).sort().reverse()[0] || null;
-    const savedContext = a.savedContext || b.savedContext || null;
-
-    merged.wordProgress[id] = {
-      ...(remoteIsNewer ? a : b),
-      ...preferred,
-      status: isMastered ? "mastered" : (preferred.status || a.status || b.status || "new"),
-      reviewSuccesses: maxSuccesses,
-      lastReviewedAt: latestReview,
-      nextReviewAt: nextReview,
-      savedContext: savedContext,
-      attempts: mergeArrays(a.attempts || [], b.attempts || []),
-      skillEvidence: {
-        recall: Boolean(a.skillEvidence?.recall || b.skillEvidence?.recall),
-        context: Boolean(a.skillEvidence?.context || b.skillEvidence?.context),
-        production: Boolean(a.skillEvidence?.production || b.skillEvidence?.production),
-      },
-      studiedDates: Array.from(new Set([...(a.studiedDates || []), ...(b.studiedDates || [])])).sort(),
-      reviewDates: Array.from(new Set([...(a.reviewDates || []), ...(b.reviewDates || [])])).sort(),
-      reviewHistory: mergeArrays(a.reviewHistory || [], b.reviewHistory || []),
-      contextQuestionIds: Array.from(new Set([...(a.contextQuestionIds || []), ...(b.contextQuestionIds || [])])),
-    };
+    merged.wordProgress[id] = mergeWordProgressItem(a, b, remoteIsNewer, localTime, remoteTime);
   }
   merged.grammarProgress = {};
   const topicIds = new Set([...Object.keys(local.grammarProgress || {}), ...Object.keys(remote.grammarProgress || {})]);
@@ -976,6 +1148,9 @@ function clearOfflineQueue(userId: string): void {
   } catch (_) {}
 }
 
+let cleanupPending = false;
+let syncDirty = false;
+
 function hasLegacyProgress(userId: string): boolean {
   if (typeof localStorage === "undefined") return false;
   const legacyKeys = [
@@ -985,17 +1160,22 @@ function hasLegacyProgress(userId: string): boolean {
     ADVENTURE_KEY,
     "sinauu-placement-check-v1",
     "sinauu-placement-result-v1",
-    OFFLINE_QUEUE_KEY,
     "sinauu-adventure-studio-drafts-v1:" + encodeURIComponent(userId),
     "sinauu-adventure-studio-drafts-v1:local",
     ACCOUNT_CACHE_PREFIX + userId,
   ];
-  return legacyKeys.some((key) => {
+  const hasKey = legacyKeys.some((key) => {
     try {
       const val = localStorage.getItem(key);
       return val !== null && val !== "" && val !== "null" && val !== "{}";
     } catch { return false; }
   });
+  if (hasKey) return true;
+  try {
+    const queue = readOfflineQueue();
+    if (queue.some(q => q && q.userId === userId)) return true;
+  } catch { return false; }
+  return false;
 }
 
 async function collectLegacyBundle(userId: string): Promise<CloudBundle | null> {
@@ -1008,7 +1188,7 @@ async function collectLegacyBundle(userId: string): Promise<CloudBundle | null> 
   const placementRaw = parseStored<AnyRecord | null>("sinauu-placement-check-v1", null)
     || parseStored<AnyRecord | null>("sinauu-placement-result-v1", null);
 
-  const base = core || freshCore();
+  const base = core || { ...freshCore(), updatedAt: "" };
   if (placementRaw && !base.placementResult) {
     base.placementResult = placementRaw;
   }
@@ -1022,7 +1202,33 @@ async function collectLegacyBundle(userId: string): Promise<CloudBundle | null> 
       || localStudioDrafts(),
   };
 
-  return normalizeBundle({ core: base, extras });
+  let candidate = normalizeBundle({ core: base, extras });
+
+  // Merge account-specific cache if present
+  try {
+    const cached = parseStored<AnyRecord | null>(ACCOUNT_CACHE_PREFIX + userId, null);
+    if (cached) {
+      if (cached.bundle) {
+        candidate = mergeBundles(candidate, normalizeBundle(cached.bundle));
+      } else if (cached.core || cached.extras) {
+        candidate = mergeBundles(candidate, normalizeBundle(cached));
+      }
+    }
+  } catch (_) {}
+
+  // Merge user's queued offline changes in chronological order
+  try {
+    const queuedItems = readOfflineQueue()
+      .filter(q => q && q.userId === userId)
+      .sort((a, b) => (parseTime(a.timestamp) || 0) - (parseTime(b.timestamp) || 0));
+    for (const q of queuedItems) {
+      if (q.bundle) {
+        candidate = mergeBundles(candidate, normalizeBundle(q.bundle));
+      }
+    }
+  } catch (_) {}
+
+  return candidate;
 }
 
 function isSafeToMigrate(userId: string): boolean {
@@ -1033,7 +1239,7 @@ function isSafeToMigrate(userId: string): boolean {
   } catch { return true; }
 }
 
-async function purgeLegacyStorage(userId: string): Promise<void> {
+async function purgeLegacyStorage(userId: string): Promise<{ complete: boolean }> {
   const keysToRemove = [
     CORE_FALLBACK,
     EXTRA_KEY,
@@ -1041,7 +1247,6 @@ async function purgeLegacyStorage(userId: string): Promise<void> {
     ADVENTURE_KEY,
     "sinauu-placement-check-v1",
     "sinauu-placement-result-v1",
-    OFFLINE_QUEUE_KEY,
     "sinauu-adventure-studio-drafts-v1:" + encodeURIComponent(userId),
     "sinauu-adventure-studio-drafts-v1:local",
     ACCOUNT_CACHE_PREFIX + userId,
@@ -1049,15 +1254,168 @@ async function purgeLegacyStorage(userId: string): Promise<void> {
   for (const key of keysToRemove) {
     try { localStorage.removeItem(key); } catch (_) {}
   }
-  try {
-    const allKeys = Object.keys(localStorage);
-    for (const key of allKeys) {
-      if (key.startsWith("sinauu-adventure-studio-drafts-v1:") || key.startsWith("sinauu-cloud-local-cache-v1:")) {
-        localStorage.removeItem(key);
+
+  // Clear offline queue for this specific user only; do not delete other users' queues
+  clearOfflineQueue(userId);
+
+  // Clear IndexedDB state and track completion status
+  const idbCleared = await clearIndexedDbState();
+  cleanupPending = !idbCleared;
+  return { complete: idbCleared };
+}
+
+function verifyBundleDataIncluded(candidate: CloudBundle, cloud: CloudBundle): { ok: boolean; reason?: string } {
+  if (!cloud || !cloud.core) {
+    return { ok: false, reason: "Cloud bundle atau core tidak valid." };
+  }
+
+  // 1. Core wordProgress
+  const candWords = candidate.core?.wordProgress || {};
+  const cloudWords = cloud.core?.wordProgress || {};
+  for (const id of Object.keys(candWords)) {
+    const cw = candWords[id];
+    if (!cw) continue;
+    const rw = cloudWords[id];
+    if (!rw) {
+      return { ok: false, reason: `Kosakata '${id}' tidak ditemukan di cloud readback.` };
+    }
+    if (cw.skillEvidence?.recall && !rw.skillEvidence?.recall) {
+      return { ok: false, reason: `Bukti recall kosakata '${id}' hilang dari cloud readback.` };
+    }
+    if (cw.skillEvidence?.context && !rw.skillEvidence?.context) {
+      return { ok: false, reason: `Bukti konteks kosakata '${id}' hilang dari cloud readback.` };
+    }
+    if (cw.skillEvidence?.production && !rw.skillEvidence?.production) {
+      return { ok: false, reason: `Bukti produksi kosakata '${id}' hilang dari cloud readback.` };
+    }
+    if (Array.isArray(cw.reviewDates)) {
+      const rwDates = new Set(Array.isArray(rw.reviewDates) ? rw.reviewDates : []);
+      const rwHistDates = new Set(Array.isArray(rw.reviewHistory) ? rw.reviewHistory.map((h: any) => h?.date).filter(Boolean) : []);
+      for (const d of cw.reviewDates) {
+        if (!rwDates.has(d) && !rwHistDates.has(d)) {
+          return { ok: false, reason: `Tanggal review '${d}' untuk kosakata '${id}' hilang dari cloud.` };
+        }
       }
     }
-  } catch (_) {}
-  await clearIndexedDbState();
+    if (Array.isArray(cw.studiedDates)) {
+      const rwStudied = new Set(Array.isArray(rw.studiedDates) ? rw.studiedDates : []);
+      for (const d of cw.studiedDates) {
+        if (!rwStudied.has(d)) {
+          return { ok: false, reason: `Tanggal belajar '${d}' untuk kosakata '${id}' hilang dari cloud.` };
+        }
+      }
+    }
+  }
+
+  // 2. Favorites
+  if (Array.isArray(candidate.core?.favorites)) {
+    const cloudFavs = new Set(Array.isArray(cloud.core?.favorites) ? cloud.core.favorites : []);
+    for (const f of candidate.core.favorites) {
+      if (!cloudFavs.has(f)) {
+        return { ok: false, reason: `Favorit '${f}' tidak ditemukan di cloud readback.` };
+      }
+    }
+  }
+
+  // 3. Grammar topics
+  const candGrammar = candidate.core?.grammarProgress || {};
+  const cloudGrammar = cloud.core?.grammarProgress || {};
+  for (const tid of Object.keys(candGrammar)) {
+    const cg = candGrammar[tid];
+    if (!cg) continue;
+    const rg = cloudGrammar[tid];
+    if (!rg) {
+      return { ok: false, reason: `Topik grammar '${tid}' tidak ditemukan di cloud readback.` };
+    }
+    if (cg.answers && typeof cg.answers === "object") {
+      const rgAnswers = rg.answers || {};
+      for (const qKey of Object.keys(cg.answers)) {
+        if (rgAnswers[qKey] === undefined) {
+          return { ok: false, reason: `Jawaban soal '${qKey}' pada topik '${tid}' tidak ditemukan di cloud.` };
+        }
+      }
+    }
+  }
+
+  // 4. Placement result
+  if (candidate.core?.placementResult) {
+    if (!cloud.core?.placementResult) {
+      return { ok: false, reason: "Hasil tes penempatan (placement check) tidak ditemukan di cloud readback." };
+    }
+  }
+
+  // 5. Studio Drafts
+  const candDrafts = candidate.extras?.studioDrafts;
+  const cloudDrafts = cloud.extras?.studioDrafts;
+  if (candDrafts?.writing?.prompts) {
+    const candPrompts = candDrafts.writing.prompts;
+    const cloudPrompts = cloudDrafts?.writing?.prompts || {};
+    for (const pId of Object.keys(candPrompts)) {
+      const cp = candPrompts[pId];
+      if (cp && (cp.text || cp.revision)) {
+        const rp = cloudPrompts[pId];
+        if (!rp || (!rp.text && !rp.revision)) {
+          return { ok: false, reason: `Draft writing prompt '${pId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+  }
+  if (candDrafts?.speaking?.prompts) {
+    const candSpeaking = candDrafts.speaking.prompts;
+    const cloudSpeaking = cloudDrafts?.speaking?.prompts || {};
+    for (const pId of Object.keys(candSpeaking)) {
+      const cs = candSpeaking[pId];
+      if (cs && Array.isArray(cs.turns) && cs.turns.length > 0) {
+        const rs = cloudSpeaking[pId];
+        if (!rs || !Array.isArray(rs.turns) || rs.turns.length === 0) {
+          return { ok: false, reason: `Draft speaking prompt '${pId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+  }
+
+  // 6. Habit reading passages
+  const candHabit = candidate.extras?.habitProgress?.readingPassages;
+  const cloudHabit = cloud.extras?.habitProgress?.readingPassages || {};
+  if (candHabit && typeof candHabit === "object") {
+    for (const pId of Object.keys(candHabit)) {
+      const cp = candHabit[pId];
+      if (cp?.completed) {
+        const rp = cloudHabit[pId];
+        if (!rp?.completed) {
+          return { ok: false, reason: `Selesai baca habit '${pId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+  }
+
+  // 7. Adventure missions
+  const candMissions = candidate.extras?.adventureProgress?.missions;
+  const cloudMissions = cloud.extras?.adventureProgress?.missions || {};
+  if (candMissions && typeof candMissions === "object") {
+    for (const mId of Object.keys(candMissions)) {
+      const cm = candMissions[mId];
+      if (cm?.completed) {
+        const rm = cloudMissions[mId];
+        if (!rm?.completed) {
+          return { ok: false, reason: `Misi adventure '${mId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+  }
+
+  // 8. Mistake journal
+  const candMistakes = candidate.extras?.extraLearning?.mistakeJournal;
+  const cloudMistakes = cloud.extras?.extraLearning?.mistakeJournal || {};
+  if (candMistakes && typeof candMistakes === "object") {
+    for (const mId of Object.keys(candMistakes)) {
+      if (!cloudMistakes[mId]) {
+        return { ok: false, reason: `Mistake '${mId}' hilang dari cloud readback.` };
+      }
+    }
+  }
+
+  return { ok: true };
 }
 
 async function migrateLegacyDataIfNeeded(userId: string): Promise<{ migrated: boolean; success: boolean }> {
@@ -1102,7 +1460,13 @@ async function migrateLegacyDataIfNeeded(userId: string): Promise<{ migrated: bo
       throw new Error("Verifikasi pembacaan ulang cloud gagal: data tidak ditemukan.");
     }
     if (readback.revision < writeResult.revision) {
-      throw new Error("Verifikasi pembacaan ulang cloud gagal: revisi tidak sesuai.");
+      throw new Error(`Verifikasi pembacaan ulang cloud gagal: revisi tidak sesuai (${readback.revision} < ${writeResult.revision}).`);
+    }
+
+    // Verify all candidate records are represented in cloud before local deletion
+    const verification = verifyBundleDataIncluded(localCandidate, readback.bundle);
+    if (!verification.ok) {
+      throw new Error("Verifikasi integritas data cloud gagal: " + verification.reason);
     }
 
     // Verification SUCCESSFUL: now and only now purge legacy storage
@@ -1114,6 +1478,7 @@ async function migrateLegacyDataIfNeeded(userId: string): Promise<{ migrated: bo
     lastSuccessfulSync = new Date().toISOString();
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres berhasil dimigrasikan ke cloud Google Sheets.", "success");
+    window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-success"));
     return { migrated: true, success: true };
   } catch (err: any) {
     // Verification or write failed: RETAIN all local data!
@@ -1129,16 +1494,22 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
     setMessage("Mode preview: progres hanya disimpan di browser ini dan tidak ditulis ke Google Sheets.", "info");
     return true;
   }
-  if (!CLOUD_READY || !session || syncing || (signingOut && !allowWhileSigningOut)) return false;
+  if (!CLOUD_READY || !session || (signingOut && !allowWhileSigningOut)) return false;
+  if (syncing) {
+    syncDirty = true;
+    return false;
+  }
   if (syncConflict && !allowWhileSigningOut) {
     setSyncBadge("Konflik revisi", "error");
     setMessage("Progres akun berubah dari perangkat lain. Perubahan ini belum tersimpan. Muat progres terbaru sebelum melanjutkan sinkronisasi.", "error");
+    window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-conflict"));
     return false;
   }
 
   if (!navigator.onLine) {
     setSyncBadge("Offline · Menunggu internet", "idle");
     setMessage("Offline: perubahan tersimpan di memori browser ini dan akan disinkronkan saat terhubung kembali.", "info");
+    window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-offline"));
     return false;
   }
 
@@ -1147,6 +1518,8 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
   const stillSameAccount = () => Boolean(session && session.user.id === syncUserId && sessionEpoch === syncEpoch);
   syncing = true;
   setSyncBadge("Menyinkronkan…", "syncing");
+  window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-syncing"));
+
   try {
     await prepareLocalForAccount();
     if (!stillSameAccount()) return false;
@@ -1167,10 +1540,21 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
       lastCloudRevision = remoteData.revision;
     }
 
-    const merged = remote ? mergeBundles(local, remote) : local;
-    if (!remote || stable(merged) !== stable(remote)) await writeCloudBundle(merged);
+    let merged = remote ? mergeBundles(local, remote) : local;
+    if (!remote || stable(merged) !== stable(remote)) {
+      await writeCloudBundle(merged);
+    }
     if (!stillSameAccount()) return false;
-    if (stable(merged) !== stable(local)) await applyLocalBundle(merged);
+
+    // Incorporate in-flight dirty changes if edits arrived during the write
+    if (syncDirty) {
+      const currentLocal = await readLocalBundle();
+      merged = mergeBundles(currentLocal, merged);
+    }
+
+    if (stable(merged) !== stable(local)) {
+      await applyLocalBundle(merged);
+    }
     if (!stillSameAccount()) return false;
 
     clearOfflineQueue(syncUserId);
@@ -1184,6 +1568,7 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
     isCloudVerified = true;
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres tersinkron pada " + new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(new Date(lastSuccessfulSync)) + ". Kamu bisa lanjut di perangkat lain.", "success");
+    window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-success"));
     renderAccount();
     return true;
   } catch (error: any) {
@@ -1191,18 +1576,33 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
       syncConflict = true;
       setSyncBadge("Konflik revisi", "error");
       setMessage("Progres akun berubah dari perangkat lain. Perubahan ini belum tersimpan. Muat progres terbaru sebelum melanjutkan sinkronisasi.", "error");
+      window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-conflict"));
       renderAccount();
       return false;
     }
     setSyncBadge("Belum tersinkron · Coba lagi", "error");
     setMessage(error instanceof Error ? error.message : "Sinkronisasi belum berhasil. Progres di memori tetap dipertahankan.", "error");
+    window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-error"));
     return false;
-  } finally { syncing = false; }
+  } finally {
+    syncing = false;
+    if (syncDirty && session && !signingOut && !syncConflict && navigator.onLine) {
+      syncDirty = false;
+      window.setTimeout(() => void syncNow(), 50);
+    }
+  }
 }
 
 function scheduleSync(): void {
   if (isVercelPreviewDeployment() || !session || !CLOUD_READY || applyingCloud || signingOut || syncConflict) return;
+  if (syncing) {
+    syncDirty = true;
+    setSyncBadge(navigator.onLine ? "Menunggu sinkronisasi" : "Menunggu internet", navigator.onLine ? "syncing" : "error");
+    window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-waiting"));
+    return;
+  }
   setSyncBadge(navigator.onLine ? "Ada perubahan" : "Menunggu internet", navigator.onLine ? "syncing" : "error");
+  window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-waiting"));
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(() => void syncNow(), 900);
 }
@@ -1348,8 +1748,11 @@ async function submitAuth(event: Event): Promise<void> {
       const nextSession = toSession(data);
       if (nextSession) {
         setSession(nextSession);
-        setMessage("Akun dibuat. Menggabungkan progres perangkat ini ke cloud…", "success");
-        await syncNow();
+        setMessage("Akun dibuat. Memeriksa progres tersimpan dan menghubungkan ke cloud…", "success");
+        const migration = await migrateLegacyDataIfNeeded(nextSession.user.id);
+        if (!migration.migrated) {
+          await syncNow();
+        }
       } else {
         setMessage("Akun dibuat. Cek email untuk mengonfirmasi alamatmu, lalu masuk kembali ke SinauuEnglish.", "success");
       }
@@ -1358,8 +1761,11 @@ async function submitAuth(event: Event): Promise<void> {
       const nextSession = toSession(data);
       if (!nextSession) throw new Error("Sesi masuk tidak tersedia. Coba masuk lagi.");
       setSession(nextSession);
-      setMessage("Berhasil masuk. Menggabungkan progres yang tersimpan…", "success");
-      await syncNow();
+      setMessage("Berhasil masuk. Memeriksa progres dan menyinkronkan ke cloud…", "success");
+      const migration = await migrateLegacyDataIfNeeded(nextSession.user.id);
+      if (!migration.migrated) {
+        await syncNow();
+      }
     }
   } catch (error) {
     setMessage(error instanceof Error ? error.message : "Tidak dapat memproses akun. Coba lagi.", "error");
@@ -1501,6 +1907,14 @@ async function restoreSession(): Promise<void> {
     const raw = parseStored<AuthSession | null>(SESSION_KEY, null);
     if (!raw?.access_token || !raw?.refresh_token) return;
     session = raw;
+
+    if (!navigator.onLine) {
+      setSyncBadge("Offline · Menunggu internet", "idle");
+      setMessage("Mode offline: menampilkan progres tersimpan di perangkat.", "info");
+      renderAccount();
+      return;
+    }
+
     const active = await currentSession();
     if (!active) return;
     const user = await authRequest("/user", { method: "GET" }, active.access_token);
@@ -1581,6 +1995,8 @@ window.addEventListener("pagehide", () => { window.clearTimeout(syncTimer); wind
 (window as any).sinauuIsCloudVerified = () => isCloudVerified;
 (window as any).sinauuTriggerCloudSync = () => syncNow();
 (window as any).sinauuMigrateLegacyData = (userId: string) => migrateLegacyDataIfNeeded(userId);
+(window as any).sinauuIsCleanupPending = () => cleanupPending;
+(window as any).sinauuVerifyBundleDataIncluded = (candidate: CloudBundle, cloud: CloudBundle) => verifyBundleDataIncluded(candidate, cloud);
 (window as any).sinauuGetSyncStatus = () => ({
   syncing,
   lastSuccessfulSync,
@@ -1591,4 +2007,19 @@ window.addEventListener("pagehide", () => { window.clearTimeout(syncTimer); wind
   revision: lastCloudRevision,
 });
 
-export {};
+export {
+  dayDistance,
+  parseTime,
+  getWordActivityTimestamp,
+  mergeWordProgressItem,
+  mergeCore,
+  verifyBundleDataIncluded,
+  hasLegacyProgress,
+  readOfflineQueue,
+  clearOfflineQueue,
+  collectLegacyBundle,
+  purgeLegacyStorage,
+  migrateLegacyDataIfNeeded,
+  syncNow,
+  scheduleSync,
+};

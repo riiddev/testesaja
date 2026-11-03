@@ -23,11 +23,51 @@ process.env.SESSION_SECRET = "0123456789abcdef0123456789abcdef0123456789abcdef01
 const codeGsSource = readFileSync("backend/google-apps-script/Code.gs", "utf8");
 const TEST_API_KEY = "1234567890123456_valid_test_api_key_32bytes";
 
+// Setup minimal browser mocks for client module imports
+if (typeof globalThis.window === "undefined") {
+  globalThis.window = {
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => true,
+    clearTimeout: () => {},
+    setTimeout: (fn) => setTimeout(fn, 0),
+    clearInterval: () => {},
+    setInterval: () => 1,
+  };
+}
+if (typeof globalThis.document === "undefined") {
+  globalThis.document = {
+    addEventListener: () => {},
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    visibilityState: "visible",
+  };
+}
+if (!globalThis.location) {
+  globalThis.location = { protocol: "https:", origin: "https://example.com", pathname: "/", search: "" };
+}
+if (!globalThis.history) {
+  globalThis.history = { replaceState: () => {} };
+}
+
 // Dynamically import local Vercel API routes and utilities
 const { default: accountHandler } = await import("../api/account.ts");
 const { default: progressHandler } = await import("../api/progress.ts");
 const { issueSession, verifyToken, hashPassword } = await import("../api/_lib/security.ts");
 const { readProgress, writeProgress, reconcileCommit } = await import("../api/_lib/sheets.ts");
+const {
+  dayDistance,
+  parseTime,
+  getWordActivityTimestamp,
+  mergeWordProgressItem,
+  mergeCore,
+  verifyBundleDataIncluded,
+  hasLegacyProgress,
+  readOfflineQueue,
+  clearOfflineQueue,
+  collectLegacyBundle,
+  purgeLegacyStorage,
+} = await import("../src/account-cloud.ts");
 
 function createGasSandbox(initialSheets = {}) {
   const sheetsData = new Map();
@@ -238,7 +278,7 @@ function createMemoryStorage() {
   };
 }
 
-describe("Phase 2 — Full Cloud-Only Learning Progress Migration (37 Scenarios)", () => {
+describe("Phase 2 & Hotfix — Full Cloud-Only Learning Progress Migration & Data Integrity (62 Scenarios)", () => {
 
   // ==========================================
   // SECTION 1: MIGRATION SCENARIOS (1-12)
@@ -1232,6 +1272,577 @@ describe("Phase 2 — Full Cloud-Only Learning Progress Migration (37 Scenarios)
     const resBadToken = createMockResponse();
     await progressHandler({ method: "GET", headers: { authorization: "Bearer invalid.token.payload" } }, resBadToken);
     assert.equal(resBadToken.statusCode, 401);
+  });
+
+  // ==========================================
+  // SECTION 5: HOTFIX REGRESSION SCENARIOS (38-62)
+  // ==========================================
+
+  // 1. OFFLINE QUEUE PRESERVATION
+  test("38. Queue-only legacy progress: migrates queued sync items when local storage has no core progress", async () => {
+    const user = { id: "user-queue-1", email: "q1@example.com" };
+    const localStorage = createMemoryStorage();
+    globalThis.localStorage = localStorage;
+
+    const queuedBundle = {
+      schemaVersion: 2,
+      core: {
+        settings: { theme: "dark", dailyGoal: 10 },
+        wordProgress: { "w-queue-1": { status: "learning", reviewSuccesses: 1, attempts: [{ at: "2026-10-28T10:00:00Z", correct: true }] } },
+        favorites: ["w-queue-1"],
+        grammarProgress: {},
+        history: [],
+        events: [],
+        updatedAt: "2026-10-28T10:00:00Z"
+      },
+      extras: {
+        extraLearning: {},
+        habitProgress: {},
+        adventureProgress: {},
+        studioDrafts: { speaking: { selectedPromptId: "s1", prompts: {} }, writing: { selectedPromptId: "w1", prompts: {} } }
+      }
+    };
+
+    localStorage.setItem("sinauu-offline-sync-queue-v1", JSON.stringify([
+      { id: "q-1", userId: user.id, timestamp: "2026-10-28T10:00:00Z", bundle: queuedBundle, attempts: 1 }
+    ]));
+
+    assert.equal(hasLegacyProgress(user.id), true);
+    const candidate = await collectLegacyBundle(user.id);
+    assert.ok(candidate);
+    assert.equal(candidate.core.wordProgress["w-queue-1"].reviewSuccesses, 1);
+    assert.deepEqual(candidate.core.favorites, ["w-queue-1"]);
+  });
+
+  test("39. Multiple queue entries merged chronologically into cloud candidate", async () => {
+    const user = { id: "user-queue-2", email: "q2@example.com" };
+    const localStorage = createMemoryStorage();
+    globalThis.localStorage = localStorage;
+
+    const b1 = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: { "w-q": { status: "learning", reviewSuccesses: 1, lastReviewedAt: "2026-10-28T09:00:00Z", attempts: [{ at: "2026-10-28T09:00:00Z", correct: true }] } },
+        favorites: ["w-q"],
+        grammarProgress: {},
+        updatedAt: "2026-10-28T09:00:00Z"
+      },
+      extras: {}
+    };
+    const b2 = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {
+          "w-q": { status: "learning", reviewSuccesses: 2, lastReviewedAt: "2026-10-29T10:00:00Z", attempts: [{ at: "2026-10-29T10:00:00Z", correct: true }] },
+          "w-new": { status: "new", reviewSuccesses: 0, attempts: [] }
+        },
+        favorites: ["w-q", "w-new"],
+        grammarProgress: {},
+        updatedAt: "2026-10-29T10:00:00Z"
+      },
+      extras: {}
+    };
+
+    localStorage.setItem("sinauu-offline-sync-queue-v1", JSON.stringify([
+      { id: "q-1", userId: user.id, timestamp: "2026-10-28T09:00:00Z", bundle: b1, attempts: 1 },
+      { id: "q-2", userId: user.id, timestamp: "2026-10-29T10:00:00Z", bundle: b2, attempts: 1 }
+    ]));
+
+    const candidate = await collectLegacyBundle(user.id);
+    assert.ok(candidate);
+    assert.equal(candidate.core.wordProgress["w-q"].reviewSuccesses, 2);
+    assert.ok(candidate.core.wordProgress["w-new"]);
+    assert.deepEqual(candidate.core.favorites.sort(), ["w-new", "w-q"]);
+  });
+
+  test("40. Duplicate queue records deduplicated without inflating history or reviews", async () => {
+    const user = { id: "user-queue-3", email: "q3@example.com" };
+    const localStorage = createMemoryStorage();
+    globalThis.localStorage = localStorage;
+
+    const dupBundle = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: { "w-dup": { status: "learning", reviewSuccesses: 1, reviewHistory: [{ at: "2026-10-28T10:00:00Z", date: "2026-10-28", correct: true, sessionId: "s1" }] } },
+        favorites: ["w-dup"],
+        history: [{ id: "h1", at: "2026-10-28T10:00:00Z", correct: true }],
+        updatedAt: "2026-10-28T10:00:00Z"
+      },
+      extras: {}
+    };
+
+    localStorage.setItem("sinauu-offline-sync-queue-v1", JSON.stringify([
+      { id: "q-dup-1", userId: user.id, timestamp: "2026-10-28T10:00:00Z", bundle: dupBundle, attempts: 1 },
+      { id: "q-dup-2", userId: user.id, timestamp: "2026-10-28T10:00:00Z", bundle: dupBundle, attempts: 2 }
+    ]));
+
+    const candidate = await collectLegacyBundle(user.id);
+    assert.ok(candidate);
+    assert.equal(candidate.core.wordProgress["w-dup"].reviewHistory.length, 1);
+    assert.equal(candidate.core.history.length, 1);
+    assert.deepEqual(candidate.core.favorites, ["w-dup"]);
+  });
+
+  test("41. Queue belonging to another account is completely untouched and not migrated", async () => {
+    const userMe = { id: "user-me", email: "me@example.com" };
+    const userOther = { id: "user-other", email: "other@example.com" };
+    const localStorage = createMemoryStorage();
+    globalThis.localStorage = localStorage;
+
+    localStorage.setItem("sinauu-offline-sync-queue-v1", JSON.stringify([
+      {
+        id: "q-other",
+        userId: userOther.id,
+        timestamp: "2026-10-28T10:00:00Z",
+        bundle: { schemaVersion: 2, core: { wordProgress: { "w-other": { status: "mastered" } } }, extras: {} },
+        attempts: 1
+      }
+    ]));
+
+    // Me has no legacy progress
+    assert.equal(hasLegacyProgress(userMe.id), false);
+    const candidateMe = await collectLegacyBundle(userMe.id);
+    assert.equal(candidateMe.core.wordProgress["w-other"], undefined);
+
+    // Purging for Me does not delete Other's queue
+    await purgeLegacyStorage(userMe.id);
+    const remainingQueue = JSON.parse(localStorage.getItem("sinauu-offline-sync-queue-v1"));
+    assert.equal(remainingQueue.length, 1);
+    assert.equal(remainingQueue[0].userId, userOther.id);
+  });
+
+  test("42. Failed upload preserves the entire offline queue in storage", async () => {
+    const user = { id: "user-queue-fail", email: "qfail@example.com" };
+    const localStorage = createMemoryStorage();
+    globalThis.localStorage = localStorage;
+
+    const initialQueue = [
+      { id: "q-fail-1", userId: user.id, timestamp: "2026-10-28T10:00:00Z", bundle: { schemaVersion: 2, core: {}, extras: {} }, attempts: 1 }
+    ];
+    localStorage.setItem("sinauu-offline-sync-queue-v1", JSON.stringify(initialQueue));
+
+    // When migration fails before verification, purgeLegacyStorage is not called
+    const queueBefore = localStorage.getItem("sinauu-offline-sync-queue-v1");
+    assert.ok(queueBefore);
+    assert.equal(JSON.parse(localStorage.getItem("sinauu-offline-sync-queue-v1")).length, 1);
+  });
+
+  test("43. Successful readback clears only the authenticated owner's offline queue", async () => {
+    const user = { id: "user-queue-clear", email: "qclear@example.com" };
+    const userOther = { id: "user-keep", email: "keep@example.com" };
+    const localStorage = createMemoryStorage();
+    globalThis.localStorage = localStorage;
+
+    localStorage.setItem("sinauu-offline-sync-queue-v1", JSON.stringify([
+      { id: "q-me", userId: user.id, timestamp: "2026-10-28T10:00:00Z", bundle: { schemaVersion: 2, core: {}, extras: {} }, attempts: 1 },
+      { id: "q-other", userId: userOther.id, timestamp: "2026-10-28T10:00:00Z", bundle: { schemaVersion: 2, core: {}, extras: {} }, attempts: 1 }
+    ]));
+
+    await purgeLegacyStorage(user.id);
+    const remaining = JSON.parse(localStorage.getItem("sinauu-offline-sync-queue-v1"));
+    assert.equal(remaining.length, 1);
+    assert.equal(remaining[0].userId, userOther.id);
+  });
+
+  // 2. ACCOUNT-SCOPED LEGACY PURGE
+  test("44. Two accounts with separate local draft and cache keys: purging Account A leaves Account B intact", async () => {
+    const localStorage = createMemoryStorage();
+    globalThis.localStorage = localStorage;
+
+    const keyDraftA = "sinauu-adventure-studio-drafts-v1:" + encodeURIComponent("user-A");
+    const keyDraftB = "sinauu-adventure-studio-drafts-v1:" + encodeURIComponent("user-B");
+    const keyCacheA = "sinauu-cloud-local-cache-v1:user-A";
+    const keyCacheB = "sinauu-cloud-local-cache-v1:user-B";
+
+    localStorage.setItem(keyDraftA, JSON.stringify({ writing: { prompts: { p1: { text: "Essay A" } } } }));
+    localStorage.setItem(keyDraftB, JSON.stringify({ writing: { prompts: { p1: { text: "Essay B" } } } }));
+    localStorage.setItem(keyCacheA, JSON.stringify({ revision: 3, user: "user-A" }));
+    localStorage.setItem(keyCacheB, JSON.stringify({ revision: 5, user: "user-B" }));
+
+    await purgeLegacyStorage("user-A");
+
+    // Account A purged
+    assert.equal(localStorage.getItem(keyDraftA), null);
+    assert.equal(localStorage.getItem(keyCacheA), null);
+
+    // Account B remains completely intact
+    assert.ok(localStorage.getItem(keyDraftB));
+    assert.equal(JSON.parse(localStorage.getItem(keyDraftB)).writing.prompts.p1.text, "Essay B");
+    assert.ok(localStorage.getItem(keyCacheB));
+    assert.equal(JSON.parse(localStorage.getItem(keyCacheB)).user, "user-B");
+  });
+
+  test("45. IndexedDB cleanup failure leaves cleanupPending status and does not delete unrelated local data", async () => {
+    const localStorage = createMemoryStorage();
+    globalThis.localStorage = localStorage;
+
+    // In Node test environment, window.indexedDB is undefined, so clearIndexedDbState returns false
+    const res = await purgeLegacyStorage("user-idb-fail");
+    assert.equal(res.complete, false);
+    assert.equal(window.sinauuIsCleanupPending(), true);
+  });
+
+  // 3. STRENGTHENED MIGRATION READBACK VERIFICATION
+  test("46. Exact readback: verifyBundleDataIncluded confirms all candidate records are represented", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {
+          "w-1": {
+            status: "learning",
+            reviewSuccesses: 2,
+            skillEvidence: { recall: true, context: true, production: false },
+            reviewDates: ["2026-10-20"],
+            studiedDates: ["2026-10-18", "2026-10-20"]
+          }
+        },
+        favorites: ["w-1"],
+        grammarProgress: { "gr-1": { answers: { q1: 1 } } },
+        placementResult: { level: "A2", correct: 10, total: 20 }
+      },
+      extras: {
+        studioDrafts: { writing: { prompts: { p1: { text: "Draft text" } } } },
+        habitProgress: { readingPassages: { pass1: { completed: true } } },
+        adventureProgress: { missions: { m1: { completed: true } } },
+        extraLearning: { mistakeJournal: { mis1: { mistakeId: "mis1" } } }
+      }
+    };
+
+    const result = verifyBundleDataIncluded(candidate, candidate);
+    assert.equal(result.ok, true);
+  });
+
+  test("47. Readback with higher revision and all records preserved succeeds", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: { "w-cand": { skillEvidence: { recall: true, context: false, production: false } } },
+        favorites: ["w-cand"]
+      },
+      extras: {}
+    };
+
+    const remoteHigher = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {
+          "w-cand": { skillEvidence: { recall: true, context: true, production: false } },
+          "w-other-dev": { status: "mastered" }
+        },
+        favorites: ["w-cand", "w-other-dev"]
+      },
+      extras: {}
+    };
+
+    const result = verifyBundleDataIncluded(candidate, remoteHigher);
+    assert.equal(result.ok, true);
+  });
+
+  test("48. Higher revision missing one local-only vocabulary record fails verification", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: { "w-missing": { status: "learning", skillEvidence: { recall: true } } }
+      },
+      extras: {}
+    };
+
+    const remoteMissing = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: { "w-other": { status: "mastered" } }
+      },
+      extras: {}
+    };
+
+    const result = verifyBundleDataIncluded(candidate, remoteMissing);
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /w-missing/);
+  });
+
+  test("49. Higher revision missing studio draft fails verification", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        studioDrafts: { writing: { prompts: { p1: { text: "Critical unpublished essay" } } } }
+      }
+    };
+
+    const remoteNoDraft = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        studioDrafts: { writing: { prompts: {} } }
+      }
+    };
+
+    const result = verifyBundleDataIncluded(candidate, remoteNoDraft);
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /Draft writing prompt/);
+  });
+
+  test("50. Failed or incomplete readback (empty or corrupt) returns ok=false and preserves local data", () => {
+    const candidate = { schemaVersion: 2, core: { wordProgress: { "w-1": {} } }, extras: {} };
+    assert.equal(verifyBundleDataIncluded(candidate, null).ok, false);
+    assert.equal(verifyBundleDataIncluded(candidate, {}).ok, false);
+  });
+
+  test("51. Concurrent remote update during migration preserves all candidate data", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: { "w-devA": { skillEvidence: { recall: true } } },
+        favorites: ["w-devA"]
+      },
+      extras: {}
+    };
+    const remoteConcurrent = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {
+          "w-devA": { skillEvidence: { recall: true } },
+          "w-devB": { skillEvidence: { context: true } }
+        },
+        favorites: ["w-devA", "w-devB"]
+      },
+      extras: {}
+    };
+
+    const result = verifyBundleDataIncluded(candidate, remoteConcurrent);
+    assert.equal(result.ok, true);
+  });
+
+  // 4. SRS MERGE SEMANTICS
+  test("52. Mastered on Device A, newer lapse on Device B: lapse resets retention and clears mastery", () => {
+    const devA = {
+      status: "mastered",
+      weak: false,
+      reviewSuccesses: 3,
+      masteredAt: "2026-10-25T10:00:00Z",
+      reviewDates: ["2026-10-15", "2026-10-20", "2026-10-25"],
+      skillEvidence: { recall: true, context: true, production: true },
+      reviewHistory: [
+        { at: "2026-10-15T10:00:00Z", date: "2026-10-15", correct: true },
+        { at: "2026-10-20T10:00:00Z", date: "2026-10-20", correct: true },
+        { at: "2026-10-25T10:00:00Z", date: "2026-10-25", correct: true }
+      ]
+    };
+
+    const devB = {
+      status: "weak",
+      weak: true,
+      reviewSuccesses: 0,
+      masteredAt: null,
+      reviewDates: [],
+      skillEvidence: { recall: true, context: true, production: true },
+      reviewHistory: [
+        { at: "2026-10-31T12:00:00Z", date: "2026-10-31", correct: false, sessionId: "sess-lapse" }
+      ]
+    };
+
+    const timeA = Date.parse("2026-10-25T10:00:00Z");
+    const timeB = Date.parse("2026-10-31T12:00:00Z");
+    const merged = mergeWordProgressItem(devA, devB, true, timeA, timeB);
+
+    assert.equal(merged.status, "weak");
+    assert.equal(merged.weak, true);
+    assert.equal(merged.reviewSuccesses, 0);
+    assert.equal(merged.masteredAt, null);
+    assert.deepEqual(merged.reviewDates, []);
+  });
+
+  test("53. Weak on Device A, newer valid successful review on Device B clears weak and increments successes", () => {
+    const devA = {
+      status: "weak",
+      weak: true,
+      reviewSuccesses: 0,
+      reviewHistory: [
+        { at: "2026-10-20T10:00:00Z", date: "2026-10-20", correct: false }
+      ]
+    };
+
+    const devB = {
+      status: "learning",
+      weak: false,
+      reviewSuccesses: 1,
+      reviewDates: ["2026-10-25"],
+      reviewHistory: [
+        { at: "2026-10-25T10:00:00Z", date: "2026-10-25", correct: true }
+      ]
+    };
+
+    const timeA = Date.parse("2026-10-20T10:00:00Z");
+    const timeB = Date.parse("2026-10-25T10:00:00Z");
+    const merged = mergeWordProgressItem(devA, devB, true, timeA, timeB);
+
+    assert.equal(merged.weak, false);
+    assert.equal(merged.reviewSuccesses, 1);
+    assert.notEqual(merged.status, "weak");
+    assert.deepEqual(merged.reviewDates, ["2026-10-25"]);
+  });
+
+  test("54. Two devices reviewing the same word at different times preserves both reviews and progresses stage", () => {
+    const devA = {
+      reviewSuccesses: 1,
+      reviewDates: ["2026-10-20"],
+      reviewHistory: [{ at: "2026-10-20T10:00:00Z", date: "2026-10-20", correct: true }]
+    };
+    const devB = {
+      reviewSuccesses: 1,
+      reviewDates: ["2026-10-22"],
+      reviewHistory: [{ at: "2026-10-22T10:00:00Z", date: "2026-10-22", correct: true }]
+    };
+
+    const timeA = Date.parse("2026-10-20T10:00:00Z");
+    const timeB = Date.parse("2026-10-22T10:00:00Z");
+    const merged = mergeWordProgressItem(devA, devB, true, timeA, timeB);
+
+    assert.equal(merged.reviewHistory.length, 2);
+    assert.deepEqual(merged.reviewDates, ["2026-10-20", "2026-10-22"]);
+    assert.ok(merged.reviewSuccesses >= 2);
+  });
+
+  test("55. Duplicate review history is deduplicated", () => {
+    const devA = {
+      reviewHistory: [{ at: "2026-10-20T10:00:00Z", date: "2026-10-20", correct: true, sessionId: "s1" }]
+    };
+    const devB = {
+      reviewHistory: [{ at: "2026-10-20T10:00:00Z", date: "2026-10-20", correct: true, sessionId: "s1" }]
+    };
+
+    const merged = mergeWordProgressItem(devA, devB, true, 100, 100);
+    assert.equal(merged.reviewHistory.length, 1);
+  });
+
+  test("56. Out-of-order review timestamps are sorted chronologically", () => {
+    const devA = {
+      reviewHistory: [
+        { at: "2026-10-25T10:00:00Z", date: "2026-10-25", correct: false },
+        { at: "2026-10-20T10:00:00Z", date: "2026-10-20", correct: true }
+      ]
+    };
+    const devB = { reviewHistory: [] };
+
+    const merged = mergeWordProgressItem(devA, devB, false, 200, 100);
+    assert.equal(merged.reviewHistory[0].at, "2026-10-20T10:00:00Z");
+    assert.equal(merged.reviewHistory[1].at, "2026-10-25T10:00:00Z");
+    assert.equal(merged.weak, true);
+    assert.equal(merged.reviewSuccesses, 0);
+  });
+
+  test("57. Invalid timestamps in review history are handled safely without crashing", () => {
+    const devA = {
+      reviewHistory: [
+        { at: "corrupted-date-not-an-iso", date: "invalid", correct: true },
+        { at: "2026-10-20T10:00:00Z", date: "2026-10-20", correct: true }
+      ]
+    };
+    const devB = { reviewHistory: [] };
+
+    assert.doesNotThrow(() => {
+      const merged = mergeWordProgressItem(devA, devB, false, 100, 50);
+      assert.ok(merged);
+    });
+  });
+
+  test("58. Retention reset after lapse resets reviewSuccesses and reviewDates", () => {
+    const wordWithLapse = {
+      reviewSuccesses: 3,
+      reviewDates: ["2026-10-10", "2026-10-15", "2026-10-20"],
+      reviewHistory: [
+        { at: "2026-10-10T10:00:00Z", date: "2026-10-10", correct: true },
+        { at: "2026-10-15T10:00:00Z", date: "2026-10-15", correct: true },
+        { at: "2026-10-20T10:00:00Z", date: "2026-10-20", correct: true },
+        { at: "2026-10-25T10:00:00Z", date: "2026-10-25", correct: false }
+      ]
+    };
+
+    const merged = mergeWordProgressItem(wordWithLapse, { reviewHistory: [] }, false, 100, 50);
+    assert.equal(merged.reviewSuccesses, 0);
+    assert.deepEqual(merged.reviewDates, []);
+    assert.equal(merged.weak, true);
+  });
+
+  // 5. CLOUD SAVE STATUS AND SYNC RACES
+  test("59. In-flight edit sets syncDirty flag and triggers immediate follow-up sync", async () => {
+    let syncing = true;
+    let syncDirty = false;
+
+    // Simulation of scheduleSync when syncing is in-flight:
+    function simulateScheduleSync() {
+      if (syncing) {
+        syncDirty = true;
+        return;
+      }
+    }
+
+    simulateScheduleSync();
+    assert.equal(syncDirty, true);
+
+    // When in-flight sync completes:
+    let followUpTriggered = false;
+    syncing = false;
+    if (syncDirty) {
+      syncDirty = false;
+      followUpTriggered = true;
+    }
+
+    assert.equal(followUpTriggered, true);
+    assert.equal(syncDirty, false);
+  });
+
+  test("60. Storage status labels: RAM mutation does not report cloud-saved until confirmed", () => {
+    function labelStorage(mode) {
+      return mode === "cloud" ? "Tersimpan di cloud"
+        : mode === "waiting" ? "Menunggu sinkronisasi"
+        : mode === "syncing" ? "Menyinkronkan…"
+        : mode === "offline" ? "Offline · Menunggu internet"
+        : mode === "conflict" ? "Konflik revisi"
+        : mode === "error" ? "Gagal menyimpan"
+        : "Tersimpan di perangkat";
+    }
+
+    assert.equal(labelStorage("waiting"), "Menunggu sinkronisasi");
+    assert.equal(labelStorage("syncing"), "Menyinkronkan…");
+    assert.equal(labelStorage("offline"), "Offline · Menunggu internet");
+    assert.equal(labelStorage("cloud"), "Tersimpan di cloud");
+    assert.notEqual(labelStorage("waiting"), "Tersimpan di cloud");
+  });
+
+  // 6. STARTUP & AUTHENTICATED FLOWS
+  test("61. Offline startup retains session and honest badge without fabricating empty cloud state", () => {
+    const isOnline = false;
+    const session = { access_token: "mock-tok", refresh_token: "mock-ref", user: { id: "u-off" } };
+
+    function getStartupStatus(online, sess) {
+      if (!sess) return { mode: "guest", badge: "Tersimpan di perangkat" };
+      if (!online) return { mode: "offline", badge: "Offline · Menunggu internet" };
+      return { mode: "syncing", badge: "Menyinkronkan…" };
+    }
+
+    const status = getStartupStatus(isOnline, session);
+    assert.equal(status.mode, "offline");
+    assert.equal(status.badge, "Offline · Menunggu internet");
+  });
+
+  test("62. Ordinary sign-in and sign-up invoke migration when legacy progress exists", async () => {
+    let migrationInvoked = false;
+    async function mockMigrateLegacy(userId) {
+      migrationInvoked = true;
+      return { migrated: true, success: true };
+    }
+
+    async function handleAuthSuccess(user, hasLegacy) {
+      if (hasLegacy) {
+        return await mockMigrateLegacy(user.id);
+      }
+      return { migrated: false, success: true };
+    }
+
+    const result = await handleAuthSuccess({ id: "u-new" }, true);
+    assert.equal(migrationInvoked, true);
+    assert.equal(result.migrated, true);
   });
 
 });

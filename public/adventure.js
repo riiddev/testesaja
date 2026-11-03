@@ -162,7 +162,11 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
       }
       const note = $("#adventure-save-state");
-      if (note) note.textContent = window.sinauuIsCloudVerified?.() ? "Tersimpan di cloud" : "Tersimpan di perangkat ini · siap disinkronkan";
+      if (note) {
+        note.textContent = window.sinauuIsCloudVerified?.()
+          ? (navigator.onLine ? "Menunggu sinkronisasi…" : "Tersimpan di memori · offline")
+          : "Tersimpan di perangkat ini · siap disinkronkan";
+      }
       window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
       return true;
     } catch (_) {
@@ -1804,7 +1808,11 @@
         localStorage.setItem(studioStorageKey(), JSON.stringify(studioDrafts));
       }
       const status = $("#adventure-studio-save-state");
-      if (status) status.textContent = window.sinauuIsCloudVerified?.() ? "Draft tersimpan di cloud." : "Draft tersimpan lokal di perangkat ini.";
+      if (status) {
+        status.textContent = window.sinauuIsCloudVerified?.()
+          ? (navigator.onLine ? "Draft menunggu sinkronisasi…" : "Draft di memori · offline")
+          : "Draft tersimpan lokal di perangkat ini.";
+      }
       window.dispatchEvent(new CustomEvent("sinauu:local-extras-saved"));
     } catch (_) {
       const status = $("#adventure-studio-save-state");
@@ -3156,6 +3164,24 @@
   window.addEventListener("sinauu:local-state-saved", () => { syncExternalMistakes(); renderMistakeJournal(); });
   window.addEventListener("sinauu:local-extras-saved", () => { syncExternalMistakes(); renderMistakeJournal(); });
   window.addEventListener("sinauu:workspace-ready", () => { syncExternalMistakes(); renderMistakeJournal(); });
+  window.addEventListener("sinauu:cloud-sync-success", () => {
+    const note = $("#adventure-save-state");
+    if (note && window.sinauuIsCloudVerified?.()) note.textContent = "Tersimpan di cloud";
+    const status = $("#adventure-studio-save-state");
+    if (status && window.sinauuIsCloudVerified?.()) status.textContent = "Draft tersimpan di cloud.";
+  });
+  window.addEventListener("sinauu:cloud-sync-error", () => {
+    const note = $("#adventure-save-state");
+    if (note && window.sinauuIsCloudVerified?.()) note.textContent = "Gagal menyimpan ke cloud · tersimpan di memori";
+    const status = $("#adventure-studio-save-state");
+    if (status && window.sinauuIsCloudVerified?.()) status.textContent = "Gagal menyimpan ke cloud · draft di memori";
+  });
+  window.addEventListener("sinauu:cloud-sync-conflict", () => {
+    const note = $("#adventure-save-state");
+    if (note && window.sinauuIsCloudVerified?.()) note.textContent = "Konflik revisi · perubahan lokal dipertahankan";
+    const status = $("#adventure-studio-save-state");
+    if (status && window.sinauuIsCloudVerified?.()) status.textContent = "Konflik revisi · draft lokal dipertahankan";
+  });
   window.sinauuAdventureBackup = () => cloneProgress(progress);
   window.sinauuAdventureRestore = (next) => { progress = normalizeProgress(next); syncExternalMistakes(); renderAll(); updateReviewActivePanel(); };
   window.sinauuStudioDraftsBackup = () => studioDrafts || readStudioDrafts();

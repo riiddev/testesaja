@@ -47,15 +47,35 @@ Bila Anda memperbarui kode Apps Script:
 
 Di dasbor Vercel → Project Settings → **Environment Variables**, pastikan variabel berikut terisi untuk *Production* dan *Preview*:
 
-| Variable Name | Keterangan |
-|---|---|
-| `SINAI_APPS_SCRIPT_URL` | URL Web App Apps Script (berakhiran `/exec`) |
-| `SINAI_API_KEY` | Kunci rahasia yang sama dengan di Script Properties Apps Script (min. 32 karakter) |
-| `SINAI_SESSION_SECRET` | *(Opsional)* Kunci penandatangan token sesi (jika kosong, diturunkan dari `SINAI_API_KEY`) |
+| Variable Name | Status | Keterangan |
+|---|---|---|
+| `SINAI_APPS_SCRIPT_URL` | **Wajib** | URL Web App Apps Script (harus berakhiran `/exec`) |
+| `SINAI_API_KEY` | **Wajib** | Kunci rahasia backend (min. 32 karakter). Nilai harus identik dengan Script Property `SINAI_API_KEY` di Apps Script. |
+| `SINAI_SESSION_SECRET` | *Direkomendasikan* | Kunci penandatangan token sesi JWT (min. 32 karakter). Jika kosong, diturunkan secara deterministik dari `SINAI_API_KEY`. |
+| `SINAUU_SESSION_SECRET` | *Alternatif* | Kunci penandatangan sesi alternatif yang didukung bila `SINAI_SESSION_SECRET` tidak ditentukan. |
+
+### Variabel Usang (Obsolete / Deprecated)
+Variabel-variabel lama berikut **tidak lagi digunakan** dan telah digantikan:
+- `GAS_URL` → Gunakan `SINAI_APPS_SCRIPT_URL`.
+- `GAS_API_KEY` → Gunakan `SINAI_API_KEY`.
+- `SESSION_SECRET` → Gunakan `SINAI_SESSION_SECRET` (atau `SINAUU_SESSION_SECRET`).
+
+*Catatan Keamanan: Jangan pernah memublikasikan nilai kunci rahasia aktual ke repositori Git.*
 
 ---
 
-## 4. Verifikasi Kesehatan Backend
+## 4. Model Runtime Cloud-Only
+
+Dalam arsitektur *cloud-only* SinauuEnglish:
+- **Google Sheets via Apps Script** adalah satu-satunya lokasi penyimpanan permanen (*single source of truth*) untuk seluruh progres belajar pengguna terautentikasi (kosakata, SRS, grammar, reading habit, adventure, XP, dan studio draft).
+- **Client Cache (IndexedDB / Memory)**:
+  - Untuk pengguna non-login (*Tamu / Guest*), progres disimpan di perangkat lokal (IndexedDB / localStorage cadangan).
+  - Saat pengguna masuk (*login*) atau mendaftar (*signup*), sistem mendeteksi apakah ada progres lokal/antrean offline. Jika ada, data dimigrasikan secara atomik ke cloud, diverifikasi pembacaan ulangnya secara mendalam, lalu data lokal dibersihkan dengan batas akun (*account-scoped purge*).
+  - Pengguna terautentikasi mengambil data langsung dari cloud saat inisialisasi, dan mutasi data hanya ditandai "Tersimpan di cloud" setelah respons konfirmasi komit diterima dari server.
+
+---
+
+## 5. Verifikasi Kesehatan Backend
 
 Setelah deploy, lakukan verifikasi melalui terminal atau browser:
 
@@ -73,7 +93,7 @@ curl -s -L "https://script.google.com/macros/s/AKfycb.../exec?action=health"
 
 ---
 
-## 5. Aturan Keamanan Penting
+## 6. Aturan Keamanan Penting
 - **Jangan pernah menyalin `SINAI_API_KEY` ke kode frontend JavaScript, CSS, HTML, atau commit Git publik.**
 - Jangan membagikan Google Spreadsheet dengan hak edit publik.
 - Web App Apps Script dijalankan sebagai *Me*, sehingga pengguna tidak memerlukan izin Google langsung ke spreadsheet.
