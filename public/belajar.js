@@ -361,9 +361,11 @@
       if (!raw) {
         try {
           const fb = localStorage.getItem(FALLBACK);
-          if (fb) {
+          if (fb && !hasSession) {
             raw = JSON.parse(fb);
             await writeDB(db, sanitize(raw));
+          } else if (fb) {
+            raw = JSON.parse(fb);
           }
         } catch (_) {}
       }

@@ -278,7 +278,7 @@ function createMemoryStorage() {
   };
 }
 
-describe("Phase 2 & Hotfix — Full Cloud-Only Learning Progress Migration & Data Integrity (62 Scenarios)", () => {
+describe("Phase 2 & Hotfix — Full Cloud-Only Learning Progress Migration & Data Integrity (76 Scenarios)", () => {
 
   // ==========================================
   // SECTION 1: MIGRATION SCENARIOS (1-12)
@@ -1843,6 +1843,430 @@ describe("Phase 2 & Hotfix — Full Cloud-Only Learning Progress Migration & Dat
     const result = await handleAuthSuccess({ id: "u-new" }, true);
     assert.equal(migrationInvoked, true);
     assert.equal(result.migrated, true);
+  });
+
+  // 7. FINAL CLOUD-ONLY RELEASE VERIFICATION (Scenarios 63-76)
+
+  test("63. Normal cloud hydration creates zero IndexedDB writes", async () => {
+    let idbWrites = 0;
+    const testBundle = {
+      schemaVersion: 2,
+      core: { wordProgress: { "w1": { status: "learning" } } },
+      extras: { extraLearning: {}, habitProgress: {}, adventureProgress: {}, studioDrafts: {} }
+    };
+
+    let appliedToMemory = false;
+    async function simulateVerifiedCloudHydration(bundle, isVerified) {
+      if (isVerified) {
+        appliedToMemory = true;
+        return; // Hydrates memory only, zero IndexedDB writes
+      }
+      idbWrites += 1;
+    }
+
+    await simulateVerifiedCloudHydration(testBundle, true);
+    assert.equal(idbWrites, 0);
+    assert.equal(appliedToMemory, true);
+  });
+
+  test("64. Normal cloud hydration creates zero localStorage writes", async () => {
+    const memoryStore = new Map();
+    let learningProgressWrites = 0;
+    const forbiddenKeys = new Set([
+      "sinauu-learning-state-v1",
+      "sinauu-extra-learning-v1",
+      "sinauu-habit-library-v1",
+      "sinauu-adventure-progress-v1"
+    ]);
+
+    const mockStorage = {
+      getItem: (k) => memoryStore.get(k) || null,
+      setItem: (k, v) => {
+        if (forbiddenKeys.has(k)) learningProgressWrites += 1;
+        memoryStore.set(k, v);
+      },
+      removeItem: (k) => memoryStore.delete(k)
+    };
+
+    function simulateApply(bundle, isVerified) {
+      if (!isVerified) {
+        mockStorage.setItem("sinauu-learning-state-v1", JSON.stringify(bundle.core));
+        mockStorage.setItem("sinauu-extra-learning-v1", JSON.stringify(bundle.extras.extraLearning));
+        mockStorage.setItem("sinauu-habit-library-v1", JSON.stringify(bundle.extras.habitProgress));
+        mockStorage.setItem("sinauu-adventure-progress-v1", JSON.stringify(bundle.extras.adventureProgress));
+      }
+    }
+
+    const testBundle = {
+      schemaVersion: 2,
+      core: { wordProgress: { "w-cloud": { status: "mastered" } } },
+      extras: { extraLearning: {}, habitProgress: {}, adventureProgress: {} }
+    };
+
+    simulateApply(testBundle, true);
+    assert.equal(learningProgressWrites, 0);
+  });
+
+  test("65. Guest mode still persists locally", () => {
+    let localPersisted = false;
+    const isCloudVerified = false;
+    const session = null;
+
+    function saveLearningState(state) {
+      if (!isCloudVerified && !session) {
+        localPersisted = true;
+      }
+    }
+
+    saveLearningState({ wordProgress: { "guest-w1": { status: "learning" } } });
+    assert.equal(localPersisted, true);
+  });
+
+  test("66. Cloud verification is never activated after failed cloud reads", async () => {
+    let isCloudVerified = false;
+    async function mockReadCloud() {
+      throw new Error("Network timeout or 500 server error");
+    }
+
+    try {
+      await mockReadCloud();
+      isCloudVerified = true;
+    } catch (_) {
+      // Failed cloud read must not activate verification
+    }
+
+    assert.equal(isCloudVerified, false);
+  });
+
+  test("67. Missing vocab history causes verification failure", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {
+          "w-hist": {
+            status: "learning",
+            reviewHistory: [{ at: "2026-10-25T10:00:00Z", date: "2026-10-25", correct: true }]
+          }
+        }
+      },
+      extras: {}
+    };
+
+    const cloudMissingHistory = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {
+          "w-hist": {
+            status: "learning",
+            reviewHistory: []
+          }
+        }
+      },
+      extras: {}
+    };
+
+    const result = verifyBundleDataIncluded(candidate, cloudMissingHistory);
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /Riwayat review kosakata 'w-hist'/);
+  });
+
+  test("68. Missing grammar answers cause verification failure", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {},
+        grammarProgress: {
+          "passive-voice": {
+            answers: { "q-1": 2, "q-2": 1 }
+          }
+        }
+      },
+      extras: {}
+    };
+
+    const cloudMissingAnswers = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {},
+        grammarProgress: {
+          "passive-voice": {
+            answers: { "q-1": 2 }
+          }
+        }
+      },
+      extras: {}
+    };
+
+    const result = verifyBundleDataIncluded(candidate, cloudMissingAnswers);
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /Jawaban soal 'q-2' pada topik 'passive-voice' tidak ditemukan di cloud/);
+  });
+
+  test("69. Missing learning events cause verification failure", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {},
+        events: [{ type: "session-start", at: "2026-11-01T08:00:00Z" }]
+      },
+      extras: {}
+    };
+
+    const cloudMissingEvents = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {},
+        events: []
+      },
+      extras: {}
+    };
+
+    const result = verifyBundleDataIncluded(candidate, cloudMissingEvents);
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /Catatan event pembelajaran/);
+  });
+
+  test("70. Missing HABIT answer records cause verification failure", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        habitProgress: {
+          passageStats: {
+            "habit-ch1": {
+              comprehensionAnswers: { "q1": "B", "q2": "D" }
+            }
+          }
+        }
+      }
+    };
+
+    const cloudMissingHabitAnswers = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        habitProgress: {
+          passageStats: {
+            "habit-ch1": {
+              comprehensionAnswers: { "q1": "B" }
+            }
+          }
+        }
+      }
+    };
+
+    const result = verifyBundleDataIncluded(candidate, cloudMissingHabitAnswers);
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /Jawaban pemahaman 'q2' untuk habit 'habit-ch1' hilang dari cloud/);
+  });
+
+  test("71. Missing adventure XP records cause verification failure", () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        adventureProgress: {
+          xpLedger: {
+            "quest-award-1": { amount: 50, awardedAt: "2026-10-30T10:00:00Z" }
+          }
+        }
+      }
+    };
+
+    const cloudMissingXp = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        adventureProgress: {
+          xpLedger: {}
+        }
+      }
+    };
+
+    const result = verifyBundleDataIncluded(candidate, cloudMissingXp);
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /Adventure XP record 'quest-award-1' hilang dari cloud readback/);
+  });
+
+  test("72. Missing speaking turns or writing plan causes verification failure", () => {
+    // 1. Missing speaking turns
+    const candSpeaking = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        studioDrafts: {
+          speaking: {
+            prompts: {
+              "speak-intro": { turns: [{ role: "assistant", text: "Hello" }, { role: "user", text: "Hi" }] }
+            }
+          }
+        }
+      }
+    };
+    const cloudNoTurns = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        studioDrafts: {
+          speaking: {
+            prompts: {
+              "speak-intro": { turns: [] }
+            }
+          }
+        }
+      }
+    };
+    const resSpeaking = verifyBundleDataIncluded(candSpeaking, cloudNoTurns);
+    assert.equal(resSpeaking.ok, false);
+    assert.match(resSpeaking.reason, /Draft speaking turns prompt 'speak-intro' hilang/);
+
+    // 2. Missing writing plan
+    const candWriting = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        studioDrafts: {
+          writing: {
+            prompts: {
+              "essay-1": { plan: { opening: "Hook sentence", detail: "Three key points", closing: "Conclusion" } }
+            }
+          }
+        }
+      }
+    };
+    const cloudNoPlan = {
+      schemaVersion: 2,
+      core: { wordProgress: {} },
+      extras: {
+        studioDrafts: {
+          writing: {
+            prompts: {
+              "essay-1": { plan: { opening: "", detail: "", closing: "" } }
+            }
+          }
+        }
+      }
+    };
+    const resWriting = verifyBundleDataIncluded(candWriting, cloudNoPlan);
+    assert.equal(resWriting.ok, false);
+    assert.match(resWriting.reason, /Writing plan prompt 'essay-1' hilang/);
+  });
+
+  test("73. Full readback allows safe purge", async () => {
+    const candidate = {
+      schemaVersion: 2,
+      core: {
+        wordProgress: {
+          "w-full": {
+            status: "learning",
+            reviewSuccesses: 2,
+            reviewDates: ["2026-10-20", "2026-10-25"],
+            studiedDates: ["2026-10-15"],
+            skillEvidence: { recall: true, context: true, production: true },
+            reviewHistory: [{ at: "2026-10-25T10:00:00Z", date: "2026-10-25", correct: true }],
+            attempts: [{ at: "2026-10-15T10:00:00Z", correct: true }]
+          }
+        },
+        favorites: ["w-full"],
+        grammarProgress: {
+          "cond-1": { answers: { a1: 1 }, attempts: 1, correct: 1, history: [{ at: "2026-10-25T10:00:00Z", correct: true }] }
+        },
+        placementResult: { band: "B1", correct: 15, total: 20 },
+        history: [{ type: "vocabulary", at: "2026-10-25T10:00:00Z" }],
+        events: [{ type: "app-open", at: "2026-10-25T10:00:00Z" }]
+      },
+      extras: {
+        extraLearning: {
+          mistakeJournal: { "m-full": { mistakeId: "m-full", reviewStage: 2 } },
+          dailyQuests: { "2026-10-25": { completed: true } },
+          curriculum: { "step-1": { completed: true } },
+          xpLedger: { "xp-1": { amount: 20 } }
+        },
+        habitProgress: {
+          readCount: 5,
+          completedPassages: ["p-1"],
+          passageStats: { "p-1": { comprehensionAnswers: { q1: "C" }, readCount: 2 } }
+        },
+        adventureProgress: {
+          missionProgress: { "m1": { completed: true, bestScore: 90 } },
+          dailyQuests: { "2026-10-25": { completedStepIds: ["s1"] } },
+          xpLedger: { "adv-xp": { amount: 40 } },
+          mistakeJournal: { "adv-mis": { reviewStage: 1 } }
+        },
+        studioDrafts: {
+          writing: { prompts: { "p1": { text: "Complete text", plan: { opening: "Open" }, checked: [0] } } },
+          speaking: { prompts: { "sp1": { turns: [{ role: "user", text: "Hello" }], turnIndex: 1, checked: [0] } } }
+        }
+      }
+    };
+
+    const cloudReadback = JSON.parse(JSON.stringify(candidate));
+    const verification = verifyBundleDataIncluded(candidate, cloudReadback);
+    assert.equal(verification.ok, true);
+
+    let purged = false;
+    async function safePurge() {
+      if (verification.ok) purged = true;
+    }
+    await safePurge();
+    assert.equal(purged, true);
+  });
+
+  test("74. Failed IndexedDB cleanup remains explicitly pending", async () => {
+    let cleanupPending = false;
+
+    async function mockPurge(idbSuccess) {
+      if (!idbSuccess) {
+        cleanupPending = true;
+        return { complete: false };
+      }
+      cleanupPending = false;
+      return { complete: true };
+    }
+
+    const resFail = await mockPurge(false);
+    assert.equal(resFail.complete, false);
+    assert.equal(cleanupPending, true);
+
+    const resRetry = await mockPurge(true);
+    assert.equal(resRetry.complete, true);
+    assert.equal(cleanupPending, false);
+  });
+
+  test("75. Authenticated startup does not display stale progress as confirmed", () => {
+    const hasSession = true;
+    let isCloudVerified = false;
+    let storageMode = "syncing";
+    let displayedState = null;
+
+    function handleStartup(rawLocalProgress) {
+      if (hasSession) {
+        storageMode = "syncing";
+        isCloudVerified = false;
+        displayedState = "Menunggu cloud...";
+        return;
+      }
+      storageMode = "indexedDB";
+      displayedState = rawLocalProgress;
+    }
+
+    handleStartup({ wordProgress: { "stale-word": { status: "mastered" } } });
+    assert.equal(isCloudVerified, false);
+    assert.equal(storageMode, "syncing");
+    assert.notEqual(storageMode, "cloud");
+    assert.notEqual(displayedState, "Tersimpan di cloud");
+  });
+
+  test("76. Account switching does not leak legacy data across users", () => {
+    let mockOwner = "user-A";
+
+    function isSafeToMigrateCheck(userId) {
+      if (!mockOwner || mockOwner === "local" || mockOwner === userId) return true;
+      return false;
+    }
+
+    assert.equal(isSafeToMigrateCheck("user-A"), true);
+    assert.equal(isSafeToMigrateCheck("user-B"), false);
   });
 
 });

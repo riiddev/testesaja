@@ -202,7 +202,7 @@ async function applyLocalBundle(bundle: CloudBundle): Promise<void> {
     if (window.sinauuApplyCloudBundle) {
       await window.sinauuApplyCloudBundle(bundle);
     } else {
-      if (!isCloudVerified) {
+      if (!isCloudVerified && !session && !signingOut) {
         try { await writeIndexedDbState(bundle.core); } catch { /* local fallback below */ }
         try {
           localStorage.setItem(CORE_FALLBACK, JSON.stringify(bundle.core));
@@ -919,6 +919,7 @@ function setSession(next: AuthSession | null): void {
     sessionEpoch += 1;
     lastCloudRevision = null;
     syncConflict = false;
+    isCloudVerified = false;
   }
   session = next;
   try { if (next) localStorage.setItem(SESSION_KEY, JSON.stringify(next)); else localStorage.removeItem(SESSION_KEY); } catch { /* This open tab keeps its in-memory session. */ }
@@ -1264,12 +1265,19 @@ async function purgeLegacyStorage(userId: string): Promise<{ complete: boolean }
   return { complete: idbCleared };
 }
 
+async function retryCleanupPending(userId: string): Promise<boolean> {
+  if (!cleanupPending) return true;
+  const purgeResult = await purgeLegacyStorage(userId);
+  cleanupPending = !purgeResult.complete;
+  return purgeResult.complete;
+}
+
 function verifyBundleDataIncluded(candidate: CloudBundle, cloud: CloudBundle): { ok: boolean; reason?: string } {
   if (!cloud || !cloud.core) {
     return { ok: false, reason: "Cloud bundle atau core tidak valid." };
   }
 
-  // 1. Core wordProgress
+  // 1. Core wordProgress & SRS state
   const candWords = candidate.core?.wordProgress || {};
   const cloudWords = cloud.core?.wordProgress || {};
   for (const id of Object.keys(candWords)) {
@@ -1288,6 +1296,17 @@ function verifyBundleDataIncluded(candidate: CloudBundle, cloud: CloudBundle): {
     if (cw.skillEvidence?.production && !rw.skillEvidence?.production) {
       return { ok: false, reason: `Bukti produksi kosakata '${id}' hilang dari cloud readback.` };
     }
+    if (cw.savedContext && !rw.savedContext) {
+      return { ok: false, reason: `Saved context kosakata '${id}' hilang dari cloud readback.` };
+    }
+    if (Array.isArray(cw.contextQuestionIds)) {
+      const rwQuestions = new Set(Array.isArray(rw.contextQuestionIds) ? rw.contextQuestionIds : []);
+      for (const qId of cw.contextQuestionIds) {
+        if (!rwQuestions.has(qId)) {
+          return { ok: false, reason: `Question ID '${qId}' kosakata '${id}' hilang dari cloud.` };
+        }
+      }
+    }
     if (Array.isArray(cw.reviewDates)) {
       const rwDates = new Set(Array.isArray(rw.reviewDates) ? rw.reviewDates : []);
       const rwHistDates = new Set(Array.isArray(rw.reviewHistory) ? rw.reviewHistory.map((h: any) => h?.date).filter(Boolean) : []);
@@ -1304,6 +1323,38 @@ function verifyBundleDataIncluded(candidate: CloudBundle, cloud: CloudBundle): {
           return { ok: false, reason: `Tanggal belajar '${d}' untuk kosakata '${id}' hilang dari cloud.` };
         }
       }
+    }
+    if (Array.isArray(cw.attempts) && cw.attempts.length > 0) {
+      const rwAttempts = Array.isArray(rw.attempts) ? rw.attempts : [];
+      if (rwAttempts.length < cw.attempts.length) {
+        return { ok: false, reason: `Catatan attempt kosakata '${id}' berkurang di cloud (${rwAttempts.length} < ${cw.attempts.length}).` };
+      }
+      const rwAttemptKeys = new Set(rwAttempts.map((a: any) => itemKey(a)));
+      for (const a of cw.attempts) {
+        if (!rwAttemptKeys.has(itemKey(a))) {
+          return { ok: false, reason: `Attempt kosakata '${id}' tidak ditemukan di cloud readback.` };
+        }
+      }
+    }
+    if (Array.isArray(cw.reviewHistory) && cw.reviewHistory.length > 0) {
+      const rwHistory = Array.isArray(rw.reviewHistory) ? rw.reviewHistory : [];
+      if (rwHistory.length < Math.min(cw.reviewHistory.length, 150)) {
+        return { ok: false, reason: `Riwayat review kosakata '${id}' berkurang di cloud (${rwHistory.length} < ${cw.reviewHistory.length}).` };
+      }
+      const rwHistKeys = new Set(rwHistory.map((h: any) => itemKey(h)));
+      for (const h of cw.reviewHistory) {
+        if (!rwHistKeys.has(itemKey(h))) {
+          return { ok: false, reason: `Riwayat review kosakata '${id}' hilang dari cloud readback.` };
+        }
+      }
+    }
+    const candHasLapse = Array.isArray(cw.reviewHistory) && cw.reviewHistory.some((h: any) => h && h.correct === false);
+    const cloudHasLapse = Array.isArray(rw.reviewHistory) && rw.reviewHistory.some((h: any) => h && h.correct === false);
+    if (!cloudHasLapse && typeof cw.reviewSuccesses === "number" && (Number(rw.reviewSuccesses) || 0) < cw.reviewSuccesses) {
+      return { ok: false, reason: `Jumlah keberhasilan review kosakata '${id}' lebih rendah di cloud (${rw.reviewSuccesses} < ${cw.reviewSuccesses}).` };
+    }
+    if (cw.status === "mastered" && rw.status !== "mastered" && !cloudHasLapse) {
+      return { ok: false, reason: `Status mastered kosakata '${id}' tidak dipertahankan di cloud.` };
     }
   }
 
@@ -1335,16 +1386,303 @@ function verifyBundleDataIncluded(candidate: CloudBundle, cloud: CloudBundle): {
         }
       }
     }
+    if (typeof cg.attempts === "number" && (Number(rg.attempts) || 0) < cg.attempts) {
+      return { ok: false, reason: `Jumlah percobaan grammar topik '${tid}' lebih rendah di cloud (${rg.attempts} < ${cg.attempts}).` };
+    }
+    if (typeof cg.correct === "number" && (Number(rg.correct) || 0) < cg.correct) {
+      return { ok: false, reason: `Jumlah jawaban benar grammar topik '${tid}' lebih rendah di cloud (${rg.correct} < ${cg.correct}).` };
+    }
+    if (Array.isArray(cg.history) && cg.history.length > 0) {
+      const rgHistory = Array.isArray(rg.history) ? rg.history : [];
+      const rgHistKeys = new Set(rgHistory.map((h: any) => itemKey(h)));
+      for (const h of cg.history) {
+        if (!rgHistKeys.has(itemKey(h))) {
+          return { ok: false, reason: `Riwayat grammar pada topik '${tid}' tidak ditemukan di cloud.` };
+        }
+      }
+    }
   }
 
   // 4. Placement result
   if (candidate.core?.placementResult) {
-    if (!cloud.core?.placementResult) {
+    const cp = candidate.core.placementResult;
+    const rp = cloud.core?.placementResult;
+    if (!rp) {
       return { ok: false, reason: "Hasil tes penempatan (placement check) tidak ditemukan di cloud readback." };
+    }
+    if (cp.band && rp.band !== cp.band && (!rp.completedAt || parseTime(rp.completedAt) < parseTime(cp.completedAt))) {
+      return { ok: false, reason: "Band hasil placement test tidak sesuai di cloud readback." };
+    }
+    if (typeof cp.correct === "number" && typeof rp.correct === "number" && rp.correct < cp.correct && (!rp.completedAt || parseTime(rp.completedAt) < parseTime(cp.completedAt))) {
+      return { ok: false, reason: "Skor jawaban benar placement test lebih rendah di cloud readback." };
+    }
+    if (typeof cp.total === "number" && typeof rp.total === "number" && rp.total < cp.total && (!rp.completedAt || parseTime(rp.completedAt) < parseTime(cp.completedAt))) {
+      return { ok: false, reason: "Total soal placement test lebih rendah di cloud readback." };
+    }
+    if (cp.categoryScores && typeof cp.categoryScores === "object") {
+      const rpCat = rp.categoryScores || {};
+      for (const cat of Object.keys(cp.categoryScores)) {
+        if (rpCat[cat] === undefined) {
+          return { ok: false, reason: `Skor kategori '${cat}' placement test hilang di cloud readback.` };
+        }
+      }
+    }
+    if (cp.levelScores && typeof cp.levelScores === "object") {
+      const rpLvl = rp.levelScores || {};
+      for (const lvl of Object.keys(cp.levelScores)) {
+        if (rpLvl[lvl] === undefined) {
+          return { ok: false, reason: `Skor level '${lvl}' placement test hilang di cloud readback.` };
+        }
+      }
     }
   }
 
-  // 5. Studio Drafts
+  // 5. Learning history and events
+  if (Array.isArray(candidate.core?.history) && candidate.core.history.length > 0) {
+    const cloudHist = Array.isArray(cloud.core?.history) ? cloud.core.history : [];
+    const cloudKeys = new Set(cloudHist.map((h: any) => itemKey(h)));
+    for (const h of candidate.core.history) {
+      if (!cloudKeys.has(itemKey(h))) {
+        return { ok: false, reason: "Riwayat belajar (history) hilang dari cloud readback." };
+      }
+    }
+  }
+  if (Array.isArray(candidate.core?.events) && candidate.core.events.length > 0) {
+    const cloudEvents = Array.isArray(cloud.core?.events) ? cloud.core.events : [];
+    const cloudKeys = new Set(cloudEvents.map((e: any) => itemKey(e)));
+    for (const e of candidate.core.events) {
+      if (!cloudKeys.has(itemKey(e))) {
+        return { ok: false, reason: "Catatan event pembelajaran (events) hilang dari cloud readback." };
+      }
+    }
+  }
+
+  // 6. Extra Learning modules
+  const candExtra = candidate.extras?.extraLearning;
+  const cloudExtra = cloud.extras?.extraLearning || {};
+  if (candExtra && typeof candExtra === "object") {
+    if (candExtra.mistakeJournal && typeof candExtra.mistakeJournal === "object") {
+      const cloudMistakes = cloudExtra.mistakeJournal || {};
+      for (const mId of Object.keys(candExtra.mistakeJournal)) {
+        const cm = candExtra.mistakeJournal[mId];
+        const rm = cloudMistakes[mId];
+        if (!rm) {
+          return { ok: false, reason: `Mistake '${mId}' hilang dari cloud readback.` };
+        }
+        if (typeof cm?.reviewStage === "number" && (Number(rm.reviewStage) || 0) < cm.reviewStage) {
+          return { ok: false, reason: `Tahap review mistake '${mId}' lebih rendah di cloud (${rm.reviewStage} < ${cm.reviewStage}).` };
+        }
+      }
+    }
+    if (candExtra.dailyQuests && typeof candExtra.dailyQuests === "object") {
+      const cloudQuests = cloudExtra.dailyQuests || {};
+      for (const qId of Object.keys(candExtra.dailyQuests)) {
+        if (!cloudQuests[qId]) {
+          return { ok: false, reason: `Daily quest '${qId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+    if (candExtra.curriculum && typeof candExtra.curriculum === "object") {
+      const cloudCurr = cloudExtra.curriculum || {};
+      for (const cId of Object.keys(candExtra.curriculum)) {
+        if (!cloudCurr[cId]) {
+          return { ok: false, reason: `Curriculum milestone '${cId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+    for (const rKey of ["readingLessons", "readingProgress", "readingLessonProgress", "reading"] as const) {
+      if (candExtra[rKey] && typeof candExtra[rKey] === "object") {
+        const cloudLessons = cloudExtra[rKey] || {};
+        for (const lId of Object.keys(candExtra[rKey])) {
+          if (!cloudLessons[lId]) {
+            return { ok: false, reason: `Reading lesson '${lId}' hilang dari cloud readback.` };
+          }
+        }
+      }
+    }
+    if (candExtra.xpLedger && typeof candExtra.xpLedger === "object") {
+      const cloudXp = cloudExtra.xpLedger || {};
+      for (const aId of Object.keys(candExtra.xpLedger)) {
+        const cx = candExtra.xpLedger[aId];
+        const rx = cloudXp[aId];
+        if (!rx) {
+          return { ok: false, reason: `XP record '${aId}' hilang dari cloud readback.` };
+        }
+        if (typeof cx?.amount === "number" && (Number(rx.amount) || 0) < cx.amount) {
+          return { ok: false, reason: `Jumlah XP '${aId}' lebih rendah di cloud (${rx.amount} < ${cx.amount}).` };
+        }
+      }
+    }
+  }
+
+  // 7. HABIT Reading Passages
+  const candHabit = candidate.extras?.habitProgress;
+  const cloudHabit = cloud.extras?.habitProgress || {};
+  if (candHabit && typeof candHabit === "object") {
+    if (typeof candHabit.readCount === "number" && (Number(cloudHabit.readCount) || 0) < candHabit.readCount) {
+      return { ok: false, reason: `Total bacaan habit lebih rendah di cloud (${cloudHabit.readCount} < ${candHabit.readCount}).` };
+    }
+    if (Array.isArray(candHabit.completedPassages)) {
+      const cloudCompleted = new Set(Array.isArray(cloudHabit.completedPassages) ? cloudHabit.completedPassages : []);
+      for (const pId of candHabit.completedPassages) {
+        if (!cloudCompleted.has(pId)) {
+          return { ok: false, reason: `Bacaan selesai habit '${pId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+    if (candHabit.passageStats && typeof candHabit.passageStats === "object") {
+      const cloudStats = cloudHabit.passageStats || {};
+      for (const pId of Object.keys(candHabit.passageStats)) {
+        const cp = candHabit.passageStats[pId];
+        const rp = cloudStats[pId];
+        if (!rp) {
+          return { ok: false, reason: `Statistik bacaan habit '${pId}' hilang dari cloud readback.` };
+        }
+        if (cp.comprehensionAnswers && typeof cp.comprehensionAnswers === "object") {
+          const rpAnswers = rp.comprehensionAnswers || {};
+          for (const qKey of Object.keys(cp.comprehensionAnswers)) {
+            if (rpAnswers[qKey] === undefined) {
+              return { ok: false, reason: `Jawaban pemahaman '${qKey}' untuk habit '${pId}' hilang dari cloud.` };
+            }
+          }
+        }
+      }
+    }
+    if (candHabit.readingPassages && typeof candHabit.readingPassages === "object") {
+      const cloudPassages = cloudHabit.readingPassages || {};
+      for (const pId of Object.keys(candHabit.readingPassages)) {
+        const cp = candHabit.readingPassages[pId];
+        const rp = cloudPassages[pId];
+        if (cp?.completed && !rp?.completed) {
+          return { ok: false, reason: `Selesai baca habit '${pId}' hilang dari cloud readback.` };
+        }
+        if (cp?.comprehensionAnswers && typeof cp.comprehensionAnswers === "object") {
+          const rpAns = rp?.comprehensionAnswers || {};
+          for (const qKey of Object.keys(cp.comprehensionAnswers)) {
+            if (rpAns[qKey] === undefined) {
+              return { ok: false, reason: `Jawaban pemahaman '${qKey}' untuk habit '${pId}' hilang dari cloud.` };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 8. Adventure Missions & Progress
+  const candAdv = candidate.extras?.adventureProgress;
+  const cloudAdv = cloud.extras?.adventureProgress || {};
+  if (candAdv && typeof candAdv === "object") {
+    const candMissions = candAdv.missionProgress || candAdv.missions;
+    const cloudMissions = cloudAdv.missionProgress || cloudAdv.missions || {};
+    if (candMissions && typeof candMissions === "object") {
+      for (const mId of Object.keys(candMissions)) {
+        const cm = candMissions[mId];
+        const rm = cloudMissions[mId];
+        if (!rm) {
+          return { ok: false, reason: `Misi adventure '${mId}' hilang dari cloud readback.` };
+        }
+        if ((cm?.completed || cm?.completedAt) && !rm?.completed && !rm?.completedAt) {
+          return { ok: false, reason: `Status selesai misi '${mId}' hilang dari cloud readback.` };
+        }
+        if (typeof cm?.bestScore === "number" && (Number(rm.bestScore) || 0) < cm.bestScore) {
+          return { ok: false, reason: `Skor terbaik misi '${mId}' lebih rendah di cloud (${rm.bestScore} < ${cm.bestScore}).` };
+        }
+      }
+    }
+    if (candAdv.dialogueProgress && typeof candAdv.dialogueProgress === "object") {
+      const cloudDialogues = cloudAdv.dialogueProgress || {};
+      for (const dId of Object.keys(candAdv.dialogueProgress)) {
+        const cd = candAdv.dialogueProgress[dId];
+        const rd = cloudDialogues[dId];
+        if (!rd) {
+          return { ok: false, reason: `Dialog adventure '${dId}' hilang dari cloud readback.` };
+        }
+        if (cd?.completedAt && !rd.completedAt) {
+          return { ok: false, reason: `Status selesai dialog '${dId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+    if (candAdv.listeningProgress && typeof candAdv.listeningProgress === "object") {
+      const cloudListening = cloudAdv.listeningProgress || {};
+      for (const lId of Object.keys(candAdv.listeningProgress)) {
+        const cl = candAdv.listeningProgress[lId];
+        const rl = cloudListening[lId];
+        if (!rl) {
+          return { ok: false, reason: `Listening exercise '${lId}' hilang dari cloud readback.` };
+        }
+        if (cl?.completedAt && !rl.completedAt) {
+          return { ok: false, reason: `Status selesai listening '${lId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+    if (candAdv.pronunciationProgress && typeof candAdv.pronunciationProgress === "object") {
+      const cloudPron = cloudAdv.pronunciationProgress || {};
+      for (const prId of Object.keys(candAdv.pronunciationProgress)) {
+        if (!cloudPron[prId]) {
+          return { ok: false, reason: `Pronunciation phrase '${prId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+    if (candAdv.storyProgress && typeof candAdv.storyProgress === "object") {
+      const cloudStories = cloudAdv.storyProgress || {};
+      for (const sId of Object.keys(candAdv.storyProgress)) {
+        const cs = candAdv.storyProgress[sId];
+        const rs = cloudStories[sId];
+        if (!rs) {
+          return { ok: false, reason: `Story '${sId}' hilang dari cloud readback.` };
+        }
+        if (cs?.completedAt && !rs.completedAt) {
+          return { ok: false, reason: `Status selesai cerita '${sId}' hilang dari cloud readback.` };
+        }
+      }
+    }
+    if (candAdv.xpLedger && typeof candAdv.xpLedger === "object") {
+      const cloudXp = cloudAdv.xpLedger || {};
+      for (const aId of Object.keys(candAdv.xpLedger)) {
+        const cx = candAdv.xpLedger[aId];
+        const rx = cloudXp[aId];
+        if (!rx) {
+          return { ok: false, reason: `Adventure XP record '${aId}' hilang dari cloud readback.` };
+        }
+        if (typeof cx?.amount === "number" && (Number(rx.amount) || 0) < cx.amount) {
+          return { ok: false, reason: `Jumlah Adventure XP '${aId}' lebih rendah di cloud (${rx.amount} < ${cx.amount}).` };
+        }
+      }
+    }
+    if (candAdv.dailyQuests && typeof candAdv.dailyQuests === "object") {
+      const cloudDaily = cloudAdv.dailyQuests || {};
+      for (const dKey of Object.keys(candAdv.dailyQuests)) {
+        const cd = candAdv.dailyQuests[dKey];
+        const rd = cloudDaily[dKey];
+        if (!rd) {
+          return { ok: false, reason: `Daily quest '${dKey}' hilang dari cloud readback.` };
+        }
+        if (Array.isArray(cd?.completedStepIds)) {
+          const rdSteps = new Set(Array.isArray(rd.completedStepIds) ? rd.completedStepIds : []);
+          for (const sId of cd.completedStepIds) {
+            if (!rdSteps.has(sId)) {
+              return { ok: false, reason: `Step '${sId}' daily quest '${dKey}' hilang dari cloud readback.` };
+            }
+          }
+        }
+      }
+    }
+    if (candAdv.mistakeJournal && typeof candAdv.mistakeJournal === "object") {
+      const cloudMistakes = cloudAdv.mistakeJournal || {};
+      for (const mId of Object.keys(candAdv.mistakeJournal)) {
+        const cm = candAdv.mistakeJournal[mId];
+        const rm = cloudMistakes[mId];
+        if (!rm) {
+          return { ok: false, reason: `Adventure mistake '${mId}' hilang dari cloud readback.` };
+        }
+        if (typeof cm?.reviewStage === "number" && (Number(rm.reviewStage) || 0) < cm.reviewStage) {
+          return { ok: false, reason: `Tahap review adventure mistake '${mId}' lebih rendah di cloud (${rm.reviewStage} < ${cm.reviewStage}).` };
+        }
+      }
+    }
+  }
+
+  // 9. Writing Studio and Speaking Studio Drafts
   const candDrafts = candidate.extras?.studioDrafts;
   const cloudDrafts = cloud.extras?.studioDrafts;
   if (candDrafts?.writing?.prompts) {
@@ -1352,10 +1690,24 @@ function verifyBundleDataIncluded(candidate: CloudBundle, cloud: CloudBundle): {
     const cloudPrompts = cloudDrafts?.writing?.prompts || {};
     for (const pId of Object.keys(candPrompts)) {
       const cp = candPrompts[pId];
-      if (cp && (cp.text || cp.revision)) {
-        const rp = cloudPrompts[pId];
+      if (!cp) continue;
+      const rp = cloudPrompts[pId];
+      if (cp.text || cp.revision) {
         if (!rp || (!rp.text && !rp.revision)) {
           return { ok: false, reason: `Draft writing prompt '${pId}' hilang dari cloud readback.` };
+        }
+      }
+      if (cp.plan && (cp.plan.opening || cp.plan.detail || cp.plan.closing)) {
+        if (!rp || !rp.plan || (!rp.plan.opening && !rp.plan.detail && !rp.plan.closing)) {
+          return { ok: false, reason: `Writing plan prompt '${pId}' hilang dari cloud readback.` };
+        }
+      }
+      if (Array.isArray(cp.checked) && cp.checked.length > 0) {
+        const rpChecked = new Set(Array.isArray(rp?.checked) ? rp.checked : []);
+        for (const item of cp.checked) {
+          if (!rpChecked.has(item)) {
+            return { ok: false, reason: `Checked item writing prompt '${pId}' hilang dari cloud readback.` };
+          }
         }
       }
     }
@@ -1365,52 +1717,30 @@ function verifyBundleDataIncluded(candidate: CloudBundle, cloud: CloudBundle): {
     const cloudSpeaking = cloudDrafts?.speaking?.prompts || {};
     for (const pId of Object.keys(candSpeaking)) {
       const cs = candSpeaking[pId];
-      if (cs && Array.isArray(cs.turns) && cs.turns.length > 0) {
-        const rs = cloudSpeaking[pId];
-        if (!rs || !Array.isArray(rs.turns) || rs.turns.length === 0) {
-          return { ok: false, reason: `Draft speaking prompt '${pId}' hilang dari cloud readback.` };
+      if (!cs) continue;
+      const rs = cloudSpeaking[pId];
+      if (Array.isArray(cs.turns) && cs.turns.length > 0) {
+        if (!rs || !Array.isArray(rs.turns) || rs.turns.length < cs.turns.length) {
+          return { ok: false, reason: `Draft speaking turns prompt '${pId}' hilang dari cloud readback.` };
         }
       }
-    }
-  }
-
-  // 6. Habit reading passages
-  const candHabit = candidate.extras?.habitProgress?.readingPassages;
-  const cloudHabit = cloud.extras?.habitProgress?.readingPassages || {};
-  if (candHabit && typeof candHabit === "object") {
-    for (const pId of Object.keys(candHabit)) {
-      const cp = candHabit[pId];
-      if (cp?.completed) {
-        const rp = cloudHabit[pId];
-        if (!rp?.completed) {
-          return { ok: false, reason: `Selesai baca habit '${pId}' hilang dari cloud readback.` };
+      if (typeof cs.turnIndex === "number" && cs.turnIndex > 0) {
+        if (!rs || (Number(rs.turnIndex) || 0) < cs.turnIndex) {
+          return { ok: false, reason: `Speaking turn index prompt '${pId}' lebih rendah di cloud (${rs?.turnIndex} < ${cs.turnIndex}).` };
         }
       }
-    }
-  }
-
-  // 7. Adventure missions
-  const candMissions = candidate.extras?.adventureProgress?.missions;
-  const cloudMissions = cloud.extras?.adventureProgress?.missions || {};
-  if (candMissions && typeof candMissions === "object") {
-    for (const mId of Object.keys(candMissions)) {
-      const cm = candMissions[mId];
-      if (cm?.completed) {
-        const rm = cloudMissions[mId];
-        if (!rm?.completed) {
-          return { ok: false, reason: `Misi adventure '${mId}' hilang dari cloud readback.` };
+      if (cs.notes && typeof cs.notes === "string" && cs.notes.trim()) {
+        if (!rs || !rs.notes) {
+          return { ok: false, reason: `Speaking notes prompt '${pId}' hilang dari cloud readback.` };
         }
       }
-    }
-  }
-
-  // 8. Mistake journal
-  const candMistakes = candidate.extras?.extraLearning?.mistakeJournal;
-  const cloudMistakes = cloud.extras?.extraLearning?.mistakeJournal || {};
-  if (candMistakes && typeof candMistakes === "object") {
-    for (const mId of Object.keys(candMistakes)) {
-      if (!cloudMistakes[mId]) {
-        return { ok: false, reason: `Mistake '${mId}' hilang dari cloud readback.` };
+      if (Array.isArray(cs.checked) && cs.checked.length > 0) {
+        const rsChecked = new Set(Array.isArray(rs?.checked) ? rs.checked : []);
+        for (const item of cs.checked) {
+          if (!rsChecked.has(item)) {
+            return { ok: false, reason: `Checked item speaking prompt '${pId}' hilang dari cloud readback.` };
+          }
+        }
       }
     }
   }
@@ -1470,7 +1800,13 @@ async function migrateLegacyDataIfNeeded(userId: string): Promise<{ migrated: bo
     }
 
     // Verification SUCCESSFUL: now and only now purge legacy storage
-    await purgeLegacyStorage(userId);
+    const purgeResult = await purgeLegacyStorage(userId);
+    if (!purgeResult.complete) {
+      cleanupPending = true;
+      setMessage("Progres tersimpan di cloud, namun pembersihan penyimpanan lokal browser masih tertunda.", "info");
+    } else {
+      cleanupPending = false;
+    }
     isCloudVerified = true;
     lastCloudRevision = readback.revision;
     await applyLocalBundle(readback.bundle);
@@ -1552,6 +1888,11 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
       merged = mergeBundles(currentLocal, merged);
     }
 
+    // Validate and confirm cloud state before applying to memory
+    isCloudVerified = true;
+    lastSuccessfulSync = new Date().toISOString();
+    syncConflict = false;
+
     if (stable(merged) !== stable(local)) {
       await applyLocalBundle(merged);
     }
@@ -1563,9 +1904,6 @@ async function syncNow(allowWhileSigningOut = false): Promise<boolean> {
       localStorage.setItem(OWNER_KEY, session.user.id);
     } catch { /* Local account owner metadata */ }
 
-    lastSuccessfulSync = new Date().toISOString();
-    syncConflict = false;
-    isCloudVerified = true;
     setSyncBadge("Tersinkron", "success");
     setMessage("Progres tersinkron pada " + new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(new Date(lastSuccessfulSync)) + ". Kamu bisa lanjut di perangkat lain.", "success");
     window.dispatchEvent(new CustomEvent("sinauu:cloud-sync-success"));
@@ -1993,9 +2331,11 @@ window.addEventListener("pagehide", () => { window.clearTimeout(syncTimer); wind
 (window as any).sinauuGetLastCloudRevision = () => lastCloudRevision;
 (window as any).sinauuHasSyncConflict = () => syncConflict;
 (window as any).sinauuIsCloudVerified = () => isCloudVerified;
+(window as any).sinauuIsCloudReady = () => CLOUD_READY;
 (window as any).sinauuTriggerCloudSync = () => syncNow();
 (window as any).sinauuMigrateLegacyData = (userId: string) => migrateLegacyDataIfNeeded(userId);
 (window as any).sinauuIsCleanupPending = () => cleanupPending;
+(window as any).sinauuRetryCleanup = (userId: string) => retryCleanupPending(userId);
 (window as any).sinauuVerifyBundleDataIncluded = (candidate: CloudBundle, cloud: CloudBundle) => verifyBundleDataIncluded(candidate, cloud);
 (window as any).sinauuGetSyncStatus = () => ({
   syncing,
@@ -2020,6 +2360,9 @@ export {
   collectLegacyBundle,
   purgeLegacyStorage,
   migrateLegacyDataIfNeeded,
+  retryCleanupPending,
+  applyLocalBundle,
+  isSafeToMigrate,
   syncNow,
   scheduleSync,
 };
