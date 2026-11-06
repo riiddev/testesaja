@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeOutboxSrsEvent } from "../src/hooks/useProgressSync.js";
+import { normalizeOutboxSrsEvent } from "../src/lib/progressOutboxMigration.js";
 
 test("keeps new SRS events with explicit isCorrect unchanged", () => {
   const event = { eventId: "new-1", isCorrect: false, masteryStage: "weak" };
