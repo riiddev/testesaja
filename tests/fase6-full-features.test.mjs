@@ -195,25 +195,49 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(mockDel.getData().success, true);
   });
 
-  await t.test("3. Titles API: unlock title and retrieve unlocked titles", async () => {
-    const mockUnlock = createMockReqRes({
+  await t.test("3. Titles API: reject forged IDs and unlock only a qualified official title", async () => {
+    const mockForge = createMockReqRes({
       method: "POST",
       token,
       url: "/api/titles/unlock",
       body: { titleId: "novice_scholar" }
     });
+    await titlesUnlockHandler(mockForge.req, mockForge.res);
+    assert.equal(mockForge.getStatus(), 400);
+    assert.match(mockForge.getData().error, /tidak terdaftar/i);
+
+    const mockUnqualified = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "word_explorer" }
+    });
+    await titlesUnlockHandler(mockUnqualified.req, mockUnqualified.res);
+    assert.equal(mockUnqualified.getStatus(), 400);
+    assert.match(mockUnqualified.getData().error, /belum memenuhi syarat/i);
+
+    // Simulate the server's accumulated statistic reaching the official threshold.
+    await db.update(schema.userStats)
+      .set({ wordsStarted: 50 })
+      .where(eq(schema.userStats.userId, testUserId));
+
+    const mockUnlock = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "word_explorer" }
+    });
     await titlesUnlockHandler(mockUnlock.req, mockUnlock.res);
     assert.equal(mockUnlock.getStatus(), 200);
-    const unlockRes = mockUnlock.getData();
-    assert.equal(unlockRes.success, true);
-    assert.equal(unlockRes.data.titleId, "novice_scholar");
+    assert.equal(mockUnlock.getData().data.titleId, "word_explorer");
 
     // GET titles
     const mockGetTitles = createMockReqRes({ method: "GET", token, url: "/api/titles/get" });
     await titlesGetHandler(mockGetTitles.req, mockGetTitles.res);
     assert.equal(mockGetTitles.getStatus(), 200);
     const titlesData = mockGetTitles.getData().data;
-    assert.ok(titlesData.titles.includes("novice_scholar"));
+    assert.ok(titlesData.titles.includes("word_explorer"));
+    assert.ok(!titlesData.titles.includes("novice_scholar"));
   });
 
   await t.test("4. Grammar API: save progress and retrieve progress map", async () => {
