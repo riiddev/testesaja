@@ -105,6 +105,22 @@ export default async function handler(req, res) {
       }
     }
 
+    // Record every server-accepted grammar attempt for history and daily quests.
+    const activityId = `act_${user.id}_grammar_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    await db.insert(schema.activityLog).values({
+      id: activityId,
+      userId: user.id,
+      activityType: "grammar",
+      title: `Latihan Grammar: ${topicId}`.slice(0, 150),
+      score,
+      totalQuestions: total,
+      accuracyPercent: Math.round((score / total) * 100),
+      durationSeconds: 0,
+      xpEarned,
+      coinsEarned,
+      createdAt: now
+    });
+
     const streakRes = await evaluateAndRecordStreak(user.id);
 
     return sendSuccess(

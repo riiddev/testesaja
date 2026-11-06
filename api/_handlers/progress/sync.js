@@ -66,22 +66,8 @@ export default async function handler(req, res) {
         continue;
       }
 
-      // 2. Record Event into Ledger
-      await db.insert(schema.progressEvents).values({
-        userId: user.id,
-        eventId: safeEventId,
-        activityType: "srs_review",
-        payload: {
-          wordId,
-          level: item.level || "A1",
-          masteryStage: item.masteryStage || "learning",
-          correctCount: item.correctCount || 0,
-          wrongCount: item.wrongCount || 0,
-          nextReviewAt: item.nextReviewAt || null
-        }
-      });
-
-      // 3. Upsert Spaced Repetition Progress
+      // 2. Read existing progress first so the server can classify a genuinely
+      // first-seen word separately from a repeat SRS review.
       const existingWord = await db
         .select()
         .from(schema.progress)
@@ -94,6 +80,23 @@ export default async function handler(req, res) {
         .limit(1);
 
       const isFirstTimeWord = existingWord.length === 0;
+
+      // 3. Record an idempotent server-owned activity classification.
+      await db.insert(schema.progressEvents).values({
+        userId: user.id,
+        eventId: safeEventId,
+        activityType: isFirstTimeWord ? "vocab_learn" : "srs_review",
+        payload: {
+          wordId,
+          level: item.level || "A1",
+          masteryStage: item.masteryStage || "learning",
+          correctCount: item.correctCount || 0,
+          wrongCount: item.wrongCount || 0,
+          nextReviewAt: item.nextReviewAt || null
+        }
+      });
+
+      // 4. Upsert Spaced Repetition Progress
       const isNewlyMastered =
         item.masteryStage === "mastered" &&
         (!existingWord.length || existingWord[0].masteryStage !== "mastered");

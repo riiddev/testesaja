@@ -50,11 +50,7 @@ export async function recordLearningActivity({
           result.streak = res.data.streak;
         }
         // Auto-advance matching quest
-        api.updateQuestProgress({
-          questId: "quest_matching_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
@@ -74,11 +70,7 @@ export async function recordLearningActivity({
           result.streak = res.data.streak;
         }
         // Auto-advance grammar quest
-        api.updateQuestProgress({
-          questId: "quest_grammar_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
@@ -101,11 +93,7 @@ export async function recordLearningActivity({
           result.streak = res.data.streak;
         }
         // Auto-advance reading quest
-        api.updateQuestProgress({
-          questId: "quest_reading_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
@@ -126,11 +114,7 @@ export async function recordLearningActivity({
           result.alreadyRewarded = res.data.alreadyRewarded;
         }
         // Auto-advance reading quest
-        api.updateQuestProgress({
-          questId: "quest_reading_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
@@ -149,11 +133,7 @@ export async function recordLearningActivity({
           result.streak = res.data.streak;
         }
         // Auto-advance story quest
-        api.updateQuestProgress({
-          questId: "quest_story_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 

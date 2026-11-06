@@ -48,6 +48,10 @@ export default async function handler(req, res) {
     const now = new Date();
     let completedList = [];
     let isStoryCompleted = false;
+    const wasStoryCompleted = existing.length > 0 && Boolean(existing[0].isStoryCompleted);
+    const wasEpisodeCompleted = existing.length > 0 &&
+      Array.isArray(existing[0].completedEpisodes) &&
+      existing[0].completedEpisodes.includes(episodeId);
 
     if (existing.length === 0) {
       completedList = [episodeId];
@@ -97,7 +101,7 @@ export default async function handler(req, res) {
       coinsEarned: rewardConfig.coins
     });
 
-    if (isStoryCompleted) {
+    if (isStoryCompleted && !wasStoryCompleted) {
       await db
         .update(schema.userStats)
         .set({
@@ -105,6 +109,23 @@ export default async function handler(req, res) {
           updatedAt: now
         })
         .where(eq(schema.userStats.userId, user.id));
+    }
+
+    if (!wasEpisodeCompleted && !tx.alreadyProcessed) {
+      const activityId = `act_${user.id}_story_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      await db.insert(schema.activityLog).values({
+        id: activityId,
+        userId: user.id,
+        activityType: "story",
+        title: `Petualangan: ${storyId} — Episode ${episodeId}`.slice(0, 150),
+        score: 1,
+        totalQuestions: 1,
+        accuracyPercent: 100,
+        durationSeconds: 0,
+        xpEarned: tx.xpEarned,
+        coinsEarned: tx.coinsEarned,
+        createdAt: now
+      });
     }
 
     const streakRes = await evaluateAndRecordStreak(user.id);

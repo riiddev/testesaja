@@ -1,16 +1,15 @@
 /**
  * POST /api/quests/claim
- * 
- * Validates quest completion on server and grants XP/Coins atomically.
- * STRICT SECURITY: Rejects double claims and validates completion criteria!
+ *
+ * Grants the fixed reward for one of today's generated missions only after
+ * server-written activity records prove that its target has been reached.
  */
-
 import { eq, and } from "drizzle-orm";
 import { db, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransaction } from "../../_lib/ledger.js";
 import { getWibDateStr } from "../../_lib/wibDate.js";
-import { REWARDS_CONFIG } from "../../_lib/rewardsConfig.js";
+import { getDailyQuestSnapshot } from "../../_lib/dailyQuestProgress.js";
 import {
   sendSuccess,
   sendAuthError,
@@ -28,43 +27,28 @@ export default async function handler(req, res) {
     const { user } = await authenticateRequest(req);
     const body = await parseJsonBody(req);
     const questId = String(body.questId || "").trim();
-    const todayWib = (body.dateStr && /^\d{4}-\d{2}-\d{2}$/.test(body.dateStr)) ? body.dateStr : getWibDateStr(new Date());
+    const todayWib = getWibDateStr(new Date());
 
     if (!questId) {
       return sendValidationError(res, "Parameter questId wajib disertakan.");
     }
 
-    // 1. Fetch user quest record for today
-    const questRows = await db
-      .select()
-      .from(schema.dailyQuests)
-      .where(
-        and(
-          eq(schema.dailyQuests.userId, user.id),
-          eq(schema.dailyQuests.questDate, todayWib),
-          eq(schema.dailyQuests.questId, questId)
-        )
-      )
-      .limit(1);
+    const snapshot = await getDailyQuestSnapshot(user.id, todayWib);
+    const quest = snapshot.quests.find((item) => item.id === questId);
 
-    if (!questRows.length) {
-      return sendValidationError(res, "Misi hari ini tidak ditemukan.");
+    if (!quest) {
+      return sendValidationError(res, "Misi tidak termasuk dalam daftar misi harian akun ini.");
     }
 
-    const quest = questRows[0];
-    const isCompleted = quest.isCompleted || quest.currentProgress >= quest.target;
-
-    // 2. Completion Check
-    if (!isCompleted) {
+    if (quest.progress < quest.target) {
       return sendValidationError(
         res,
-        `Misi belum selesai (Progres: ${quest.currentProgress}/${quest.target}). Selesaikan misi terlebih dahulu.`
+        `Misi belum selesai (Progres: ${quest.progress}/${quest.target}). Selesaikan misi terlebih dahulu.`
       );
     }
 
-    // 3. Double-claim Check
     const existingClaim = await db
-      .select()
+      .select({ id: schema.questClaims.id })
       .from(schema.questClaims)
       .where(
         and(
@@ -79,30 +63,12 @@ export default async function handler(req, res) {
       return sendValidationError(res, "Hadiah misi ini sudah diklaim sebelumnya.");
     }
 
-    // 4. Server-defined Reward Configuration
-    const config = REWARDS_CONFIG[questId] || { xp: 35, coins: 15 };
-    const xpReward = Number(config.xp) || 35;
-    const coinsReward = Number(config.coins) || 15;
-
-    // 5. Insert claim row
-    await db.insert(schema.questClaims).values({
-      userId: user.id,
-      questDate: todayWib,
-      questId,
-      xpReward,
-      coinsReward
-    });
-
-    // Mark quest completed if not already
-    if (!quest.isCompleted) {
-      await db
-        .update(schema.dailyQuests)
-        .set({ isCompleted: true })
-        .where(eq(schema.dailyQuests.id, quest.id));
-    }
-
-    // 6. Record transaction in ledger
+    // Reward amounts come from the server-owned mission catalog. No fallback
+    // reward is issued for unknown IDs.
+    const xpReward = Math.max(0, Number(quest.xpReward) || 0);
+    const coinsReward = Math.max(0, Number(quest.coinsReward) || 0);
     const eventId = `quest_claim:${todayWib}:${questId}`;
+
     const tx = await recordLedgerTransaction({
       userId: user.id,
       eventId,
@@ -111,16 +77,32 @@ export default async function handler(req, res) {
       coinsEarned: coinsReward
     });
 
+    // Upsert semantics allow a retry after a server interruption between the
+    // ledger write and the claim marker without crediting the reward twice.
+    await db
+      .insert(schema.questClaims)
+      .values({
+        userId: user.id,
+        questDate: todayWib,
+        questId,
+        xpReward,
+        coinsReward
+      })
+      .onConflictDoNothing();
+
     return sendSuccess(
       res,
       {
         questId,
-        earnedXp: xpReward,
-        earnedCoins: coinsReward,
+        earnedXp: tx.alreadyProcessed ? 0 : tx.xpEarned,
+        earnedCoins: tx.alreadyProcessed ? 0 : tx.coinsEarned,
         totalXp: tx.totalXp,
-        totalCoins: tx.totalCoins
+        totalCoins: tx.totalCoins,
+        alreadyClaimed: tx.alreadyProcessed
       },
-      `Selamat! Hadiah misi berhasil diklaim (+${xpReward} EXP, +${coinsReward} Sinau Coin).`
+      tx.alreadyProcessed
+        ? "Hadiah misi ini telah diproses sebelumnya."
+        : `Selamat! Hadiah misi berhasil diklaim (+${xpReward} EXP, +${coinsReward} Sinau Coin).`
     );
   } catch (err) {
     if (err.statusCode === 401 || err.code === "AUTH_ERROR") {
