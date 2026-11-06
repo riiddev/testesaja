@@ -62,10 +62,6 @@ export function clearSessionToken() {
  */
 async function requestApi(endpoint, options = {}, requiresAuth = true) {
   const token = getSessionToken();
-  if (requiresAuth && !token) {
-    throw new AuthError("Sesi tidak ditemukan. Silakan masuk terlebih dahulu.");
-  }
-
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {})
@@ -81,6 +77,7 @@ async function requestApi(endpoint, options = {}, requiresAuth = true) {
   try {
     const res = await fetch(endpoint, {
       ...options,
+      credentials: "same-origin",
       headers,
       signal: controller.signal
     });
