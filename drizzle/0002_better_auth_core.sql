@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS "auth_verifications" (
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_auth_verifications_identifier" ON "auth_verifications" USING btree ("identifier");
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "auth_rate_limits" (
+CREATE TABLE IF NOT EXISTS "better_auth_rate_limits" (
   "id" text PRIMARY KEY NOT NULL,
   "key" varchar(255) NOT NULL UNIQUE,
   "count" integer DEFAULT 0 NOT NULL,
