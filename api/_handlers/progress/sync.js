@@ -1,19 +1,20 @@
 /**
  * POST /api/progress/sync
- * 
- * Batch processes offline-first Spaced Repetition (SRS) review updates.
- * STRICT SECURITY & IDEMPOTENCY:
- * - Each item must contain a unique `eventId`
- * - Skips previously recorded eventIds to prevent double counting
- * - Updates user stats, profile XP, and coins via server ledger
+ *
+ * Processes offline-first SRS events. Device submissions contain only the
+ * official word identifier and whether the answer was correct; all counts,
+ * mastery status, CEFR level, schedule, and rewards are derived on the server.
  */
-
 import { eq, and, sql } from "drizzle-orm";
 import { db, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreak } from "../../_lib/streak.js";
 import { REWARDS_CONFIG } from "../../_lib/rewardsConfig.js";
+import {
+  getOfficialWord,
+  OFFICIAL_SRS_INTERVALS
+} from "../../_lib/officialWordCatalog.js";
 import {
   sendSuccess,
   sendAuthError,
@@ -35,147 +36,174 @@ export default async function handler(req, res) {
     if (updates.length === 0) {
       return sendSuccess(res, { processedEvents: [], count: 0 }, "Tidak ada antrean progres.");
     }
+    if (updates.length > 25) {
+      return sendValidationError(res, "Satu batch sinkronisasi maksimal berisi 25 event.");
+    }
+
+    // Validate the full batch before any database writes.
+    const seenEventIds = new Set();
+    const validatedUpdates = [];
+
+    for (const item of updates) {
+      const eventId = String(item?.eventId || "").trim();
+      const wordId = String(item?.wordId || "").trim();
+      const officialWord = getOfficialWord(wordId);
+
+      if (!eventId || eventId.length > 140 || !/^[\x21-\x7e]+$/.test(eventId)) {
+        return sendValidationError(res, "ID event SRS tidak valid atau tidak tersedia.");
+      }
+      if (seenEventIds.has(eventId)) {
+        return sendValidationError(res, "Satu batch tidak boleh memuat event ID yang sama dua kali.");
+      }
+      if (!officialWord) {
+        return sendValidationError(res, `Kata '${wordId.slice(0, 80)}' tidak ditemukan dalam korpus Oxford 3000 resmi.`);
+      }
+      if (typeof item.isCorrect !== "boolean") {
+        return sendValidationError(res, "Status jawaban benar/salah harus disertakan untuk setiap event SRS.");
+      }
+
+      seenEventIds.add(eventId);
+      validatedUpdates.push({ eventId, wordId: officialWord.id, officialWord, isCorrect: item.isCorrect });
+    }
 
     const processedEvents = [];
     let xpGrantedTotal = 0;
     let coinsGrantedTotal = 0;
 
-    for (const item of updates) {
-      const eventId = String(item.eventId || "").trim();
-      const wordId = String(item.wordId || "").trim();
+    for (const item of validatedUpdates) {
+      const { eventId, wordId, officialWord, isCorrect } = item;
 
-      if (!wordId) continue;
-
-      const safeEventId = eventId || `srs_${user.id}_${wordId}_${Date.now()}`;
-
-      // 1. Idempotency Check in progress_events ledger
       const existingEvent = await db
         .select({ id: schema.progressEvents.id })
         .from(schema.progressEvents)
-        .where(
-          and(
-            eq(schema.progressEvents.userId, user.id),
-            eq(schema.progressEvents.eventId, safeEventId)
-          )
-        )
+        .where(and(
+          eq(schema.progressEvents.userId, user.id),
+          eq(schema.progressEvents.eventId, eventId)
+        ))
         .limit(1);
 
       if (existingEvent.length > 0) {
-        // Event already processed in a previous batch (e.g. network timeout retry)
-        processedEvents.push(safeEventId);
+        processedEvents.push(eventId);
         continue;
       }
 
-      // 2. Read existing progress first so the server can classify a genuinely
-      // first-seen word separately from a repeat SRS review.
       const existingWord = await db
         .select()
         .from(schema.progress)
-        .where(
-          and(
-            eq(schema.progress.userId, user.id),
-            eq(schema.progress.wordId, wordId)
-          )
-        )
+        .where(and(
+          eq(schema.progress.userId, user.id),
+          eq(schema.progress.wordId, wordId)
+        ))
         .limit(1);
 
+      const now = new Date();
       const isFirstTimeWord = existingWord.length === 0;
+      const currentCorrect = Number(existingWord[0]?.correctCount || 0);
+      const currentWrong = Number(existingWord[0]?.wrongCount || 0);
 
-      // 3. Record an idempotent server-owned activity classification.
+      // Counts are cumulative server state. Never trust client-supplied totals,
+      // masteryStage, intervalDays, CEFR level, or nextReviewAt.
+      const nextCorrect = isCorrect ? currentCorrect + 1 : Math.max(0, currentCorrect - 1);
+      const nextWrong = isCorrect ? currentWrong : currentWrong + 1;
+      const masteryStage = nextCorrect >= 5
+        ? "mastered"
+        : (isCorrect ? "learning" : "weak");
+      const intervalIndex = isCorrect
+        ? Math.min(Math.max(0, nextCorrect - 1), OFFICIAL_SRS_INTERVALS.length - 1)
+        : 0;
+      const intervalDays = OFFICIAL_SRS_INTERVALS[intervalIndex];
+      const nextReviewDate = new Date(now);
+      nextReviewDate.setDate(nextReviewDate.getDate() + intervalDays);
+      const isNewlyMastered = masteryStage === "mastered" &&
+        existingWord[0]?.masteryStage !== "mastered";
+      const activityType = isFirstTimeWord ? "vocab_learn" : "srs_review";
+
       await db.insert(schema.progressEvents).values({
         userId: user.id,
-        eventId: safeEventId,
-        activityType: isFirstTimeWord ? "vocab_learn" : "srs_review",
+        eventId,
+        activityType,
         payload: {
           wordId,
-          level: item.level || "A1",
-          masteryStage: item.masteryStage || "learning",
-          correctCount: item.correctCount || 0,
-          wrongCount: item.wrongCount || 0,
-          nextReviewAt: item.nextReviewAt || null
+          level: officialWord.level,
+          isCorrect,
+          masteryStage,
+          intervalDays,
+          correctCount: nextCorrect,
+          wrongCount: nextWrong,
+          nextReviewAt: nextReviewDate.toISOString()
         }
       });
-
-      // 4. Upsert Spaced Repetition Progress
-      const isNewlyMastered =
-        item.masteryStage === "mastered" &&
-        (!existingWord.length || existingWord[0].masteryStage !== "mastered");
-
-      const nextReviewDate = item.nextReviewAt ? new Date(item.nextReviewAt) : null;
-      const intervalDays = Math.max(1, parseInt(item.intervalDays, 10) || 1);
 
       if (isFirstTimeWord) {
         await db.insert(schema.progress).values({
           userId: user.id,
           wordId,
-          level: item.level || "A1",
-          masteryStage: item.masteryStage || "fresh",
+          level: officialWord.level,
+          masteryStage,
           intervalDays,
-          correctCount: item.correctCount || 0,
-          wrongCount: item.wrongCount || 0,
+          correctCount: nextCorrect,
+          wrongCount: nextWrong,
           nextReviewAt: nextReviewDate,
-          lastReviewedAt: new Date()
+          lastReviewedAt: now
         });
       } else {
         await db
           .update(schema.progress)
           .set({
-            level: item.level || existingWord[0].level,
-            masteryStage: item.masteryStage || existingWord[0].masteryStage,
+            level: officialWord.level,
+            masteryStage,
             intervalDays,
-            correctCount: item.correctCount !== undefined ? item.correctCount : existingWord[0].correctCount,
-            wrongCount: item.wrongCount !== undefined ? item.wrongCount : existingWord[0].wrongCount,
+            correctCount: nextCorrect,
+            wrongCount: nextWrong,
             nextReviewAt: nextReviewDate,
-            lastReviewedAt: new Date()
+            lastReviewedAt: now
           })
-          .where(
-            and(
-              eq(schema.progress.userId, user.id),
-              eq(schema.progress.wordId, wordId)
-            )
-          );
+          .where(and(
+            eq(schema.progress.userId, user.id),
+            eq(schema.progress.wordId, wordId)
+          ));
       }
 
-      // 4. Update User Stats
       const statUpdates = {
         totalReviews: sql`${schema.userStats.totalReviews} + 1`,
-        updatedAt: new Date()
+        updatedAt: now
       };
       if (isFirstTimeWord) {
         statUpdates.wordsStarted = sql`${schema.userStats.wordsStarted} + 1`;
       }
       if (isNewlyMastered) {
         statUpdates.wordsMastered = sql`${schema.userStats.wordsMastered} + 1`;
-        if (item.level === "B2") {
+        if (officialWord.level === "B2") {
           statUpdates.b2Mastered = sql`${schema.userStats.b2Mastered} + 1`;
         }
       }
 
-      await db
-        .update(schema.userStats)
+      await db.update(schema.userStats)
         .set(statUpdates)
         .where(eq(schema.userStats.userId, user.id));
 
-      // 5. Award Review Reward via Ledger
-      const rewardConfig = REWARDS_CONFIG.srs_review_word || { xp: 3, coins: 1 };
+      const rewardConfig = isFirstTimeWord
+        ? REWARDS_CONFIG.vocab_learn_word
+        : REWARDS_CONFIG.srs_review_word;
       const rewardTx = await recordLedgerTransaction({
         userId: user.id,
-        eventId: `srs_reward:${safeEventId}`,
-        source: "srs_review_word",
+        eventId: `srs_reward:${eventId}`,
+        source: activityType,
         xpEarned: rewardConfig.xp,
         coinsEarned: rewardConfig.coins
       });
 
       if (!rewardTx.alreadyProcessed) {
-        xpGrantedTotal += rewardConfig.xp;
-        coinsGrantedTotal += rewardConfig.coins;
+        xpGrantedTotal += rewardTx.xpEarned;
+        coinsGrantedTotal += rewardTx.coinsEarned;
       }
 
-      processedEvents.push(safeEventId);
+      processedEvents.push(eventId);
     }
 
-    // 6. Record streak for active learning day
-    const streakResult = await evaluateAndRecordStreak(user.id);
+    const streakResult = processedEvents.length > 0
+      ? await evaluateAndRecordStreak(user.id)
+      : null;
 
     return sendSuccess(
       res,
@@ -196,4 +224,3 @@ export default async function handler(req, res) {
     return sendServerError(res, "Gagal menyinkronkan progres belajar: " + err.message);
   }
 }
-

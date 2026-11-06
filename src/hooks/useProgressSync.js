@@ -210,12 +210,7 @@ export function useProgressSync() {
       eventId,
       userId,
       wordId,
-      level: updated.level,
-      correctCount: updated.correctCount,
-      wrongCount: updated.wrongCount,
-      masteryStage: updated.masteryStage,
-      intervalDays: updated.intervalDays,
-      nextReviewAt: updated.nextReviewAt,
+      isCorrect: Boolean(isCorrect),
       createdAt: new Date().toISOString()
     };
 
