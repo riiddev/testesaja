@@ -64,6 +64,7 @@ export default async function handler(req, res) {
         id: "sess_bridge_" + crypto.randomBytes(8).toString("hex"),
         userId: user.id,
         tokenHash: bridge.tokenHash,
+        authSessionId: authResult.session.id,
         expiresAt: safeExpiry
       });
 
