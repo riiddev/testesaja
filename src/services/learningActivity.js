@@ -23,6 +23,7 @@ export async function recordLearningActivity({
   wrongItems = [],
   questionsBreakdown = [],
   answers = [],
+  matchedPairs = [],
   meta = {}
 }) {
   let result = {
@@ -37,8 +38,7 @@ export async function recordLearningActivity({
     switch (activityType) {
       case "matching": {
         const res = await api.recordMatchingSession({
-          score,
-          total,
+          matchedPairs,
           durationSeconds,
           sessionId: refId || `match_${Date.now()}`
         });

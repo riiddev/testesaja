@@ -598,8 +598,8 @@ export const api = {
   },
 
   // Sentence Context Matching (Fase 6)
-  async recordMatchingSession({ score, total, durationSeconds, sessionId }) {
-    return request("recordMatchingSession", { score, total, durationSeconds, sessionId }, true);
+  async recordMatchingSession({ matchedPairs = [], durationSeconds, sessionId }) {
+    return request("recordMatchingSession", { matchedPairs, durationSeconds, sessionId }, true);
   },
 
   // Reading Comprehension Quiz (Fase 6)

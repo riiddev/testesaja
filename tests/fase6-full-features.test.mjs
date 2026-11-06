@@ -413,15 +413,48 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
   });
   await t.test("6. Matching & Reading Quiz: record sessions with mistake tracking", async () => {
     // 6a. Matching Round
-    const mockMatch = createMockReqRes({
+    const matchingVocabulary = JSON.parse(
+      fs.readFileSync(new URL("../src/data/vocabulary.json", import.meta.url), "utf8")
+    ).entries;
+    const officialPairs = matchingVocabulary.slice(0, 5).map((entry, index) => ({
+      leftId: `pair_${entry.id}_${index}`,
+      rightId: `pair_${entry.id}_${index}`,
+      wordId: entry.id
+    }));
+
+    const invalidMatch = createMockReqRes({
       method: "POST",
       token,
       url: "/api/matching/record",
-      body: { score: 100, total: 5, durationSeconds: 25, sessionId: `match_${Date.now()}` }
+      body: {
+        sessionId: `round_${Date.now()}_invalid`,
+        durationSeconds: 25,
+        matchedPairs: [{ leftId: "pair_forged_0", rightId: "pair_forged_0", wordId: "forged" }]
+      }
     });
-    await matchingRecordHandler(mockMatch.req, mockMatch.res);
-    assert.equal(mockMatch.getStatus(), 200);
-    assert.equal(mockMatch.getData().success, true);
+    await matchingRecordHandler(invalidMatch.req, invalidMatch.res);
+    assert.equal(invalidMatch.getStatus(), 400);
+
+    const matchingRewards = [];
+    for (let round = 0; round < 5; round++) {
+      const mockMatch = createMockReqRes({
+        method: "POST",
+        token,
+        url: "/api/matching/record",
+        body: {
+          sessionId: `round_${Date.now()}_${round}`,
+          durationSeconds: 25,
+          matchedPairs: officialPairs
+        }
+      });
+      await matchingRecordHandler(mockMatch.req, mockMatch.res);
+      assert.equal(mockMatch.getStatus(), 200);
+      assert.equal(mockMatch.getData().success, true);
+      matchingRewards.push(mockMatch.getData().data.earnedXp);
+    }
+
+    assert.deepEqual(matchingRewards.slice(0, 4), [25, 25, 25, 25]);
+    assert.equal(matchingRewards[4], 0, "Matching rewards must stop at the 100 EXP daily cap.");
 
     // 6b. Reading Quiz with mistake breakdown
     const readingQuizData = JSON.parse(

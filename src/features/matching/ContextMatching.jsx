@@ -97,7 +97,10 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
       // Trigger reward callback if round complete
       if (newMatched.length === roundData.totalPairs) {
         if (onRecordMatchComplete) {
-          onRecordMatchComplete({ score: score + 20, count: 5 });
+          onRecordMatchComplete({
+            roundId: roundData.roundId,
+            matchedPairs: newMatched
+          });
         }
       }
     } else {
