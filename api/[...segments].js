@@ -6,18 +6,6 @@
  * staying within the Vercel Hobby limit of 12 functions per deployment.
  */
 
-export const config = { api: { bodyParser: false } };
-
-let betterAuthHandlerPromise;
-
-async function getBetterAuthHandler() {
-  betterAuthHandlerPromise ??= Promise.all([
-    import("better-auth/node"),
-    import("./_lib/better-auth.js")
-  ]).then(([nodeAdapter, authModule]) => nodeAdapter.toNodeHandler(authModule.auth));
-  return betterAuthHandlerPromise;
-}
-
 const routeLoaders = {
   "/activity/history": () => import("./_handlers/activity/history.js"),
   "/activity/summary": () => import("./_handlers/activity/summary.js"),
@@ -98,11 +86,6 @@ export function resolveApiPath(req) {
 export default async function apiRouter(req, res) {
   const routePath = resolveApiPath(req);
   const loadHandler = routeLoaders[routePath];
-
-  if (!loadHandler && routePath.startsWith("/auth/")) {
-    const handler = await getBetterAuthHandler();
-    return handler(req, res);
-  }
 
   if (!loadHandler) {
     return res.status(404).json({
