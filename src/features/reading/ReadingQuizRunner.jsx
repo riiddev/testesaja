@@ -55,19 +55,9 @@ export function ReadingQuizRunner({
     // Record the complete quiz result through the dedicated server endpoint.
     // The server owns reward policy and idempotency; the client only submits answers.
     if (claimReward) {
-      const wrongQuestions = questions.filter((question) =>
-        selectedAnswers[question.id] !== question.correctIndex
-      );
-      const wrongItems = wrongQuestions.map((question) => question.targetWord || question.id);
-      const questionsBreakdown = questions.map((question) => ({
+      const answers = questions.map((question) => ({
         questionId: question.id,
-        category: question.category || "General Info",
-        subType: question.subType || "",
-        question: question.question,
-        selectedAnswer: selectedAnswers[question.id] ?? null,
-        correctAnswer: question.options?.[question.correctIndex] ?? "",
-        isCorrect: selectedAnswers[question.id] === question.correctIndex,
-        targetWord: question.targetWord || null
+        selectedIndex: selectedAnswers[question.id]
       }));
 
       try {
@@ -81,8 +71,7 @@ export function ReadingQuizRunner({
             correctCount,
             totalQuestions: questions.length,
             durationSeconds: Math.max(0, Math.round((Date.now() - quizStartedAt.current) / 1000)),
-            wrongItems,
-            questionsBreakdown
+            answers
           }
         });
 

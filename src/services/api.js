@@ -603,8 +603,8 @@ export const api = {
   },
 
   // Reading Comprehension Quiz (Fase 6)
-  async recordReadingQuiz({ articleId, articleTitle, score, total, durationSeconds, wrongItems = [], questionsBreakdown = [] }) {
-    return request("recordReadingQuiz", { articleId, articleTitle, score, total, durationSeconds, wrongItems, questionsBreakdown }, true);
+  async recordReadingQuiz({ articleId, articleTitle, durationSeconds, answers = [] }) {
+    return request("recordReadingQuiz", { articleId, articleTitle, durationSeconds, answers }, true);
   },
 
   // Practice History & 7-Day Trend (Butir F)

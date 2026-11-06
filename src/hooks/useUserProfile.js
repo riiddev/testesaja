@@ -425,8 +425,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
             score: Math.max(0, Number(meta.correctCount) || 0),
             total: Math.max(1, Number(meta.totalQuestions) || 1),
             durationSeconds: Math.max(0, Number(meta.durationSeconds) || 0),
-            wrongItems: Array.isArray(meta.wrongItems) ? meta.wrongItems : [],
-            questionsBreakdown: Array.isArray(meta.questionsBreakdown) ? meta.questionsBreakdown : []
+            answers: Array.isArray(meta.answers) ? meta.answers : []
           })
         : await api.grantReward({ eventId, source, refId, meta });
       if (res.success && res.data) {

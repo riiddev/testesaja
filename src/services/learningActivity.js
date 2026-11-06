@@ -22,6 +22,7 @@ export async function recordLearningActivity({
   durationSeconds = 0,
   wrongItems = [],
   questionsBreakdown = [],
+  answers = [],
   meta = {}
 }) {
   let result = {
@@ -78,11 +79,10 @@ export async function recordLearningActivity({
         const res = await api.recordReadingQuiz({
           articleId: refId,
           articleTitle: title,
-          score,
-          total,
+          articleId: refId,
+          articleTitle: title,
           durationSeconds,
-          wrongItems,
-          questionsBreakdown
+          answers
         });
         if (!res?.success) {
           throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");

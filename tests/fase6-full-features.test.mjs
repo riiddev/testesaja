@@ -13,6 +13,8 @@
  */
 
 import test from "node:test";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import "dotenv/config";
 import { eq, inArray } from "drizzle-orm";
@@ -326,22 +328,36 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(mockMatch.getData().success, true);
 
     // 6b. Reading Quiz with mistake breakdown
+    const readingQuizData = JSON.parse(
+      fs.readFileSync(new URL("../src/data/habit-reading-quizzes.json", import.meta.url), "utf8")
+    );
+    const articleId = "the-tiny-tenants-inside-you";
+    const officialQuestions = readingQuizData.quizzes[articleId].questions;
+    const answers = officialQuestions.map((question, index) => ({
+      questionId: question.id,
+      selectedIndex: index === 0
+        ? (question.correctIndex + 1) % question.options.length
+        : question.correctIndex
+    }));
+
     const mockQuiz = createMockReqRes({
       method: "POST",
       token,
       url: "/api/reading-quiz/record",
       body: {
-        articleId: "passage_science_space",
-        articleTitle: "Exploring the Solar System",
-        score: 4,
-        total: 5,
+        articleId,
         durationSeconds: 45,
-        wrongItems: ["gravity", "orbit"]
+        answers,
+        // Forged scores and wrongItems must be ignored by the API.
+        score: officialQuestions.length,
+        total: officialQuestions.length,
+        wrongItems: ["forged-item"]
       }
     });
     await readingQuizRecordHandler(mockQuiz.req, mockQuiz.res);
     assert.equal(mockQuiz.getStatus(), 200);
     assert.equal(mockQuiz.getData().success, true);
+    assert.equal(mockQuiz.getData().data.score, officialQuestions.length - 1);
   });
 
   await t.test("7. Activity History (Butir F): cursor pagination, filter, and 7-day summary", async () => {
@@ -360,7 +376,7 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     // Check wrongItems persisted in attemptDetails
     const quizItem = historyData.items.find((i) => i.activityType === "reading_quiz");
     assert.ok(quizItem, "Reading quiz item must be recorded in history");
-    assert.deepEqual(quizItem.wrongItems, ["gravity", "orbit"]);
+    assert.deepEqual(quizItem.wrongItems, ["q1"]);
 
     // 7b. Filter by module
     const mockFiltered = createMockReqRes({
