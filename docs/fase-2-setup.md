@@ -24,7 +24,8 @@
 5. Plan: Free.
 6. Region: AWS Singapore (ap-southeast-1).
 7. PostgreSQL version: pilih versi stabil yang tersedia (disarankan 17 jika tersedia di region itu).
-8. Buat project. Pertahankan default branch awal sebagai parent; jangan menjalankan schema migration terhadapnya.
+8. Pilih PostgreSQL saja. Jangan mengaktifkan Neon Managed Better Auth, Neon Data API, atau Object Storage pada setup awal. Autentikasi yang dipilih adalah Better Auth open-source yang akan dijalankan sendiri di Vercel pada Fase 3; avatar kecil tetap di PostgreSQL.
+9. Buat project. Pertahankan default branch awal sebagai parent; jangan menjalankan schema migration terhadapnya.
 
 ## B. Buat branch development
 
