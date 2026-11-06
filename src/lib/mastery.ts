@@ -77,12 +77,12 @@ export function isMastered(p: WordProgress): boolean {
   return Boolean(hasSkill && hasRepeat && !p.weak);
 }
 
-export function getWordStatus(p: WordProgress | undefined): WordStatus {
+export function getWordStatus(p: WordProgress | undefined, now: Date = new Date()): WordStatus {
   if (!p || (!p.firstSeenDate && (!p.attempts || p.attempts.length === 0))) {
     return "fresh";
   }
   if (p.weak) return "weak";
-  if (p.nextReviewAt && new Date(p.nextReviewAt).getTime() <= Date.now()) {
+  if (p.nextReviewAt && new Date(p.nextReviewAt).getTime() <= now.getTime()) {
     return "due";
   }
   if (isMastered(p)) return "mastered";
