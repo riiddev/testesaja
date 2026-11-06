@@ -405,3 +405,11 @@ File: `src/features/reading/ReadingQuizRunner.jsx:55-94`; `src/hooks/useUserProf
 - Temuan penting yang tetap terbuka: risiko atomicity SRS/ledger, Settings GET response mismatch, state/cache account-switch, refresh quest setelah SRS, false-success avatar/logout, achievement berbasis data lokal, dan coverage history.
 - Akar insiden production tidak dapat dipastikan tanpa deployment SHA, keberadaan Environment Variables (cukup cek ada/tidak; jangan bagikan nilainya), log runtime, dan row Neon yang relevan.
 - Tidak ada perubahan source aplikasi, tidak ada request tulis ke Neon/Sheets/Drive, tidak ada perubahan Vercel environment atau production.
+
+
+### I. Keputusan reset data legacy setelah Fase 0 (6 November 2026)
+- Pengguna memilih membuang akun dan data lama **hanya di Google Sheets**. Data atau akun di Neon tidak termasuk cakupan reset.
+- Tidak ada migrasi akun, hash password, progres, atau koleksi lama ke Neon. Pengguna baru akan membuat akun baru dari nol.
+- Pengosongan Sheets dijadwalkan pada Fase 7, setelah preview sepenuhnya berhenti membaca/menulis data pengguna melalui Apps Script. Tab dan header dipertahankan; baris data pada tab pengguna dihapus setelah inventarisasi, minimal `Accounts`, `LearningStates`, dan `Collections`.
+- Keputusan dan urutan aman ini telah dicatat di `docs/neon-migration-plan.md`.
+- **Pengosongan belum dilakukan.** Dalam sesi ini tidak tersedia koneksi langsung ke spreadsheet Google Sheets; tidak ada data Sheets atau Neon yang diubah.
