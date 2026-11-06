@@ -144,7 +144,7 @@ jobs:
             WHERE table_schema = 'public' AND table_name = 'users'
           `;
           const columns = new Map(userColumns.map((row) => [row.column_name, row.is_nullable]));
-          for (const name of ["updated_at", "email_verified", "image"]) {
+          for (const name of ["updated_at", "email_verified", "image", "password_hash", "auth_session_id"]) {
             if (!columns.has(name)) {
               console.error("Schema verification failed: a Better Auth user column is missing.");
               process.exit(1);
@@ -163,7 +163,7 @@ jobs:
           }
 
           console.log("Schema verification passed: all 23 application/auth tables exist.");
-          console.log("Schema verification passed: Better Auth user fields are present.");
+          console.log("Schema verification passed: Better Auth user fields and session bridge are present.");
           console.log("Data verification passed: all 11 original catalog entries remain.");
           NODE
 
@@ -176,5 +176,11 @@ jobs:
       - name: Build Vite client
         run: npm run build
 
-      - name: Run API, security and Better Auth database integration tests
-        run: npm run test:api
+      - name: Run legacy authentication regression tests
+        run: node tests/auth-api.test.mjs
+
+      - name: Run Better Auth database integration tests
+        run: node --test tests/better-auth-integration.test.mjs
+
+      - name: Run authentication and API security tests
+        run: node tests/security.test.mjs
