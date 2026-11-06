@@ -49,7 +49,11 @@ export function GrammarDetail({ topic, onBack, onStartQuiz, userProfileHook }) {
     throw new Error(res?.error || res?.message || "Gagal menyimpan hasil kuis Grammar.");
   };
 
-  const isMastered = topicProgress?.status === "mastered" || (topicProgress?.quizBest || 0) >= 80;
+  const storedScorePct = Number(topicProgress?.scorePct) ||
+    (topicProgress?.total ? Math.round((Number(topicProgress.score) / Number(topicProgress.total)) * 100) : 0);
+  const isMastered = topicProgress?.status === "completed" ||
+    topicProgress?.status === "mastered" ||
+    storedScorePct >= 80;
 
   return (
     <div className="grammar-deep-container" id="grammar-deep-detail-view">

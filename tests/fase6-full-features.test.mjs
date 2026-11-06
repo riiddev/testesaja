@@ -299,6 +299,12 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(mockForged.getData().data.scorePct, 0);
     assert.equal(mockForged.getData().data.status, "in_progress");
     assert.equal(mockForged.getData().data.xpEarned, 0);
+    const failedQuizActivity = await db.select().from(schema.activityLog)
+      .where(eq(schema.activityLog.userId, testUserId));
+    assert.ok(
+      failedQuizActivity.some((activity) => activity.activityType === "grammar" && activity.accuracyPercent === 0),
+      "A fully submitted quiz must be recorded even when it does not reach mastery"
+    );
 
     const correctAnswers = officialQuestions.map((question) => ({
       questionId: question.id,

@@ -135,23 +135,23 @@ export default async function handler(req, res) {
       }
     }
 
-    // Daily quest activity is recorded only for a server-verified passing quiz.
-    if (isCompleted) {
-      const activityId = `act_${user.id}_grammar_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      await db.insert(schema.activityLog).values({
-        id: activityId,
-        userId: user.id,
-        activityType: "grammar",
-        title: `Latihan Grammar: ${topicId}`.slice(0, 150),
-        score,
-        totalQuestions: total,
-        accuracyPercent: scorePct,
-        durationSeconds: 0,
-        xpEarned,
-        coinsEarned,
-        createdAt: now
-      });
-    }
+    // Every fully submitted quiz is a completed learning activity, even
+    // when its score is below the mastery threshold. Mastery and rewards are
+    // still controlled separately by the server-side 80% threshold.
+    const activityId = `act_${user.id}_grammar_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    await db.insert(schema.activityLog).values({
+      id: activityId,
+      userId: user.id,
+      activityType: "grammar",
+      title: `Latihan Grammar: ${topicId}`.slice(0, 150),
+      score,
+      totalQuestions: total,
+      accuracyPercent: scorePct,
+      durationSeconds: 0,
+      xpEarned,
+      coinsEarned,
+      createdAt: now
+    });
 
     const streakRes = await evaluateAndRecordStreak(user.id);
 
