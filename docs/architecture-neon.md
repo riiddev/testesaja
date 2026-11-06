@@ -144,7 +144,9 @@ Rencana:
 - Gunakan WebSocket/Pool hanya bila implementasi benar-benar memerlukan session atau interactive transaction. Jangan otomatis memaksa seluruh request melewati WebSocket.
 - Sebelum mengaktifkan transaksi pada Better Auth Drizzle adapter, verifikasi operasi transaksional yang benar-benar dipanggil versi Better Auth terpilih; jika membutuhkan `db.transaction()` interaktif, hubungkan adapter ke driver yang mendukungnya dan uji commit/rollback di Preview.
 - Operasi ekonomi/claim/pembelian harus berupa transaksi database atomik. Alternatifnya, satu statement SQL/function yang benar-benar atomik dapat digunakan untuk operasi tertentu. Jangan memecah ledger dan update saldo ke banyak request terpisah.
-- Gunakan pooled connection string dari Neon untuk koneksi runtime yang menggunakan protokol Postgres/PgBouncer. Gunakan koneksi direct untuk operasi administrasi/migrasi bila diperlukan.
+- Runtime Vercel hanya menerima `DATABASE_URL` pooled (hostname mengandung `-pooler`). Simpan URL ini sebagai Environment Variable Preview branch yang dipakai.
+- Simpan `DATABASE_URL_UNPOOLED` direct (hostname tanpa `-pooler`) hanya di environment lokal/CI migration yang memang membutuhkannya; jangan menaruh direct URL di Vercel Functions runtime.
+- Gunakan koneksi direct untuk Drizzle migrations, `pg_dump`, dan `pg_restore`; pooled connection dipakai untuk request aplikasi.
 - Jangan membuat koneksi database ketika build Vite berjalan. Inisialisasi hanya di runtime API.
 - Jangan mencetak `DATABASE_URL`, token, atau objek konfigurasi yang mengandung secret.
 

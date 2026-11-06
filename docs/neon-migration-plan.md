@@ -321,3 +321,16 @@ CATATAN STATUS PELAKSANAAN — 6 NOVEMBER 2026
 - Keputusan data: tidak memigrasikan akun/progres lama dari Google Sheets; reset hanya menyentuh Sheets pada Fase 7 setelah preview cutover; Neon tidak boleh dihapus atau dikosongkan.
 - Fase 2 belum dimulai. Belum ada Neon project/branch baru, Environment Variables yang diubah, migration database yang dijalankan, atau deployment Production yang dilakukan.
 - Main dan PR merge tetap menunggu keputusan eksplisit pengguna.
+
+
+==========================================================
+STATUS FASE 2 — 6 NOVEMBER 2026
+==========================================================
+- Pengguna menyetujui tujuh rekomendasi arsitektur Fase 1.
+- Pemeriksaan read-only Vercel menemukan project `sinauuenglish` di tim Hobby, terhubung ke repo `riiddev/testesaja`; Preview branch `feat/neon-migration` saat pemeriksaan berjalan di region `iad1`.
+- Konfigurasi repository `vercel.json` disiapkan untuk mengarahkan Function Preview ke Singapore `sin1`. Perubahan berlaku pada deployment dari branch ini; Production tidak disentuh.
+- Neon project/branch belum dapat dibuat atau diverifikasi melalui koneksi yang tersedia. Pemilik akun harus membuat/memilih project di Neon Console dan menyiapkan branch `development`.
+- Runtime memakai pooled `DATABASE_URL`; migration/backup memakai direct `DATABASE_URL_UNPOOLED`. Direct URL tidak disimpan pada Vercel runtime.
+- Environment Variables Vercel belum ditambahkan karena connection string Neon belum tersedia. Variable legacy `SINAI_APPS_SCRIPT_URL` tidak diubah.
+- Schema Drizzle, dua migration awal, seed katalog, dan skrip koneksi sudah tersedia sebelum Fase 2; konfigurasi migrasi/koneksi diperketat. Belum ada migration atau seed yang dijalankan pada database.
+- Lihat `docs/fase-2-setup.md` untuk checklist langkah manual, verifikasi, dan batas aman.

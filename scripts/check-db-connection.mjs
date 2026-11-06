@@ -1,67 +1,118 @@
 /**
- * SINAUENGLISH V2 — Secure Database Connection Checker
- * 
- * Verifies connectivity to Neon PostgreSQL via @neondatabase/serverless.
- * STRICT SECURITY: Never logs connection strings, passwords, or hostnames.
+ * SINAUENGLISH V2 — Secure Neon Connectivity Check
+ *
+ * Checks the pooled runtime URL and, when provided, the direct migration URL.
+ * Never prints connection strings, credentials, database hostnames, or raw
+ * driver error messages.
  */
 
 import "dotenv/config";
 import { neon } from "@neondatabase/serverless";
 
-async function checkConnection() {
-  const dbUrl = process.env.DATABASE_URL;
-
-  console.log("==================================================");
-  console.log("   SINAUENGLISH V2 — DB CONNECTION CHECKER        ");
-  console.log("==================================================");
-
-  if (!dbUrl) {
-    console.error("❌ STATUS: DATABASE_URL tidak ditemukan.");
-    console.error("   Petunjuk: Buat berkas '.env' di root folder dan isi:");
-    console.error("   DATABASE_URL=postgresql://[user]:[password]@[endpoint]-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require");
-    console.log("==================================================");
-    process.exit(1);
+const targets = [
+  {
+    label: "Runtime connection (pooled)",
+    url: process.env.DATABASE_URL,
+    required: true,
+    mustBePooled: true
+  },
+  {
+    label: "Migration/backup connection (direct)",
+    url: process.env.DATABASE_URL_UNPOOLED,
+    required: false,
+    mustBePooled: false
   }
+];
 
-  // Parse protocol to ensure it looks like postgresql://
-  if (!dbUrl.startsWith("postgres://") && !dbUrl.startsWith("postgresql://")) {
-    console.error("❌ STATUS: Format DATABASE_URL tidak valid (harus dimulai dengan postgresql:// atau postgres://).");
-    process.exit(1);
-  }
+function isPostgresUrl(value) {
+  return typeof value === "string" &&
+    (value.startsWith("postgres://") || value.startsWith("postgresql://"));
+}
 
-  console.log("🔄 Menghubungkan ke Neon PostgreSQL (Region Singapore)...");
-  const startTime = Date.now();
-
+function hasPoolerHostname(value) {
   try {
-    const sql = neon(dbUrl);
-    const result = await sql`SELECT current_database() as db_name, version() as version, NOW() as server_time`;
-    const latency = Date.now() - startTime;
-
-    const row = result[0] || {};
-    const dbName = row.db_name || "neondb";
-    const pgVersion = (row.version || "").split(" ")[1] || "PostgreSQL";
-    const serverTime = row.server_time ? new Date(row.server_time).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) : "WIB";
-
-    console.log("✓ STATUS: BERHASIL TERHUBUNG!");
-    console.log(`  - Database       : ${dbName}`);
-    console.log(`  - Versi Mesin    : PostgreSQL ${pgVersion}`);
-    console.log(`  - Waktu Server   : ${serverTime} WIB`);
-    console.log(`  - Latensi Jaringan: ${latency} ms`);
-    console.log("==================================================");
-    console.log("🎉 Koneksi database Neon siap digunakan untuk migrasi!");
-  } catch (err) {
-    console.error("❌ STATUS: GAGAL TERHUBUNG KE DATABASE.");
-    // Filter out any potential sensitive string from error message
-    let safeMessage = err.message || "Unknown error";
-    if (dbUrl.includes("@")) {
-      const sensitivePart = dbUrl.split("@")[0];
-      safeMessage = safeMessage.replaceAll(sensitivePart, "[REDACTED_CREDENTIALS]");
-    }
-    console.error(`  - Pesan Error   : ${safeMessage}`);
-    console.error("  - Kemungkinan   : Endpoint sedang scale-to-zero (coba ulangi), kata sandi salah, atau SSL belum aktif.");
-    console.log("==================================================");
-    process.exit(1);
+    return new URL(value).hostname.includes("-pooler");
+  } catch {
+    return false;
   }
 }
 
-checkConnection();
+async function checkTarget(target) {
+  if (!target.url) {
+    const status = target.required ? "MISSING" : "NOT SET (optional)";
+    console.log("  - " + target.label + ": " + status);
+    return target.required ? false : true;
+  }
+
+  if (!isPostgresUrl(target.url)) {
+    console.error("  - " + target.label + ": INVALID URL FORMAT");
+    return false;
+  }
+
+  const pooled = hasPoolerHostname(target.url);
+  if (target.mustBePooled && !pooled) {
+    console.error("  - " + target.label + ": EXPECTED A POOLED URL (-pooler hostname)");
+    return false;
+  }
+  if (!target.mustBePooled && pooled) {
+    console.error("  - " + target.label + ": EXPECTED A DIRECT URL (hostname without -pooler)");
+    return false;
+  }
+
+  const startedAt = Date.now();
+
+  try {
+    const sql = neon(target.url);
+    const result = await sql`SELECT 1::int AS ok, current_setting('server_version_num') AS version_num`;
+    const row = result[0] || {};
+
+    if (Number(row.ok) !== 1) {
+      console.error("  - " + target.label + ": UNEXPECTED QUERY RESULT");
+      return false;
+    }
+
+    const elapsed = Date.now() - startedAt;
+    const versionNum = String(row.version_num || "");
+    const major = versionNum.length >= 2 ? versionNum.slice(0, 2) : "unknown";
+
+    console.log("  - " + target.label + ": CONNECTED");
+    console.log("      PostgreSQL major: " + major);
+    console.log("      Round-trip: " + elapsed + " ms");
+    return true;
+  } catch (error) {
+    // Driver error messages can contain endpoint or connection details.
+    const safeCode = typeof error?.code === "string"
+      ? error.code.replace(/[^A-Z0-9_]/gi, "").slice(0, 32)
+      : "CONNECTION_FAILED";
+    console.error("  - " + target.label + ": FAILED (" + safeCode + ")");
+    return false;
+  }
+}
+
+async function main() {
+  console.log("SINAUENGLISH V2 — NEON CONNECTION CHECK");
+  console.log("No connection details or credentials will be printed.");
+
+  let success = true;
+  for (const target of targets) {
+    const current = await checkTarget(target);
+    if (!current) success = false;
+  }
+
+  if (!process.env.DATABASE_URL_UNPOOLED) {
+    console.log("  NOTE: Set DATABASE_URL_UNPOOLED before running db:migrate or pg_dump.");
+  }
+
+  if (!success) {
+    console.error("RESULT: CONNECTION CHECK FAILED");
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log("RESULT: ALL CONFIGURED CONNECTIONS PASSED");
+}
+
+main().catch(() => {
+  console.error("RESULT: CHECKER FAILED (UNEXPECTED_ERROR)");
+  process.exitCode = 1;
+});
