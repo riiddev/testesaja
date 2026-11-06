@@ -4,7 +4,7 @@
  * supplied progress/target values.
  */
 
-import { and, count, eq, gte, lt } from "drizzle-orm";
+import { and, count, eq, gte, inArray, lt } from "drizzle-orm";
 import { generateDailyQuests } from "../../src/features/missions/missionsEngine.js";
 import { db, schema } from "../../db/index.js";
 
@@ -74,7 +74,7 @@ export async function calculateDailyQuestProgress({ userId, quest, dateStr }) {
         schema.activityLog,
         and(
           eq(schema.activityLog.userId, userId),
-          eq(schema.activityLog.activityType, "reading_quiz"),
+          inArray(schema.activityLog.activityType, ["reading_quiz", "reading_complete"]),
           gte(schema.activityLog.createdAt, start),
           lt(schema.activityLog.createdAt, end)
         )

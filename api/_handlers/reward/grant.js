@@ -11,6 +11,7 @@ import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreak } from "../../_lib/streak.js";
 import { REWARDS_CONFIG } from "../../_lib/rewardsConfig.js";
+import habitReadingLibrary from "../../../src/data/habit-reading-library.json" with { type: "json" };
 import {
   sendSuccess,
   sendAuthError,
@@ -38,12 +39,18 @@ export default async function handler(req, res) {
     let xpAmount = 0;
     let coinsAmount = 0;
     let isHabitReading = false;
+    let officialArticleTitle = "";
 
     // 1. Determine Reward Policy by Activity Source
     switch (source) {
       case "reading_reward":
       case "reading_complete": {
         if (!refId) return sendValidationError(res, "Parameter refId (articleId) wajib disertakan untuk membaca.");
+        const officialArticle = habitReadingLibrary.passages?.find((passage) => passage.id === refId);
+        if (!officialArticle) {
+          return sendValidationError(res, "Artikel tidak ditemukan dalam perpustakaan HABIT resmi.");
+        }
+        officialArticleTitle = officialArticle.title;
         deterministicEventId = `reading:${refId}:first_complete`;
         xpAmount = REWARDS_CONFIG.reading_first_complete.xp;
         coinsAmount = REWARDS_CONFIG.reading_first_complete.coins;

@@ -14,6 +14,34 @@ export function ReadingLibrary({ passages = [], onRecordWordReview, userProfileH
   const [selectedPassage, setSelectedPassage] = useState(null);
   const [activeQuizPassage, setActiveQuizPassage] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
+  const [readingFeedback, setReadingFeedback] = useState(null);
+
+  const handleFinishReading = async () => {
+    if (userProfileHook?.claimReward) {
+      const result = await userProfileHook.claimReward({
+        eventId: `reading:${selectedPassage.id}:first_complete`,
+        source: "reading_complete",
+        refId: selectedPassage.id,
+        meta: {
+          articleTitle: selectedPassage.title,
+          durationSeconds: selectedPassage.estimatedMinutes
+            ? Number(selectedPassage.estimatedMinutes) * 60
+            : 0
+        }
+      });
+
+      if (!result?.success) {
+        setReadingFeedback(result?.error || "Bacaan belum berhasil dicatat. Coba lagi.");
+        return;
+      }
+
+      setReadingFeedback(result.alreadyRewarded
+        ? "Bacaan ini sudah pernah diselesaikan. Tidak ada hadiah tambahan."
+        : `Bacaan tersimpan: +${result.earnedXp} EXP dan +${result.earnedCoins} Koin Sinau.`);
+    }
+
+    setSelectedPassage(null);
+  };
 
   const categories = ["all", "Science", "Culture", "History", "Technology", "Society"];
 
@@ -31,6 +59,19 @@ export function ReadingLibrary({ passages = [], onRecordWordReview, userProfileH
         <p className="section-desc">
           Tingkatkan kecepatan membaca, perluas konteks kosakata, dan uji pemahaman analitis melalui kuis komprehensif 4 dimensi.
         </p>
+
+        {readingFeedback && (
+          <div role="status" aria-live="polite" style={{
+            marginBottom: "var(--space-3)",
+            padding: "var(--space-3) var(--space-4)",
+            borderRadius: "var(--radius-md)",
+            background: "var(--color-bg-surface)",
+            color: "var(--color-text-secondary)",
+            fontSize: "var(--text-sm)"
+          }}>
+            {readingFeedback}
+          </div>
+        )}
 
         {/* Filter categories */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
@@ -71,7 +112,10 @@ export function ReadingLibrary({ passages = [], onRecordWordReview, userProfileH
           return (
             <div
               key={p.id}
-              onClick={() => setSelectedPassage(p)}
+              onClick={() => {
+                setReadingFeedback(null);
+                setSelectedPassage(p);
+              }}
               className="card card-interactive"
               id={`passage-card-${p.id}`}
               style={{
@@ -176,7 +220,7 @@ export function ReadingLibrary({ passages = [], onRecordWordReview, userProfileH
           >
             <Button
               variant="outline"
-              onClick={() => setSelectedPassage(null)}
+              onClick={handleFinishReading}
               id="finish-reading-btn"
             >
               <>Selesai Membaca <IconCheck size={13} style={{ marginLeft: 4 }} /></>
@@ -185,7 +229,7 @@ export function ReadingLibrary({ passages = [], onRecordWordReview, userProfileH
             {availableQuizzes[selectedPassage.id] ? (
               <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
                 <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)", fontWeight: 700 }}>
-                  <IconGift size={13} style={{ marginRight: 4 }} /> Hadiah pertama: +35 EXP · +15 Koin
+                  <IconGift size={13} style={{ marginRight: 4 }} /> Hadiah kuis pertama: +35 EXP · +15 Koin
                 </span>
                 <button
                   type="button"

@@ -36,8 +36,8 @@ import storyCompleteHandler from "../api/_handlers/story/complete.js";
 import matchingRecordHandler from "../api/_handlers/matching/record.js";
 import readingQuizRecordHandler from "../api/_handlers/reading-quiz/record.js";
 import rewardGrantHandler from "../api/_handlers/reward/grant.js";
-import activityHistoryHandler from "../api/activity/history.js";
-import activitySummaryHandler from "../api/activity/summary.js";
+import activityHistoryHandler from "../api/_handlers/activity/history.js";
+import activitySummaryHandler from "../api/_handlers/activity/summary.js";
 
 function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {
   const req = {
@@ -487,6 +487,60 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(mockQuiz.getStatus(), 200);
     assert.equal(mockQuiz.getData().success, true);
     assert.equal(mockQuiz.getData().data.score, officialQuestions.length - 1);
+  });
+
+  await t.test("7. HABIT Reading completion: records one server-backed activity and reward", async () => {
+    const forgedArticle = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reward/grant",
+      body: {
+        source: "reading_complete",
+        refId: "invented-article-id",
+        meta: { articleTitle: "Fake reading article" }
+      }
+    });
+    await rewardGrantHandler(forgedArticle.req, forgedArticle.res);
+    assert.equal(forgedArticle.getStatus(), 400);
+    assert.match(forgedArticle.getData().error, /perpustakaan HABIT resmi/i);
+
+    const articleId = "the-tiny-tenants-inside-you";
+    const mockComplete = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reward/grant",
+      body: {
+        source: "reading_complete",
+        refId: articleId,
+        eventId: "client-event-is-not-authoritative",
+        meta: { articleTitle: "The Tiny Tenants Inside You", durationSeconds: 180 }
+      }
+    });
+
+    await rewardGrantHandler(mockComplete.req, mockComplete.res);
+    assert.equal(mockComplete.getStatus(), 200);
+    assert.equal(mockComplete.getData().success, true);
+    assert.equal(mockComplete.getData().data.earnedXp, 40);
+    assert.equal(mockComplete.getData().data.earnedCoins, 20);
+
+    const readingActivities = await db.select().from(schema.activityLog)
+      .where(eq(schema.activityLog.userId, testUserId));
+    assert.ok(readingActivities.some((activity) =>
+      activity.activityType === "reading_complete" &&
+      activity.title.includes("The Tiny Tenants Inside You") &&
+      activity.accuracyPercent === 100
+    ));
+
+    const duplicateComplete = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reward/grant",
+      body: { source: "reading_complete", refId: articleId }
+    });
+    await rewardGrantHandler(duplicateComplete.req, duplicateComplete.res);
+    assert.equal(duplicateComplete.getStatus(), 200);
+    assert.equal(duplicateComplete.getData().data.alreadyRewarded, true);
+    assert.equal(duplicateComplete.getData().data.earnedXp, 0);
   });
 
   await t.test("7. Activity History (Butir F): cursor pagination, filter, and 7-day summary", async () => {
