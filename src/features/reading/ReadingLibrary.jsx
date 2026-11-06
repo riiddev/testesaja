@@ -185,7 +185,7 @@ export function ReadingLibrary({ passages = [], onRecordWordReview, userProfileH
             {availableQuizzes[selectedPassage.id] ? (
               <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
                 <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)", fontWeight: 700 }}>
-                  <IconGift size={13} style={{ marginRight: 4 }} /> Hadiah: +30 EXP · +20 Koin
+                  <IconGift size={13} style={{ marginRight: 4 }} /> Hadiah pertama: +35 EXP · +15 Koin
                 </span>
                 <button
                   type="button"
