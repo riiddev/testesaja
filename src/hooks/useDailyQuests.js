@@ -114,11 +114,11 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
   // Claim quest reward (Server validates completion & double claim)
   const claimReward = useCallback(async (questId) => {
     const quest = quests.find((q) => q.id === questId);
-    if (!quest || !quest.isCompleted || quest.isClaimed) return;
+    if (!quest || !quest.isCompleted || quest.isClaimed) return false;
 
     if (!isAuthenticated) {
       alert("Silakan masuk akun terlebih dahulu untuk mengklaim hadiah misi.");
-      return;
+      return false;
     }
 
     try {
@@ -126,6 +126,10 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
         questId,
         dateStr: todayStr
       });
+
+      if (!res?.success || !res.data) {
+        throw new Error(res?.error || res?.message || "Server belum mengonfirmasi klaim hadiah.");
+      }
 
       if (res.success && res.data) {
         const now = new Date().toISOString();
@@ -154,10 +158,14 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
             coins: res.data.earnedCoins
           });
         }
+        return true;
       }
+
+      return false;
     } catch (err) {
       console.warn("[DailyQuests] Gagal mengklaim misi:", err.message);
       alert(err.message || "Gagal mengklaim hadiah misi.");
+      return false;
     }
   }, [quests, todayStr, storageKey, isAuthenticated, onRewardClaimed]);
 

@@ -16,8 +16,8 @@ import { eq, and } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
 import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
 
-import progressGetHandler from "../api/progress/get.js";
-import progressSyncHandler from "../api/progress/sync.js";
+import progressGetHandler from "../api/_handlers/progress/get.js";
+import progressSyncHandler from "../api/_handlers/progress/sync.js";
 
 function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {
   const req = {

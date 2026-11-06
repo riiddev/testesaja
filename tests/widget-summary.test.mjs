@@ -9,8 +9,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "dotenv/config";
 import { neon } from "@neondatabase/serverless";
-import widgetSummaryHandler from "../api/widget/summary.js";
-import authRegisterHandler from "../api/auth/register.js";
+import widgetSummaryHandler from "../api/_handlers/widget/summary.js";
+import authRegisterHandler from "../api/_handlers/auth/register.js";
 import { getWibDateStr } from "../api/_lib/wibDate.js";
 function mockReq({ method = "GET", headers = {}, body = {}, query = {} } = {}) {
   return {

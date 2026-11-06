@@ -20,19 +20,19 @@ import { db, schema } from "../db/index.js";
 import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
 
 // Handler imports
-import settingsGetHandler from "../api/settings/get.js";
-import settingsUpdateHandler from "../api/settings/update.js";
-import avatarUploadHandler from "../api/avatar/upload.js";
-import avatarGetHandler from "../api/avatar/get.js";
-import avatarDeleteHandler from "../api/avatar/delete.js";
-import titlesGetHandler from "../api/titles/get.js";
-import titlesUnlockHandler from "../api/titles/unlock.js";
-import grammarGetHandler from "../api/grammar/get.js";
-import grammarSaveHandler from "../api/grammar/save.js";
-import storyGetHandler from "../api/story/get.js";
-import storyCompleteHandler from "../api/story/complete.js";
-import matchingRecordHandler from "../api/matching/record.js";
-import readingQuizRecordHandler from "../api/reading-quiz/record.js";
+import settingsGetHandler from "../api/_handlers/settings/get.js";
+import settingsUpdateHandler from "../api/_handlers/settings/update.js";
+import avatarUploadHandler from "../api/_handlers/avatar/upload.js";
+import avatarGetHandler from "../api/_handlers/avatar/get.js";
+import avatarDeleteHandler from "../api/_handlers/avatar/delete.js";
+import titlesGetHandler from "../api/_handlers/titles/get.js";
+import titlesUnlockHandler from "../api/_handlers/titles/unlock.js";
+import grammarGetHandler from "../api/_handlers/grammar/get.js";
+import grammarSaveHandler from "../api/_handlers/grammar/save.js";
+import storyGetHandler from "../api/_handlers/story/get.js";
+import storyCompleteHandler from "../api/_handlers/story/complete.js";
+import matchingRecordHandler from "../api/_handlers/matching/record.js";
+import readingQuizRecordHandler from "../api/_handlers/reading-quiz/record.js";
 import activityHistoryHandler from "../api/activity/history.js";
 import activitySummaryHandler from "../api/activity/summary.js";
 

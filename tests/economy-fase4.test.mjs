@@ -20,16 +20,16 @@ import { evaluateAndRecordStreak } from "../api/_lib/streak.js";
 import { recordLedgerTransaction } from "../api/_lib/ledger.js";
 import { getWibDateStr, getWibYesterdayStr } from "../api/_lib/wibDate.js";
 
-import profileGetHandler from "../api/profile/get.js";
-import profileUpdateHandler from "../api/profile/update.js";
-import catalogHandler from "../api/economy/catalog.js";
-import inventoryHandler from "../api/economy/inventory.js";
-import buyHandler from "../api/economy/buy.js";
-import equipHandler from "../api/economy/equip.js";
-import grantHandler from "../api/reward/grant.js";
-import questsGetHandler from "../api/quests/get.js";
-import questsUpdateHandler from "../api/quests/update.js";
-import questsClaimHandler from "../api/quests/claim.js";
+import profileGetHandler from "../api/_handlers/profile/get.js";
+import profileUpdateHandler from "../api/_handlers/profile/update.js";
+import catalogHandler from "../api/_handlers/economy/catalog.js";
+import inventoryHandler from "../api/_handlers/economy/inventory.js";
+import buyHandler from "../api/_handlers/economy/buy.js";
+import equipHandler from "../api/_handlers/economy/equip.js";
+import grantHandler from "../api/_handlers/reward/grant.js";
+import questsGetHandler from "../api/_handlers/quests/get.js";
+import questsUpdateHandler from "../api/_handlers/quests/update.js";
+import questsClaimHandler from "../api/_handlers/quests/claim.js";
 
 // Helper to simulate request / response
 function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {

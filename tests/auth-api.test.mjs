@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
-import registerHandler from "../api/auth/register.js";
-import loginHandler from "../api/auth/login.js";
-import meHandler from "../api/auth/me.js";
-import logoutHandler from "../api/auth/logout.js";
+import registerHandler from "../api/_handlers/auth/register.js";
+import loginHandler from "../api/_handlers/auth/login.js";
+import meHandler from "../api/_handlers/auth/me.js";
+import logoutHandler from "../api/_handlers/auth/logout.js";
 
 // Helper to mock request and response for testing serverless handlers
 function createMockReqRes({ method = "GET", body = {}, headers = {} }) {

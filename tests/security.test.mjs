@@ -22,14 +22,14 @@ import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
 import { recordLedgerTransaction } from "../api/_lib/ledger.js";
 
 // Handler imports
-import loginHandler from "../api/auth/login.js";
-import profileUpdateHandler from "../api/profile/update.js";
-import profileGetHandler from "../api/profile/get.js";
-import questsGetHandler from "../api/quests/get.js";
-import questsUpdateHandler from "../api/quests/update.js";
-import questsClaimHandler from "../api/quests/claim.js";
-import buyItemHandler from "../api/economy/buy.js";
-import progressGetHandler from "../api/progress/get.js";
+import loginHandler from "../api/_handlers/auth/login.js";
+import profileUpdateHandler from "../api/_handlers/profile/update.js";
+import profileGetHandler from "../api/_handlers/profile/get.js";
+import questsGetHandler from "../api/_handlers/quests/get.js";
+import questsUpdateHandler from "../api/_handlers/quests/update.js";
+import questsClaimHandler from "../api/_handlers/quests/claim.js";
+import buyItemHandler from "../api/_handlers/economy/buy.js";
+import progressGetHandler from "../api/_handlers/progress/get.js";
 
 function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {
   const req = {

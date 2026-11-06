@@ -41,6 +41,9 @@ export async function recordLearningActivity({
           durationSeconds,
           sessionId: refId || `match_${Date.now()}`
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.earnedXp || 0;
           result.earnedCoins = res.data.earnedCoins || 0;
@@ -62,6 +65,9 @@ export async function recordLearningActivity({
           total,
           practiceDone: score >= Math.ceil(total * 0.7)
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.xpEarned || 0;
           result.earnedCoins = res.data.coinsEarned || 0;
@@ -86,6 +92,9 @@ export async function recordLearningActivity({
           wrongItems,
           questionsBreakdown
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.earnedXp || 0;
           result.earnedCoins = res.data.earnedCoins || 0;
@@ -107,6 +116,9 @@ export async function recordLearningActivity({
           refId,
           meta
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.earnedXp || 0;
           result.earnedCoins = res.data.earnedCoins || 0;
@@ -128,6 +140,9 @@ export async function recordLearningActivity({
           episodeId: meta.episodeId || 1,
           totalEpisodes: meta.totalEpisodes || 5
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.earnedXp || 0;
           result.earnedCoins = res.data.earnedCoins || 0;
@@ -143,12 +158,16 @@ export async function recordLearningActivity({
       }
 
       default: {
-        console.warn(`[LearningActivity] Tipe aktivitas '${activityType}' tidak dikenal.`);
+        const error = `Tipe aktivitas '${activityType}' tidak dikenal.`;
+        console.warn(`[LearningActivity] ${error}`);
+        result.success = false;
+        result.error = error;
       }
     }
   } catch (err) {
     console.warn(`[LearningActivity] Gagal mencatat ${activityType}:`, err.message);
-    result.error = err.message;
+    result.success = false;
+    result.error = err.message || "Gagal mencatat aktivitas belajar.";
   }
 
   return result;
