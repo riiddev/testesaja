@@ -76,10 +76,23 @@ test("Better Auth sign-up, /me compatibility bridge, sign-in and logout", async 
     });
     assert.equal(session?.user?.id, userId, "sign-up cookie must resolve to the new user");
 
+    const signin = await auth.api.signInEmail({
+      returnHeaders: true,
+      body: { email, password }
+    });
+    assert.equal(signin.response.user.id, userId, "email/password sign-in must resolve the same user");
+
+    const signinCookie = cookieHeader(signin.headers);
+    assert.ok(signinCookie, "sign-in must return a session cookie");
+    const signinSession = await auth.api.getSession({
+      headers: new Headers({ cookie: signinCookie })
+    });
+    assert.equal(signinSession?.user?.id, userId);
+
     const meReq = {
       method: "GET",
       url: "/api/auth/me",
-      headers: { cookie: signupCookie }
+      headers: { cookie: signinCookie }
     };
     const meRes = createMockResponse();
     await meHandler(meReq, meRes);
@@ -114,18 +127,6 @@ test("Better Auth sign-up, /me compatibility bridge, sign-in and logout", async 
     assert.equal(statsRows.length, 1, "new Better Auth users must receive app statistics");
     assert.equal(settingsRows.length, 1, "new Better Auth users must receive app settings");
 
-    const signin = await auth.api.signInEmail({
-      returnHeaders: true,
-      body: { email, password }
-    });
-    assert.equal(signin.response.user.id, userId, "email/password sign-in must resolve the same user");
-
-    const signinCookie = cookieHeader(signin.headers);
-    assert.ok(signinCookie, "sign-in must return a session cookie");
-    const signinSession = await auth.api.getSession({
-      headers: new Headers({ cookie: signinCookie })
-    });
-    assert.equal(signinSession?.user?.id, userId);
 
     await auth.api.signOut({
       headers: new Headers({ cookie: signinCookie })
