@@ -13,19 +13,22 @@ test("Word status progression: fresh -> learning -> mastered", () => {
   const p = ensureWordProgress(map, "word-1");
   assert.equal(getWordStatus(p), "fresh");
 
-  // First review success
-  calculateNextReview(p, true, new Date("2026-11-04T12:00:00Z"));
+  // First review success: evaluate against the same fixed clock as the review.
+  const firstReviewAt = new Date("2026-11-04T12:00:00Z");
+  calculateNextReview(p, true, firstReviewAt);
   assert.equal(p.reviewSuccesses, 1);
   assert.equal(p.firstSeenDate, "2026-11-04");
-  assert.equal(getWordStatus(p), "learning");
+  assert.equal(getWordStatus(p, firstReviewAt), "learning");
+  assert.equal(getWordStatus(p, new Date("2026-11-05T12:00:00Z")), "due");
 
   // Second review success with skill evidence
   p.skillEvidence.recall = true;
   p.skillEvidence.context = true;
-  calculateNextReview(p, true, new Date("2026-11-05T12:00:00Z"));
+  const secondReviewAt = new Date("2026-11-05T12:00:00Z");
+  calculateNextReview(p, true, secondReviewAt);
   assert.equal(p.reviewSuccesses, 2);
   assert.equal(isMastered(p), true);
-  assert.equal(getWordStatus(p), "mastered");
+  assert.equal(getWordStatus(p, secondReviewAt), "mastered");
 });
 
 test("Word error triggers weak state and 1-day reset interval", () => {
