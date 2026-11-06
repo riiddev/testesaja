@@ -3,11 +3,8 @@
  */
 
 import crypto from "crypto";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, sql } from "drizzle-orm";
 import { db, schema } from "../../db/index.js";
-
-// In-memory rate limiting map for login protection (per IP or email)
-const rateLimitMap = new Map();
 
 /**
  * Hash password securely using Node.js crypto.scrypt with a random 16-byte salt
@@ -80,31 +77,65 @@ export function hashToken(rawToken) {
 }
 
 /**
- * Rate limit check for login attempts (5 attempts per 15 minutes)
+ * Persistent, shared rate limit for login attempts (default: 5 per 15 minutes).
+ * The key is SHA-256 hashed before storage, so raw IP/email values are not kept.
+ * PostgreSQL UPSERT serializes concurrent attempts across serverless instances.
  */
-export function checkLoginRateLimit(key, maxAttempts = 5, windowMs = 15 * 60 * 1000) {
-  const now = Date.now();
-  const record = rateLimitMap.get(key);
-
-  if (!record || now - record.startTime > windowMs) {
-    rateLimitMap.set(key, { count: 1, startTime: now });
-    return { allowed: true };
-  }
-
-  if (record.count >= maxAttempts) {
-    const remainingSeconds = Math.ceil((record.startTime + windowMs - now) / 1000);
-    return { allowed: false, remainingSeconds };
-  }
-
-  record.count += 1;
-  return { allowed: true };
+function hashRateLimitKey(key) {
+  return crypto.createHash("sha256").update(String(key)).digest("hex");
 }
 
-/**
- * Clear rate limit on successful authentication
- */
-export function clearLoginRateLimit(key) {
-  rateLimitMap.delete(key);
+export async function checkLoginRateLimit(key, maxAttempts = 5, windowMs = 15 * 60 * 1000) {
+  const now = new Date();
+  const resetBefore = new Date(now.getTime() - windowMs);
+  const keyHash = hashRateLimitKey(key);
+
+  const rows = await db
+    .insert(schema.authRateLimits)
+    .values({
+      keyHash,
+      windowStartedAt: now,
+      attemptCount: 1,
+      updatedAt: now
+    })
+    .onConflictDoUpdate({
+      target: schema.authRateLimits.keyHash,
+      set: {
+        windowStartedAt: sql`CASE
+          WHEN ${schema.authRateLimits.windowStartedAt} <= ${resetBefore}
+          THEN ${now}
+          ELSE ${schema.authRateLimits.windowStartedAt}
+        END`,
+        attemptCount: sql`CASE
+          WHEN ${schema.authRateLimits.windowStartedAt} <= ${resetBefore}
+          THEN 1
+          ELSE ${schema.authRateLimits.attemptCount} + 1
+        END`,
+        updatedAt: now
+      }
+    })
+    .returning({
+      windowStartedAt: schema.authRateLimits.windowStartedAt,
+      attemptCount: schema.authRateLimits.attemptCount
+    });
+
+  const record = rows[0];
+  const allowed = Number(record?.attemptCount || 0) <= maxAttempts;
+  const startedAt = record?.windowStartedAt instanceof Date
+    ? record.windowStartedAt.getTime()
+    : new Date(record?.windowStartedAt || now).getTime();
+  const remainingSeconds = Math.max(
+    0,
+    Math.ceil((startedAt + windowMs - now.getTime()) / 1000)
+  );
+
+  return allowed ? { allowed: true } : { allowed: false, remainingSeconds };
+}
+
+/** Clear the persistent login window after successful authentication. */
+export async function clearLoginRateLimit(key) {
+  await db.delete(schema.authRateLimits)
+    .where(eq(schema.authRateLimits.keyHash, hashRateLimitKey(key)));
 }
 
 /**

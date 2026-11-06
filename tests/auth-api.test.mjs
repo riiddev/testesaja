@@ -118,6 +118,26 @@ test("AUTH SUITE — Reject duplicate email registration", async () => {
   assert.equal(res.body.status, "VALIDATION_ERROR");
 });
 
+test("AUTH SUITE — Persistent login rate limit blocks the sixth attempt", async () => {
+  const uniqueEmail = `rate_limit_${Date.now()}@sinauenglish.test`;
+  const requestLogin = async () => {
+    const { req, res } = createMockReqRes({
+      method: "POST",
+      body: { email: uniqueEmail, password: "WrongPassword123!" }
+    });
+    await loginHandler(req, res);
+    return res;
+  };
+
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const response = await requestLogin();
+    assert.equal(response.statusCode, 401, `Attempt ${attempt} should reach credential verification`);
+  }
+
+  const blocked = await requestLogin();
+  assert.equal(blocked.statusCode, 429, "The sixth attempt in the active window must be rate limited");
+});
+
 test("AUTH SUITE — Reject registration with short password", async () => {
   const { req, res } = createMockReqRes({
     method: "POST",

@@ -41,9 +41,12 @@ export default async function handler(req, res) {
     }
 
     // Rate Limiting Protection (Max 5 attempts per 15 minutes per IP + email)
-    const clientIp = req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "127.0.0.1";
+    const forwardedFor = String(req.headers["x-forwarded-for"] || "")
+      .split(",")[0]
+      .trim();
+    const clientIp = forwardedFor || req.socket?.remoteAddress || "127.0.0.1";
     const rateLimitKey = `${clientIp}:${email}`;
-    const rateCheck = checkLoginRateLimit(rateLimitKey);
+    const rateCheck = await checkLoginRateLimit(rateLimitKey);
 
     if (!rateCheck.allowed) {
       return sendRateLimitError(res, rateCheck.remainingSeconds);
@@ -82,7 +85,7 @@ export default async function handler(req, res) {
     }
 
     // Clear Rate Limit on successful login
-    clearLoginRateLimit(rateLimitKey);
+    await clearLoginRateLimit(rateLimitKey);
 
     // Update lastLoginAt
     await db

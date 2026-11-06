@@ -8,6 +8,13 @@
       "when": 1793853363535,
       "tag": "0000_init_neon_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793969157347,
+      "tag": "0001_auth_rate_limits",
+      "breakpoints": true
     }
   ]
 }

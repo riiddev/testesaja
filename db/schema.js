@@ -12,7 +12,8 @@ import {
   bigserial,
   primaryKey,
   check,
-  unique
+  unique,
+  index
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -270,4 +271,16 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 }, (table) => [
   check("check_settings_daily_goal_positive", sql`${table.dailyGoal} > 0`)
+]);
+
+
+// 19. Persistent login rate-limit windows (shared across serverless instances)
+export const authRateLimits = pgTable("auth_rate_limits", {
+  keyHash: varchar("key_hash", { length: 64 }).primaryKey(),
+  windowStartedAt: timestamp("window_started_at", { withTimezone: true }).notNull(),
+  attemptCount: integer("attempt_count").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => [
+  check("check_auth_rate_attempt_count", sql`${table.attemptCount} >= 0`),
+  index("idx_auth_rate_limits_updated_at").on(table.updatedAt)
 ]);
