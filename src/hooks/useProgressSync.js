@@ -25,6 +25,25 @@ import {
 const BATCH_SIZE_THRESHOLD = 5;
 const DEBOUNCE_DELAY_MS = 2500;
 
+/**
+ * Preserve progress events written by older app versions before isCorrect
+ * was added. Their masteryStage was calculated locally from that answer.
+ */
+export function normalizeOutboxSrsEvent(event) {
+  if (typeof event?.isCorrect === "boolean") return event;
+
+  if (event?.masteryStage === "weak") {
+    return { ...event, isCorrect: false };
+  }
+  if (event?.masteryStage === "learning" || event?.masteryStage === "mastered") {
+    return { ...event, isCorrect: true };
+  }
+
+  // Unknown historical shapes are passed through so the server can reject
+  // them explicitly rather than silently inventing an answer.
+  return event;
+}
+
 export function useProgressSync() {
   const { user, isAuthenticated } = useAuth();
   const userId = user?.id || "guest";
@@ -141,7 +160,8 @@ export function useProgressSync() {
     setSyncError(null);
 
     try {
-      const res = await api.syncProgress(pending);
+      const compatiblePending = pending.map(normalizeOutboxSrsEvent);
+      const res = await api.syncProgress(compatiblePending);
 
       if (res.success && Array.isArray(res.data?.processedEvents)) {
         // STRICT ACK: Remove ONLY events confirmed by the server
