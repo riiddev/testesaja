@@ -22,8 +22,8 @@ export function RegisterForm() {
       setErrorMessage("Silakan isi semua data yang diperlukan.");
       return;
     }
-    if (password.length < 6) {
-      setErrorMessage("Kata sandi minimal 6 karakter.");
+    if (password.length < 8) {
+      setErrorMessage("Kata sandi minimal 8 karakter.");
       return;
     }
 
@@ -112,7 +112,7 @@ export function RegisterForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="form-input"
-            placeholder="Minimal 6 karakter"
+            placeholder="Minimal 8 karakter"
           />
         </div>
 
