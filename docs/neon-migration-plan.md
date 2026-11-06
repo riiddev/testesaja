@@ -312,3 +312,12 @@ MULAI SEKARANG
 ==========================================================
 1. Simpan dokumen ini apa adanya ke docs/neon-migration-plan.md.
 2. Kerjakan FASE 0 saja (tanpa mengubah kode), lalu laporkan dan tunggu persetujuan saya.
+
+==========================================================
+CATATAN STATUS PELAKSANAAN — 6 NOVEMBER 2026
+==========================================================
+- Fase 0: audit statis dan laporan verifikasi sudah didokumentasikan. Pengujian runtime/production yang membutuhkan akses dashboard dan database tetap ditandai belum terverifikasi.
+- Fase 1: riset arsitektur dan kuota sudah didokumentasikan di `docs/architecture-neon.md` dan `docs/kuota.md`. Rekomendasi teknis telah disiapkan, tetapi keputusan final komponen masih menunggu persetujuan pengguna.
+- Keputusan data: tidak memigrasikan akun/progres lama dari Google Sheets; reset hanya menyentuh Sheets pada Fase 7 setelah preview cutover; Neon tidak boleh dihapus atau dikosongkan.
+- Fase 2 belum dimulai. Belum ada Neon project/branch baru, Environment Variables yang diubah, migration database yang dijalankan, atau deployment Production yang dilakukan.
+- Main dan PR merge tetap menunggu keputusan eksplisit pengguna.
