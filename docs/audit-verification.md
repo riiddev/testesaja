@@ -1,101 +1,304 @@
-# Laporan Verifikasi Audit Kode & Infrastruktur (Fase 0)
+# Fase 0 — Verifikasi Audit Kode SINAUENGLISHV2
 
-Dokumen ini memuat hasil verifikasi langsung terhadap 19 temuan audit AI statis, temuan tambahan sistem, analisis akar masalah (Butir B, C, D, E, F), serta verifikasi batas kuota Neon PostgreSQL Free Tier.
-Seluruh verifikasi dilakukan secara empiris pada branch `feat/neon-migration` **tanpa mengubah kode produksi apa pun**.
+Tanggal: 6 November 2026  
+Repository: riiddev/testesaja  
+Branch: feat/neon-migration  
+Base commit: e88c70517ff97ddcc1e1bd03cd9cf1965943e393  
+Metode: GitHub source inspection + GitHub Actions log inspection. Fase 0 tidak mengubah source aplikasi.
 
----
+> TERBUKTI pada GAS berarti bug ada pada handler legacy. Itu tidak otomatis membuktikan bahwa seluruh frontend masih memakainya; banyak aksi sekarang diarahkan ke Vercel Functions/Neon. Bedakan kode legacy dari jalur runtime yang aktif.
 
-## 1. Verifikasi 19 Temuan Audit Statis
+## 1. Ringkasan 19 temuan
 
-| No | Temuan Audit | Status | Lokasi Berkas & Baris | Cara Reproduksi & Analisis Teknis |
-|---|---|---|---|---|
-| **1** | `src/services/api.js`: `handleDevFallback()` mengembalikan `success:true` (login, register, getMe, syncProgress, update profil, klaim hadiah) saat URL backend kosong, koneksi gagal, timeout, 401/403/302, action tak dikenal, atau error sesi. | **TERBUKTI** | [src/services/api.js:61-130](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/services/api.js#L61-L130), [src/services/api.js:135-265](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/services/api.js#L135-L265) | **Cara Reproduksi:** Kosongkan `VITE_API_URL` di `.env`, lalu jalankan aplikasi dan buka form login atau selesaikan kuis.<br>**Analisis:** Pada baris 61-65 (`!API_URL`), 87-90 (`status === 401/403/302`), 96-104 (`error: "tidak dikenal"` / `"sesi"`), dan 122-126 (`Failed to fetch`/timeout), fungsi `request` langsung mengalihkan eksekusi ke `handleDevFallback()`. Di fungsi fallback tersebut, `register`, `login`, `getMe`, `syncProgress`, `updateProfile`, `claimQuestReward`, dan seluruh aksi tak dikenal mengembalikan `{ success: true, ... }` dengan data dummy (`u_dev_user`). Akibatnya, UI menganggap penyimpanan awan berhasil padahal data tidak pernah dikirim ke database. |
-| **2** | `backend/Code.gs` `handleUpdateProfile()`: menerima `payload.xp`, `streak`, `coins` dari client dan langsung menyimpannya. | **TERBUKTI** | [backend/Code.gs:662-664](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L662-L664), [backend/Code.gs:672-674](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L672-L674) | **Cara Reproduksi:** Kirim payload POST `action: "updateProfile"` dengan `{ xp: 999999, coins: 888888, streak: 365 }`.<br>**Analisis:** Baris 662-664 mengeksekusi `profileSheet.getRange(rowIdx, 4).setValue(Number(payload.xp))`, dsb tanpa validasi log aktivitas, batas harian, atau kewajaran. Selain itu, baris 672-674 memasukkan nilai bawaan akun baru: `xp: 50, streak: 1, coins: 50`, melanggar aturan akun baru harus mulai dari 0. |
-| **3** | `backend/Code.gs` `handleClaimQuestReward()`: memakai `payload.xpReward`/`coinsReward` dari client, tidak memvalidasi misi/progres/klaim ganda, bisa membuat baris quest baru berstatus selesai. | **TERBUKTI** | [backend/Code.gs:1012-1013](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L1012-L1013), [backend/Code.gs:1036-1038](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L1036-L1038), [backend/Code.gs:1056-1063](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L1056-L1063) | **Cara Reproduksi:** Kirim payload POST `action: "claimQuestReward"` dengan `questId: "fake_quest"`, `xpReward: 5000`, `coinsReward: 5000` untuk misi yang belum pernah dikerjakan.<br>**Analisis:** Server mengambil angka hadiah langsung dari client (`Number(payload.xpReward) || 35`). Jika baris misi belum ada (`rowIdx <= 0`), server langsung menyisipkan baris baru `[userId, dateStr, questId, 1, 1, true, now]` dan menambahkan XP/koin ke profil tanpa mengecek apakah progres misi sebenarnya telah terpenuhi (`current >= target`). |
-| **4** | `useDailyQuests.updateProgress()` tidak dipanggil dari aktivitas belajar (MissionsView/WorkspacePage), sehingga progres misi tidak bertambah. | **TERBUKTI** | [src/features/missions/MissionsView.jsx:13-19](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/missions/MissionsView.jsx#L13-L19), [src/hooks/useDailyQuests.js:75](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useDailyQuests.js#L75) | **Cara Reproduksi:** Buka halaman Kosakata atau Review, pelajari 5 kata, lalu periksa menu Misi.<br>**Analisis:** Pencarian global menunjukkan bahwa `useDailyQuests` hanya diimpor di `MissionsView.jsx`. Di dalam `MissionsView.jsx`, fungsi `updateProgress` bahkan tidak di-destructure. Modul kosakata (`VocabGrid`), tata bahasa (`GrammarGrid`), membaca (`ReadingLibrary`), petualangan (`StoryRunner`), maupun pasangan konteks (`ContextMatching`) sama sekali tidak memanggil `updateProgress()`. |
-| **5** | `useProgressSync.js`: antrean pending hanya di memori (`pendingQueueRef`), flush di beforeunload tidak dijamin selesai, tidak ada antrean permanen. | **TERBUKTI** | [src/hooks/useProgressSync.js:15](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useProgressSync.js#L15), [src/hooks/useProgressSync.js:78-91](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useProgressSync.js#L78-L91) | **Cara Reproduksi:** Matikan koneksi jaringan (offline) sesaat setelah mempelajari kata, lalu tutup tab browser secara mendadak.<br>**Analisis:** Antrean pembaruan hanya disimpan di `pendingQueueRef = useRef(new Map())`. Tidak ada persistensi ke IndexedDB. Di event `beforeunload`, `flushQueue()` dipanggil secara asynchronous tanpa `fetch(..., { keepalive: true })` atau `navigator.sendBeacon()`, sehingga browser Chromium/WebKit modern langsung membatalkan request saat tab ditutup. |
-| **6** | Avatar: backend menyimpan `avatar_updated_at` tapi `handleGetProfile()` tidak mengembalikan `avatarUpdatedAt`; frontend menghapus cache avatar saat nilainya tidak ada, sehingga foto hilang setelah reload. | **TERBUKTI** | [backend/Code.gs:568-577](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L568-L577), [src/hooks/useUserProfile.js:164-189](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useUserProfile.js#L164-L189) | **Cara Reproduksi:** Unggah foto profil di modal Profil, pastikan foto tampil, lalu muat ulang halaman (`F5`).<br>**Analisis:** `backend/Code.gs:568-577` tidak menyertakan kolom 10 (`avatar_updated_at`) dalam objek `userProfile` respons `handleGetProfile`. Akibatnya, pada `useUserProfile.js:164`, `remoteP.avatarUpdatedAt` bernilai `undefined`. Kondisi baris 184 `else if (!remoteAvatarTime && cachedUrl)` menjadi terpenuhi, menyebabkan kode menghapus cache lokal `localStorage.removeItem(LOCAL_AVATAR_URL_KEY)` dan mengosongkan `avatarUrl` menjadi `null`. |
-| **7** | `useUserProfile.js`: inventory dimuat dari localStorage (`"sinau_local_inventory"`), `api.getInventory()` tidak dipanggil. | **TERBUKTI** | [src/hooks/useUserProfile.js:56-62](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useUserProfile.js#L56-L62), [src/services/api.js:620](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/services/api.js#L620) | **Cara Reproduksi:** Beli border avatar di Perangkat A, lalu login dengan akun yang sama di Perangkat B.<br>**Analisis:** `api.getInventory()` telah didefinisikan di `api.js:620`, tetapi tidak pernah dipanggil di mana pun di seluruh aplikasi. Di `useUserProfile.js:56-62`, state `inventory` hanya diinisialisasi dari `localStorage.getItem("sinau_local_inventory")`. |
-| **8** | `useUserProfile.js`: ketidaksesuaian nama properti `totalReviewsDone` vs `totalReviews` membuat `hasStudyActivity` salah, sehingga xp/streak/coins cloud bisa tertimpa 0. | **TERBUKTI** | [src/hooks/useUserProfile.js:100](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useUserProfile.js#L100), [src/hooks/useUserProfile.js:146-155](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useUserProfile.js#L146-L155) | **Cara Reproduksi:** Masuk dengan akun yang memiliki nilai XP dari aktivitas non-kosakata atau saat kata baru belum dibuka (`totalStartedWords === 0`), lalu muat ulang halaman.<br>**Analisis:** Pada baris 100 objek `userStats` menamai propertinya `totalReviewsDone: totalReviews`. Namun pada baris 146 pengecekan membaca `userStats.totalReviews` (tanpa kata "Done"), sehingga nilainya selalu `undefined`. Akibatnya `hasStudyActivity` bernilai `false`, dan baris 152-154 memaksa `xp: 0`, `streak: 0`, `coins: 0` dan menimpanya ke `LOCAL_PROFILE_KEY`. |
-| **9** | `useDailyQuests.js`: key penyimpanan lokal tidak memuat user ID (`sinau_daily_quests_<tanggal>`), data antarakun bisa tercampur. | **TERBUKTI** | [src/hooks/useDailyQuests.js:17](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useDailyQuests.js#L17) | **Cara Reproduksi:** Selesaikan misi dengan Akun A di browser. Logout, lalu login dengan Akun B pada hari yang sama di browser yang sama.<br>**Analisis:** Baris 17 menyusun key: `` const storageKey = `sinau_daily_quests_${todayStr}`; `` tanpa menyertakan `user.id`. Akun B akan langsung membaca progres dan status klaim milik Akun A dari `localStorage`. |
-| **10** | `ContextMatching` tidak menerima callback `onRecordMatchComplete` dari WorkspacePage, penyelesaian sesi tidak tercatat. | **TERBUKTI** | [src/pages/WorkspacePage.jsx:274-276](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/pages/WorkspacePage.jsx#L274-L276), [src/features/matching/ContextMatching.jsx:9-101](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/matching/ContextMatching.jsx#L9-L101) | **Cara Reproduksi:** Selesaikan satu putaran Context Matching (5 pasang kata). Periksa log network dan profil.<br>**Analisis:** Komponen `ContextMatching.jsx` menerima prop `onRecordMatchComplete` pada baris 9 dan memanggilnya pada baris 99-100 saat putaran selesai. Namun di `WorkspacePage.jsx:274-276`, komponen hanya dipanggil dengan `<ContextMatching vocabulary={vocabulary} />` tanpa mengoper `onRecordMatchComplete`. |
-| **11** | `useSpacedRepetition.js`: interval pertama `[1,3,8,16,30]` terlewat (keberhasilan pertama memakai 3 hari); `src/lib/mastery.ts` punya perhitungan berbeda; tes mengharapkan 3 hari. Ada dua implementasi SRS. | **TERBUKTI** | [src/hooks/useSpacedRepetition.js:39-42](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useSpacedRepetition.js#L39-L42), [src/lib/mastery.ts:102-103](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/lib/mastery.ts#L102-L103), [tests/react-srs.test.mjs:26](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/tests/react-srs.test.mjs#L26) | **Cara Reproduksi:** Panggil `calculateNextReview(true, 0)`.<br>**Analisis:** Pada `useSpacedRepetition.js:41-42`, `intervalIndex = Math.min(nextCorrect, 4)`. Saat jawaban pertama benar (`nextCorrect = 1`), `intervalIndex = 1` (`SRS_INTERVALS_DAYS[1] = 3` hari). Interval ke-0 (1 hari) tidak pernah terpakai. Sementara di `src/lib/mastery.ts:102-103`, indeks dihitung `p.reviewSuccesses - 1`, sehingga jawaban pertama menghasilkan interval 1 hari. Di `tests/react-srs.test.mjs:26`, assertion secara eksplisit mengunci `assert.equal(rev1.intervalDays, 3)`. |
-| **12** | `SettingsPanel`: target belajar harian hanya state lokal (`useState(10)`), tidak disimpan ke getSettings/updateSettings. | **TERBUKTI** | [src/features/settings/SettingsPanel.jsx:23](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/settings/SettingsPanel.jsx#L23), [src/features/settings/SettingsPanel.jsx:308-309](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/settings/SettingsPanel.jsx#L308-L309) | **Cara Reproduksi:** Buka Pengaturan, ubah target harian menjadi "20 Kata / Hari", lalu muat ulang halaman.<br>**Analisis:** Baris 23 mendefinisikan `const [dailyGoal, setDailyGoal] = useState(10)`. Nilai ini tidak pernah dibaca dari `api.getSettings()` maupun dikirim ke `api.updateSettings()`. Setiap kali halaman dibuka ulang, target kembali ke default 10. |
-| **13** | Notifikasi: hanya `setInterval` 20 detik saat aplikasi berjalan, tidak ada push/periodicsync di service worker, padahal Settings menjanjikan notifikasi saat browser ditutup. | **TERBUKTI** | [src/hooks/usePWA.js:165-166](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/usePWA.js#L165-L166), [src/features/settings/SettingsPanel.jsx:204](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/settings/SettingsPanel.jsx#L204), [public/sw.js:118-135](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/public/sw.js#L118-L135) | **Cara Reproduksi:** Aktifkan izin notifikasi di Pengaturan, tutup seluruh tab dan aplikasi browser di ponsel, tunggu sampai jam pengingat tiba.<br>**Analisis:** Di `usePWA.js:166`, pengecekan jadwal hanya mengandalkan `setInterval(checkReminderSchedule, 20000)` di thread utama React. Ketika tab ditutup, thread terhenti total. Pada `public/sw.js`, tidak ada listener `push` dari Web Push Server dan tidak ada `periodicsync`. Namun di `SettingsPanel.jsx:204`, UI menjanjikan: *"Aktifkan izin notifikasi sistem agar pengingat tetap masuk saat browser ditutup"*. Janji ini secara teknis mustahil terjadi pada arsitektur saat ini. |
-| **14** | `backend/Code.gs` `doPost()`: `lock.waitLock(...)` global untuk semua request, termasuk baca. | **TERBUKTI** | [backend/Code.gs:42-48](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L42-L48) | **Cara Reproduksi:** Lakukan inspeksi baris awal `doPost(e)` di `backend/Code.gs`.<br>**Analisis:** Tepat pada baris 42-45, `lock.waitLock(CONFIG.LOCK_TIMEOUT_MS)` dieksekusi sebelum server memeriksa properti `action`. Akibatnya, request baca (`getMe`, `getProfile`, `getCatalog`, `getGrammarProgress`, dsb.) ikut mengunci skrip secara eksklusif, memicu antrean global dan error HTTP 429 ("Server sibuk") jika ada beberapa permintaan simultan. |
-| **15** | `useUserProfile.js`: pembelian item/equip/klaim/avatar/profil diterapkan lokal dulu; saat server gagal hanya `console.warn`, dan beli item tetap return `success:true`. | **TERBUKTI** | [src/hooks/useUserProfile.js:330-350](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useUserProfile.js#L330-L350), [src/hooks/useUserProfile.js:287-289](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useUserProfile.js#L287-L289) | **Cara Reproduksi:** Simulasikan kegagalan server (misal matikan internet) saat mengklik beli item di Koleksi.<br>**Analisis:** Pada `buyItem`, `setProfile` dan `setInventory` langsung memotong koin dan menambahkan item ke `localStorage` (baris 330-340). Saat `api.buyItem({ itemId })` gagal, catch block hanya melakukan `console.warn` (baris 346) tanpa rollback state/localStorage, dan tetap mengembalikan `return { success: true, item: catItem }` (baris 350). |
-| **16** | `ProfileView` membuat instance `useUserProfile` kedua padahal sudah menerima dari `WorkspacePage`. | **TERBUKTI** | [src/features/profile/ProfileView.jsx:12-15](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/profile/ProfileView.jsx#L12-L15), [src/pages/WorkspacePage.jsx:21](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/pages/WorkspacePage.jsx#L21) | **Cara Reproduksi:** Buka tab Profil di Workspace.<br>**Analisis:** Meskipun `ProfileView` menerima prop `userProfileHook` dari `WorkspacePage`, pada baris 14 ia tetap mengeksekusi hook secara independen: `const internalProfileHook = useUserProfile({ vocabulary, progressMap })`. Di React, hooks dijalankan tanpa syarat pada setiap render. Ini menyebabkan duplikasi pemanggilan API `getProfile()`, duplikasi listener effect, dan persaingan akses state/storage. |
-| **17** | `ProfileView` memakai `profile.xp || 50`, `coins || 50`, `streak || 1` (nol dianggap kosong). | **TERBUKTI** | [src/features/profile/ProfileView.jsx:331](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/profile/ProfileView.jsx#L331), [src/features/profile/ProfileView.jsx:347](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/profile/ProfileView.jsx#L347), [src/features/profile/ProfileView.jsx:360](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/features/profile/ProfileView.jsx#L360) | **Cara Reproduksi:** Buat akun baru dengan `xp: 0`, `coins: 0`, `streak: 0`, lalu buka halaman Profil.<br>**Analisis:** Operator logical OR `||` mengevaluasi angka `0` sebagai *falsy*. Kode `Number(profile.xp || 50)`, `Number(profile.coins || 50)`, dan `profile.streak || 1` langsung mengubah angka 0 menjadi 50 EXP, 50 Koin, dan 1 Hari Streak palsu di layar. |
-| **18** | `useAuth.jsx`: data lokal tamu dihapus sebelum registrasi dikonfirmasi server. | **TERBUKTI** | [src/hooks/useAuth.jsx:61-72](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/src/hooks/useAuth.jsx#L61-L72) | **Cara Reproduksi:** Belajar beberapa kata sebagai tamu, buka halaman daftar, masukkan email yang salah atau putuskan koneksi internet, lalu submit.<br>**Analisis:** Pembersihan cache `localStorage.removeItem(...)` berada pada baris 62-69, yaitu *sebelum* pemanggilan `await api.register(...)` pada baris 72. Jika registrasi gagal (misal email duplikat atau koneksi putus), data sesi belajar tamu sudah terlanjur musnah dan tidak dapat dipulihkan. |
-| **19** | `npm test` hanya menjalankan `test:content` dan `react-srs.test`; logic dan e2e tidak masuk; tidak ada GitHub Actions. | **TERBUKTI** | [package.json:13-16](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/package.json#L13-L16) | **Cara Reproduksi:** Jalankan `npm test` di terminal dan periksa direktori `.github/workflows`.<br>**Analisis:** Skrip `"test"` di `package.json` bernilai `"node scripts/verify-v2-data.mjs && node --test tests/react-srs.test.mjs"`. Skrip `test:logic` (`tests/logic.test.mjs`) dan `test:e2e` (`scripts/test-react-spa.mjs`) tidak diikutsertakan. Folder `.github` sama sekali belum ada di repositori. |
+| No | Status | Hasil |
+|---:|---|---|
+| 1 | **SEBAGIAN** | Mock success exists but only when DEV and VITE_ENABLE_MOCK=true; not automatic production fallback. |
+| 2 | **TERBUKTI (legacy GAS)** | handleUpdateProfile writes XP/streak/coins from client payload. Vercel profile route is more restrictive. |
+| 3 | **TERBUKTI (legacy GAS)** | handleClaimQuestReward trusts payload rewards and can create a claimed row with no proof of completion. |
+| 4 | **SEBAGIAN** | Hook updateProgress is not used by Workspace/Missions; learningActivity directly updates server for a subset, not all types; server trusts client values. |
+| 5 | **TIDAK TERBUKTI** | Persistent IndexedDB outbox exists, localStorage fallback exists, event removed after ACK. pagehide flush is still best-effort. |
+| 6 | **SEBAGIAN** | GAS profile omits avatarUpdatedAt; Neon routes return it. Cross-device test not performed. |
+| 7 | **TIDAK TERBUKTI** | Local cache exists but api.getInventory() is invoked and response populates state. |
+| 8 | **TIDAK TERBUKTI** | totalReviewsDone is returned; no alleged hasStudyActivity mismatch found in current hook. |
+| 9 | **TIDAK TERBUKTI** | daily quest local key includes user ID. |
+| 10 | **TIDAK TERBUKTI** | ContextMatching accepts callback and WorkspacePage passes it. |
+| 11 | **SEBAGIAN** | Two SRS implementations remain, but both use [1,3,8,16,30] and first success = 1 day. |
+| 12 | **TIDAK TERBUKTI** | daily goal loads via getSettings and saves through updateSettings; save failure UX remains weak. |
+| 13 | **TERBUKTI** | Reminder timer runs in active page; service worker lacks push/periodicSync listener. No working browser-closed reminder. |
+| 14 | **TERBUKTI (legacy GAS)** | doPost grabs global ScriptLock before action dispatch, including reads. |
+| 15 | **SEBAGIAN** | Buy/equip are server-first; avatar upload/delete optimistically mutate and may return success on server failure. |
+| 16 | **TIDAK TERBUKTI in Workspace route** | ProfileView only creates internal hook if prop absent; WorkspacePage supplies shared hook. |
+| 17 | **TIDAK TERBUKTI** | ProfileView uses ?? 0 for XP/coins/streak. |
+| 18 | **TIDAK TERBUKTI** | Guest cache cleared only after successful registration response. |
+| 19 | **SEBAGIAN** | GitHub Actions exists; test:all omits E2E; latest CI failed in logic test before build/API tests. |
 
----
+## 2. Detail file:line and reproduction
 
-## 2. Temuan Tambahan Arsitektur Kode Saat Ini
+### 1. src/services/api.js fallback
+Location: src/services/api.js:12-18 and :220-350, plus handleDevFallback at end.
+- IS_MOCK_ALLOWED requires import.meta.env.DEV and VITE_ENABLE_MOCK === "true".
+- Core actions mapped to Vercel use requestApi directly.
+- Remaining legacy actions use VITE_API_URL; missing URL/network failure throws NetworkError unless mock explicitly enabled.
+- handleDevFallback returns success:true for several dev actions.
+- Reproduce only on a dev build: set VITE_ENABLE_MOCK=true and omit legacy URL; then repeat with production build and verify mock unavailable. Never use production account/data.
 
-1. **Definisi Ganda `setupDatabase()` ([backend/Code.gs:1180](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L1180) vs [backend/setup.gs:8](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/setup.gs#L8)):**
-   - **Status:** **TERBUKTI**
-   - Di Google Apps Script, seluruh berkas `.gs` berada dalam scope global tunggal.
-   - `backend/setup.gs` hanya mengonfigurasi 5 tabel (`Users`, `Sessions`, `Progress`, `QuizAttempts`, `Settings`), sedangkan `backend/Code.gs` mengonfigurasi 8 tabel (menambahkan `Profiles`, `Titles`, `Quests`). Jika `setup.gs` dieksekusi atau ditimpa di Apps Script editor, tabel profil dan misi akan hilang dari skema spreadsheet.
-2. **`jsonResponse` Mengabaikan Parameter Status Code ([backend/Code.gs:1169-1173](file:///d:/VIBE%20CODE%20ANTI%20GRAFITY/SINAUENGLISHV2/backend/Code.gs#L1169-L1173)):**
-   - **Status:** **TERBUKTI**
-   - Fungsi `jsonResponse(data, statusCode)` menerima `statusCode` (misal 400, 401, 429, 500) namun tidak pernah menggunakannya karena `ContentService.createTextOutput()` Google Apps Script tidak mendukung kustomisasi HTTP status code. Semua respons jaringan selalu tiba di browser dengan status **HTTP 200 OK**.
-   - Ini memaksa client melakukan inspeksi manual atas properti `json.success` dan string teks pesan error.
+### 2. backend/Code.gs handleUpdateProfile
+Location: backend/Code.gs:642-698.
+- Around lines 658-660 writes payload.xp, payload.streak, payload.coins directly.
+- Around lines 672-674 creates new profile defaults XP=50, streak=1, coins=50.
+- Proven for legacy Apps Script. api/profile/update.js Vercel route uses safe field allowlist and does not accept economy fields.
+- Reproduce only against disposable GAS test copy, not the user's spreadsheet.
 
----
+### 3. backend/Code.gs handleClaimQuestReward
+Location: backend/Code.gs:1006-1068.
+- Lines 1012-1013 read xpReward/coinsReward from client.
+- If no row, around 1036-1038 append quest row with 1/1 and claimed=true.
+- Later credits profile. Proven legacy code; no live sheet tests.
 
-## 3. Verifikasi Analisis Masalah Fitur (Butir B, C, D, E, F)
+### 4. Daily quest progress
+Location: src/hooks/useDailyQuests.js:77-110; src/pages/WorkspacePage.jsx:85-90; src/services/learningActivity.js:16-157; api/quests/update.js:24-75.
+- Hook exposes updateProgress but WorkspacePage does not destructure it and MissionsView only consumes claimReward.
+- learningActivity directly calls updateQuestProgress for matching, grammar, reading quiz/read complete and story; no vocabulary/SRS case.
+- api/quests/update reads questId/progress/target from body and inserts/updates those values. Server does not derive them from verified activity.
+- Some activities are wired, but not all. Partial.
 
-### Butir B — Progres / EXP / Koin Tidak Tercatat di Akun
-- **Akar Masalah Nyata:**
-  1. **Mode Dev Fallback Terselubung:** Bila `VITE_API_URL` tidak diset di Environment Variables Vercel, atau endpoint Apps Script memicu redirect Google Login (HTTP 302/401/403 karena izin akses privat), atau terjadi timeout 15 detik, `src/services/api.js` diam-diam berpindah ke mode preview dan mengembalikan respons sukses palsu (`u_dev_user`). Pengguna mengira datanya tersimpan, padahal tidak ada request yang masuk ke database.
-  2. **Antrean Memori Volatil:** `useProgressSync.js` menampung pembaruan kosakata di `pendingQueueRef` (hanya ada di RAM). Debounce menunggu 3,5 detik. Jika pengguna menutup halaman sebelum debounce selesai, browser membatalkan proses async `flushQueue()`.
-  3. **Bug Typo Timpa Nol:** Di `useUserProfile.js:146`, pengecekan `hasStudyActivity` mencari `totalReviews` (seharusnya `totalReviewsDone`). Jika kata baru belum dimulai (`totalStartedWords === 0`), `hasStudyActivity` bernilai `false`, dan kode secara aktif menimpa data XP, coins, dan streak dari cloud menjadi `0` di memori dan `localStorage`.
+### 5. Persistent outbox
+Location: src/hooks/useProgressSync.js:15-23 and :145-170; src/services/outboxDb.js:22-190.
+- IndexedDB outbox store has eventId key and userId index.
+- removeConfirmedEvents removes only server-acknowledged events.
+- localStorage fallback exists if IndexedDB is unavailable.
+- visibilitychange/pagehide attempts flush but it is not a guarantee of network completion on close. Persistent outbox means the old "memory only" claim is false.
+- Two-device/offline close/reopen runtime test has not been performed.
 
-### Butir C — Progres Misi Tidak Bertambah
-- **Akar Masalah Nyata:**
-  - Fungsi `updateProgress(questId, increment)` yang ada di `useDailyQuests.js` terisolasi sepenuhnya di dalam hook tersebut dan tidak pernah dipanggil dari halaman maupun modul latihan mana pun (`VocabGrid`, `GrammarGrid`, `ReadingLibrary`, `StoryRunner`, `ContextMatching`). Tidak ada service perantara (*event bus* / *learning activity dispatcher*) yang mengaitkan aktivitas belajar dengan misi harian.
+### 6. Avatar version
+Location: backend/Code.gs:558-640; src/hooks/useUserProfile.js:177-200; api/profile/get.js:15-45; api/avatar/upload.js:75-88; api/avatar/get.js:20-45.
+- GAS handleGetProfile omits avatarUpdatedAt; client has a branch that removes cached URL if remote timestamp is absent.
+- Vercel profile GET returns profile row including avatarUpdatedAt; upload updates it and returns timestamp; avatar GET also returns timestamp.
+- No live two-device test. Partial.
 
-### Butir D — Achievement Tidak Bergerak
-- **Akar Masalah Nyata:**
-  - Perhitungan progres achievement di `src/features/profile/titleSystem.js` bergantung pada `userStats` di `useUserProfile.js`.
-  - Nilai membaca dan grammar dibaca dari key `localStorage` browser tanpa namespace user ID (`sinau_habit_read_history`, `sinau_grammar_history`).
-  - Nilai cerita petualangan dan latihan konteks dihitung dari angka dummy statis: `Math.min(started > 10 ? 3 : 0, 12)` dan `Math.round(totalReviews * 0.7)`.
-  - Server Apps Script sama sekali tidak memiliki tabel atau logika akumulasi statistik pencapaian (`user_stats`). Ketika cache browser dibersihkan atau pengguna membuka dari perangkat lain, seluruh pencapaian kembali terkunci atau diam di tempat.
+### 7. Inventory
+Location: src/hooks/useUserProfile.js:56-62, :133-146.
+- State may initialize from localStorage cache.
+- Effect calls api.getProfile and api.getInventory; remote inventory replaces state/cache.
+- Claim that API is never called is false.
 
-### Butir E — Foto Profil Tidak Berganti di Perangkat Lain
-- **Akar Masalah Nyata:**
-  - Saat `uploadAvatar` berhasil, foto disimpan di Google Drive dan `avatar_updated_at` dicatat di sheet Profiles kolom 10.
-  - Namun ketika endpoint `getProfile` dipanggil (misal saat Perangkat B memuat halaman), backend `backend/Code.gs:568-577` **lupa menyertakan field `avatarUpdatedAt`**.
-  - Di frontend Perangkat B, `remoteP.avatarUpdatedAt` bernilai `undefined`, sehingga Perangkat B tidak pernah tahu bahwa ada foto profil baru dan tidak pernah memanggil `api.getAvatar()`.
-  - Sementara itu di Perangkat A (yang baru saja mengunggah), saat halaman di-reload, baris 184 menganggap bahwa hilangnya field waktu tersebut berarti foto telah dihapus (`!remoteAvatarTime && cachedUrl`), lalu menghapus foto dari cache lokal.
+### 8. totalReviewsDone
+Location: src/hooks/useUserProfile.js:64-107.
+- Local totalReviews is returned as totalReviewsDone.
+- No hasStudyActivity property found in this hook.
+- Alleged property mismatch is not supported by current code.
 
-### Butir F — Audit Riwayat Latihan Saat Ini
-- **Kondisi Eksisting:**
-  - Hanya ada tabel mentah `QuizAttempts` di backend untuk kuis umum (kolom: `user_id`, `topic_id`, `score`, `total`, `taken_at`).
-  - Modul Kosakata/SRS, Grammar, Reading, Story, dan Context Matching **sama sekali tidak memiliki pencatatan riwayat sesi latihan**.
-  - Tidak ada halaman atau rute Riwayat di UI, tidak ada penyimpanan detail soal/jawaban yang salah, dan tidak ada integrasi dengan antrean review SRS.
+### 9. Quest cache namespace
+Location: src/hooks/useDailyQuests.js:16-18.
+- Storage key includes user ID (or guest) and date.
+- Cross-account shared key not found.
 
----
+### 10. Matching callback
+Location: src/features/matching/ContextMatching.jsx:9, :96-101; src/pages/WorkspacePage.jsx:300-309.
+- Component receives callback and invokes it after all pairs matched.
+- WorkspacePage passes callback and records activityType matching.
+- Alleged missing wiring is false.
 
-## 4. Verifikasi Kuota Neon PostgreSQL Free Tier
+### 11. SRS intervals
+Location: src/hooks/useSpacedRepetition.js:7, :39-54; src/lib/mastery.ts:8, :88-123; tests/react-srs.test.mjs:22-55.
+- Both declare [1,3,8,16,30].
+- Both calculate index 0 for the first correct review, hence 1 day.
+- React SRS tests expect 1,3,8,16,30.
+- No first-interval bug found in current logic. Two distinct implementations/data models remain, so unification still needs audit. Partial.
 
-Berdasarkan dokumentasi resmi Neon terkini:
-1. **Batas Penyimpanan:** Paket Free memberikan **1 GB penyimpanan PostgreSQL per project**.
-2. **Perhitungan Storage pada Branch:**
-   - Neon memisahkan *compute* dan *storage* menggunakan arsitektur *Copy-on-Write* (CoW).
-   - Pembuatan branch baru (misal `development` yang dibuat dari `main`) awalnya memakan **0 byte data tambahan** karena menunjuk ke *storage pages* yang sama dengan *parent branch*.
-   - **Perhatian Khusus:** Setiap operasi tulis (`INSERT`, `UPDATE`, `DELETE`) pada child branch akan menciptakan *divergent pages* (delta). **Seluruh delta data pada branch development DIHITUNG ke dalam kuota penyimpanan total 1 GB proyek**.
-   - Batas 1 GB berlaku untuk **satu project secara keseluruhan**, bukan 1 GB per masing-masing branch.
-3. **Strategi Efisiensi Data:**
-   - Skema database harus didesain ringkas (tipe data optimal, hindari menyimpan gambar biner mentah ukuran besar di database Postgres).
-   - Buat skrip *test cleanup / reset* otomatis untuk memangkas data uji di branch development agar tidak mengakumulasi delta yang memakan kuota 1 GB.
-   - Pangkas log detail latihan (`attempt_details`) secara otomatis setelah 90 hari.
+### 12. Daily goal
+Location: src/features/settings/SettingsPanel.jsx:23-53.
+- State initializes at 10.
+- Settings are fetched through api.getSettings and saved with api.updateSettings.
+- Error path only console.error; no clear rollback/status. Allegation of no server persistence is false.
 
----
+### 13. Notifications
+Location: src/hooks/usePWA.js:96-130, :143-168, :170-230; public/sw.js.
+- setInterval checks schedule every 20s in active page context.
+- Service worker can display a notification when explicitly triggered by page.
+- Service worker has no push event listener or periodicSync handler.
+- Closing browser stops the timer. Background reminders while closed are not implemented.
 
-## 5. Ringkasan Status Verifikasi
+### 14. GAS global lock
+Location: backend/Code.gs:41-48, :50-159.
+- doPost obtains ScriptLock/waitLock before parsing dispatch action.
+- Read and write POST actions pass through same exclusive lock.
+- Proven for GAS legacy only.
 
-Semua 19 temuan audit AI dan 2 temuan tambahan sistem berstatus **TERBUKTI**.
-Akar masalah untuk keluhan progres tidak tersimpan, misi mandek, pencapaian beku, dan foto profil tidak sinkron telah diidentifikasi secara presisi di level baris kode.
-Verifikasi Fase 0 ini diselesaikan secara utuh **tanpa mengubah kode produksi aplikasi**.
+### 15. Optimistic avatar operations
+Location: src/hooks/useUserProfile.js:293-344, :345-410, :412-445.
+- Buy/equip call server before applying main state updates.
+- Avatar upload updates UI/local cache first; catch returns success:true with warning.
+- Avatar delete clears local cache first; catch only logs; function returns success:true.
+- Partial.
+
+### 16. Duplicate ProfileView hook
+Location: src/features/profile/ProfileView.jsx:12-21; src/pages/WorkspacePage.jsx:399-407.
+- ProfileView creates hook only when userProfileHook prop is absent.
+- WorkspacePage passes the already-created hook.
+- Not proven on Workspace route. Other callers without prop may create internal hook.
+
+### 17. Zero fallback
+Location: src/features/profile/ProfileView.jsx:341, :357, :370.
+- XP/coins use nullish coalescing to zero; streak uses ?? 0.
+- 0 remains 0.
+
+### 18. Guest data and signup
+Location: src/hooks/useAuth.jsx:79-90.
+- api.register runs first.
+- clearLocalUserCache runs only after res.success and res.data.user.
+- No pre-confirmation guest data deletion found.
+
+### 19. CI/test coverage
+Location: package.json; .github/workflows/ci.yml:1-44; Actions run 42197332325.
+- A GitHub Actions workflow exists.
+- It runs npm test, npm run test:logic, build, and API tests behind DATABASE_URL condition.
+- npm test runs content audit + react SRS. test:logic is a separate step.
+- test:all does not include test:e2e.
+- Latest run failed in test:logic; build and API/security steps were skipped.
+- So "no CI" is false; coverage/run health is insufficient.
+
+## 3. Additional verified findings
+
+### P1: Client-forgeable quest progress and unknown quest reward
+Files: api/quests/update.js:24-75; api/quests/claim.js:50-112.
+- update endpoint trusts client questId/progress/target and inserts a new row if absent.
+- claim endpoint only checks row completion.
+- Reward lookup falls back to 35 XP/15 coins for arbitrary unknown questId.
+- Authenticated user could potentially write progress=1,target=1 for arbitrary questId and claim fallback reward.
+- Static evidence proves unsafe validation boundary. Dynamic exploit must only be tested on development database after approval.
+
+### False success: Learning activity service
+File: src/services/learningActivity.js:27-33 and :149-154.
+- Result begins success=true.
+- Catch records error but never changes success to false. Caller can treat failed request as success.
+
+### False success: MissionsView claim
+File: src/features/missions/MissionsView.jsx:21-25.
+- claimReward is not awaited.
+- UI immediately announces successful reward before server response.
+
+### False success: Avatar
+File: src/hooks/useUserProfile.js:293-344.
+- Avatar upload/delete mutate local state first and report success even on API failure.
+
+### HABIT reading completion / quiz mismatch
+Files: src/features/reading/ReadingLibrary.jsx:177-200; src/features/reading/ReadingQuizRunner.jsx:48-76; src/services/learningActivity.js:103-118; api/reward/grant.js:31-90; api/reading-quiz/record.js.
+- "Selesai Membaca" only closes passage selection; handler does not record completion/reward.
+- ReadingQuizRunner calls claimReward with source article_quiz and timestamped event id.
+- api/reward/grant accepts reading_quiz_complete, not article_quiz; this source is not recognized.
+- A separate api/reading-quiz/record endpoint uses deterministic article event and records attempts; learningActivity has a case for that endpoint, but inspected runner calls claimReward instead.
+- This breaks intended reading reward/history path and affects missions/history.
+
+### Achievement unlock not validated server-side
+File: api/titles/unlock.js:20-45; src/hooks/useUserProfile.js:64-107.
+- Client derives several title progress values from progressMap/localStorage.
+- API unlock only validates titleId presence and deduplicates per current user; it does not check server achievement criteria.
+
+### Duplicate setupDatabase
+Files: backend/Code.gs:1180; backend/setup.gs:8.
+- Two global functions with same name in Apps Script source. Must reconcile before legacy retirement.
+
+### GAS jsonResponse ignores HTTP status
+File: backend/Code.gs:1169-1173.
+- statusCode parameter is not used; function only creates JSON TextOutput and sets MIME type.
+- GAS responses may arrive HTTP 200 even for body-level failure. This is legacy GAS; Vercel helper is separate.
+
+### Ledger operations not grouped as one transaction
+File: api/_lib/ledger.js:21-95.
+- Idempotency check, transaction insert and profile update are separate DB queries without explicit transaction wrapping the entire operation.
+- Unique event constraint helps duplicate prevention, but races/partial failure need testing before describing the operation as atomic.
+
+### Non-portable reminder test
+File: scripts/test-reminder-notification.mjs:1-7.
+- Playwright import and screenshot output use machine-specific absolute Windows paths; not portable to Linux CI.
+
+### Browser-local quest date
+File: src/hooks/useDailyQuests.js:8-15 and reset countdown logic.
+- Client computes today/midnight from device local timezone while server uses Asia/Jakarta. Potential mismatch outside WIB devices; server must remain source of truth.
+
+## 4. Additional user-reported areas B-F
+
+### B. Progress/EXP/coins not recorded
+**Status: PARTIAL; code-level causes found, live environment/DB unverified.**
+- Many core routes already map to Vercel Functions.
+- Mock is gated to development + explicit VITE_ENABLE_MOCK=true; not automatic in production.
+- learningActivity false success, MissionsView false success, avatar false success.
+- HABIT quiz uses unrecognized reward source.
+- Cannot inspect Vercel env presence, production SHA, runtime logs or Neon rows from public repo. Do not request secret values. User can report only if expected variables are configured.
+- No preview learning event was run; no progress_events/transactions/profiles row or balance before/after is available.
+
+### C. Quest progress
+**Status: PARTIAL, with P1 security issue.**
+- Activity dispatcher only updates subset; vocabulary/SRS not mapped.
+- Client hook updates local state then sends API; errors swallowed.
+- API accepts client progress/target and can insert arbitrary quest row.
+- No dynamic tests against development Neon performed.
+
+### D. Achievement
+**Status: PARTIAL.**
+- useUserProfile computes several stats using local progressMap and localStorage histories.
+- Some user_stats exist and some server endpoints update counters, but not all modules are connected.
+- titles/unlock endpoint does not validate qualifying stats server-side.
+- Cross-device verification not performed.
+
+### E. Avatar
+**Status: PARTIAL.**
+- GAS profile misses timestamp and frontend can clear cache.
+- Neon profile/avatar routes return timestamp.
+- Upload/delete false-success remain.
+- No two-browser test performed.
+
+### F. History
+**Status: PARTIAL.**
+- PracticeHistoryView has filters, 7-day summary, cursor paging and API calls.
+- API scopes query using session user and joins attemptDetails, but selects wrongItems only.
+- Matching and reading quiz routes write activityLog; coverage for SRS/grammar/story is not consistently proven.
+- All answer/explanation detail is not proven for every module.
+- Implementation stays in Fases 4-6.
+
+## 5. CI evidence
+
+Actions run: 42197332325  
+Workflow: SinauEnglish V2 CI  
+Commit: e88c70517ff97ddcc1e1bd03cd9cf1965943e393 (main)  
+Observed: 6 Nov 2026 around 16:44 WIB  
+Conclusion: FAILURE.
+
+Step results:
+- npm ci: passed.
+- npm test: passed. Data report: Oxford 2,971; starter vocabulary 999; grammar 19 lessons / 57 questions; HABIT 156 passages / 63,309 words; reading skills 12; stories 8; dialogues 4; listening 8; pronunciation 16; data parity 100%; React SRS tests 3/3.
+- npm run test:logic: failed at tests/logic.test.mjs:20. Fixture first review date is 2026-11-04T12:00Z, but workflow is 2026-11-06; nextReviewAt is already due, so actual "due" differs from expected "learning". Likely test-clock fixture mismatch; no fix in Fase0.
+- Vite build: skipped.
+- API/security tests: skipped on this run.
+- npm ci reported 4 moderate npm audit advisories; package details not audited yet.
+No local test rerun was performed in this session; only the actual Actions run was inspected.
+
+## 6. Google Sheets account/row counts
+**Not verified.** User said they will count and provide counts. No Sheets read access connected. Do not request credentials, Spreadsheet ID, or service-account key. Do not invent row counts.
+
+## 7. Vercel Preview and Neon row evidence
+**Not verified.** .env.example does not prove dashboard variables are present. No Vercel secrets were read. No approved Preview transaction executed and no Neon rows inspected. Cannot claim any row was written or provide XP/coins before/after. Later safe process: user checks whether variables are configured in Vercel Dashboard → Project → Settings → Environment Variables, reports presence only; then perform a Preview exercise and inspect redacted DB query results.
+
+## 8. Fase 0 summary
+
+| Area | Status |
+|---|---|
+| 19 static findings | Classified against branch source |
+| Additional findings | P1 quest exploit + false-success paths recorded |
+| B progress/XP/coins | Partial; actual deployment/env/DB not verified |
+| C quest progress | Partial; incomplete mapping and client-controlled API |
+| D achievements | Partial; no complete server-authoritative criteria |
+| E avatar | Partial; legacy vs Neon differences and false success |
+| F history | Partial; UI/API exists but coverage/details incomplete |
+| setupDatabase/jsonResponse | Proven in legacy GAS |
+| Sheets account/row counts | Await user count |
+| Vercel Preview env/Neon rows | Unverified |
+| App source code changed | No |
+
+## 9. Fase 0 boundary
+- No app source changes during Fase 0.
+- Do not alter Neon production, Vercel production env, Apps Script deployment, Sheets or Drive.
+- Do not merge old branches or PR to main.
+- Do not start Fase 1 or later phases before user approves this report.
+- Stability gate is NOT open.
