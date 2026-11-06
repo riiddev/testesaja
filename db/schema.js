@@ -335,7 +335,7 @@ export const authVerifications = pgTable("auth_verifications", {
   index("idx_auth_verifications_identifier").on(table.identifier)
 ]);
 
-export const authRateLimitRecords = pgTable("auth_rate_limits", {
+export const authRateLimitRecords = pgTable("better_auth_rate_limits", {
   id: text("id").primaryKey(),
   key: varchar("key", { length: 255 }).notNull().unique(),
   count: integer("count").notNull().default(0),
