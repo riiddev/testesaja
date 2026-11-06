@@ -9,6 +9,8 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "../../../db/index.js";
 import {
   verifyPassword,
+  needsPasswordRehash,
+  hashPassword,
   createSessionToken,
   parseJsonBody,
   checkLoginRateLimit,
@@ -63,6 +65,19 @@ export default async function handler(req, res) {
     const isValid = verifyPassword(password, user.passwordHash, user.salt);
     if (!isValid) {
       return sendAuthError(res, "Email atau kata sandi tidak cocok.", 401);
+    }
+
+    // Preserve the same account and transparently upgrade Apps Script password
+    // hashes to scrypt after the user proves possession of the correct password.
+    if (needsPasswordRehash(user.passwordHash)) {
+      const upgraded = hashPassword(password);
+      await db
+        .update(schema.users)
+        .set({
+          passwordHash: upgraded.hash,
+          salt: upgraded.salt
+        })
+        .where(eq(schema.users.id, user.id));
     }
 
     // Clear Rate Limit on successful login

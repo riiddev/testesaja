@@ -22,18 +22,45 @@ export function hashPassword(password) {
 }
 
 /**
- * Verify plaintext password against stored hash & salt using constant-time comparison
+ * Verify current Vercel scrypt hashes and legacy Apps Script SHA-256×5,000 hashes.
+ * Legacy format: SHA256(salt + ":" + password), then SHA256(previous digest)
+ * for 4,999 additional iterations.
  */
 export function verifyPassword(password, storedHash, salt) {
-  if (!password || !storedHash || !salt) return false;
+  if (typeof password !== "string" || !password || !storedHash || !salt) return false;
+  if (!/^[a-f0-9]+$/i.test(storedHash)) return false;
+
   try {
-    const derivedKey = crypto.scryptSync(password, salt, 64);
     const storedBuffer = Buffer.from(storedHash, "hex");
-    if (derivedKey.length !== storedBuffer.length) return false;
-    return crypto.timingSafeEqual(derivedKey, storedBuffer);
-  } catch (e) {
+
+    // Legacy Apps Script hash: 32-byte SHA-256 digest => 64 hex characters.
+    if (storedHash.length === 64) {
+      let digest = crypto
+        .createHash("sha256")
+        .update(`${salt}:${password}`, "utf8")
+        .digest();
+
+      for (let iteration = 1; iteration < 5000; iteration++) {
+        digest = crypto.createHash("sha256").update(digest).digest();
+      }
+
+      return digest.length === storedBuffer.length &&
+        crypto.timingSafeEqual(digest, storedBuffer);
+    }
+
+    // Current Vercel hash: 64-byte scrypt key => 128 hex characters.
+    if (storedHash.length !== 128) return false;
+    const derivedKey = crypto.scryptSync(password, salt, 64);
+    return derivedKey.length === storedBuffer.length &&
+      crypto.timingSafeEqual(derivedKey, storedBuffer);
+  } catch {
     return false;
   }
+}
+
+/** True when a valid login should upgrade the stored legacy hash to scrypt. */
+export function needsPasswordRehash(storedHash) {
+  return typeof storedHash === "string" && /^[a-f0-9]{64}$/i.test(storedHash);
 }
 
 /**
