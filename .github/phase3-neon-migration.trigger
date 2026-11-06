@@ -1,1 +1,1 @@
-Run Better Auth migration and verification for Neon Development. Schema check corrected.
+Run Fase 3 Better Auth Neon migration and sign-in/sign-out integration tests.
