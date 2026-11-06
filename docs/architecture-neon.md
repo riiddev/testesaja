@@ -250,7 +250,7 @@ Aturan implementasi:
 - Tolak SVG/HTML dan file lain yang bukan raster image yang diizinkan; hapus metadata sensitif/EXIF jika memungkinkan.
 - Satu avatar aktif per user; update/delete dan timestamp versi avatar harus konsisten.
 - Endpoint foto harus memvalidasi sesi dan menggunakan cache private/revalidation. Jangan menerbitkan URL publik untuk foto akun.
-- Jika pemakaian PostgreSQL mendekati batas 1 GB, ukur dahulu data sebenarnya; baru evaluasi Blob sebagai tahap tersendiri.
+- Jika pemakaian PostgreSQL mendekati batas 1 GB, ukur dahulu data sebenarnya; baru evaluasi Neon Object Storage dan Vercel Blob sebagai tahap tersendiri.
 
 Vercel Private Blob tersedia pada semua plan. Namun, untuk foto kecil 35 KiB, keuntungan penyimpanan terpisah belum mengimbangi beban tambahan. Private Blob layak dievaluasi ulang bila aplikasi mulai menyimpan file yang lebih besar dari avatar.
 
