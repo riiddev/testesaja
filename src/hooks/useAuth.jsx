@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { api, getSessionToken, clearSessionToken } from "../services/api.js";
+import { api, setSessionToken, clearSessionToken } from "../services/api.js";
+import { authClient } from "../lib/auth-client.js";
 import { clearAllUserData } from "../services/outboxDb.js";
 
 const AuthContext = createContext(null);
@@ -23,52 +24,81 @@ function clearLocalUserCache(userId = null) {
   }
 }
 
+function authErrorMessage(result, fallback) {
+  return result?.error?.message || result?.error?.statusText || fallback;
+}
+
+async function getAppSession() {
+  const res = await api.getMe();
+  if (!res?.success || !res.data?.user) {
+    throw new Error(res?.error || "Sesi tidak ditemukan. Silakan masuk kembali.");
+  }
+
+  if (res.data.token) {
+    setSessionToken(res.data.token);
+  }
+
+  return res.data.user;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check existing session token on mount
+  // Always ask the server. This supports both a remembered Better Auth cookie
+  // and the temporary compatibility token used by existing feature APIs.
   useEffect(() => {
-    async function initSession() {
-      const token = getSessionToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+    let active = true;
 
+    async function initSession() {
       try {
-        const res = await api.getMe();
-        if (res.success && res.data?.user) {
-          setUser(res.data.user);
-        } else {
-          clearSessionToken();
-          setUser(null);
-        }
-      } catch (err) {
+        const currentUser = await getAppSession();
+        if (active) setUser(currentUser);
+      } catch {
         clearSessionToken();
-        setUser(null);
+        if (active) setUser(null);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
 
     initSession();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const login = useCallback(async (email, password) => {
     setError(null);
     setLoading(true);
+    clearSessionToken();
+
     try {
-      const res = await api.login({ email, password });
-      if (res.success && res.data?.user) {
-        // Clear prior account cache to avoid cross-tenant contamination
-        clearLocalUserCache(user?.id);
-        setUser(res.data.user);
-        return { success: true };
+      const result = await authClient.signIn.email({
+        email: String(email || "").trim().toLowerCase(),
+        password,
+        rememberMe: true
+      });
+
+      if (result?.error) {
+        // Keep the previous credential flow available for any legacy account
+        // that has not yet created a Better Auth credential record.
+        const legacy = await api.login({ email, password });
+        if (legacy?.success && legacy.data?.user) {
+          clearLocalUserCache(user?.id);
+          setUser(legacy.data.user);
+          return { success: true };
+        }
+        throw new Error(authErrorMessage(result, legacy?.error || "Gagal masuk."));
       }
-      throw new Error(res.error || "Gagal masuk.");
+
+      const currentUser = await getAppSession();
+      clearLocalUserCache(user?.id);
+      setUser(currentUser);
+      return { success: true };
     } catch (err) {
+      clearSessionToken();
       setError(err.message);
       return { success: false, error: err.message };
     } finally {
@@ -79,17 +109,26 @@ export function AuthProvider({ children }) {
   const register = useCallback(async (email, password, displayName) => {
     setError(null);
     setLoading(true);
+    clearSessionToken();
+
     try {
-      // Send registration request first; do NOT wipe local guest data before server confirms
-      const res = await api.register({ email, password, displayName });
-      if (res.success && res.data?.user) {
-        // Server confirmed success: now wipe old local cache for a brand-new clean slate
-        clearLocalUserCache(user?.id);
-        setUser(res.data.user);
-        return { success: true };
+      const result = await authClient.signUp.email({
+        name: String(displayName || "").trim(),
+        email: String(email || "").trim().toLowerCase(),
+        password
+      });
+
+      if (result?.error) {
+        throw new Error(authErrorMessage(result, "Gagal membuat akun."));
       }
-      throw new Error(res.error || "Gagal mendaftar.");
+
+      const currentUser = await getAppSession();
+      // Only clear guest/prior-account cache after the server confirms signup.
+      clearLocalUserCache(user?.id);
+      setUser(currentUser);
+      return { success: true };
     } catch (err) {
+      clearSessionToken();
       setError(err.message);
       return { success: false, error: err.message };
     } finally {
@@ -100,6 +139,12 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     setLoading(true);
     const activeUserId = user?.id;
+    try {
+      await authClient.signOut();
+    } catch (err) {
+      // Clear the legacy bridge below even when the Better Auth request fails.
+    }
+
     try {
       await api.logout();
     } finally {
