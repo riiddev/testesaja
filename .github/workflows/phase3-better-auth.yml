@@ -1,0 +1,180 @@
+name: Fase 3 — Better Auth Neon Migration (Preview Only)
+
+on:
+  push:
+    branches:
+      - feat/neon-migration
+    paths:
+      - .github/phase3-neon-migration.trigger
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neon-better-auth-development
+  cancel-in-progress: false
+
+jobs:
+  migrate-and-test:
+    name: Apply Better Auth schema and test Preview
+    if: github.ref == 'refs/heads/feat/neon-migration'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: ${{ secrets.NEON_DEV_DIRECT_URL }}
+      DATABASE_URL_UNPOOLED: ${{ secrets.NEON_DEV_DIRECT_URL }}
+      BETTER_AUTH_URL: http://localhost:5173
+
+    steps:
+      - name: Verify Direct development connection is configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL_UNPOOLED:-}" ]; then
+            echo "::error::GitHub repository secret NEON_DEV_DIRECT_URL is missing."
+            exit 1
+          fi
+          node --input-type=module -e '
+            const u = new URL(process.env.DATABASE_URL_UNPOOLED);
+            if (!["postgres:", "postgresql:"].includes(u.protocol)) throw new Error("Expected a PostgreSQL URL.");
+            if (u.hostname.includes("-pooler")) throw new Error("A direct (non-pooled) Neon URL is required.");
+            console.log("Direct Neon development connection is configured; credentials are hidden.");
+          '
+
+      - name: Checkout Preview branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Create temporary test-only Better Auth secret
+        shell: bash
+        run: |
+          set -euo pipefail
+          SECRET="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("base64url"))')"
+          echo "::add-mask::$SECRET"
+          echo "BETTER_AUTH_SECRET=$SECRET" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Safety preflight — preserve the existing Fase 2 database
+        run: |
+          node --input-type=module <<'NODE'
+          import { neon } from "@neondatabase/serverless";
+
+          const sql = neon(process.env.DATABASE_URL_UNPOOLED);
+          const expectedFase2Tables = [
+            "activity_log", "attempt_details", "avatars", "auth_rate_limits",
+            "catalog", "daily_quests", "grammar_progress", "inventory",
+            "profiles", "progress", "progress_events", "quest_claims",
+            "sessions", "settings", "story_progress", "titles",
+            "transactions", "user_stats", "users"
+          ];
+
+          const rows = await sql`
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+          `;
+          const current = new Set(rows.map((row) => row.table_name));
+          const missing = expectedFase2Tables.filter((name) => !current.has(name));
+
+          if (missing.length) {
+            console.error("STOPPED: this is not the expected Fase 2 Neon database.");
+            console.error("Required existing table count missing:", missing.length);
+            process.exit(1);
+          }
+
+          const catalogRows = await sql`SELECT count(*)::int AS count FROM catalog`;
+          const catalogCount = Number(catalogRows[0]?.count ?? 0);
+          if (catalogCount !== 11) {
+            console.error("STOPPED: the existing catalog count is not the verified Fase 2 count.");
+            process.exit(1);
+          }
+
+          console.log("Safety preflight passed: all 19 Fase 2 tables exist.");
+          console.log("Safety preflight passed: all 11 catalog entries are preserved.");
+          console.log("Only the additive Better Auth migration will be applied.");
+          NODE
+
+      - name: Apply additive Better Auth migration
+        run: npm run db:migrate
+        env:
+          DATABASE_URL_UNPOOLED: ${{ secrets.NEON_DEV_DIRECT_URL }}
+
+      - name: Verify Better Auth schema and preserved app data
+        run: |
+          node --input-type=module <<'NODE'
+          import { neon } from "@neondatabase/serverless";
+
+          const sql = neon(process.env.DATABASE_URL_UNPOOLED);
+          const expectedTables = [
+            "activity_log", "attempt_details", "avatars", "auth_rate_limits",
+            "better_auth_rate_limits", "auth_accounts", "auth_sessions",
+            "auth_verifications", "catalog", "daily_quests", "grammar_progress",
+            "inventory", "profiles", "progress", "progress_events", "quest_claims",
+            "sessions", "settings", "story_progress", "titles", "transactions",
+            "user_stats", "users"
+          ];
+
+          const tables = await sql`
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+          `;
+          const present = new Set(tables.map((row) => row.table_name));
+          const missing = expectedTables.filter((name) => !present.has(name));
+
+          if (missing.length) {
+            console.error("Schema verification failed: required table count missing:", missing.length);
+            process.exit(1);
+          }
+
+          const userColumns = await sql`
+            SELECT column_name, is_nullable
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'users'
+          `;
+          const columns = new Map(userColumns.map((row) => [row.column_name, row.is_nullable]));
+          for (const name of ["updated_at", "email_verified", "image"]) {
+            if (!columns.has(name)) {
+              console.error("Schema verification failed: a Better Auth user column is missing.");
+              process.exit(1);
+            }
+          }
+          if (columns.get("password_hash") !== "YES") {
+            console.error("Schema verification failed: password_hash must remain nullable for Better Auth credentials.");
+            process.exit(1);
+          }
+
+          const catalogRows = await sql`SELECT count(*)::int AS count FROM catalog`;
+          const catalogCount = Number(catalogRows[0]?.count ?? 0);
+          if (catalogCount !== 11) {
+            console.error("Data verification failed: existing catalog count changed.");
+            process.exit(1);
+          }
+
+          console.log("Schema verification passed: all 23 application/auth tables exist.");
+          console.log("Schema verification passed: Better Auth user fields are present.");
+          console.log("Data verification passed: all 11 original catalog entries remain.");
+          NODE
+
+      - name: Verify content and core learning logic
+        run: npm test
+
+      - name: Verify adaptive learning logic
+        run: npm run test:logic
+
+      - name: Build Vite client
+        run: npm run build
+
+      - name: Run API, security and Better Auth database integration tests
+        run: npm run test:api
