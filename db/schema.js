@@ -10,6 +10,7 @@ import {
   customType,
   jsonb,
   bigserial,
+  bigint,
   primaryKey,
   check,
   unique,
@@ -29,10 +30,13 @@ export const users = pgTable("users", {
   id: text("id").primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   displayName: varchar("display_name", { length: 100 }).notNull(),
-  passwordHash: text("password_hash").notNull(),
+  passwordHash: text("password_hash"),
   salt: text("salt"),
   role: varchar("role", { length: 20 }).notNull().default("student"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true })
 });
 
@@ -284,3 +288,56 @@ export const authRateLimits = pgTable("auth_rate_limits", {
   check("check_auth_rate_attempt_count", sql`${table.attemptCount} >= 0`),
   index("idx_auth_rate_limits_updated_at").on(table.updatedAt)
 ]);
+
+
+// Better Auth core tables. The legacy "sessions" table above remains as a
+// temporary compatibility bridge for older SinauEnglish API endpoints.
+export const authSessions = pgTable("auth_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => [
+  index("idx_auth_sessions_user_id").on(table.userId)
+]);
+
+export const authAccounts = pgTable("auth_accounts", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => [
+  unique("uq_auth_accounts_provider_account").on(table.providerId, table.accountId),
+  index("idx_auth_accounts_user_id").on(table.userId)
+]);
+
+export const authVerifications = pgTable("auth_verifications", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => [
+  index("idx_auth_verifications_identifier").on(table.identifier)
+]);
+
+export const authRateLimitRecords = pgTable("auth_rate_limits", {
+  id: text("id").primaryKey(),
+  key: varchar("key", { length: 255 }).notNull().unique(),
+  count: integer("count").notNull().default(0),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull()
+});
