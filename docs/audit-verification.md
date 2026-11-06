@@ -338,3 +338,70 @@ Tidak ada secret yang diminta atau dibaca. Tidak ada perubahan data remote.
 - Jangan memulai Bagian C tanpa perintah tepat "GERBANG DIBUKA".
 - Jangan merge PR #33 atau mengubah main.
 - Google Sheets/Apps Script/Drive tetap dipertahankan.
+
+
+---
+
+## Addendum verifikasi pada 6 November 2026 — pemeriksaan lanjutan branch aktif
+
+Pemeriksaan lanjutan ini mempertahankan seluruh laporan di atas dan menambahkan koreksi/bukti dari source yang dibaca ulang. Source aplikasi terakhir yang diperiksa berada pada commit `d5c9bc84327f4a206efd49dc7cadcc4adc4ed724`; commit sesudahnya `415f8e9e317d3ea068a39738f7900c538db7f104` hanya memperbarui dokumen audit. Posisi branch sekarang: **28 commit ahead, 0 behind** dari `main`. Tidak ada perubahan source aplikasi pada pemeriksaan lanjutan.
+
+### A. Risiko partial commit SRS yang perlu diprioritaskan
+File: `api/_handlers/progress/sync.js:85-95,123-177`; `api/_lib/ledger.js:20-90`.
+
+1. progress/sync memeriksa eventId yang telah tercatat. Bila event ada, event langsung dimasukkan ke processedEvents dan sisa proses dilewati.
+2. Untuk event baru, progressEvents ditulis lebih dahulu; setelah itu progress, userStats, dan reward ledger di-update satu demi satu tanpa satu transaction boundary yang membungkus semua operasi.
+3. Jika request terhenti setelah progressEvents masuk tetapi sebelum progress/stat/reward lengkap, retry akan menemukan eventId yang sama, memasukkannya ke processedEvents, dan melewati operasi yang belum selesai. Client dapat menerima ACK dan menghapus event dari outbox.
+4. recordLedgerTransaction sendiri melakukan cek idempotensi, insert transactions, lalu update profiles sebagai query terpisah. Bila insert sukses dan update saldo gagal, retry dapat melihat transaksi sebagai alreadyProcessed tanpa memperbaiki saldo.
+
+Status: **risiko statis terbukti; kejadian pada database pengguna belum dibuktikan**. Ini kandidat penting untuk keluhan progres/EXP/koin. Reproduksi harus menggunakan Neon development dan fault injection setelah disetujui; tidak ada transaksi uji dilakukan pada Fase 0.
+
+### B. Bug bentuk respons Settings
+File: `api/_handlers/settings/get.js:21-34`; `src/features/settings/SettingsPanel.jsx:29-40`.
+
+- API mengirim `{ settings: userSettings }` di dalam `data`.
+- SettingsPanel saat ini memeriksa `res.data.dailyGoal` atau `res.dailyGoal`, bukan `res.data.settings.dailyGoal`.
+- Dengan demikian GET dapat berhasil tetapi target yang tersimpan tidak dimuat kembali dan UI bertahan pada default 10. Endpoint update menulis setting ke database; masalah yang terlihat adalah pembacaan respons di client.
+- Reproduksi aman setelah akun uji tersedia: ubah target, reload Settings, dan bandingkan nilai yang ditampilkan dengan respons GET /api/settings/get. Belum diuji pada database Preview.
+
+### C. State misi dan cache akun
+File: `src/hooks/useDailyQuests.js:9-21,27-73`; `src/hooks/useUserProfile.js:8-11,55-62,125-146`.
+
+- Storage key Daily Quest sudah memuat userId dan tanggal Asia/Jakarta, tetapi state React `storedQuests` hanya diinisialisasi sekali. Saat user/storageKey berubah pada instance hook yang sama, effect memuat remote lalu menggabungkan remoteQuests ke state sebelumnya. Ini berpotensi menyisakan data akun terdahulu dalam state sementara/hasil merge.
+- Inventory, profile dan avatar menggunakan beberapa key localStorage global (tanpa userId). Auth menghapus sebagian key ketika logout atau berganti akun, tetapi pendekatan ini belum sesuai aturan namespace per user dan perlu diuji saat account switch serta saat fetch remote gagal.
+- useProgressSync memiliki outbox/cache yang memang sudah dinamespace per user. Jangan menyamakan cache yang belum dinamespace dengan outbox tersebut.
+
+### D. Pencatatan misi setelah SRS
+File: `src/hooks/useProgressSync.js:145-176,240-255`; `api/_lib/dailyQuestProgress.js:31-112`; `src/pages/WorkspacePage.jsx:85-90`.
+
+- Event vocab_learn dan srs_review dapat dihitung oleh server untuk quest.
+- Setelah flush menerima ACK, useProgressSync tidak memanggil refresh Daily Quest.
+- Maka server dapat menghitung progres yang benar, tetapi badge/sidebar yang sudah dimuat dapat tertinggal sampai query misi dijalankan lagi. Perlu tes aktivitas vocab/SRS dan refresh UI di Preview.
+
+### E. False-success tambahan
+File: `src/services/api.js:471-479`; `src/hooks/useUserProfile.js:293-344`.
+
+- `api.logout()` menelan request error, menghapus token lokal, lalu selalu mengembalikan `success: true`. Client memang terlogout secara lokal, tetapi server belum tentu menerima pencabutan sesi. Ini bukan bukti progres tidak tersimpan, tetapi status pencabutan sesi tidak boleh dilaporkan sukses terkonfirmasi.
+- Upload/delete avatar tetap memiliki false-success sebagaimana laporan utama.
+
+### F. Reading quiz dan riwayat
+File: `src/features/reading/ReadingQuizRunner.jsx:55-94`; `src/hooks/useUserProfile.js:410-460`; `api/_handlers/reading-quiz/record.js:80-145`; `api/_handlers/activity/history.js:33-62`; `api/_handlers/progress/sync.js:123-177`.
+
+- Jalur `article_quiz` pada ReadingQuizRunner dikenali wrapper claimReward dan dialihkan ke recordReadingQuiz. Mismatch source reward dari audit lama sudah tidak berlaku pada jalur ini.
+- Endpoint reading quiz membangun questionsBreakdown dari soal resmi, tetapi penyimpanan attemptDetails memakai `body.questionsBreakdown || []`; wrapper mengirim answers, bukan questionsBreakdown. Detail analisis jawaban yang salah dapat tersimpan kosong.
+- History API mengambil wrongItems, bukan questionsBreakdown.
+- Handler SRS menulis progressEvents/progress/userStats, bukan activityLog. History API yang diperiksa membaca activityLog. Jadi filter Kosakata/SRS belum memiliki bukti bahwa setiap review muncul sebagai sesi riwayat.
+
+### G. Bukti CI paling baru yang berhasil diverifikasi
+- Run yang dapat diperiksa pada source commit `d5c9bc8`: GitHub Actions run **42228478402**, status success.
+- npm ci, content/SRS audit, adaptive logic, dan Vite build berhasil.
+- Langkah Backend Integration & Security Tests **skipped** karena `DATABASE_URL` tidak tersedia di environment workflow run itu.
+- Run ini bukan bukti test:api lulus, dan tidak menjalankan E2E.
+- Commit audit setelahnya (`415f8e9`) hanya mengubah `docs/audit-verification.md`; tidak ada hasil workflow baru yang dapat diverifikasi untuk commit dokumentasi tersebut.
+- Vercel bot sebelumnya melaporkan Preview Ready pada PR #33. Status itu adalah bukti deployment Preview yang teramati saat itu, bukan bukti bahwa production sedang menjalankan branch ini.
+
+### H. Koreksi ringkas status Fase 0
+- Source-level audit 19 temuan dan tambahan sudah terdokumentasi.
+- Temuan penting yang tetap terbuka: risiko atomicity SRS/ledger, Settings GET response mismatch, state/cache account-switch, refresh quest setelah SRS, false-success avatar/logout, achievement berbasis data lokal, dan coverage history.
+- Akar insiden production tidak dapat dipastikan tanpa deployment SHA, keberadaan Environment Variables (cukup cek ada/tidak; jangan bagikan nilainya), log runtime, dan row Neon yang relevan.
+- Tidak ada perubahan source aplikasi, tidak ada request tulis ke Neon/Sheets/Drive, tidak ada perubahan Vercel environment atau production.
