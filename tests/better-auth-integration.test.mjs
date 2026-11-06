@@ -52,6 +52,7 @@ test("Better Auth sign-up, /me compatibility bridge, sign-in and logout", async 
   const email = `better_auth_${Date.now()}@sinauenglish.test`;
   const password = "BetterAuthTest123!";
   let userId = null;
+  let bridgeHash = null;
 
   try {
     const signup = await auth.api.signUpEmail({
@@ -88,7 +89,7 @@ test("Better Auth sign-up, /me compatibility bridge, sign-in and logout", async 
     assert.equal(meRes.body?.data?.user?.id, userId);
     assert.ok(meRes.body?.data?.token, "/me must issue a temporary API compatibility token");
 
-    const bridgeHash = (await import("../api/_lib/auth.js")).hashToken(meRes.body.data.token);
+    bridgeHash = (await import("../api/_lib/auth.js")).hashToken(meRes.body.data.token);
     const bridgeRows = await db
       .select()
       .from(schema.sessions)
@@ -133,6 +134,11 @@ test("Better Auth sign-up, /me compatibility bridge, sign-in and logout", async 
       headers: new Headers({ cookie: signinCookie })
     });
     assert.equal(revoked, null, "logout must revoke the database session");
+    const revokedBridge = await db
+      .select()
+      .from(schema.sessions)
+      .where(eq(schema.sessions.tokenHash, bridgeHash));
+    assert.equal(revokedBridge.length, 0, "Better Auth logout must also revoke the legacy API bridge token");
   } finally {
     if (userId) {
       await db.delete(schema.users).where(eq(schema.users.id, userId));
