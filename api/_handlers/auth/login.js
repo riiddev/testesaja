@@ -11,6 +11,7 @@ import {
   verifyPassword,
   needsPasswordRehash,
   hashPassword,
+  getSessionCookieSecurity,
   createSessionToken,
   parseJsonBody,
   checkLoginRateLimit,
@@ -100,7 +101,7 @@ export default async function handler(req, res) {
       expiresAt
     });
 
-    const cookieHeader = `sinau_session=${encodeURIComponent(rawToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`;
+    const cookieHeader = `sinau_session=${encodeURIComponent(rawToken)}; Path=/; HttpOnly; SameSite=Lax${getSessionCookieSecurity(req)}; Max-Age=${30 * 24 * 60 * 60}`;
 
     return sendSuccess(
       res,

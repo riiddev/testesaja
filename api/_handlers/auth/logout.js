@@ -6,7 +6,7 @@
 
 import { eq } from "drizzle-orm";
 import { db, schema } from "../../../db/index.js";
-import { hashToken } from "../../_lib/auth.js";
+import { hashToken, getSessionCookieSecurity } from "../../_lib/auth.js";
 import { sendSuccess, sendServerError } from "../../_lib/response.js";
 
 export default async function handler(req, res) {
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       await db.delete(schema.sessions).where(eq(schema.sessions.tokenHash, tokenHash));
     }
 
-    const clearCookieHeader = "sinau_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax";
+    const clearCookieHeader = `sinau_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax${getSessionCookieSecurity(req)}`;
 
     return sendSuccess(res, {}, "Berhasil keluar dari akun.", 200, {
       "Set-Cookie": clearCookieHeader

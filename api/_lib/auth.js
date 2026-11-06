@@ -216,3 +216,16 @@ export async function authenticateRequest(req) {
   };
 }
 
+
+
+/**
+ * Add Secure to session cookies on HTTPS requests (including Vercel Preview).
+ * Local HTTP development keeps the cookie usable without Secure.
+ */
+export function getSessionCookieSecurity(req) {
+  const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  return forwardedProto === "https" || process.env.VERCEL === "1" ? "; Secure" : "";
+}
