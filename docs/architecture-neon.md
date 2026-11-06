@@ -1,310 +1,457 @@
 # Arsitektur dan Keputusan Teknis — SINAUENGLISHV2 → Neon + Vercel
 
 **Tanggal riset:** 6 November 2026  
-**Repository:** riiddev/testesaja  
-**Branch:** feat/neon-migration  
-**Baseline:** main 395ce73409b08690b195da0254599294536a1dde  
-**Status:** rancangan arsitektur siap; belum ada resource Neon yang dibuat. Preview compatibility fix berada di branch feat/neon-migration dan tidak mengubah Production.
+**Repository:** https://github.com/riiddev/testesaja  
+**Branch kerja:** `feat/neon-migration`  
+**Tahap:** Fase 1 — rancangan selesai, menunggu persetujuan keputusan pengguna  
+**Ruang lingkup:** riset dan dokumentasi saja. Tidak ada perubahan source aplikasi, database Neon, Environment Variables Vercel, atau Production.
 
-> Dokumen arsitektur lama pada baseline tidak lagi akurat pada status Neon Auth dan batas paket gratis. Riset ini memakai dokumentasi resmi yang tersedia pada tanggal riset. Kuota, harga, region, dan API vendor dapat berubah; cek kembali saat setup Fase 2.
+> Harga, kuota, lokasi region, dan fitur layanan dapat berubah. Angka di bawah diverifikasi dari dokumentasi resmi yang diakses pada 6 November 2026. Ringkasan kuota disimpan terpisah di [docs/kuota.md](./kuota.md).
 
-## 1. Keputusan yang direkomendasikan
+---
 
-**Rekomendasi default: Better Auth open-source yang dijalankan pada Vercel Functions, dengan Neon PostgreSQL dan Drizzle ORM.**
+## 1. Ringkasan keputusan yang direkomendasikan
 
-Alasannya:
-1. Tetap memakai arsitektur aplikasi yang sudah ada: React/Vite → API Vercel → Neon. Tidak perlu memindahkan seluruh API ke Neon Functions atau mengubah frontend menjadi framework lain.
-2. Better Auth sudah tercantum di package.json. Better Auth menyediakan adapter Drizzle, kontrol password hashing, session/cookie, serta konfigurasi masa berlaku reset password.
-3. Akun lama dapat dipertahankan dengan ID yang sama. Verifier kompatibilitas dapat membaca format hash Apps Script lama dan format scrypt Vercel saat ini, lalu menaikkan hash ke format baru setelah login berhasil.
-4. Masa berlaku reset password dapat ditetapkan 3600 detik (1 jam) sesuai roadmap; sesi dapat dicabut saat password di-reset.
-5. Menghindari ketergantungan tambahan pada layanan auth terkelola; route, schema, dan pemeriksaan API tetap dapat diaudit di repository.
+**Rekomendasi default: Better Auth open-source (self-hosted) di Vercel Functions + Neon PostgreSQL + Drizzle ORM.**
 
-**Tidak ada perubahan kode auth pada Fase 1.** Rekomendasi ini akan diuji di branch development sebelum dipakai akun nyata. Jika integrasi hash lama atau transaksi Better Auth tidak lolos tes, jangan cutover; perbaiki di Preview dahulu.
+| Komponen | Rekomendasi | Alasan utama |
+|---|---|---|
+| Database | Neon PostgreSQL Free | PostgreSQL standar, branching, autosuspend, dan kuota cukup untuk tahap awal aplikasi kecil |
+| API | Vercel Functions | Mempertahankan React/Vite dan folder `api/` yang sudah digunakan |
+| Region | Neon Singapore `ap-southeast-1` + Vercel Singapore `sin1` | Menempatkan function dekat database; Hobby dapat memilih satu region |
+| Auth | Better Auth self-hosted | Bisa dikustomisasi, reset link 1 jam, session revocation, adapter Drizzle, dan cookie HttpOnly |
+| ORM | Drizzle | Sudah digunakan di repo; schema dan migration SQL tersimpan di Git |
+| Driver query biasa | Neon HTTP | Cocok untuk query singkat/stateless dari Vercel Functions |
+| Driver transaksi interaktif | Neon WebSocket/Pool bila dibutuhkan | Drizzle menyatakan WebSocket diperlukan untuk session/interactive transaction |
+| Avatar | PostgreSQL `bytea` WebP ≤35 KiB | Foto kecil; satu sumber data; penghapusan akun bisa memakai FK/cascade |
+| Backup | `pg_dump` lokal terenkripsi + uji `pg_restore` | Instant restore Neon Free hanya 6 jam dan tidak menggantikan backup jangka panjang |
+
+Keputusan ini **belum dianggap disetujui** sampai pengguna menyetujuinya. Fase 2 belum dimulai.
+
+---
 
 ## 2. Perbandingan opsi autentikasi
 
-| Aspek | A. Neon Managed Better Auth | B. Better Auth self-hosted di Vercel | C. Pertahankan custom auth saat ini |
+| Aspek | A. Neon Managed Better Auth | B. Better Auth self-hosted di Vercel | C. Custom auth yang sekarang |
 |---|---|---|---|
-| Pengelola | Neon mengelola Auth API | Library open-source di project | Seluruh kode auth dikelola project |
-| Biaya dasar | Termasuk Neon Free hingga 60.000 MAU/proyek | Tidak ada biaya lisensi; memakai kuota Vercel + Neon | Tidak ada biaya lisensi; memakai kuota Vercel + Neon |
-| Integrasi frontend | SDK resmi @neondatabase/neon-js; quick start React/Vite tersedia | Better Auth client untuk React | Hook custom yang sudah ada |
-| Integrasi Vercel API | Perlu mengirim/validasi JWT Managed Auth pada setiap API | API memeriksa sesi Better Auth dari request cookie | API memeriksa custom session token di tabel sessions |
-| Password | Managed by Neon/Better Auth | Better Auth; hash/verify dapat dikustomisasi | Saat ini Node crypto.scrypt |
-| Reset password | Tersedia, link default 15 menit; SDK reset tertentu belum sepenuhnya didukung dan UI reset disediakan lewat komponen auth | Reset TTL dapat ditetapkan 3600 detik dan sesi dapat dicabut | Token, email, reset, dan revoke harus dibuat sendiri |
-| Kustomisasi | Lebih terbatas; bukan drop-in untuk Better Auth self-hosted dan belum mendukung custom server handler/plugin sendiri pada dokumentasi yang diriset | Luas: konfigurasi, hook, adapter, email callback, schema | Paling bebas, tetapi seluruh beban security pada project |
-| Isolasi Preview | Auth, users, config dan endpoint ikut database branch | Schema/session ikut DB yang sama; route/config dikendalikan project | Harus dikelola sendiri |
-| Dampak pada kode saat ini | Perlu migrasi ke Neon Auth SDK/JWT dan auth flow Neon | Mengganti helper custom dengan Better Auth; API tetap di Vercel | Memperbaiki custom auth dan menambah kode security sendiri |
+| Pengelola | Neon mengelola server auth | Auth berjalan di API Vercel milik aplikasi | Seluruh alur dikelola source aplikasi |
+| Biaya | Termasuk Neon Free hingga 60.000 MAU/proyek | Tidak ada biaya lisensi terpisah; memakai kuota Neon dan Vercel | Tidak ada biaya lisensi; memakai kuota Neon dan Vercel |
+| Frontend | SDK Neon untuk React/Vite | Better Auth client untuk React | Hook dan API client yang sudah ada |
+| Sesi | Dikelola layanan Neon; data auth berada di schema `neon_auth` | Cookie session dikelola Better Auth dan disimpan sesuai adapter | Tabel `sessions` dan token custom |
+| Kustomisasi | Mengikuti fitur dan plugin yang didukung Neon | Konfigurasi, adapter, hook, dan plugin Better Auth | Bebas, tetapi semua perilaku dan pengamanan ditanggung proyek |
+| Reset password | Link reset bawaan berlaku 15 menit | TTL dapat ditetapkan 3.600 detik (1 jam) | Token, lifecycle, rate limit, email, dan revoke dibuat sendiri |
+| Transaksi | Auth dikelola Neon | Adapter Drizzle dapat menggunakan transaksi | Harus diimplementasikan dan diuji sendiri |
+| Integrasi API saat ini | Perlu adaptasi validasi identitas/JWT ke API Vercel | Dapat dipasang pada `/api/auth/*`; API belajar tetap di Vercel | Perubahan lebih kecil pada awalnya |
+| Kecocokan dengan kebutuhan saat ini | Valid, tetapi kurang fleksibel untuk aturan reset 30–60 menit dan handler khusus | **Paling sesuai** | Opsi cadangan bila integrasi Better Auth gagal dalam pengujian |
 
-### Catatan Neon Managed Better Auth
+### A. Neon Managed Better Auth
 
-Managed Better Auth sekarang tersedia pada Neon Free, dan Neon mendokumentasikan integrasi React/Vite. Kuota Free yang tercantum adalah hingga 60.000 monthly active users per project. Jadi pernyataan lama bahwa Neon Auth masih preview sudah tidak berlaku.
+Kelebihan:
+- Auth terintegrasi dengan Neon; pengguna, sesi, dan konfigurasi tersimpan di database proyek.
+- State auth ikut terisolasi ketika database di-branch.
+- SDK resmi mendukung penggunaan React.
+- Termasuk pada Neon Free hingga 60.000 monthly active users (MAU) per proyek.
 
-Namun, dokumentasi reset password Managed Better Auth yang diperiksa pada 6 November 2026 menyebut masa berlaku link 15 menit. Roadmap aplikasi meminta 30–60 menit; SDK reset password juga dinyatakan belum sepenuhnya didukung dan dokumentasi mengarahkan penggunaan komponen UI. Untuk link reset, custom email provider diperlukan bila ingin menggunakan verification links alih-alih kode bersama. Ini membuat Managed Auth kurang cocok dengan kebutuhan kustom saat ini.
+Kekurangan untuk kebutuhan SinauEnglish:
+- Reset password link bawaan kedaluwarsa setelah **15 menit**, sedangkan roadmap menginginkan 30–60 menit.
+- Neon menyediakan daftar plugin/fitur yang didukung; ini bukan pengganti penuh untuk self-hosted Better Auth yang dapat memasang custom server-side handler/plugin sendiri.
+- Frontend dan API perlu mengadopsi Neon Auth SDK/flow, bukan sekadar memakai tabel sesi custom saat ini.
 
-Managed Auth tetap opsi valid bila kebutuhan produk berubah dan masa reset 15 menit diterima, tetapi bukan pilihan default sekarang.
+Kesimpulan: opsi ini layak bila kemudahan layanan terkelola lebih penting daripada kustomisasi reset dan server handler. Bukan pilihan utama untuk roadmap saat ini.
 
-### Catatan Better Auth self-hosted
+### B. Better Auth self-hosted di Vercel
 
-Better Auth memiliki adapter resmi Drizzle dan mendukung PostgreSQL. Password hashing default Better Auth memakai scrypt; fungsi hash/verify dapat dikustomisasi untuk kompatibilitas hash lama. Cookie sesi bersifat HttpOnly dan Secure di production; origin validation/CSRF protections tersedia. Masa berlaku reset password dapat dikonfigurasi, serta sesi dapat dicabut saat reset.
+Kelebihan:
+- Email/password, sesi, cookie, password reset, hashing, dan rate limiting disediakan oleh library yang dapat dikonfigurasi.
+- `resetPasswordTokenExpiresIn: 3600` dapat digunakan untuk masa reset 1 jam.
+- `revokeSessionsOnPasswordReset: true` dapat mencabut sesi pengguna saat reset password.
+- Adapter Drizzle resmi tersedia untuk PostgreSQL.
+- API profil, belajar, misi, ekonomi, avatar, dan riwayat tetap berada pada Vercel Functions yang sudah ada.
 
-### Mengapa tidak mempertahankan custom auth selamanya?
+Hal yang harus diperhatikan:
+- Better Auth perlu disambungkan ke tabel dan kolom dengan benar. Tabel `users` yang ada tidak boleh dihapus atau diganti ID-nya.
+- Rate limiting Better Auth secara default menggunakan memory storage; untuk serverless, storage harus diubah ke database atau custom storage atomik.
+- Adapter Drizzle perlu dikonfigurasi dengan `transaction: true` bila flow yang diuji membutuhkan transaksi. Gunakan driver yang mendukung transaksi interaktif; jangan menganggap driver HTTP otomatis mendukung seluruh pola transaksi.
+- Paket `better-auth` versi 1.7.17 sudah ada di lockfile. Package adapter Drizzle muncul sebagai dependency di lockfile, tetapi dependency langsung/import path harus dinyatakan dengan benar saat implementasi Fase 3. Jangan mengandalkan dependency transitif secara tidak sengaja.
 
-Implementasi sekarang mempunyai beberapa bagian baik: Vercel membuat token acak 32 byte, menyimpan hash SHA-256 token di DB, password Neon/Vercel memakai scrypt, dan cookie HttpOnly. Namun:
-- Login rate limit memakai Map di memori proses Vercel, sehingga state tidak persisten/terkoordinasi antar instance.
-- Frontend masih menyimpan bearer session token pada sessionStorage sebagai jalur utama/fallback, memperbesar dampak bila terjadi XSS.
-- Belum ada reset password dan seluruh email token lifecycle.
-- Rotasi session, CSRF/origin, recovery, dan edge cases harus terus dijaga manual.
+### C. Mempertahankan custom auth saat ini
 
-Custom auth tidak otomatis tidak aman, tetapi mempertahankannya menambah beban security dan pengujian. Better Auth memberi primitive yang lebih teruji, sementara kebutuhan khusus tetap dapat ditangani pada API project.
+Kondisi kode yang terverifikasi:
+- `api/_lib/auth.js` memakai Node.js `scrypt` untuk password, token sesi acak 32 byte, dan hash SHA-256 token yang disimpan di database.
+- Login rate limit sekarang menggunakan tabel `auth_rate_limits` dan upsert database; temuan audit lama yang menyebut Map in-memory sudah tidak akurat untuk branch saat ini.
+- Frontend mengambil bearer token dari `sessionStorage` lalu mengirimkannya pada header `Authorization`.
+- Registrasi saat ini membuat user, profile, user_stats, settings, dan session melalui beberapa insert berurutan dengan compensation rollback, bukan satu transaksi database yang terbukti atomik.
+- Reset password, email lifecycle, cookie-only session, dan seluruh edge cases tetap perlu dikelola sendiri.
 
-## 3. Rencana migrasi akun dan password — tanpa memaksa pendaftaran ulang
+Kesimpulan: custom auth bukan otomatis tidak aman, tetapi lebih banyak bagian sensitif yang harus terus dirawat sendiri. Better Auth disarankan agar primitive auth yang umum tidak perlu dibuat dari nol, sementara aturan belajar dan ekonomi tetap dikendalikan API aplikasi.
 
-**Jangan menghapus atau mengganti kolom users.id.** Semua foreign key data belajar harus tetap menunjuk ke ID pengguna yang sama.
+---
 
-### Format password yang ditemukan
+## 3. Kebijakan akun dan data lama — tanpa migrasi akun Sheets
 
-Pemeriksaan kode menemukan dua format yang berbeda:
+**Keputusan pengguna:** akun dan data lama di Google Sheets akan dibuang; pengguna baru mendaftar dari nol. Cakupan reset hanya Google Sheets. **Data di Neon tidak boleh dihapus, dikosongkan, atau di-reset.**
 
-1. **Akun Apps Script/Google Sheets lama:** backend/Code.gs menggunakan SHA-256 dengan salt dan 5.000 iterasi (HASH_ITERATIONS = 5000). Salt serta hasil hash disimpan pada kolom Users.
-2. **Akun yang dibuat melalui API Vercel/Neon saat ini:** api/_lib/auth.js memakai Node.js crypto.scryptSync, salt acak 16 byte yang direpresentasikan hex, dan derived key 64 byte; hash dan salt disimpan terpisah pada kolom users.password_hash dan users.salt.
+Urutan aman:
+1. Pada Fase 3–6, preview beralih penuh ke API Neon dan berhenti membaca/menulis data akun/progres lewat Apps Script.
+2. Setelah cutover preview terbukti, Fase 7 menginventarisasi tab pengguna di Sheets dan mengosongkan baris data. Header/struktur tab dipertahankan. Minimal tab yang diketahui: `Accounts`, `LearningStates`, dan `Collections`; tab lain juga harus diperiksa.
+3. Tidak ada ekspor CSV akun, email, password, hash password, progres, atau koleksi lama untuk dimasukkan ke Neon.
+4. Spreadsheet dan Apps Script dapat dipertahankan sementara sebagai artefak legacy untuk audit; penghapusan proyek/skrip bukan bagian dari reset ini.
+5. Neon tetap dipertahankan. Jika ada akun/data yang sudah tersimpan di Neon, seluruhnya harus tetap ada dan foreign key tetap valid.
 
-Kedua format ini tidak boleh diasumsikan identik. Skrip migrasi wajib mengidentifikasi jenis sumber akun dan mempertahankan format verifikasi yang benar.
+### Perlakuan untuk akun yang mungkin sudah ada di Neon
 
-### Strategi kompatibilitas yang direkomendasikan
+Tidak ada bukti dari audit statis bahwa database Neon aktif berisi akun nyata; akses database langsung belum dilakukan. Karena itu jangan menganggap Neon kosong dan jangan melakukan truncate/reset.
 
-1. Pertahankan user ID lama dari Google Sheets/Neon.
-2. Buat record kredensial Better Auth yang terhubung ke ID tersebut.
-3. Tandai hash dengan versi format, misalnya gas-sha256-5000:<salt>:<hash> dan vercel-scrypt-v1:<salt>:<hash>. Ini adalah format internal migrasi, bukan format yang boleh dikirim ke browser.
-4. Custom password verifier Better Auth mendeteksi versi, memverifikasi menggunakan algoritma sumber yang tepat, lalu saat login berhasil menaikkan hash lama menjadi format scrypt terbaru.
-5. Hash password tidak pernah didekripsi. CSV/hash tidak pernah dicetak ke log, commit, atau chat.
-6. Bila akun duplikat email ditemukan, jangan gabungkan otomatis; karantina untuk pemeriksaan manual.
-7. Uji akun Apps Script lama, akun Vercel/Neon lama, password salah, password benar, migrasi pertama saat login, login kedua setelah rehash, dan session revoke.
-8. Jangan meminta pengguna membuat akun baru massal. Jika format akun tertentu tidak dapat diverifikasi, laporkan dan siapkan jalur reset yang aman; jangan mengarang hasil migrasi.
+Jika terdapat baris pengguna Neon yang dibuat oleh custom auth saat ini:
+- Pertahankan `users.id` dan semua foreign key yang menunjuk ke ID tersebut.
+- Tambahkan struktur Better Auth secara aditif; jangan drop tabel `users`, `profiles`, `progress`, `transactions`, atau tabel pengguna lainnya.
+- Buat/link credential account Better Auth untuk user Neon yang sudah ada dengan mempertahankan hash scrypt lama melalui verifier kompatibilitas yang diuji. Tidak perlu mengimpor hash SHA-256 dari Sheets.
+- Sesi custom lama dapat meminta pengguna login ulang saat perpindahan auth, tetapi data akun/progres tidak boleh hilang.
+- Jangan menjalankan reset atau migrasi destruktif ke Neon tanpa inventarisasi dan rencana rollback yang disetujui.
 
-**Batas penting:** jumlah akun dan row Google Sheets belum diberikan. Karena itu strategi migrasi sudah dirancang, tetapi belum boleh menjalankan migrasi riil. Penghitungan/ekspor hanya dilakukan pada Fase 7 setelah jumlah sumber diketahui dan dry-run disetujui.
+### Default akun baru
 
-## 4. Driver, ORM, dan koneksi
+Akun baru wajib memiliki:
+- XP = 0, koin = 0, streak = 0.
+- Statistik belajar = 0.
+- Belum memiliki progres SRS, grammar, reading, story, matching, achievement, atau riwayat.
+- Tidak memiliki item/title yang belum diperoleh.
+- Preferensi non-progres boleh memakai default produk (misalnya target belajar harian 10); ini bukan hadiah/progres palsu.
+
+Profil, user_stats, dan settings harus dibuat secara konsisten bersama proses registrasi. Kegagalan di salah satu langkah tidak boleh meninggalkan akun setengah jadi.
+
+---
+
+## 4. Driver, ORM, dan migrasi skema
 
 ### Keputusan
 
-Pertahankan:
-- @neondatabase/serverless
-- Drizzle ORM
-- koneksi HTTP neon() untuk query stateless biasa dari Vercel Functions.
+Pertahankan dua paket yang sudah digunakan:
+- `@neondatabase/serverless`
+- `drizzle-orm` dan `drizzle-kit`
 
-Ini sudah sesuai implementasi db/index.js pada branch sekarang. Drizzle mendokumentasikan driver Neon HTTP dan Neon WebSocket. HTTP cocok untuk query serverless stateless singkat; WebSocket/Pool menjadi opsi bila suatu operasi benar-benar membutuhkan session atau interactive transaction.
+File `db/index.js` sekarang menggunakan `neon()` + `drizzle-orm/neon-http`. Pola ini sesuai untuk query singkat/stateless dari Vercel Functions.
 
-### Aturan implementasi
+### HTTP vs WebSocket
 
-- Jangan membuat koneksi database saat build Vite/static export; inisialisasi hanya di runtime API yang membutuhkan DB.
-- Jangan mencetak DATABASE_URL atau object konfigurasi yang mengandung secret.
-- Gunakan pooled connection string dari Neon untuk koneksi berbasis PostgreSQL protocol bila diperlukan.
-- Setiap transaksi kritis harus diuji dengan driver yang dipakai; khususnya ledger ekonomi harus menjamin insert transaksi dan update saldo tidak terpisah saat failure.
-- Gunakan query parameterized/Drizzle, jangan string-concatenate input user menjadi SQL.
-- Semua endpoint personal menggunakan user ID yang diperoleh dari sesi server, bukan dari body request.
+| Driver | Cocok untuk | Batas / aturan |
+|---|---|---|
+| Neon HTTP (`drizzle-orm/neon-http`) | Query tunggal, read, operasi singkat stateless | Drizzle menyebut HTTP lebih cepat untuk query non-interaktif; jangan menggunakannya lalu menganggap transaksi interaktif pasti didukung |
+| Neon WebSocket/Pool (`drizzle-orm/neon-serverless`) | Sesi database dan interactive transaction | Tambahkan konfigurasi WebSocket yang diperlukan di runtime Node; uji pooling, koneksi, dan commit/rollback pada Vercel Preview |
 
-### Batas transaksi
+Rencana:
+- Gunakan HTTP untuk mayoritas read/query pendek.
+- Gunakan WebSocket/Pool hanya pada jalur yang benar-benar membutuhkan transaksi interaktif, termasuk Better Auth Drizzle adapter jika konfigurasi `transaction: true` membutuhkan `db.transaction()`.
+- Operasi ekonomi/claim/pembelian harus berupa transaksi database atomik. Alternatifnya, satu statement SQL/function yang benar-benar atomik dapat digunakan untuk operasi tertentu. Jangan memecah ledger dan update saldo ke banyak request terpisah.
+- Gunakan pooled connection string dari Neon untuk koneksi runtime yang menggunakan protokol Postgres/PgBouncer. Gunakan koneksi direct untuk operasi administrasi/migrasi bila diperlukan.
+- Jangan membuat koneksi database ketika build Vite berjalan. Inisialisasi hanya di runtime API.
+- Jangan mencetak `DATABASE_URL`, token, atau objek konfigurasi yang mengandung secret.
 
-Ledger XP/coins, claim quest, purchase, serta pembuatan akun harus atomik:
-- cek unique event / idempotency,
-- validasi syarat server,
-- insert ledger,
-- update profile/inventory,
-- commit bersama atau rollback seluruhnya.
+### Alur migrasi Drizzle
 
-Jika mode HTTP tidak dapat memenuhi transaksi yang dibutuhkan oleh suatu operasi, gunakan driver WebSocket hanya untuk alur itu atau gunakan mekanisme SQL transaction yang didukung dan diuji. Jangan mengklaim atomic sebelum ada race/partial-failure test.
+1. Ubah schema di `db/schema.js`.
+2. Jalankan `npm run db:generate` untuk menghasilkan SQL migration.
+3. Review file SQL: constraint, default, foreign key, index, dan urutan perubahan.
+4. Backup development branch.
+5. Terapkan migration hanya ke Neon development melalui `npm run db:migrate`.
+6. Jalankan tes upgrade, rollback/recovery, auth, dan semua API yang terpengaruh.
+7. Jangan mengedit migration yang sudah diterapkan; buat migration baru untuk perubahan berikutnya.
+8. Production tidak mendapat migration sampai Fase 11 dan persetujuan eksplisit.
 
-## 5. Arsitektur target autentikasi
+Migration awal Better Auth harus aditif dan menjaga struktur data aplikasi yang sudah ada. Jangan menggunakan `drizzle-kit push` secara membabi buta pada database yang memiliki data.
 
-1. React/Vite menggunakan Better Auth React client pada same-origin /api/auth/*.
-2. Browser mengirim cookie melalui credentials: "include"; jangan menyimpan access/session token di localStorage/sessionStorage sebagai sumber sesi.
-3. Vercel route api/auth/[...all].js menangani endpoint Better Auth.
-4. Semua api/*.js yang membutuhkan login mengambil session Better Auth dari header/cookie request. Server menentukan user.id.
-5. Profile, progress, inventory, history, economy, quest, dan avatar tetap di API Vercel yang sudah ada. Better Auth tidak diberi kewenangan mengubah XP/koin.
-6. Cookie production harus HttpOnly, Secure, SameSite=Lax, scoped ke domain aplikasi; trusted origins dibatasi ke origin yang benar.
-7. Login rate limit harus persisten/terkoordinasi, bukan hanya in-memory Map pada instance serverless. Pilihan implementasi awal: table rate-limit window di PostgreSQL dengan upsert atomik, expiry/cleanup, serta normalisasi IP berdasarkan header proxy tepercaya. Simpan identifier email/IP dalam bentuk hash bila memungkinkan.
-8. users.id menjadi FK utama. Better Auth user model dimapping ke tabel users atau schema kompatibel; kolom wajib Better Auth dan account/session/verification schema ditambahkan melalui migration yang diuji.
-9. Profil, user_stats, dan settings default dibuat atomik saat user dibuat (misalnya via DB transaction/database hook yang terbukti atomik). Akun baru wajib XP 0, coins 0, streak 0, tanpa progress, title, atau inventory palsu.
-10. Verifikasi email tidak diaktifkan otomatis pada fase ini; roadmap meminta menunggu persetujuan pengguna. Reset email baru diimplementasikan pada Fase 12 setelah provider email gratis dipilih.
+---
+
+## 5. Arsitektur autentikasi target
+
+Alur:
+1. React/Vite memakai Better Auth React client pada same-origin `/api/auth/*`.
+2. Vercel route `api/auth/[...all].js` (atau route catch-all yang setara dan lolos tes) meneruskan request ke Better Auth.
+3. Cookie sesi bersifat HttpOnly, Secure pada HTTPS/production, SameSite=Lax, dan host-only kecuali benar-benar diperlukan konfigurasi domain lain.
+4. Frontend tidak lagi menyimpan bearer session token di `localStorage` atau `sessionStorage` sebagai sumber sesi. Request browser memakai cookie credentials.
+5. Semua API personal memvalidasi sesi dari request cookie di server; `user.id` berasal dari sesi, bukan dari body/query pengguna.
+6. Trusted origins harus berupa daftar origin yang benar-benar digunakan: domain aplikasi, domain Preview yang diizinkan, dan localhost development. Jangan memasukkan wildcard terlalu luas.
+7. Jangan mematikan pemeriksaan CSRF, Origin, atau Fetch Metadata untuk mempermudah integrasi.
+8. Better Auth hanya mengurus identitas, password, dan sesi. Better Auth tidak boleh mengatur atau mengubah XP, koin, streak, misi, inventory, atau hadiah belajar.
+9. Reset password menggunakan TTL 3.600 detik; semua sesi dicabut setelah reset. Email provider baru dipilih pada Fase 12; hingga itu, reset email belum diaktifkan di UI.
+10. Verifikasi email saat registrasi tetap menunggu persetujuan pengguna sesuai roadmap.
+
+### Rate limiting
+
+Better Auth rate limiter default menggunakan memory storage bila tidak diubah. Memory tidak cukup untuk koordinasi antar-instance Vercel.
+
+Rekomendasi:
+- Gunakan storage database atau custom storage yang melakukan cek + increment secara atomik.
+- Atur batas lebih ketat pada route sensitif seperti sign-in, sign-up, dan reset password.
+- Untuk login, batas desain awal: maksimum 5 percobaan per kombinasi IP dan email yang dinormalisasi dalam 15 menit; konfigurasi final harus diuji terhadap false positive dan proxy header Vercel.
+- Simpan identifier rate-limit dalam bentuk hash bila memungkinkan, bukan email/IP mentah.
+- Pastikan alamat IP diambil dari header yang memang ditetapkan oleh proxy tepercaya; jangan percaya nilai header yang dapat dipalsukan klien.
+- Tetapkan masa retensi dan pembersihan row rate-limit agar tabel tidak tumbuh tanpa batas.
+
+### Tabel auth
+
+Better Auth membutuhkan tabel/field untuk user, account, session, dan verification. Penamaan model dapat dipetakan ke schema Drizzle, tetapi struktur aktual harus dihasilkan/diperiksa dari versi library yang dipakai. Credential email/password dikelola melalui account provider credential, bukan dikirim atau dibaca frontend.
+
+---
 
 ## 6. Skema PostgreSQL target
 
-Semua data personal memakai foreign key ke users.id dan query harus scope by user_id.
+Semua tabel personal menggunakan foreign key ke identitas user. Setiap query personal wajib dibatasi oleh user ID yang sudah diverifikasi server.
 
 | Area | Tabel | Tanggung jawab |
 |---|---|---|
-| Identity | users, Better Auth accounts, sessions, verifications | Identitas, kredensial, sesi, verification/reset token |
-| Profile | profiles, avatars, settings | Nama tampilan, title aktif, XP/coins/streak, foto kecil, preferensi |
-| Learning | progress, progress_events, user_stats | Status SRS per kata, event idempoten, akumulasi statistik |
-| Curriculum | grammar_progress, story_progress | Kemajuan grammar dan episode cerita |
-| Missions | daily_quests, quest_claims | Progres misi WIB serta satu klaim hadiah per user/quest/day |
-| Economy | transactions, catalog, inventory, titles | Ledger XP/koin, katalog server, barang dimiliki, title unlocked |
-| History | activity_log, attempt_details, reading_quiz_attempts, matching_attempts | Ringkasan sesi dan rincian jawaban |
-| Future gated | push_subscriptions, widget_tokens, announcements, inbox_messages | Hanya dibuat pada fase setelah stability gate jika disetujui |
+| Identity | `users`, `accounts`, `sessions`, `verifications` | Identitas, credential, sesi, token verifikasi/reset |
+| Profile | `profiles`, `avatars`, `settings` | Identitas tampilan, statistik utama, foto, preferensi |
+| Learning | `progress`, `progress_events`, `user_stats` | Status SRS per kata, event idempoten, statistik |
+| Curriculum | `grammar_progress`, `story_progress` | Progres grammar dan cerita |
+| Missions | `daily_quests`, `quest_claims` | Misi berdasarkan tanggal WIB dan klaim hadiah |
+| Economy | `transactions`, `catalog`, `inventory`, `titles` | Ledger XP/koin, katalog, kepemilikan item, title |
+| History | `activity_log`, `attempt_details`, `reading_quiz_attempts`, `matching_attempts` | Ringkasan sesi dan detail jawaban |
+| Future gated | `push_subscriptions`, `widget_tokens`, `announcements`, `inbox_messages` | Dibuat hanya pada fase ekspansi setelah gerbang dibuka |
 
-### Constraint dan indeks penting
+Constraint wajib:
+- `UNIQUE(user_id, event_id)` pada `progress_events` dan ledger transaksi/reward yang memerlukan idempotensi.
+- `UNIQUE(user_id, word_id)` untuk satu status progres per kosakata.
+- `UNIQUE(user_id, quest_date, quest_id)` untuk satu catatan misi/klaim per hari dan jenis.
+- `CHECK (coins >= 0)`, `CHECK (xp >= 0)`, progres tidak negatif, target/harga sesuai batas.
+- Foreign key dengan `ON DELETE CASCADE` untuk data personal yang memang harus ikut terhapus saat fitur hapus akun kelak diimplementasikan.
+- Index untuk `(user_id, created_at DESC)`, `(user_id, next_review_at)`, token/session lookup, dan kolom event ID.
+- Gunakan `TIMESTAMPTZ` untuk timestamp absolut UTC. Tanggal misi, streak, batas harian, dan cerita ditentukan oleh helper server zona `Asia/Jakarta`, bukan timezone perangkat.
+- `attempt_details` boleh memakai JSONB dan retensi 90 hari; ringkasan `activity_log` dipertahankan sesuai kebijakan. Jangan memangkas event idempotensi terlalu cepat sehingga event lama dapat memberi hadiah ulang.
+- Corpus kosakata statis tetap di file frontend; Neon menyimpan progres per kata, bukan semua definisi.
+- Semua transaksi ekonomi memvalidasi aturan dan hadiah dari server. Client tidak boleh mengirim nilai hadiah final.
 
-- UNIQUE(user_id, event_id) pada progress event/transaction/reward event.
-- UNIQUE(user_id, quest_date, quest_id) pada daily quest dan klaim.
-- CHECK (xp >= 0), CHECK (coins >= 0), CHECK (progress >= 0), CHECK (target > 0), harga tidak negatif.
-- Foreign key ON DELETE CASCADE untuk seluruh data personal yang memang harus ikut terhapus.
-- Indeks untuk (user_id, created_at DESC), (user_id, next_review_at), session/token lookup, dan event ID.
-- activity_log menyimpan ringkasan jangka panjang; attempt_details berisi JSONB detail dan di-retain 90 hari sesuai roadmap. Setelah 90 hari, hapus detail; jangan otomatis menghapus ledger idempotensi bila itu bisa membuat event lama diproses ulang.
-- Jangan menyimpan seluruh corpus kosakata statis ke Neon; hanya status/progres kata.
-- Simpan timestamp sebagai TIMESTAMPTZ UTC; tentukan tanggal misi/streak/reward dengan helper server Asia/Jakarta (WIB). Jangan bergantung timezone perangkat pengguna.
+---
 
-### Misi dan achievement
+## 7. Foto profil: PostgreSQL bytea vs Vercel Blob
 
-- Client tidak boleh mengirim progress/target final.
-- Backend mencatat event aktivitas yang tervalidasi (misalnya review SRS, completion grammar, quiz, matching, reading, story).
-- Server memetakan event ke quest dan menghitung progres; claim endpoint memeriksa progres dari event server, quest ID dikenal, hari WIB, dan klaim sebelumnya.
-- Achievement dihitung dari statistik server dan unlock server hanya bila syarat terpenuhi. Client hanya meminta status atau klaim reward yang sudah valid.
-
-## 7. Penyimpanan foto profil: bytea vs Vercel Blob
-
-| Kriteria | bytea di Neon | Vercel Blob Hobby |
+| Kriteria | PostgreSQL `bytea` | Vercel Blob Hobby (Private Store) |
 |---|---|---|
-| Included quota | Termasuk dalam 1 GB PostgreSQL/project Neon | 1 GB storage, 10 GB data transfer; 10.000 simple ops dan 2.000 advanced ops |
-| Secret terpisah | Tidak; memakai koneksi DB server | Perlu token Blob |
-| Konsistensi penghapusan akun | Dapat memakai FK/cascade | Perlu menghapus file dari Blob juga |
-| Skalabilitas file besar | Bukan pilihan untuk gambar besar | Lebih tepat untuk file besar |
-| Beban implementasi | Rendah untuk foto kecil | Ada upload/delete, token, orphan cleanup |
+| Kuota gratis terkait | Termasuk dalam kuota PostgreSQL Neon 1 GB/proyek | 1 GB storage per bulan, 10 GB transfer, 10.000 simple operations, 2.000 advanced operations |
+| Privasi | Dapat dilayani lewat endpoint API yang memvalidasi sesi | Private Blob tersedia; semua read/write memerlukan autentikasi |
+| Pengiriman gambar | API membaca row lalu mengirim gambar kecil | Private Blob perlu diakses melalui Function dengan `get()`, lalu stream ke browser |
+| Integritas hapus akun | FK/cascade dapat menghapus row bersama data akun | File perlu dihapus dari Blob juga; perlu menangani orphan file |
+| Beban implementasi | Rendah untuk gambar sangat kecil | SDK, store private, token/OIDC, endpoint stream, cache, cleanup |
+| Cocok untuk | Avatar 192–256 px yang dibatasi ketat | Gambar/dokumen lebih besar atau jumlah media yang terus bertambah |
 
-### Rekomendasi: tetap gunakan bytea kecil
+### Rekomendasi: tetap gunakan bytea kecil di Neon
 
-Schema saat ini sudah membatasi foto ke 35.840 byte (35 KiB). Dengan batas maksimum ini:
+Schema saat ini sudah membatasi file avatar ke 35.840 byte (35 KiB). Perkiraan batas maksimum:
 - 1.000 foto × 35 KiB ≈ 35 MiB.
 - 5.000 foto × 35 KiB ≈ 171 MiB.
-- Pada rata-rata 20 KiB: 1.000 foto ≈ 20 MiB; 5.000 foto ≈ 98 MiB.
+- 10.000 foto × 35 KiB ≈ 342 MiB.
 
-Batasi ke WebP 192–256 px, kompres sebelum upload, validasi MIME dan signature file di server, jangan menerima SVG/HTML, dan tolak ukuran di atas 35 KiB. Kembalikan avatar melalui endpoint terautentikasi dengan ETag/revalidation; jangan memakai cache publik untuk foto personal. Bila jumlah akun/foto nanti mendekati batas storage, evaluasi Blob lagi berdasarkan data nyata.
+Perhitungan ini hanya ukuran payload foto, belum overhead row, WAL/history, progres, dan data aplikasi lain.
 
-## 8. Neon Free — batas dan dampak biaya
+Aturan implementasi:
+- Resize ke WebP 192–256 px; batas keras 35 KiB.
+- Validasi signature file/magic bytes, MIME, dimensi, dan ukuran dari binary aktual di server; jangan percaya MIME dari client.
+- Tolak SVG/HTML dan file lain yang bukan raster image yang diizinkan; hapus metadata sensitif/EXIF jika memungkinkan.
+- Satu avatar aktif per user; update/delete dan timestamp versi avatar harus konsisten.
+- Endpoint foto harus memvalidasi sesi dan menggunakan cache private/revalidation. Jangan menerbitkan URL publik untuk foto akun.
+- Jika pemakaian PostgreSQL mendekati batas 1 GB, ukur dahulu data sebenarnya; baru evaluasi Blob sebagai tahap tersendiri.
 
-Riset resmi yang ditemukan pada 6 November 2026:
-- 1 GB PostgreSQL storage per project.
-- 100 CU-hours per project per bulan.
-- Autoscaling hingga 2 CU (sekitar 8 GB RAM).
-- 10 branches per project.
-- 5 GB public network transfer per project per bulan.
-- Scale-to-zero setelah 5 menit idle; Free instant restore window 6 jam.
-- 100 CU-hours setara kira-kira 400 jam bila compute berjalan stabil pada 0,25 CU.
+Vercel Private Blob kini tersedia pada semua plan dan sudah GA sejak 30 Juni 2026. Namun, untuk foto kecil 35 KiB, keuntungan penyimpanan terpisah belum mengimbangi beban tambahan. Private Blob layak dievaluasi ulang bila aplikasi mulai menyimpan file yang lebih besar dari avatar.
 
-### Branching dan storage
+---
 
-Neon menggunakan copy-on-write. Child branch awalnya menunjuk ke data pages yang sama; data dasar tidak disalin penuh saat branch dibuat. Saat child branch menulis perubahan, branch tersebut membuat page berbeda untuk perubahan itu. Jadi branch tidak otomatis menggandakan 1 GB data, tetapi perubahan/retensi page yang divergen tetap menggunakan storage project. Semua branch berada dalam satu batas project, bukan masing-masing mendapat kuota 1 GB sendiri.
+## 8. Neon Free — batas, risiko, dan dampak kuota
 
-### Strategi hemat kuota
+Angka resmi yang diverifikasi pada 6 November 2026:
 
-- Satu project Neon untuk aplikasi; gunakan maksimal branch yang diperlukan.
-- Satu branch Preview/Development yang tetap; jangan membuat branch baru untuk setiap tes kecil.
-- Jangan terus melakukan health ping untuk menjaga compute tetap hidup.
-- Jangan menyimpan log debug/per-request yang tidak diperlukan.
-- Simpan detail jawaban hanya 90 hari; pertahankan ringkasan sesi.
-- Batasi foto ke 35 KiB; corpus kata tetap di frontend.
-- Uji query dan indeks; hindari N+1 request untuk dashboard awal.
-- Pantau compute hours, storage, network transfer dan branch count di Neon dashboard.
+| Resource | Neon Free |
+|---|---:|
+| Harga | $0/bulan |
+| Project | 100 project per account |
+| Branch | 10 branch per project |
+| PostgreSQL storage | 1 GB per project; 20 GB total seluruh project |
+| Compute | 100 CU-hours per project per bulan |
+| Maksimum autoscaling | 2 CU (sekitar 8 GB RAM) |
+| Scale to zero | Setelah 5 menit tidak aktif |
+| Public network transfer | 5 GB per project per bulan |
+| Instant restore history | 6 jam, dibatasi 1 GB change history |
+| Manual snapshot | 1 snapshot |
+| Monitoring history | 1 hari |
+| Managed Better Auth | Hingga 60.000 MAU |
 
-## 9. Vercel Hobby — batas dan pertimbangan region
+### Cara membaca compute
 
-Vercel Hobby saat ini mencantumkan included usage seperti hingga 1 juta Function invocations dan 100 GB-hours Function Duration; plan ini ditujukan untuk proyek personal/non-komersial. Gunakan kuota secara hemat dan cek kembali terms bila status penggunaan aplikasi berubah.
+- 100 CU-hours sama dengan sekitar 400 jam bila compute berjalan stabil pada 0,25 CU.
+- Pada 0,5 CU, jatah setara sekitar 200 jam aktif.
+- Pada 1 CU, setara sekitar 100 jam aktif.
+- Perhitungan aktual mengikuti ukuran compute dan durasi aktif; idle 5 menit akan disuspend pada plan Free.
+- Setiap branch punya compute endpoint sendiri, tetapi batas compute dihitung pada tingkat project. Banyak branch aktif dapat memakai jatah project bersama.
 
-**Pertimbangan penting untuk pengguna Indonesia:** Vercel mencantumkan Singapore sebagai region sin1, tetapi dokumentasi regional pricing menyatakan pricing/region compute khusus Singapore tersedia untuk pengguna Pro. Vercel Functions memiliki default region iad1 (Washington, D.C.). Karena target biaya adalah Rp0 dan tidak boleh meminta pengguna upgrade, jangan mengasumsikan fungsi Hobby dapat dijalankan di Singapore. Pada setup nanti:
-1. periksa region yang benar-benar diberikan project Hobby;
-2. ukur cold/warm latency browser → function → Neon dari Indonesia;
-3. jangan menjanjikan performa sub-second sebelum diukur;
-4. jika latensi tidak memuaskan, tunjukkan alternatif gratis dan konsekuensinya (misalnya Neon Functions di region database, bila cocok dan disetujui) — jangan otomatis memindahkan arsitektur atau mengaktifkan plan berbayar.
+### Branch dan storage
 
-## 10. Foto, data, dan perlindungan privasi
+Neon menggunakan copy-on-write: membuat branch baru tidak langsung menyalin seluruh database. Branch berbagi pages dasar; perubahan pada child branch membuat data divergen. Namun, storage perubahan dan history tetap menggunakan batas project yang sama. **Satu branch tidak mendapat jatah 1 GB tersendiri.**
 
-- DATABASE_URL, BETTER_AUTH_SECRET, email provider token, dan secret lainnya hanya di Vercel Environment Variables/local ignored .env; tidak pernah di source, log, commit, screenshot, atau chat.
-- .env.example hanya placeholder dan tidak membuktikan environment variable terpasang.
-- Preview menggunakan Neon development branch dan Vercel Preview env. Jangan membuat atau menulis ke production.
-- Google Sheets/Apps Script/Drive tetap menjadi sumber legacy/rollback sampai migrasi terverifikasi.
-- CSV export bersifat lokal, folder gitignored, akses terbatas. Password hash/email tidak dicetak di log.
-- Jangan menyalin data production ke Preview tanpa strategi perlindungan/anonymization dan persetujuan; branch copy-on-write tetap dapat berisi snapshot data sensitif.
+Strategi:
+- Satu Neon project untuk awal; satu branch development/preview yang dipakai terus.
+- Jangan membuat branch baru untuk setiap tes kecil.
+- Hapus branch percobaan yang sudah tidak dipakai setelah memastikan tidak ada koneksi deployment yang menggunakannya.
+- Hindari salinan data pribadi dari production ke Preview. Untuk proyek baru, seed hanya katalog umum dan data uji.
+- Pantau compute, storage, network transfer, dan jumlah branch di Dashboard.
 
-## 11. Cold start dan strategi request awal
+### Apa yang terjadi jika kuota habis?
 
-- Neon Free dapat suspend compute setelah 5 menit idle. Request pertama setelah idle dapat mengalami wake-up latency.
-- Vercel Function cold start terpisah dari Neon wake-up; keduanya harus diuji.
-- Tampilkan skeleton untuk shell dan identitas akun; jangan memblokir seluruh workspace menunggu semua modul.
-- Ambil data minimum untuk first paint; modul berat dan history dimuat saat dibuka.
-- Timeout harus menghasilkan pesan yang bisa dipahami, bukan sukses palsu.
-- Retry hanya pada operasi aman/idempoten atau event dengan event_id stabil. Jangan retry purchase/reward tanpa idempotency.
-- Target loading diukur dari Preview, jangan menjanjikan 3 detik universal karena koneksi/perangkat/Neon cold start berbeda.
-- Jangan melakukan ping database berkala hanya agar tidak tidur.
+- Compute-hours atau network transfer habis: compute project dapat disuspend sampai kuota periode berikutnya atau plan diubah.
+- Storage melewati batas: operasi INSERT/UPDATE yang menambah storage akan gagal sampai ruang dibebaskan atau plan diubah.
+- Branch mencapai batas: pembuatan branch baru gagal hingga branch lain dihapus.
+- Data yang sudah ada tidak otomatis dihapus saat kuota habis.
+
+Jangan melakukan ping berkala agar database tetap hidup. Itu justru dapat menghabiskan compute-hours.
+
+---
+
+## 9. Vercel Hobby — batas dan region
+
+Vercel Hobby adalah $0 dan mencantumkan:
+- 1.000.000 Function invocations.
+- 100 GB-hours Function Duration.
+- 4 CPU-hours Active CPU.
+- 360 GB-hours Provisioned Memory.
+- Hobby dapat memilih **satu region** untuk Function. Multi-region membutuhkan plan lebih tinggi.
+
+Batas kebijakan:
+- Hobby hanya untuk penggunaan personal/non-komersial. Jika proyek digunakan untuk tujuan komersial/keuntungan finansial, penggunaan harus ditinjau ulang terhadap aturan plan Vercel. Jangan menyamakan gratis dengan izin untuk semua bentuk penggunaan.
+- Jika batas kuota tercapai, layanan dapat dibatasi sampai periode kuota berikutnya; jangan merancang sistem yang mengandalkan kelebihan kuota berbayar.
+
+### Region yang direkomendasikan
+
+- Neon: Singapore `ap-southeast-1`.
+- Vercel: Singapore `sin1`.
+- Vercel menyatakan Hobby dapat memilih satu region; karena itu Singapore dapat ditetapkan tanpa harus mengaktifkan multi-region Pro.
+- `vercel.json` saat ini belum mencantumkan `regions`; default umum Vercel Function adalah `iad1` kecuali dashboard/config mengubahnya. Perubahan region baru dilakukan setelah disetujui dan diuji pada branch Preview.
+
+Tempatkan Vercel Function di region yang sama dengan Neon untuk mengurangi perjalanan jaringan. Hasil latency tetap perlu diukur dari browser pengguna di Indonesia; region yang sama tidak menghilangkan cold start atau latency jaringan ISP.
+
+---
+
+## 10. Privasi, environment, dan batas Preview
+
+- `DATABASE_URL`, `BETTER_AUTH_SECRET`, token Blob (bila kelak dipakai), dan secret lain hanya berada di Environment Variables Vercel atau file `.env` lokal yang diabaikan Git.
+- Jangan meminta pengguna mengirim secret ke chat. Jangan mencetak nilai secret ke log. `.env.example` hanya memuat placeholder.
+- Vercel Preview harus memakai Neon development branch; Environment Variables Production tidak diubah pada Fase 1–10.
+- Main tetap terlindungi. Semua perubahan rancangan dan implementasi berada di `feat/neon-migration` dan PR tetap tidak di-merge sampai pengguna menyetujui.
+- Google Sheets/Apps Script tidak menjadi tempat penulisan data setelah seluruh preview cutover ke Neon. Pengosongan data Sheets ditunda sampai Fase 7 dan hanya menyentuh spreadsheet legacy.
+- Reset Sheets tidak boleh menghapus data Neon. Migration database Neon harus aditif dan menjaga foreign key/data akun Neon yang mungkin sudah ada.
+- Data pribadi tidak boleh dicopy ke branch Preview tanpa tujuan yang jelas, persetujuan, dan anonimisasi.
+
+---
+
+## 11. Cold start dan pengalaman memuat
+
+Ada dua kemungkinan waktu tunggu yang terpisah:
+1. Vercel Function cold start.
+2. Neon compute wake-up setelah scale-to-zero 5 menit.
+
+Neon menjelaskan compute yang disuspend akan aktif lagi ketika menerima koneksi berikutnya; estimasi wake-up yang dipublikasikan dapat sekitar ratusan milidetik, tetapi ini bukan SLA dan bukan jaminan waktu total dari browser. Jaringan pengguna, Function cold start, query, dan banyaknya request tetap berpengaruh.
+
+Strategi UI dan request:
+- Render shell, sidebar, dan skeleton terlebih dahulu. Jangan mengunci seluruh workspace saat semua modul mengambil data.
+- Ambil informasi sesi dan data awal minimum saja.
+- Muat history, detail latihan, katalog besar, dan modul lain ketika dibutuhkan.
+- Gunakan satu bootstrap endpoint yang kecil bila pengukuran membuktikan banyak request awal menjadi bottleneck; jangan membuat endpoint gabungan yang mengambil seluruh database.
+- Timeout harus menampilkan pesan yang jelas, tombol coba lagi, dan status sinkronisasi yang jujur.
+- Retry otomatis hanya untuk GET/read idempoten atau operasi tulis yang mempunyai `event_id` idempoten. Jangan mengulang purchase, reward, atau klaim tanpa idempotency key.
+- Jangan menampilkan data mock atau sukses palsu saat database tidur/gagal.
+- Target muat 3 detik diuji pada Preview dengan cold/warm scenario, bukan dijanjikan universal.
+- Jangan mengirim keepalive/ping hanya agar Neon tidak tidur.
+
+---
 
 ## 12. Backup dan pemulihan
 
-Neon Free menyediakan instant restore window 6 jam dan satu manual snapshot menurut tabel paket yang diriset; itu bukan pengganti backup mandiri jangka panjang.
+Neon Free menyediakan instant restore history hingga 6 jam (dengan batas 1 GB change history) dan satu manual snapshot. Fitur ini membantu pemulihan jangka pendek, tetapi bukan backup mandiri jangka panjang.
 
-Rencana:
-1. Sebelum setiap migration besar, buat pg_dump dari branch yang tepat.
-2. Simpan backup di folder lokal terenkripsi/penyimpanan privat milik pengguna; folder backup selalu gitignored.
-3. Lakukan backup mingguan saat aplikasi aktif digunakan, serta sebelum schema/cutover.
-4. Uji restore ke branch development terpisah secara berkala.
-5. Jangan upload dump ke repository publik atau lampirkan password hash ke chat.
-6. Dokumentasikan tanggal, branch sumber, checksum, jumlah row, dan hasil restore tanpa menyertakan secret.
+### Rekomendasi
 
-Jadwal otomatis baru dipilih bila penyimpanan backup privat dan kuota CI/retensinya dipastikan gratis serta aman. Jangan menyimpan dump rahasia sebagai GitHub artifact tanpa evaluasi akses dan retention.
+1. Gunakan `pg_dump --format=custom` untuk backup database secara utuh.
+2. Simpan dump secara lokal dalam folder yang di-`.gitignore`, terenkripsi, dan tidak tersinkron ke lokasi publik.
+3. Backup sebelum perubahan schema/migration/cutover dan secara berkala ketika aplikasi mulai dipakai nyata.
+4. Gunakan Windows Task Scheduler untuk jadwal otomatis lokal bila diperlukan; backup hanya berjalan saat komputer menyala dan memiliki koneksi. Penyimpanan/retensi tetap di bawah kendali pengguna.
+5. Uji pemulihan dengan `pg_restore` ke Neon development branch terpisah. Jangan menguji restore langsung pada branch yang digunakan Preview.
+6. Catat tanggal, branch sumber, checksum, dan hasil restore. Jangan memasukkan password/hash/token atau isi data pribadi ke laporan.
+7. Jangan commit dump, mengunggah dump mentah ke GitHub, atau mengirimkannya melalui chat.
 
-## 13. Urutan implementasi setelah rancangan
+### Kondisi script backup yang sudah ada
 
-1. Fase 2: user membuat Neon project Singapore dan development branch; memasukkan DATABASE_URL/secret sendiri di Vercel Preview; tidak ada production secret.
-2. Fase 3: implementasi Better Auth self-hosted pada Vercel; migrasi schema/auth di branch development; compatibility verifier untuk dua format hash; no main changes.
-3. Fase 4: transaksi ekonomi/reward atomik, server-side quest/achievement validation.
-4. Fase 5: outbox IndexedDB, ACK, idempotency, multi-device.
-5. Fase 6: semua modul, history, reading, profile/avatar, SRS, settings, cross-device.
-6. Fase 7: dry-run data migration setelah jumlah akun/row diketahui. Jangan hapus Sheets.
-7. Fase 8: CI/security/two-device/responsive/E2E.
-8. Fase 9: production plan hanya setelah seluruh stability gate dan persetujuan eksplisit.
+Repo sudah memiliki `scripts/backup-db.mjs` dan `scripts/restore-db.mjs`, tetapi keduanya saat ini memakai ekspor/impor JSON per tabel, bukan `pg_dump`/format arsip PostgreSQL:
+- daftar tabel backup ditulis manual;
+- kegagalan membaca satu tabel ditangkap sebagai peringatan dan diisi array kosong, sehingga proses masih dapat menyelesaikan file backup yang tidak lengkap;
+- restore mengerjakan insert per baris dan bukan proses restore database penuh yang atomik;
+- file JSON memuat data akun/progres sehingga harus diperlakukan sebagai data pribadi.
 
-**Tidak ada perubahan production pada seluruh langkah tersebut.**
-
-## 14. Keputusan teknis yang ditetapkan sebagai default
-
-| Keputusan | Default |
-|---|---|
-| Database | Neon PostgreSQL Free |
-| API | Vercel Functions |
-| Region database | Singapore, bila tersedia untuk project Free |
-| Auth | Better Auth self-hosted di Vercel |
-| ORM | Drizzle |
-| Driver umum | Neon HTTP |
-| Driver transaksi khusus | Neon WebSocket bila tes transaksi mengharuskannya |
-| Password compatibility | Verifikasi GAS SHA-256 × 5.000 dan Vercel scrypt, upgrade setelah login benar |
-| Cookie/session | Better Auth HttpOnly/Secure/SameSite=Lax, same-origin |
-| Rate limit | Persistent DB-backed, tidak bergantung Map in-memory |
-| Avatar | PostgreSQL bytea WebP ≤35 KiB |
-| Timezone misi/streak | Asia/Jakarta (WIB) |
-| Backup | pg_dump lokal terenkripsi + restore test |
-| Production | Tidak disentuh sebelum gerbang stabilitas dan persetujuan pengguna |
-
-## 15. Sumber resmi yang digunakan (diakses 6 November 2026)
-
-**Neon**
-- [Neon Free Plan update (2 October 2026)](https://neon.com/blog/neon-free-plan-1-gb-per-project)
-- [Neon Free plan limits and quotas](https://github.com/neondatabase/website/blob/main/content/faqs/free-plan-limits-and-quotas.md)
-- [Managed Better Auth overview](https://neon.com/docs/auth/overview)
-- [React quick start for Managed Better Auth](https://neon.com/docs/auth/quick-start/react)
-- [Managed Better Auth password reset](https://neon.com/docs/auth/guides/password-reset)
-- [Branching authentication](https://neon.com/docs/auth/branching-authentication)
-- [Copy-on-write branching](https://neon.com/blog/branching-as-the-new-standard-for-relational-databases)
-
-**Better Auth / Drizzle**
-- [Better Auth security and password hashing](https://better-auth.com/docs/reference/security)
-- [Better Auth options: password hash/verify and reset TTL](https://better-auth.com/docs/reference/options)
-- [Better Auth Drizzle adapter](https://better-auth.com/docs/adapters/drizzle)
-- [Better Auth cookie security](https://better-auth.com/docs/concepts/cookies)
-- [Drizzle ORM + Neon](https://orm.drizzle.team/docs/connect-neon)
-
-**Vercel**
-- [Hobby plan usage](https://vercel.com/docs/plans/hobby)
-- [Vercel Function limitations](https://vercel.com/docs/functions/limitations)
-- [Vercel regions (Singapore = sin1; default function region = iad1)](https://vercel.com/docs/regions)
-- [Singapore regional pricing availability](https://vercel.com/docs/pricing/regional-pricing/sin1)
-- [Vercel Blob Hobby pricing](https://vercel.com/docs/vercel-blob/usage-and-pricing)
-- [Vercel Cron limits](https://vercel.com/docs/schedules/cron-jobs/usage-and-pricing)
+Karena itu script tersebut **belum boleh dianggap sebagai backup disaster-recovery yang teruji**. Perbaikannya harus dilakukan dan diuji pada fase implementasi, tidak dalam Fase 1.
 
 ---
+
+## 13. Urutan implementasi setelah rancangan disetujui
+
+| Fase | Fokus | Batas aman |
+|---|---|---|
+| 2 | Membuat Neon project Singapore dan development branch; menghubungkan Vercel Preview | Pengguna mengisi secret di dashboard; Production tidak disentuh |
+| 3 | Better Auth, registrasi/login/logout/sesi dan API inti | Pertahankan data Neon yang ada; schema additive; tes transaksi dan session |
+| 4 | Ekonomi, ledger, klaim, pembelian, streak server-side | Semua perubahan atomik dan idempoten |
+| 5 | Outbox IndexedDB dan sinkronisasi offline | Hapus event dari queue hanya setelah ACK |
+| 6 | Pindahkan semua fitur ke API baru dan perbaikan sub-bagian | Satu sub-bagian per laporan; Preview saja |
+| 7 | Reset data legacy Google Sheets tanpa migrasi akun | Hanya setelah preview tidak lagi memakai Sheets; Neon tidak diubah |
+| 8 | Audit/perbaikan HABIT Reading | Jangan mengubah konten lain di luar cakupan |
+| 9 | Responsif di seluruh ukuran layar | Screenshot dan pengujian regresi |
+| 10 | Test:all, integrasi, keamanan, multi-device, CI | Semua tes dan CI harus hijau |
+| 11 | Persiapan produksi dan backup operasional | Cutover hanya setelah seluruh checklist dan persetujuan |
+| — | Gerbang Stabilitas | Pengguna sendiri menulis "GERBANG DIBUKA" |
+| 12–20 | Ekspansi fitur | Dilarang sebelum Gerbang Stabilitas dibuka |
+
+Tidak ada implementasi source code, provisioning Neon, pengubahan Environment Variables, penghapusan data, atau deployment Production dalam Fase 1.
+
+---
+
+## 14. Keputusan yang diminta dari pengguna
+
+Rekomendasi untuk disetujui:
+
+1. **Auth:** Better Auth self-hosted di Vercel Functions.
+2. **Database/ORM:** Neon PostgreSQL + Drizzle.
+3. **Driver:** HTTP untuk query biasa; WebSocket/Pool hanya untuk transaksi interaktif yang diwajibkan dan diuji.
+4. **Region:** Neon Singapore `ap-southeast-1` dan Vercel Hobby Singapore `sin1` (satu region).
+5. **Avatar:** tetap `bytea` WebP ≤35 KiB di Neon.
+6. **Data lama:** tidak mengimpor akun/progres Google Sheets; Fase 7 mengosongkan Sheets sesudah preview beralih; Neon tidak di-reset dan data Neon yang sudah ada wajib dipertahankan.
+7. **Backup:** `pg_dump` lokal terenkripsi, dengan uji `pg_restore`.
+
+Bila disetujui, Fase 2 dapat dimulai. Bila ada komponen yang tidak disetujui, ubah keputusan itu dulu sebelum setup.
+
+---
+
+## 15. Sumber resmi (diakses 6 November 2026)
+
+### Neon
+- [Free plan limits and quotas](https://neon.com/docs/introduction/plans) — kuota proyek, branch, storage, compute, transfer, restore.
+- [Neon Free Plan: 1 GB PostgreSQL per project (2 October 2026)](https://neon.com/blog/neon-free-plan-1-gb-per-project)
+- [Neon FAQ: Free plan limits and quotas](https://github.com/neondatabase/website/blob/main/content/faqs/free-plan-limits-and-quotas.md)
+- [Managed Better Auth overview](https://neon.com/docs/auth/overview)
+- [Managed Better Auth password reset](https://neon.com/docs/auth/guides/password-reset)
+- [React quick start for Managed Better Auth](https://neon.com/docs/auth/quick-start/react)
+- [Neon branching authentication](https://neon.com/docs/auth/branching-authentication)
+- [Neon regional latency dashboard](https://neon.com/demos/regional-latency)
+- [Neon branch management](https://neon.com/docs/manage/branches)
+
+### Better Auth dan Drizzle
+- [Better Auth email/password](https://better-auth.com/docs/authentication/email-password)
+- [Better Auth options: custom password hash/verify and reset TTL](https://better-auth.com/docs/reference/options)
+- [Better Auth Drizzle adapter](https://better-auth.com/docs/adapters/drizzle)
+- [Better Auth session management](https://better-auth.com/docs/concepts/session-management)
+- [Better Auth rate limiting](https://better-auth.com/docs/concepts/rate-limit)
+- [Better Auth security and origin validation](https://better-auth.com/docs/reference/security)
+- [Drizzle ORM + Neon](https://orm.drizzle.team/docs/connect-neon)
+
+### Vercel
+- [Hobby plan usage and restrictions](https://vercel.com/docs/plans/hobby)
+- [Vercel regions](https://vercel.com/docs/regions)
+- [Vercel Function region configuration](https://vercel.com/docs/functions/configuring-functions/region)
+- [Vercel project configuration: Hobby single-region support](https://vercel.com/docs/project-configuration/vercel-json)
+- [Vercel Blob pricing](https://vercel.com/docs/vercel-blob/usage-and-pricing)
+- [Vercel Blob private storage](https://vercel.com/docs/vercel-blob/private-storage)
+- [Vercel Private Blob general availability (30 June 2026)](https://vercel.com/changelog/vercel-private-blob-is-now-generally-available)
+
