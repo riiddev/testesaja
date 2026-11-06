@@ -11,7 +11,8 @@ import { db, schema } from "../../../db/index.js";
 import {
   hashPassword,
   createSessionToken,
-  parseJsonBody
+  parseJsonBody,
+  getSessionCookieSecurity
 } from "../../_lib/auth.js";
 import {
   sendSuccess,
