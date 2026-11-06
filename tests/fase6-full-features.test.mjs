@@ -264,24 +264,55 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(grammarMap["simple_present"].score, 5);
   });
 
-  await t.test("5. Story API: record completed episode", async () => {
+  await t.test("5. Story API: enforce official stories and sequential episode completion", async () => {
+    const mockUnknownStory = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/story/complete",
+      body: { storyId: "story_market_adventure", episodeId: 1 }
+    });
+    await storyCompleteHandler(mockUnknownStory.req, mockUnknownStory.res);
+    assert.equal(mockUnknownStory.getStatus(), 400);
+
+    const mockSkipEpisode = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/story/complete",
+      body: { storyId: "story-01", episodeId: 2 }
+    });
+    await storyCompleteHandler(mockSkipEpisode.req, mockSkipEpisode.res);
+    assert.equal(mockSkipEpisode.getStatus(), 400);
+    assert.match(mockSkipEpisode.getData().error, /berurutan/i);
+
     const mockStory = createMockReqRes({
       method: "POST",
       token,
       url: "/api/story/complete",
-      body: { storyId: "story_market_adventure", episodeId: 1, totalEpisodes: 3 }
+      body: { storyId: "story-01", episodeId: 1, totalEpisodes: 999 }
     });
     await storyCompleteHandler(mockStory.req, mockStory.res);
     assert.equal(mockStory.getStatus(), 200);
     assert.equal(mockStory.getData().success, true);
+    assert.equal(mockStory.getData().data.isStoryCompleted, false);
+
+    const mockRepeat = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/story/complete",
+      body: { storyId: "story-01", episodeId: 1 }
+    });
+    await storyCompleteHandler(mockRepeat.req, mockRepeat.res);
+    assert.equal(mockRepeat.getStatus(), 200);
+    assert.equal(mockRepeat.getData().data.earnedXp, 0);
+    assert.equal(mockRepeat.getData().data.alreadyCompleted, true);
 
     const mockGetStory = createMockReqRes({ method: "GET", token, url: "/api/story/get" });
     await storyGetHandler(mockGetStory.req, mockGetStory.res);
     assert.equal(mockGetStory.getStatus(), 200);
     const storyData = mockGetStory.getData().data;
-    assert.ok(storyData.allStories["story_market_adventure"]);
+    assert.ok(storyData.allStories["story-01"]);
+    assert.deepEqual(storyData.allStories["story-01"].completedEpisodes, [1]);
   });
-
   await t.test("6. Matching & Reading Quiz: record sessions with mistake tracking", async () => {
     // 6a. Matching Round
     const mockMatch = createMockReqRes({

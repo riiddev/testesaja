@@ -10,6 +10,19 @@ import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreak } from "../../_lib/streak.js";
 import { REWARDS_CONFIG } from "../../_lib/rewardsConfig.js";
+
+const STORY_TOTAL_EPISODES = Object.freeze({
+  "story-01": 10,
+  "story-02": 10,
+  "story-03": 10,
+  "story-04": 10,
+  "story-05": 10,
+  "story-06": 10,
+  "story-07": 10,
+  "story-08": 10,
+  "story-09": 10,
+  "story-10": 10
+});
 import {
   sendSuccess,
   sendAuthError,
@@ -27,11 +40,15 @@ export default async function handler(req, res) {
     const { user } = await authenticateRequest(req);
     const body = await parseJsonBody(req);
     const storyId = String(body.storyId || "").trim();
-    const episodeId = parseInt(body.episodeId, 10) || 1;
-    const totalEpisodes = parseInt(body.totalEpisodes, 10) || 5;
+    const episodeId = Number(body.episodeId);
+    const totalEpisodes = STORY_TOTAL_EPISODES[storyId];
 
-    if (!storyId) {
-      return sendValidationError(res, "Parameter storyId wajib disertakan.");
+    if (!storyId || !totalEpisodes) {
+      return sendValidationError(res, "Cerita tidak terdaftar dalam katalog Petualangan resmi.");
+    }
+
+    if (!Number.isInteger(episodeId) || episodeId < 1 || episodeId > totalEpisodes) {
+      return sendValidationError(res, `Nomor episode harus berada pada rentang 1–${totalEpisodes}.`);
     }
 
     const existing = await db
@@ -46,16 +63,43 @@ export default async function handler(req, res) {
       .limit(1);
 
     const now = new Date();
-    let completedList = [];
-    let isStoryCompleted = false;
+    const priorList = existing.length > 0 && Array.isArray(existing[0].completedEpisodes)
+      ? existing[0].completedEpisodes
+      : [];
     const wasStoryCompleted = existing.length > 0 && Boolean(existing[0].isStoryCompleted);
-    const wasEpisodeCompleted = existing.length > 0 &&
-      Array.isArray(existing[0].completedEpisodes) &&
-      existing[0].completedEpisodes.includes(episodeId);
+    const wasEpisodeCompleted = priorList.includes(episodeId);
+
+    if (wasEpisodeCompleted) {
+      return sendSuccess(
+        res,
+        {
+          storyId,
+          episodeId,
+          completedEpisodes: priorList,
+          isStoryCompleted: wasStoryCompleted,
+          alreadyCompleted: true,
+          earnedXp: 0,
+          earnedCoins: 0
+        },
+        "Episode ini sudah pernah diselesaikan. Hadiah tidak diberikan dua kali."
+      );
+    }
+
+    const expectedEpisode = existing.length > 0
+      ? Math.max(1, Number(existing[0].currentEpisode) || 1)
+      : 1;
+
+    if (episodeId !== expectedEpisode) {
+      return sendValidationError(
+        res,
+        `Selesaikan episode secara berurutan. Episode berikutnya yang tersedia adalah ${expectedEpisode}.`
+      );
+    }
+
+    const completedList = [...priorList, episodeId];
+    const isStoryCompleted = completedList.length >= totalEpisodes || wasStoryCompleted;
 
     if (existing.length === 0) {
-      completedList = [episodeId];
-      isStoryCompleted = completedList.length >= totalEpisodes;
       await db.insert(schema.storyProgress).values({
         userId: user.id,
         storyId,
@@ -65,19 +109,10 @@ export default async function handler(req, res) {
         updatedAt: now
       });
     } else {
-      const priorList = Array.isArray(existing[0].completedEpisodes) ? existing[0].completedEpisodes : [];
-      if (!priorList.includes(episodeId)) {
-        completedList = [...priorList, episodeId];
-      } else {
-        completedList = priorList;
-      }
-
-      isStoryCompleted = completedList.length >= totalEpisodes || existing[0].isStoryCompleted;
-
       await db
         .update(schema.storyProgress)
         .set({
-          currentEpisode: Math.min(totalEpisodes, Math.max(existing[0].currentEpisode, episodeId + 1)),
+          currentEpisode: Math.min(totalEpisodes, episodeId + 1),
           completedEpisodes: completedList,
           isStoryCompleted,
           updatedAt: now
@@ -137,6 +172,7 @@ export default async function handler(req, res) {
         episodeId,
         completedEpisodes: completedList,
         isStoryCompleted,
+        alreadyCompleted: false,
         earnedXp: tx.alreadyProcessed ? 0 : tx.xpEarned,
         earnedCoins: tx.alreadyProcessed ? 0 : tx.coinsEarned,
         streak: streakRes?.streak

@@ -96,17 +96,21 @@ export function StoryRunner({
         episodeId: episode.id
       });
 
-      if (res && res.success) {
+      if (res?.success && res.data) {
         setCompletionFeedback({
-          earnedXp: res.data?.earnedXp || 50,
-          earnedCoins: res.data?.earnedCoins || 30,
-          alreadyCompleted: Boolean(res.alreadyCompleted),
+          earnedXp: Number(res.data.earnedXp) || 0,
+          earnedCoins: Number(res.data.earnedCoins) || 0,
+          alreadyCompleted: Boolean(res.data.alreadyCompleted),
           message: res.message || null
         });
 
         if (onEpisodeCompleted) {
           onEpisodeCompleted(story.id, episode.id);
         }
+      } else {
+        setCompletionFeedback({
+          error: res?.error || res?.message || "Episode belum berhasil dicatat."
+        });
       }
     } catch (err) {
       console.warn("Complete episode error:", err);
