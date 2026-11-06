@@ -19,7 +19,7 @@ PETA FASE
 | 4    | Ekonomi dan hadiah di server                    | B |
 | 5    | Sinkronisasi offline-first                      | B |
 | 6    | Pindahkan semua fitur + perbaikan (6.1–6.10)    | B |
-| 7    | Migrasi data dari Google Sheets                 | B |
+| 7    | Reset data legacy Google Sheets (tanpa migrasi) | B |
 | 8    | Audit dan perbaikan bug HABIT Reading           | B |
 | 9    | Tampilan rapi di semua ukuran layar             | B |
 | 10   | Pengujian dan CI                                | B |
@@ -50,7 +50,7 @@ A2. REPO DAN CABANG
 
 A3. KEPUTUSAN YANG SUDAH DIAMBIL
 - Database utama: Neon PostgreSQL paket Free. Backend/API: Vercel Functions (folder api/). Frontend React + Vite dipertahankan. Biaya target Rp0.
-- Google Sheets/Apps Script TIDAK dimatikan atau dihapus sampai semua data dan fitur terbukti pindah dan lolos tes.
+- Google Sheets/Apps Script tetap dipertahankan sementara sampai fitur aplikasi benar-benar beralih ke API Neon. Namun, data akun dan progres lama di Google Sheets TIDAK dimigrasikan: data legacy akan dikosongkan pada Fase 7 setelah aplikasi berhenti menulis ke Sheets. Neon tidak ikut dikosongkan.
 - Semua perubahan diuji di preview (Vercel preview + branch Neon). Production tidak disentuh sebelum checklist lulus.
 - Mode gelap tetap dihapus. Angka total konten (jumlah kata/topik/artikel) tidak ditampilkan di UI.
 
@@ -62,8 +62,9 @@ Keamanan dan data
 - Akun baru mulai dari NOL untuk semua progres, pencapaian, XP, koin, streak, inventory, dan data lain (tanpa angka default palsu).
 - Cache lokal diberi namespace user_id dan dibersihkan saat logout atau ganti akun.
 
-Akses data lama
-- Jangan meminta kredensial Google. Jumlah akun/baris di Google Sheets saya hitung sendiri dan saya beri tahu angkanya. Untuk migrasi (Fase 7), saya menaruh ekspor CSV di folder lokal yang masuk .gitignore (berisi email dan hash password: dilarang di-commit, dicetak ke log, atau dikirim ke chat).
+Akses dan reset data lama
+- Jangan meminta kredensial Google dan jangan mengekspor akun/progres lama untuk migrasi. Keputusan pengguna: seluruh akun dan data lama di Google Sheets dibuang; pengguna baru akan mendaftar dari nol. Tidak ada CSV akun, hash password, atau progres yang dipindahkan ke Neon.
+- Reset dilakukan hanya setelah aplikasi preview sudah berhenti memakai/menulis ke Google Sheets agar reset tidak membuat login/registrasi aplikasi aktif rusak atau data lama terbentuk kembali. Pada Fase 7, kosongkan baris data (bukan header/struktur tab) pada tab legacy yang digunakan, minimal `Accounts`, `LearningStates`, dan `Collections`; audit tab lain sebelum reset agar tidak ada data pengguna tertinggal. Neon tidak boleh dihapus atau di-reset sebagai bagian dari keputusan ini.
 
 Kuota gratis
 - Neon Free: VERIFIKASI angka terbaru dari halaman harga/dokumentasi Neon (penyimpanan per proyek, jam komputasi, jumlah branch, auto-suspend, riwayat pemulihan, apakah data di branch development ikut dihitung dalam batas penyimpanan). Jangan memakai angka dari ingatan; catat hasilnya di docs/kuota.md. Rancang data ringkas, hindari file/gambar besar di database, dan jangan membuat ping terus-menerus agar database tidak tidur.
@@ -206,8 +207,13 @@ Cakupan: profil, avatar, inventory, titles, settings (termasuk target harian), m
 6.10 Cerita/petualangan, grammar, reading quiz, matching
 - Pastikan semuanya memakai API baru, progres tersimpan di server, dan lolos A5.
 
-FASE 7 — MIGRASI DATA
-Skrip ekspor dari Google Sheets (hanya baca) ke Neon branch development: dry run dulu, laporan jumlah baris sebelum/sesudah per tabel, verifikasi acak per akun. Jangan menghapus apa pun di Sheets. Lewati fase ini bila hanya ada data uji dan saya setuju.
+FASE 7 — RESET DATA LEGACY GOOGLE SHEETS (TANPA MIGRASI)
+Keputusan pengguna: mulai dari nol akun. Tidak ada akun, password/hash, progres, koleksi, atau data pengguna lama yang dipindahkan ke Neon.
+1. Jangan reset Sheets sebelum seluruh alur aplikasi preview sudah beralih ke API Neon dan tidak lagi membaca/menulis akun/progres melalui Apps Script. Ini mencegah login/registrasi rusak atau data lama tercipta kembali.
+2. Inventarisasi semua tab yang berisi data pengguna. Minimal tab yang diketahui: `Accounts`, `LearningStates`, dan `Collections`. Pertahankan tab serta baris header/struktur; hapus hanya baris data. Periksa tab lain agar tidak ada data pengguna yang tertinggal.
+3. Catat jumlah baris sebelum dan sesudah pengosongan tanpa menampilkan email, hash password, atau isi data pribadi. Verifikasi ketiga tab tersebut tidak lagi memiliki baris akun/progres/koleksi.
+4. Cakupan reset hanya Google Sheets lama. JANGAN menghapus, mengosongkan, atau mengubah data di Neon. Akun yang dibuat setelah cutover harus registrasi baru dan seluruh progres/EXP/koin/streak/inventory dimulai dari nol.
+5. Jangan membuat ekspor CSV atau skrip migrasi akun lama. Jangan menghapus proyek Apps Script atau spreadsheet sebelum verifikasi akhir Fase 11; data di Sheets sudah kosong, tetapi artefak legacy dapat dipertahankan sementara untuk audit.
 
 FASE 8 — AUDIT DAN PERBAIKAN BUG HABIT READING
 Audit menyeluruh: render teks dan format, daftar/filter/pencarian, penanda selesai membaca, tombol kuis, hadiah sekali per artikel (6.4), progres bacaan, tampilan mobile, artikel rusak atau kosong, konsistensi data, kuis (soal, kunci jawaban, pembahasan). Daftar semua bug dengan file:baris dan cara reproduksi, lalu perbaiki yang terbukti. Pembuktian: tes otomatis tiap artikel (render tidak error, teks tidak kosong) + uji manual sampel.
