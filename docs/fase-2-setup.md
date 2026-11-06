@@ -61,24 +61,25 @@ Project Vercel yang teridentifikasi:
 
 1. Buka https://vercel.com/thoodev/sinauuenglish/settings/environment-variables.
 2. Pilih Add New.
-3. Untuk setiap variable, set Target = Preview dan Git Branch = feat/neon-migration. Jangan memilih Production atau Development.
-4. Tambahkan variable berikut:
+3. Untuk variable baru, set Target = Preview dan Git Branch = feat/neon-migration. Jangan memilih Production atau Development.
+4. Tambahkan hanya variable ini setelah project Neon siap:
 
-| Key | Value | Catatan |
+| Key | Value | Status |
 |---|---|---|
-| DATABASE_URL | pooled connection string dari branch Neon development | Runtime API |
-| BETTER_AUTH_SECRET | secret random baru minimal 32 byte | Generate lokal dengan perintah di bawah; dipakai saat Better Auth diimplementasikan pada Fase 3 |
-| BETTER_AUTH_URL | https://sinauuenglish-git-feat-neon-migration-thoodev.vercel.app | URL auth untuk alias branch Preview |
+| DATABASE_URL | pooled connection string dari Neon branch development | BELUM ADA; pemilik akun menambahkannya setelah membuat project Neon |
 
-5. Generate BETTER_AUTH_SECRET secara lokal melalui PowerShell/Terminal (jangan kirim hasilnya ke chat):
+5. Dua variable berikut **sudah dibuat** melalui koneksi Vercel untuk Preview branch feat/neon-migration:
+   - BETTER_AUTH_SECRET: sudah tersimpan sebagai Sensitive.
+   - BETTER_AUTH_URL: sudah diset ke alias branch Preview.
+   Jangan mengganti atau membuat ulang keduanya kecuali memang melakukan rotasi secret.
+6. Bila suatu saat perlu merotasi BETTER_AUTH_SECRET, buat secret baru secara lokal dengan PowerShell/Terminal (jangan kirim hasilnya ke chat):
 
 ```powershell
 node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
 ```
 
-6. Simpan variable. Nilai secret bertipe Sensitive/Encrypted jika opsi tersedia.
-7. Biarkan SINAI_APPS_SCRIPT_URL yang sudah ada. Jangan mengedit scope variable legacy.
-8. Setelah environment variables disimpan, lakukan Redeploy pada deployment Preview terbaru dari branch feat/neon-migration. Variable Vercel baru hanya berlaku untuk deployment berikutnya; deployment lama tidak otomatis berubah.
+7. Biarkan SINAI_APPS_SCRIPT_URL yang sudah ada. Jangan mengedit atau menghapus scope variable legacy.
+8. Setelah DATABASE_URL ditambahkan, redeploy deployment Preview terbaru dari branch feat/neon-migration. Variable Vercel baru hanya berlaku untuk deployment berikutnya; deployment lama tidak otomatis berubah.
 
 ## E. Verifikasi lokal
 

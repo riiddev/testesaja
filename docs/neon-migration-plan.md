@@ -331,6 +331,9 @@ STATUS FASE 2 — 6 NOVEMBER 2026
 - Konfigurasi repository `vercel.json` disiapkan untuk mengarahkan Function Preview ke Singapore `sin1`. Perubahan berlaku pada deployment dari branch ini; Production tidak disentuh.
 - Neon project/branch belum dapat dibuat atau diverifikasi melalui koneksi yang tersedia. Pemilik akun harus membuat/memilih project di Neon Console dan menyiapkan branch `development`.
 - Runtime memakai pooled `DATABASE_URL`; migration/backup memakai direct `DATABASE_URL_UNPOOLED`. Direct URL tidak disimpan pada Vercel runtime.
-- Environment Variables Vercel belum ditambahkan karena connection string Neon belum tersedia. Variable legacy `SINAI_APPS_SCRIPT_URL` tidak diubah.
+- Environment Variables Vercel: BETTER_AUTH_SECRET (Sensitive) dan BETTER_AUTH_URL telah dibuat khusus untuk Preview branch; DATABASE_URL pooled menunggu Neon project. Variable legacy `SINAI_APPS_SCRIPT_URL` tidak diubah.
 - Schema Drizzle, dua migration awal, seed katalog, dan skrip koneksi sudah tersedia sebelum Fase 2; konfigurasi migrasi/koneksi diperketat. Belum ada migration atau seed yang dijalankan pada database.
 - Lihat `docs/fase-2-setup.md` untuk checklist langkah manual, verifikasi, dan batas aman.
+- Environment Variables Vercel branch-specific `BETTER_AUTH_SECRET` (Sensitive) dan `BETTER_AUTH_URL` telah dibuat untuk Preview `feat/neon-migration`; `DATABASE_URL` pooled masih menunggu project Neon development.
+- CI run 42246638151 berhasil untuk install, audit logic/content, dan build Vite; Backend Integration & Security Tests dilewati karena DATABASE_URL belum tersedia.
+- Preview deployment commit ini berstatus READY dan region Function terverifikasi `sin1`; alias branch tetap `https://sinauuenglish-git-feat-neon-migration-thoodev.vercel.app`.
