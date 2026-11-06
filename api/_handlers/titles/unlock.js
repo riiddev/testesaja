@@ -4,7 +4,7 @@
  * Only unlocks IDs in the official title catalog after server-side statistics
  * prove the user's achievement requirements have been met.
  */
-import { eq, and } from "drizzle-orm";
+import { eq, and, sum } from "drizzle-orm";
 import { db, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { evaluateAllTitles } from "../../../src/features/profile/titleSystem.js";
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       return sendValidationError(res, "Parameter titleId wajib disertakan.");
     }
 
-    const [profileRows, statsRows, existingRows] = await Promise.all([
+    const [profileRows, statsRows, existingRows, contextRows] = await Promise.all([
       db.select().from(schema.profiles)
         .where(eq(schema.profiles.userId, user.id))
         .limit(1),
@@ -39,19 +39,26 @@ export default async function handler(req, res) {
         .limit(1),
       db.select({ id: schema.titles.id, titleId: schema.titles.titleId })
         .from(schema.titles)
-        .where(eq(schema.titles.userId, user.id))
+        .where(eq(schema.titles.userId, user.id)),
+      db.select({ totalQuestions: sum(schema.activityLog.totalQuestions) })
+        .from(schema.activityLog)
+        .where(and(
+          eq(schema.activityLog.userId, user.id),
+          eq(schema.activityLog.activityType, "matching")
+        ))
     ]);
 
     const profile = profileRows[0] || {};
     const stats = statsRows[0] || {};
     const alreadyUnlocked = existingRows.map((row) => row.titleId);
+    const contextReviewsCount = Number(contextRows[0]?.totalQuestions || 0);
 
     const serverStats = {
       totalStartedWords: Number(stats.wordsStarted) || 0,
       masteredWordsCount: Number(stats.wordsMastered) || 0,
       b2MasteredCount: Number(stats.b2Mastered) || 0,
       totalReviewsDone: Number(stats.totalReviews) || 0,
-      contextReviewsCount: Math.round((Number(stats.totalReviews) || 0) * 0.7),
+      contextReviewsCount,
       completedGrammarCount: Number(stats.grammarCompleted) || 0,
       readingCompletedCount: Number(stats.readingCompleted) || 0,
       adventureCompletedCount: Number(stats.storiesCompleted) || 0,

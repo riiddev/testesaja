@@ -234,6 +234,33 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(mockUnlock.getStatus(), 200);
     assert.equal(mockUnlock.getData().data.titleId, "word_explorer");
 
+    const contextBefore = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "context_scholar" }
+    });
+    await titlesUnlockHandler(contextBefore.req, contextBefore.res);
+    assert.equal(contextBefore.getStatus(), 400);
+
+    await db.insert(schema.activityLog).values({
+      id: `act_${testUserId}_context_100`,
+      userId: testUserId,
+      activityType: "matching",
+      title: "Verified context matching practice",
+      totalQuestions: 100
+    });
+
+    const contextQualified = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "context_scholar" }
+    });
+    await titlesUnlockHandler(contextQualified.req, contextQualified.res);
+    assert.equal(contextQualified.getStatus(), 200);
+    assert.equal(contextQualified.getData().data.titleId, "context_scholar");
+
     // GET titles
     const mockGetTitles = createMockReqRes({ method: "GET", token, url: "/api/titles/get" });
     await titlesGetHandler(mockGetTitles.req, mockGetTitles.res);
@@ -311,6 +338,16 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(duplicateReward.getStatus(), 200);
     assert.equal(duplicateReward.getData().data.alreadyRewarded, true);
     assert.equal(duplicateReward.getData().data.earnedXp, 0);
+
+    const mockRetake = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/grammar/save",
+      body: { topicId: "present-simple", answers: wrongAnswers }
+    });
+    await grammarSaveHandler(mockRetake.req, mockRetake.res);
+    assert.equal(mockRetake.getData().data.status, "completed");
+    assert.equal(mockRetake.getData().data.xpEarned, 0);
 
     const mockGetGrammar = createMockReqRes({ method: "GET", token, url: "/api/grammar/get" });
     await grammarGetHandler(mockGetGrammar.req, mockGetGrammar.res);
