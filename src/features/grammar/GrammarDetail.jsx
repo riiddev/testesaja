@@ -41,14 +41,12 @@ export function GrammarDetail({ topic, onBack, onStartQuiz, userProfileHook }) {
   if (!detailedTopic) return null;
 
   const handleSaveProgress = async (data) => {
-    try {
-      const res = await api.saveGrammarProgress(data);
-      if (res && res.data) {
-        setTopicProgress(res.data);
-      }
-    } catch (err) {
-      console.warn("Save grammar progress error:", err);
+    const res = await api.saveGrammarProgress(data);
+    if (res?.success && res.data) {
+      setTopicProgress(res.data);
+      return res;
     }
+    throw new Error(res?.error || res?.message || "Gagal menyimpan hasil kuis Grammar.");
   };
 
   const isMastered = topicProgress?.status === "mastered" || (topicProgress?.quizBest || 0) >= 80;

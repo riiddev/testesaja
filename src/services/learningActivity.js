@@ -79,8 +79,6 @@ export async function recordLearningActivity({
         const res = await api.recordReadingQuiz({
           articleId: refId,
           articleTitle: title,
-          articleId: refId,
-          articleTitle: title,
           durationSeconds,
           answers
         });

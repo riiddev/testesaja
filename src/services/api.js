@@ -584,8 +584,8 @@ export const api = {
     return request("getGrammarProgress", {}, true);
   },
 
-  async saveGrammarProgress({ topicId, practiceDone, quizScore }) {
-    return request("saveGrammarProgress", { topicId, practiceDone, quizScore }, true);
+  async saveGrammarProgress({ topicId, answers = [] }) {
+    return request("saveGrammarProgress", { topicId, answers }, true);
   },
 
   // Storytelling & Adventures

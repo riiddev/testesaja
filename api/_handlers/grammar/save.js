@@ -29,7 +29,9 @@ export default async function handler(req, res) {
     const topicId = String(body.topicId || "").trim();
     const score = Math.max(0, parseInt(body.quizScore !== undefined ? body.quizScore : body.score, 10) || 0);
     const total = Math.max(1, parseInt(body.total, 10) || 5);
-    const isCompleted = score >= Math.ceil(total * 0.7) || Boolean(body.practiceDone);
+    // Completion is derived from the score threshold only; client-supplied
+    // practiceDone flags are not trusted for progress or rewards.
+    const isCompleted = score >= Math.ceil(total * 0.7);
 
     if (!topicId) {
       return sendValidationError(res, "Parameter topicId wajib disertakan.");
@@ -105,23 +107,26 @@ export default async function handler(req, res) {
       }
     }
 
-    // Record every server-accepted grammar attempt for history and daily quests.
-    const activityId = `act_${user.id}_grammar_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    await db.insert(schema.activityLog).values({
-      id: activityId,
-      userId: user.id,
-      activityType: "grammar",
-      title: `Latihan Grammar: ${topicId}`.slice(0, 150),
-      score,
-      totalQuestions: total,
-      accuracyPercent: Math.round((score / total) * 100),
-      durationSeconds: 0,
-      xpEarned,
-      coinsEarned,
-      createdAt: now
-    });
+    // Only a passing server-accepted quiz is a completed grammar activity.
+    if (isCompleted) {
+      const activityId = `act_${user.id}_grammar_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      await db.insert(schema.activityLog).values({
+        id: activityId,
+        userId: user.id,
+        activityType: "grammar",
+        title: `Latihan Grammar: ${topicId}`.slice(0, 150),
+        score,
+        totalQuestions: total,
+        accuracyPercent: Math.round((score / total) * 100),
+        durationSeconds: 0,
+        xpEarned,
+        coinsEarned,
+        createdAt: now
+      });
+  
+    }
 
-    const streakRes = await evaluateAndRecordStreak(user.id);
+    const streakRes = await evaluateAndRecordStreak(user.id);    const streakRes = await evaluateAndRecordStreak(user.id);
 
     return sendSuccess(
       res,

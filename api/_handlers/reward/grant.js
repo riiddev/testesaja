@@ -5,7 +5,7 @@
  * BUTIR A: Reading rewards granted strictly ONCE per article per user.
  */
 
-import { eq, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransaction } from "../../_lib/ledger.js";
@@ -77,7 +77,25 @@ export default async function handler(req, res) {
 
       case "grammar_quiz": {
         if (!refId) return sendValidationError(res, "Parameter refId (topicId) wajib disertakan.");
-        deterministicEventId = `grammar:${refId}:quiz`;
+
+        const verifiedGrammar = await db
+          .select({ status: schema.grammarProgress.status })
+          .from(schema.grammarProgress)
+          .where(
+            and(
+              eq(schema.grammarProgress.userId, user.id),
+              eq(schema.grammarProgress.topicId, refId)
+            )
+          )
+          .limit(1);
+
+        if (verifiedGrammar[0]?.status !== "completed") {
+          return sendValidationError(res, "Kuis Grammar belum memenuhi ambang kelulusan resmi.");
+        }
+
+        // Match the event ID used by /api/grammar/save so a reward can never
+        // be minted a second time through this compatibility endpoint.
+        deterministicEventId = `grammar:${refId}:first_complete`;
         xpAmount = REWARDS_CONFIG.grammar_quiz_complete.xp;
         coinsAmount = REWARDS_CONFIG.grammar_quiz_complete.coins;
         break;

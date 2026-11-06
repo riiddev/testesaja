@@ -35,6 +35,7 @@ import storyGetHandler from "../api/_handlers/story/get.js";
 import storyCompleteHandler from "../api/_handlers/story/complete.js";
 import matchingRecordHandler from "../api/_handlers/matching/record.js";
 import readingQuizRecordHandler from "../api/_handlers/reading-quiz/record.js";
+import rewardGrantHandler from "../api/_handlers/reward/grant.js";
 import activityHistoryHandler from "../api/activity/history.js";
 import activitySummaryHandler from "../api/activity/summary.js";
 
@@ -242,30 +243,82 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.ok(!titlesData.titles.includes("novice_scholar"));
   });
 
-  await t.test("4. Grammar API: save progress and retrieve progress map", async () => {
+  await t.test("4. Grammar API: verify official answers and grant one server-side completion reward", async () => {
+    const grammarData = JSON.parse(
+      fs.readFileSync(new URL("../src/data/grammar/present-simple.json", import.meta.url), "utf8")
+    );
+    const officialQuestions = grammarData.finalQuiz;
+    const wrongAnswers = officialQuestions.map((question) => ({
+      questionId: question.id,
+      selectedIndex: (question.correctIndex + 1) % question.options.length
+    }));
+
+    const mockForged = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/grammar/save",
+      body: {
+        topicId: "present-simple",
+        answers: wrongAnswers,
+        score: officialQuestions.length,
+        quizScore: 100,
+        total: officialQuestions.length,
+        practiceDone: true
+      }
+    });
+    await grammarSaveHandler(mockForged.req, mockForged.res);
+    assert.equal(mockForged.getStatus(), 200);
+    assert.equal(mockForged.getData().data.score, 0);
+    assert.equal(mockForged.getData().data.scorePct, 0);
+    assert.equal(mockForged.getData().data.status, "in_progress");
+    assert.equal(mockForged.getData().data.xpEarned, 0);
+
+    const correctAnswers = officialQuestions.map((question) => ({
+      questionId: question.id,
+      selectedIndex: question.correctIndex
+    }));
     const mockSaveGrammar = createMockReqRes({
       method: "POST",
       token,
       url: "/api/grammar/save",
       body: {
-        topicId: "simple_present",
-        score: 5,
-        total: 5,
-        practiceDone: true
+        topicId: "present-simple",
+        answers: correctAnswers,
+        // These browser-supplied figures must not determine the server result.
+        score: 0,
+        quizScore: 0,
+        total: 1,
+        practiceDone: false
       }
     });
     await grammarSaveHandler(mockSaveGrammar.req, mockSaveGrammar.res);
     assert.equal(mockSaveGrammar.getStatus(), 200);
     assert.equal(mockSaveGrammar.getData().success, true);
+    assert.equal(mockSaveGrammar.getData().data.score, officialQuestions.length);
+    assert.equal(mockSaveGrammar.getData().data.scorePct, 100);
+    assert.equal(mockSaveGrammar.getData().data.status, "completed");
+    assert.ok(mockSaveGrammar.getData().data.xpEarned > 0);
+
+    // The compatibility reward endpoint uses the same ledger event ID, so it
+    // cannot mint a second payout after /grammar/save has already granted it.
+    const duplicateReward = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reward/grant",
+      body: { source: "grammar_quiz", refId: "present-simple", eventId: "forged-second-payment" }
+    });
+    await rewardGrantHandler(duplicateReward.req, duplicateReward.res);
+    assert.equal(duplicateReward.getStatus(), 200);
+    assert.equal(duplicateReward.getData().data.alreadyRewarded, true);
+    assert.equal(duplicateReward.getData().data.earnedXp, 0);
 
     const mockGetGrammar = createMockReqRes({ method: "GET", token, url: "/api/grammar/get" });
     await grammarGetHandler(mockGetGrammar.req, mockGetGrammar.res);
     assert.equal(mockGetGrammar.getStatus(), 200);
     const grammarMap = mockGetGrammar.getData().data.progress;
-    assert.ok(grammarMap["simple_present"]);
-    assert.equal(grammarMap["simple_present"].score, 5);
+    assert.ok(grammarMap["present-simple"]);
+    assert.equal(grammarMap["present-simple"].score, officialQuestions.length);
   });
-
   await t.test("5. Story API: enforce official stories and sequential episode completion", async () => {
     const mockUnknownStory = createMockReqRes({
       method: "POST",
