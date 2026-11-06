@@ -21,8 +21,8 @@
 | Region | Neon Singapore `ap-southeast-1` + Vercel Singapore `sin1` | Menempatkan function dekat database; Hobby dapat memilih satu region |
 | Auth | Better Auth self-hosted | Bisa dikustomisasi, reset link 1 jam, session revocation, adapter Drizzle, dan cookie HttpOnly |
 | ORM | Drizzle | Sudah digunakan di repo; schema dan migration SQL tersimpan di Git |
-| Driver query biasa | Neon HTTP | Cocok untuk query singkat/stateless dari Vercel Functions |
-| Driver transaksi interaktif | Neon WebSocket/Pool bila dibutuhkan | Drizzle menyatakan WebSocket diperlukan untuk session/interactive transaction |
+| Driver query biasa | Neon HTTP | Cocok untuk query singkat dan transaksi non-interaktif; dapat mengirim beberapa query sebagai satu batch |
+| Driver transaksi interaktif | Neon WebSocket/Pool hanya bila dibutuhkan | Diperlukan untuk session/interactive transaction dan kompatibilitas `pg` yang lebih penuh |
 | Avatar | PostgreSQL `bytea` WebP ≤35 KiB | Foto kecil; satu sumber data; penghapusan akun bisa memakai FK/cascade |
 | Backup | `pg_dump` lokal terenkripsi + uji `pg_restore` | Instant restore Neon Free hanya 6 jam dan tidak menggantikan backup jangka panjang |
 
@@ -72,7 +72,7 @@ Hal yang harus diperhatikan:
 - Better Auth perlu disambungkan ke tabel dan kolom dengan benar. Tabel `users` yang ada tidak boleh dihapus atau diganti ID-nya.
 - Rate limiting Better Auth secara default menggunakan memory storage; untuk serverless, storage harus diubah ke database atau custom storage atomik.
 - Adapter Drizzle perlu dikonfigurasi dengan `transaction: true` bila flow yang diuji membutuhkan transaksi. Gunakan driver yang mendukung transaksi interaktif; jangan menganggap driver HTTP otomatis mendukung seluruh pola transaksi.
-- Paket `better-auth` versi 1.7.17 sudah ada di lockfile. Package adapter Drizzle muncul sebagai dependency di lockfile, tetapi dependency langsung/import path harus dinyatakan dengan benar saat implementasi Fase 3. Jangan mengandalkan dependency transitif secara tidak sengaja.
+- Repository saat ini menyatakan `better-auth: ^1.7.17`; lockfile mengunci versi 1.7.17. Dokumentasi resmi yang diperiksa pada 6 November 2026 menampilkan 1.7.18 sebagai versi terbaru. `@better-auth/drizzle-adapter` 1.7.17 sudah muncul secara transitif di lockfile, tetapi belum menjadi dependency langsung yang dideklarasikan di `package.json`. Pada Fase 3, pilih satu versi Better Auth yang kompatibel, pasangkan versi adapter yang sama sebagai dependency langsung, lalu lock dan tes; jangan melakukan upgrade dependency dalam Fase 1.
 
 ### C. Mempertahankan custom auth saat ini
 
@@ -136,12 +136,13 @@ File `db/index.js` sekarang menggunakan `neon()` + `drizzle-orm/neon-http`. Pola
 
 | Driver | Cocok untuk | Batas / aturan |
 |---|---|---|
-| Neon HTTP (`drizzle-orm/neon-http`) | Query tunggal, read, operasi singkat stateless | Drizzle menyebut HTTP lebih cepat untuk query non-interaktif; jangan menggunakannya lalu menganggap transaksi interaktif pasti didukung |
-| Neon WebSocket/Pool (`drizzle-orm/neon-serverless`) | Sesi database dan interactive transaction | Tambahkan konfigurasi WebSocket yang diperlukan di runtime Node; uji pooling, koneksi, dan commit/rollback pada Vercel Preview |
+| Neon HTTP (`drizzle-orm/neon-http`) | Query biasa dan transaksi non-interaktif/batch yang tidak memerlukan sesi interaktif | Cocok untuk query singkat pada serverless. Gunakan fitur transaksi HTTP yang didukung driver untuk sekumpulan operasi yang dapat dijalankan non-interaktif; jangan mengasumsikan dukungan interactive transaction/session. |
+| Neon WebSocket/Pool (`drizzle-orm/neon-serverless`) | Session, interactive transaction, atau kompatibilitas `pg` | Tambahkan konfigurasi `ws` yang diperlukan di runtime Node.js (termasuk dependency `ws`/`bufferutil` bila dibutuhkan); uji koneksi, pooling, commit, dan rollback di Vercel Preview. |
 
 Rencana:
-- Gunakan HTTP untuk mayoritas read/query pendek.
-- Gunakan WebSocket/Pool hanya pada jalur yang benar-benar membutuhkan transaksi interaktif, termasuk Better Auth Drizzle adapter jika konfigurasi `transaction: true` membutuhkan `db.transaction()`.
+- Gunakan HTTP untuk mayoritas read/query pendek dan transaksi batch non-interaktif yang didukung Neon HTTP.
+- Gunakan WebSocket/Pool hanya bila implementasi benar-benar memerlukan session atau interactive transaction. Jangan otomatis memaksa seluruh request melewati WebSocket.
+- Sebelum mengaktifkan transaksi pada Better Auth Drizzle adapter, verifikasi operasi transaksional yang benar-benar dipanggil versi Better Auth terpilih; jika membutuhkan `db.transaction()` interaktif, hubungkan adapter ke driver yang mendukungnya dan uji commit/rollback di Preview.
 - Operasi ekonomi/claim/pembelian harus berupa transaksi database atomik. Alternatifnya, satu statement SQL/function yang benar-benar atomik dapat digunakan untuk operasi tertentu. Jangan memecah ledger dan update saldo ke banyak request terpisah.
 - Gunakan pooled connection string dari Neon untuk koneksi runtime yang menggunakan protokol Postgres/PgBouncer. Gunakan koneksi direct untuk operasi administrasi/migrasi bila diperlukan.
 - Jangan membuat koneksi database ketika build Vite berjalan. Inisialisasi hanya di runtime API.
@@ -251,7 +252,11 @@ Aturan implementasi:
 - Endpoint foto harus memvalidasi sesi dan menggunakan cache private/revalidation. Jangan menerbitkan URL publik untuk foto akun.
 - Jika pemakaian PostgreSQL mendekati batas 1 GB, ukur dahulu data sebenarnya; baru evaluasi Blob sebagai tahap tersendiri.
 
-Vercel Private Blob kini tersedia pada semua plan dan sudah GA sejak 30 Juni 2026. Namun, untuk foto kecil 35 KiB, keuntungan penyimpanan terpisah belum mengimbangi beban tambahan. Private Blob layak dievaluasi ulang bila aplikasi mulai menyimpan file yang lebih besar dari avatar.
+Vercel Private Blob tersedia pada semua plan. Namun, untuk foto kecil 35 KiB, keuntungan penyimpanan terpisah belum mengimbangi beban tambahan. Private Blob layak dievaluasi ulang bila aplikasi mulai menyimpan file yang lebih besar dari avatar.
+
+### Catatan opsi baru: Neon Object Storage
+
+Neon Object Storage menjadi GA pada Agustus 2026 dan Free plan mencakup 5 GB per project. Layanannya S3-compatible, branch-aware, serta bucket dibuat private secara default (akses publik harus dipilih secara eksplisit). Ini opsi yang patut dipertimbangkan untuk media yang lebih besar karena bucket ikut terisolasi per branch. Namun, untuk satu avatar WebP kecil dengan batas 35 KiB, `bytea` tetap rekomendasi fase awal: lebih sedikit komponen, tidak perlu URL presigned, dan metadata/foto berada dalam satu transaksi PostgreSQL. Bila kebutuhan file berkembang, bandingkan kembali Neon Object Storage dengan Vercel Blob sebelum menambah layanan. Region dan batas penggunaan object storage harus dikonfirmasi di Console ketika Fase 2 dimulai.
 
 ---
 
@@ -273,6 +278,7 @@ Angka resmi yang diverifikasi pada 6 November 2026:
 | Manual snapshot | 1 snapshot |
 | Monitoring history | 1 hari |
 | Managed Better Auth | Hingga 60.000 MAU |
+| Neon Object Storage | 5 GB per project |
 
 ### Cara membaca compute
 
@@ -306,23 +312,26 @@ Jangan melakukan ping berkala agar database tetap hidup. Itu justru dapat mengha
 
 ## 9. Vercel Hobby — batas dan region
 
-Vercel Hobby adalah $0 dan mencantumkan:
-- 1.000.000 Function invocations.
-- 100 GB-hours Function Duration.
-- 4 CPU-hours Active CPU.
-- 360 GB-hours Provisioned Memory.
-- Hobby dapat memilih **satu region** untuk Function. Multi-region membutuhkan plan lebih tinggi.
+Vercel Hobby berharga $0. Untuk proyek baru yang memakai Fluid Compute, alokasi utama yang berlaku adalah:
+- 1.000.000 Function invocations per bulan.
+- 4 jam Active CPU per bulan.
+- 360 GB-hours Provisioned Memory per bulan.
+- Fast Data Transfer 100 GB dan Fast Origin Transfer 10 GB.
+- Maximum Function duration pada Fluid Compute: 300 detik (5 menit); maksimum memory Hobby 2 GB / 1 vCPU.
+- Hobby dapat memilih **satu region** untuk Function. Multi-region tidak tersedia pada Hobby.
+
+**Jangan mencampur model billing baru dan legacy.** Dokumentasi Vercel menyatakan Fluid Compute menjadi default untuk semua Function baru. Proyek/function lama yang masih tidak memakai Fluid Compute dapat tetap mengikuti model legacy dengan 100 GB-hours Function Duration dan 100.000 invocations. Karena repo ini menggunakan project Vercel yang sudah ada, mode aktualnya belum dapat dipastikan dari source code: periksa Settings/Functions atau Dashboard Usage saat Fase 2, lalu gunakan hanya angka pada model yang benar-benar aktif. Jangan memakai 100 GB-hours legacy bersamaan dengan kuota Active CPU/Provisioned Memory Fluid Compute.
 
 Batas kebijakan:
-- Hobby hanya untuk penggunaan personal/non-komersial. Jika proyek digunakan untuk tujuan komersial/keuntungan finansial, penggunaan harus ditinjau ulang terhadap aturan plan Vercel. Jangan menyamakan gratis dengan izin untuk semua bentuk penggunaan.
-- Jika batas kuota tercapai, layanan dapat dibatasi sampai periode kuota berikutnya; jangan merancang sistem yang mengandalkan kelebihan kuota berbayar.
+- Hobby hanya untuk penggunaan personal/non-komersial. Karena SinauEnglish dapat diakses pengguna lain, pastikan penggunaan publiknya tetap sesuai kebijakan personal/non-komersial Vercel. Gratis tidak berarti bebas untuk penggunaan komersial.
+- Pemakaian di luar alokasi dapat menyebabkan project/function dibatasi atau dijeda hingga reset periode atau perubahan plan; desain jangan bergantung pada penggunaan berbayar otomatis.
 
 ### Region yang direkomendasikan
 
 - Neon: Singapore `ap-southeast-1`.
-- Vercel: Singapore `sin1`.
-- Vercel menyatakan Hobby dapat memilih satu region; karena itu Singapore dapat ditetapkan tanpa harus mengaktifkan multi-region Pro.
-- `vercel.json` saat ini belum mencantumkan `regions`; default umum Vercel Function adalah `iad1` kecuali dashboard/config mengubahnya. Perubahan region baru dilakukan setelah disetujui dan diuji pada branch Preview.
+- Vercel: Singapore `sin1` (kode region AWS `ap-southeast-1`).
+- Hobby dapat memilih satu region; Singapore tersedia sehingga konfigurasi ini tidak membutuhkan multi-region Pro.
+- `vercel.json` saat ini belum mencantumkan `regions`, jadi dari source repo saja kita belum bisa membuktikan region deployment aktif. Dokumentasi Vercel menyebut default Function untuk project baru adalah `iad1` kecuali Dashboard/config mengubahnya. Pengaturan region akan dilakukan hanya setelah disetujui dan diuji pada branch Preview.
 
 Tempatkan Vercel Function di region yang sama dengan Neon untuk mengurangi perjalanan jaringan. Hasil latency tetap perlu diukur dari browser pengguna di Indonesia; region yang sama tidak menghilangkan cold start atau latency jaringan ISP.
 
@@ -363,7 +372,7 @@ Strategi UI dan request:
 
 ## 12. Backup dan pemulihan
 
-Neon Free menyediakan instant restore history hingga 6 jam (dengan batas 1 GB change history) dan satu manual snapshot. Fitur ini membantu pemulihan jangka pendek, tetapi bukan backup mandiri jangka panjang.
+Neon Free menyediakan instant restore history hingga 6 jam (dengan batas 1 GB change history) dan satu manual snapshot. Neon juga menyediakan 5 GB Object Storage per project Free per informasi resmi 2 Oktober 2026. Fitur restore membantu pemulihan jangka pendek, tetapi bukan backup mandiri jangka panjang.
 
 ### Rekomendasi
 
@@ -428,7 +437,8 @@ Bila disetujui, Fase 2 dapat dimulai. Bila ada komponen yang tidak disetujui, ub
 
 ### Neon
 - [Free plan limits and quotas](https://neon.com/docs/introduction/plans) — kuota proyek, branch, storage, compute, transfer, restore.
-- [Neon Free Plan: 1 GB PostgreSQL per project (2 October 2026)](https://neon.com/blog/neon-free-plan-1-gb-per-project)
+- [Neon Free Plan: 1 GB PostgreSQL + 5 GB Object Storage per project (2 October 2026)](https://neon.com/blog/neon-free-plan-1-gb-per-project)
+- [Neon Object Storage (GA, 6 August 2026)](https://neon.com/blog/building-neon-object-storage)
 - [Neon FAQ: Free plan limits and quotas](https://github.com/neondatabase/website/blob/main/content/faqs/free-plan-limits-and-quotas.md)
 - [Managed Better Auth overview](https://neon.com/docs/auth/overview)
 - [Managed Better Auth password reset](https://neon.com/docs/auth/guides/password-reset)
@@ -443,6 +453,7 @@ Bila disetujui, Fase 2 dapat dimulai. Bila ada komponen yang tidak disetujui, ub
 - [Better Auth Drizzle adapter](https://better-auth.com/docs/adapters/drizzle)
 - [Better Auth session management](https://better-auth.com/docs/concepts/session-management)
 - [Better Auth rate limiting](https://better-auth.com/docs/concepts/rate-limit)
+- [npm package: Better Auth Drizzle adapter current release](https://www.npmjs.com/package/@better-auth/drizzle-adapter)
 - [Better Auth security and origin validation](https://better-auth.com/docs/reference/security)
 - [Drizzle ORM + Neon](https://orm.drizzle.team/docs/connect-neon)
 
@@ -450,6 +461,9 @@ Bila disetujui, Fase 2 dapat dimulai. Bila ada komponen yang tidak disetujui, ub
 - [Hobby plan usage and restrictions](https://vercel.com/docs/plans/hobby)
 - [Vercel regions](https://vercel.com/docs/regions)
 - [Vercel Function region configuration](https://vercel.com/docs/functions/configuring-functions/region)
+- [Vercel Functions usage and pricing — Fluid Compute](https://vercel.com/docs/functions/usage-and-pricing)
+- [Vercel Functions limits](https://vercel.com/docs/functions/limitations)
+- [Vercel legacy Function usage and pricing](https://vercel.com/docs/functions/usage-and-pricing/legacy-pricing)
 - [Vercel project configuration: Hobby single-region support](https://vercel.com/docs/project-configuration/vercel-json)
 - [Vercel Blob pricing](https://vercel.com/docs/vercel-blob/usage-and-pricing)
 - [Vercel Blob private storage](https://vercel.com/docs/vercel-blob/private-storage)
