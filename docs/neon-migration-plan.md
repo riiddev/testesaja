@@ -213,3 +213,17 @@ Each phase: (a) status, (b) exact files changed, (c) evidence including tests/sc
 - [ ] User approves Fase 0 report.
 
 STOP after Fase0. Fase1 requires explicit approval.
+
+
+## Fase 1 — Progress record (6 November 2026)
+- [x] Re-read current repository architecture and auth implementation.
+- [x] Verify latest Neon Free limits and Managed Better Auth status from official sources.
+- [x] Compare Managed Better Auth, Better Auth self-hosted, and current custom auth.
+- [x] Identify both existing password formats (Apps Script SHA-256 × 5,000; Vercel scrypt).
+- [x] Recommend default auth/driver/avatar/schema/backup/cold-start architecture in docs/architecture-neon.md.
+- [ ] Fase 2 account owner action: create/confirm Neon Free project and development branch in Singapore, then configure Vercel Preview secrets directly in dashboard. Never send secret values in chat.
+- [ ] Verify actual Vercel Hobby function region and Preview latency; do not assume sin1 is available at Rp0.
+- [ ] No app source code/auth migration has been performed yet.
+- [ ] No real users/data migrated; legacy Sheets/Apps Script/Drive remain untouched.
+
+User has asked the assistant to take ownership of technical decisions and finish the work. Treat the documented default recommendations as the working direction; only stop for actions that require the account owner's private dashboard, data counts/exports, or an explicit stability-gate requirement. The Part 2 stability gate remains closed until every required condition and the exact user phrase GERBANG DIBUKA are satisfied.
