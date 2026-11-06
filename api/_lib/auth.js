@@ -169,58 +169,78 @@ export async function parseJsonBody(req) {
  * Authenticate incoming request and retrieve active user
  */
 export async function authenticateRequest(req) {
+  const headers = req?.headers || {};
   let token = null;
 
-  // 1. Authorization: Bearer <token>
-  const authHeader = req.headers["authorization"] || req.headers["Authorization"];
-  if (authHeader && authHeader.startsWith("Bearer ")) {
+  // 1. Existing SinauEnglish compatibility token (Bearer or legacy cookie).
+  const authHeader = headers.authorization || headers.Authorization;
+  if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
     token = authHeader.slice(7).trim();
   }
 
-  // 2. Cookie fallback
-  if (!token && req.headers.cookie) {
-    const cookieList = req.headers.cookie.split(";");
-    for (const cookie of cookieList) {
-      const [name, val] = cookie.trim().split("=");
+  if (!token && typeof headers.cookie === "string") {
+    for (const cookie of headers.cookie.split(";")) {
+      const [name, ...parts] = cookie.trim().split("=");
       if (name === "sinau_session") {
-        token = decodeURIComponent(val || "");
+        try {
+          token = decodeURIComponent(parts.join("=") || "");
+        } catch {
+          token = null;
+        }
         break;
       }
     }
   }
 
-  if (!token) {
-    const error = new Error("Sesi tidak ditemukan. Silakan masuk terlebih dahulu.");
-    error.statusCode = 401;
-    error.code = "AUTH_ERROR";
-    throw error;
-  }
-
-  const tokenHash = hashToken(token);
-  const now = new Date();
-
-  // Find active non-expired session
-  const activeSessions = await db
-    .select()
-    .from(schema.sessions)
-    .where(
-      and(
+  // Keep older Vercel and Apps Script-compatible requests working during cutover.
+  if (token) {
+    const tokenHash = hashToken(token);
+    const activeSessions = await db
+      .select()
+      .from(schema.sessions)
+      .where(and(
         eq(schema.sessions.tokenHash, tokenHash),
-        gt(schema.sessions.expiresAt, now)
-      )
-    )
-    .limit(1);
+        gt(schema.sessions.expiresAt, new Date())
+      ))
+      .limit(1);
 
-  if (!activeSessions.length) {
-    const error = new Error("Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.");
+    if (activeSessions.length) {
+      const session = activeSessions[0];
+      const userList = await db
+        .select({
+          id: schema.users.id,
+          email: schema.users.email,
+          displayName: schema.users.displayName,
+          role: schema.users.role,
+          createdAt: schema.users.createdAt
+        })
+        .from(schema.users)
+        .where(eq(schema.users.id, session.userId))
+        .limit(1);
+
+      if (userList.length) {
+        return { user: userList[0], session, token, authProvider: "legacy-bridge" };
+      }
+    }
+  }
+
+  // 2. Better Auth cookie session. This makes all existing feature handlers
+  // compatible with Better Auth without exposing the session token to JavaScript.
+  const [{ fromNodeHeaders }, { auth }] = await Promise.all([
+    import("better-auth/node"),
+    import("./better-auth.js")
+  ]);
+  const betterSession = await auth.api.getSession({
+    headers: fromNodeHeaders(headers)
+  });
+
+  if (!betterSession?.user?.id || !betterSession?.session) {
+    const error = new Error("Sesi tidak ditemukan, tidak valid, atau telah kedaluwarsa. Silakan masuk kembali.");
     error.statusCode = 401;
     error.code = "AUTH_ERROR";
     throw error;
   }
 
-  const session = activeSessions[0];
-
-  // Retrieve user
   const userList = await db
     .select({
       id: schema.users.id,
@@ -230,7 +250,7 @@ export async function authenticateRequest(req) {
       createdAt: schema.users.createdAt
     })
     .from(schema.users)
-    .where(eq(schema.users.id, session.userId))
+    .where(eq(schema.users.id, betterSession.user.id))
     .limit(1);
 
   if (!userList.length) {
@@ -242,11 +262,11 @@ export async function authenticateRequest(req) {
 
   return {
     user: userList[0],
-    session,
-    token
+    session: betterSession.session,
+    token: null,
+    authProvider: "better-auth"
   };
 }
-
 
 
 /**
