@@ -10,6 +10,10 @@ jobs:
   test:
     name: Build, Audit & Test Suite
     runs-on: ubuntu-latest
+    env:
+      # Expose the optional repository secret to step conditions without ever
+      # printing it. Backend integration tests run only when it is configured.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
       - name: Checkout Code
@@ -34,8 +38,6 @@ jobs:
         run: npm run build
 
       - name: Run Backend Integration & Security Tests
-        if: env.DATABASE_URL != ''
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        if: ${{ env.DATABASE_URL != '' }}
         run: npm run test:api
 

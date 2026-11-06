@@ -10,7 +10,7 @@ import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreak } from "../../_lib/streak.js";
 import { REWARDS_CONFIG } from "../../_lib/rewardsConfig.js";
-import { isOfficialMatchingWordId } from "../../_lib/matchingCatalog.js";
+import { validateOfficialMatchingPairs } from "../../_lib/matchingCatalog.js";
 import { getWibDateStr } from "../../_lib/wibDate.js";
 import {
   sendSuccess,
@@ -35,36 +35,14 @@ export default async function handler(req, res) {
     if (!/^[a-zA-Z0-9_-]{6,120}$/.test(sessionId)) {
       return sendValidationError(res, "ID sesi Matching tidak valid.");
     }
-    if (matchedPairs.length !== 5) {
-      return sendValidationError(res, "Satu sesi Matching harus menyelesaikan tepat 5 pasangan.");
-    }
-
-    const usedWordIds = new Set();
-    for (const pair of matchedPairs) {
-      const wordId = String(pair?.wordId || "");
-      const leftId = String(pair?.leftId || "");
-      const rightId = String(pair?.rightId || "");
-      const prefix = `pair_${wordId}_`;
-      const sequence = leftId.startsWith(prefix) ? leftId.slice(prefix.length) : "";
-      const sequenceIndex = Number(sequence);
-
-      if (
-        !isOfficialMatchingWordId(wordId) ||
-        usedWordIds.has(wordId) ||
-        leftId !== rightId ||
-        !sequence ||
-        !Number.isInteger(sequenceIndex) ||
-        sequenceIndex < 0 ||
-        sequenceIndex >= 5
-      ) {
-        return sendValidationError(res, "Pasangan Matching tidak cocok dengan katalog vocabulary resmi.");
-      }
-      usedWordIds.add(wordId);
+    const matchValidation = validateOfficialMatchingPairs(matchedPairs);
+    if (!matchValidation.valid) {
+      return sendValidationError(res, matchValidation.message);
     }
 
     // The browser submits pair identities only. The server sets score and total.
-    const score = 5;
-    const total = 5;
+    const score = matchValidation.score;
+    const total = matchValidation.total;
     const accuracy = 100;
     const now = new Date();
     const wibDate = getWibDateStr(now);
