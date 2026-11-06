@@ -144,7 +144,7 @@ jobs:
             WHERE table_schema = 'public' AND table_name = 'users'
           `;
           const columns = new Map(userColumns.map((row) => [row.column_name, row.is_nullable]));
-          for (const name of ["updated_at", "email_verified", "image", "password_hash", "auth_session_id"]) {
+          for (const name of ["updated_at", "email_verified", "image", "password_hash"]) {
             if (!columns.has(name)) {
               console.error("Schema verification failed: a Better Auth user column is missing.");
               process.exit(1);
@@ -152,6 +152,16 @@ jobs:
           }
           if (columns.get("password_hash") !== "YES") {
             console.error("Schema verification failed: password_hash must remain nullable for Better Auth credentials.");
+            process.exit(1);
+          }
+
+          const sessionColumns = await sql`
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'sessions'
+          `;
+          if (!sessionColumns.some((row) => row.column_name === "auth_session_id")) {
+            console.error("Schema verification failed: compatibility session link is missing.");
             process.exit(1);
           }
 
