@@ -1,0 +1,261 @@
+/* ==========================================================================
+   STORY RUNNER — Immersive Warm Editorial Neobrutalism
+   ========================================================================== */
+
+.story-runner-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(20, 20, 20, 0.82);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 2500;
+  overflow-y: auto;
+}
+
+.story-runner-card {
+  background-color: var(--color-bg-base);
+  border: var(--border-lg);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 860px;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.story-runner-header {
+  padding: var(--space-4) var(--space-6);
+  background-color: var(--color-bg-surface);
+  border-bottom: var(--border-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.story-runner-body {
+  padding: var(--space-6);
+  overflow-y: auto;
+  flex: 1;
+}
+
+@media (min-width: 768px) {
+  .story-runner-body {
+    padding: var(--space-8);
+  }
+}
+
+/* Stepper Steps in Runner */
+.story-nav-steps {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: var(--border-sm);
+  padding-bottom: var(--space-3);
+  overflow-x: auto;
+}
+
+.story-step-pill {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-color);
+  background-color: var(--color-bg-surface);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.story-step-pill.is-active {
+  background-color: var(--color-accent-navy);
+  color: var(--color-text-inverse);
+  border-color: var(--color-accent-navy);
+}
+
+/* Dialogue Lines */
+.dialogue-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.dialogue-bubble {
+  background-color: var(--color-bg-surface);
+  border: var(--border-sm);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: 2px 2px 0 var(--border-color);
+  position: relative;
+}
+
+.dialogue-bubble.speaker-you {
+  background-color: #F0FFF4;
+  border-color: #38A169;
+  align-self: flex-end;
+  max-width: 85%;
+}
+
+.dialogue-bubble.speaker-kanci {
+  background-color: #FFFDF0;
+  border-color: #D69E2E;
+  border-left: 6px solid #D69E2E;
+}
+
+.dialogue-bubble.speaker-narrator {
+  background-color: #FAF8F5;
+  font-style: italic;
+  border-left: 4px solid var(--color-text-secondary);
+}
+
+.dialogue-speaker-name {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dialogue-en-text {
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  margin: 0 0 6px 0;
+}
+
+.dialogue-id-text {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Audio & Translation Controls */
+.bubble-action-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.btn-bubble-action {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  background-color: var(--color-bg-surface);
+}
+
+.btn-bubble-action:hover {
+  background-color: var(--color-bg-subtle);
+}
+
+/* Interactive Choice Box */
+.interactive-choice-box {
+  background-color: #FFFDF5;
+  border: 2px solid #D69E2E;
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin: var(--space-4) 0;
+  box-shadow: 3px 3px 0 #D69E2E;
+}
+
+.choice-option-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-bg-surface);
+  border: var(--border-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: var(--space-2);
+  transition: all 0.15s ease;
+}
+
+.choice-option-btn:hover {
+  background-color: #FEFCBF;
+  transform: translateX(3px);
+}
+
+.choice-option-btn.is-selected {
+  background-color: #FEFCBF;
+  border-color: #744210;
+  border-left: 6px solid #744210;
+}
+
+/* Vocab Spotlight Grid */
+.vocab-spotlight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.vocab-spotlight-card {
+  background-color: var(--color-bg-surface);
+  border: var(--border-sm);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: 2px 2px 0 var(--border-color);
+}
+
+.vocab-spotlight-card h5 {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 800;
+  margin: 0 0 2px 0;
+  color: var(--color-accent-navy);
+}
+
+@media (max-width: 640px) {
+  .story-runner-modal {
+    padding: 0;
+  }
+  .story-runner-card {
+    border-radius: 0;
+    max-height: 100vh;
+    height: 100vh;
+    border: none;
+  }
+  .story-runner-header {
+    padding: var(--space-3) var(--space-4);
+  }
+  .story-runner-body {
+    padding: var(--space-4);
+  }
+  .vocab-spotlight-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 850px) {
+  .story-runner-card {
+    max-height: 96vh;
+  }
+  .story-runner-header {
+    padding: var(--space-3) var(--space-5);
+  }
+  .story-runner-body {
+    padding: var(--space-4) var(--space-6);
+  }
+}
+
+

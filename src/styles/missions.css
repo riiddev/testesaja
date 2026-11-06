@@ -1,0 +1,344 @@
+/* ==========================================================================
+   SINAUENGLISH V2 — DAILY MISSIONS (QUESTS) STYLES
+   Warm Editorial Neobrutalism UI
+   ========================================================================== */
+
+.missions-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+/* 1. Daily Missions Header Card */
+.missions-header-card {
+  background-color: var(--color-bg-surface);
+  border: var(--border-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.missions-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.missions-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.missions-eyebrow {
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.missions-main-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.missions-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  max-width: 620px;
+  margin: 0;
+}
+
+.missions-meta-pills {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.mission-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-family: var(--font-heading);
+  border: var(--border-sm);
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+.mission-pill.pill-timer {
+  background-color: #FFFDF0;
+  border-color: var(--color-accent-gold);
+}
+
+.mission-pill.pill-status {
+  background-color: var(--color-accent-sand);
+}
+
+/* 2. Quests List */
+.missions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mission-card {
+  background-color: var(--color-bg-surface);
+  border: var(--border-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  transition: transform var(--transition-fast);
+}
+
+.mission-card:hover {
+  transform: translateY(-2px);
+}
+
+.mission-card.is-completed {
+  background-color: #FAFBF8;
+}
+
+.mission-card.is-claimed {
+  background-color: #F8FAF7;
+  border-color: #385E38;
+}
+
+.mission-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.mission-card-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 240px;
+}
+
+.mission-icon-box {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  border: var(--border-sm);
+  background-color: var(--color-bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+
+.mission-card.is-completed .mission-icon-box {
+  background-color: var(--color-accent-gold);
+  color: #121212;
+}
+
+.mission-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mission-title-text {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.mission-desc-text {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.mission-rewards-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.reward-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-family: var(--font-heading);
+  border: var(--border-sm);
+}
+
+.reward-exp {
+  background-color: #FFFDF0;
+  color: #5C4312;
+  border-color: var(--color-accent-gold);
+}
+
+.reward-coins {
+  background-color: #EBF5E9;
+  color: #274C23;
+  border-color: #6AA864;
+}
+
+/* Progress Section in Card */
+.mission-progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.mission-track {
+  flex: 1;
+  height: 10px;
+  background-color: var(--color-bg-subtle);
+  border: var(--border-sm);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.mission-fill {
+  height: 100%;
+  background-color: var(--color-accent-gold);
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
+.mission-fill.fill-done {
+  background-color: #4CAF50;
+}
+
+.mission-progress-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Actions Footer in Card */
+.mission-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border-color);
+}
+
+.btn-claim-reward {
+  background-color: var(--color-accent-gold);
+  color: #121212;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  border: var(--border-base);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.btn-claim-reward:hover {
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.9);
+}
+
+/* 3. Daily Completion Celebration Box */
+.missions-bonus-card {
+  background-color: #FAF5E8;
+  border: var(--border-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.bonus-info-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.bonus-trophy-box {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 50%;
+  border: var(--border-base);
+  background-color: var(--color-accent-gold);
+  color: #121212;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .mission-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mission-rewards-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .mission-card-footer {
+    justify-content: stretch;
+  }
+
+  .mission-card-footer a,
+  .mission-card-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .missions-bonus-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

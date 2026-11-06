@@ -1,0 +1,13 @@
+/* ==========================================================================
+   SINAUENGLISH V2 — MASTER STYLE SYSTEM
+   Declares explicit CSS Layers: reset, tokens, base, components, utilities
+   ========================================================================== */
+
+@layer reset, tokens, base, components, utilities;
+
+@import "./reset.css";
+@import "./tokens.css";
+@import "./base.css";
+@import "./components.css";
+@import "./utilities.css";
+

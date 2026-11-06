@@ -1,0 +1,2235 @@
+import fs from "fs";
+import path from "path";
+
+const story10 = {
+  id: "story-10",
+  title: "Wawancara Beasiswa",
+  titleEn: "The Scholarship Interview",
+  level: "B2-C1",
+  theme: "Academic Ambition & Global Diplomacy",
+  description: "Ikuti momen puncak Maya menghadapi dewan guru besar internasional dalam seleksi beasiswa riset kelautan bergengsi. Kuasai retorika formal C1, pembelaan metodologi ilmiah, dan diplomasi akademik.",
+  descriptionEn: "Join Maya as she defends her marine research before an elite international scholarship panel. Master C1 formal rhetoric, academic hedging, and diplomatic case-study resolution.",
+  icon: "🎓",
+  accentColor: "#4f46e5",
+  rewardExp: 50,
+  rewardCoins: 30,
+  episodes: [
+    // EPISODE 1
+    {
+      id: 1,
+      number: 1,
+      title: "Ruang Tunggu Menara Kaca",
+      titleEn: "The High-Rise Waiting Room",
+      estimatedMinutes: 9,
+      recap: "Maya tiba di lantai empat puluh gedung Global Scholars Foundation untuk mengikuti babak final wawancara beasiswa riset internasional.",
+      dialogue: [
+        {
+          id: "s10e1_d1",
+          speaker: "Julian",
+          speakerRole: "Fellow Finalist",
+          textEn: "Good morning. You must be Maya, the researcher who documented the off-grid coral sanctuary. Are you feeling nervous about facing the grand interview panel today?",
+          textId: "Selamat pagi. Anda pasti Maya, peneliti yang mendokumentasikan suaka terumbu karang terpencil itu. Apakah Anda merasa gugup menghadapi dewan pewawancara agung hari ini?",
+          audioText: "Good morning. You must be Maya, the researcher who documented the off-grid coral sanctuary. Are you feeling nervous about facing the grand interview panel today?"
+        },
+        {
+          id: "s10e1_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "Good morning, Julian. Seeing the city skyline from this room certainly elevates the stakes, but I have prepared extensively to convey my genuine passion for ocean stewardship.",
+          textId: "Selamat pagi, Julian. Memandang cakrawala kota dari ruangan ini tentu meningkatkan tensi persaingan, namun saya telah bersiap secara mendalam untuk menyampaikan dedikasi sejati saya pada pelestarian samudra.",
+          audioText: "Good morning, Julian. Seeing the city skyline from this room certainly elevates the stakes, but I have prepared extensively to convey my genuine passion for ocean stewardship."
+        },
+        {
+          id: "s10e1_d3",
+          speaker: "Foundation Coordinator",
+          speakerRole: "Liaison Officer",
+          textEn: "Attention, candidates. Each candidate will have forty-five minutes before the board. Remember that the committee does not seek mere test scores; they value intellectual courage.",
+          textId: "Perhatian, para kandidat. Setiap kandidat memiliki empat puluh lima menit di hadapan dewan. Ingatlah bahwa komite tidak mencari nilai ujian semata; mereka menghargai keberanian intelektual.",
+          audioText: "Attention, candidates. Each candidate will have forty-five minutes before the board. Remember that the committee does not seek mere test scores; they value intellectual courage."
+        },
+        {
+          id: "s10e1_choice_1",
+          type: "interactive_choice",
+          promptEn: "How does Maya compose her mindset before entering the boardroom?",
+          promptId: "Bagaimana cara Maya menata pola pikirnya sebelum melangkah ke ruang sidang?",
+          options: [
+            {
+              id: "s10e1_opt_1a",
+              textEn: "Center her focus on the ecological mission, projecting calm confidence rather than rehearsed anxiety to impress the examiners.",
+              textId: "Memusatkan fokus pada misi ekologis, memancarkan rasa percaya diri yang tenang alih-alih kecemasan kaku untuk membuat penguji terkesan.",
+              feedbackEn: "Exemplary mental preparation! Authentic poise commands respect in high-stakes interviews.",
+              feedbackId: "Kesiapan mental yang patut dicontoh! Ketenangan autentik memancarkan wibawa dalam wawancara bergengsi."
+            },
+            {
+              id: "s10e1_opt_1b",
+              textEn: "Frantically flip through notes to memorize fifty statistical formulas at the very last second.",
+              textId: "Panik membalik lembaran catatan untuk menghafal lima puluh rumus statistik di detik-detik terakhir.",
+              feedbackEn: "Counterproductive; last-minute cramming increases cortisol and muddles clear articulation.",
+              feedbackId: "Kurang efektif; menghafal di detik terakhir meningkatkan kepanikan dan mengaburkan artikulasi."
+            }
+          ]
+        },
+        {
+          id: "s10e1_d4",
+          speaker: "Julian",
+          speakerRole: "Fellow Finalist",
+          textEn: "Your composure is contagious, Maya. Knock them dead! When that double door opens, show them how field science transforms communities.",
+          textId: "Ketenanganmu menular, Maya. Berikan yang terbaik! Begitu pintu ganda itu terbuka, tunjukkan pada mereka bagaimana sains lapangan mentransformasi masyarakat.",
+          audioText: "Your composure is contagious, Maya. Knock them dead! When that double door opens, show them how field science transforms communities."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-interview",
+          word: "interview",
+          partOfSpeech: "noun",
+          enDefinition: "A formal meeting in which one or more persons question, consult, or evaluate another person.",
+          idMeaning: "wawancara seleksi resmi",
+          contextSentenceEn: "The scholarship interview evaluates both academic rigor and leadership potential.",
+          contextSentenceId: "Wawancara beasiswa mengevaluasi ketajaman akademik sekaligus potensi kepemimpinan."
+        },
+        {
+          wordId: "oxford-candidate",
+          word: "candidate",
+          partOfSpeech: "noun",
+          enDefinition: "A person who applies for a job or is nominated for election and assessment.",
+          idMeaning: "kandidat pelamar beasiswa",
+          contextSentenceEn: "Each shortlisted candidate brings a unique interdisciplinary research perspective.",
+          contextSentenceId: "Setiap kandidat yang terpilih membawa perspektif riset interdisipliner yang unik."
+        },
+        {
+          wordId: "oxford-nervous",
+          word: "nervous",
+          partOfSpeech: "adjective",
+          enDefinition: "Easily agitated or alarmed; apprehensive or worried about a future event.",
+          idMeaning: "gugup, tegang menghadapi ujian",
+          contextSentenceEn: "It is entirely natural to feel nervous before presenting to an esteemed scholarship panel.",
+          contextSentenceId: "Sangat wajar merasa gugup sebelum presentasi di hadapan panel beasiswa yang terhormat."
+        },
+        {
+          wordId: "oxford-room",
+          word: "room",
+          partOfSpeech: "noun",
+          enDefinition: "Space that can be occupied or where something can be done, or a walled part of a building.",
+          idMeaning: "ruang tunggu formal",
+          contextSentenceEn: "The quiet waiting room was filled with nervous anticipation and focused reflection.",
+          contextSentenceId: "Ruang tunggu yang hening dipenuhi rasa antisipasi tegang dan refleksi yang terpusat."
+        },
+        {
+          wordId: "oxford-impress",
+          word: "impress",
+          partOfSpeech: "verb",
+          enDefinition: "Make (someone) feel admiration and respect.",
+          idMeaning: "membuat terkesan, memukau dewan",
+          contextSentenceEn: "Maya sought to impress the committee through authentic field insights rather than hollow buzzwords.",
+          contextSentenceId: "Maya berupaya membuat komite terkesan melalui wawasan lapangan autentik, bukan jargon hampa."
+        },
+        {
+          wordId: "oxford-confidence",
+          word: "confidence",
+          partOfSpeech: "noun",
+          enDefinition: "A feeling of self-assurance arising from one's appreciation of one's own abilities or qualities.",
+          idMeaning: "rasa percaya diri yang matang",
+          contextSentenceEn: "Inner confidence stems from knowing your data thoroughly under cross-examination.",
+          contextSentenceId: "Rasa percaya diri berasal dari penguasaan data secara mendalam di bawah ujian silang."
+        }
+      ],
+      grammarFocus: {
+        topic: "Advanced Participle Clauses & Emotional Framing in C1 Register",
+        explanationEn: "In C1 formal spoken and written English, introductory participial phrases ('Seeing the skyline...', 'Having prepared extensively...') allow candidates to frame emotional composure with intellectual elegance.",
+        explanationId: "Dalam bahasa Inggris formal tingkat C1, frasa partisipel pembuka ('Seeing the skyline...', 'Having prepared extensively...') memungkinkan kandidat membingkai ketenangan emosi dengan keanggunan intelektual.",
+        examples: [
+          {
+            en: "Having spent weeks in an isolated sanctuary, Maya approached the panel with grounded conviction.",
+            id: "Setelah menghabiskan berminggu-minggu di suaka terpencil, Maya melangkah ke hadapan panel dengan keyakinan kokoh."
+          },
+          {
+            en: "Recognizing the gravity of the fellowship, the candidates maintained courteous solidarity.",
+            id: "Menyadari betapa bergengsinya beasiswa tersebut, para kandidat mempertahankan solidaritas yang santun."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "Pre-Interview Waiting Room Etiquette",
+        titleId: "Etika Ruang Tunggu Wawancara Internasional",
+        contentEn: "In competitive international scholarship selections (such as Rhodes, Fulbright, or Chevening), finalists demonstrate emotional maturity by treating fellow candidates with generous collegiate respect rather than aloof rivalry.",
+        contentId: "Dalam seleksi beasiswa internasional bergengsi (seperti Rhodes, Fulbright, atau Chevening), para finalis menunjukkan kematangan emosional dengan memperlakukan sesama kandidat secara kolegial dan hangat, bukan sebagai rival yang dingin."
+      },
+      quiz: [
+        {
+          id: "s10_ep1_q1",
+          questionEn: "What does the Foundation Coordinator emphasize regarding the committee's evaluation criteria?",
+          questionId: "Apa yang ditekankan oleh Koordinator Yayasan mengenai kriteria evaluasi komite?",
+          options: [
+            "They prioritize intellectual courage and authentic leadership over mere test scores",
+            "They only accept candidates who dressed in dark blue suits",
+            "They grade applicants solely based on how quickly they answer math questions",
+            "They will select the candidate who speaks the fastest"
+          ],
+          correctIndex: 0,
+          explanationEn: "The coordinator clarifies that top fellowship committees look for intellectual bravery, resilience, and personal vision.",
+          explanationId: "Koordinator menegaskan bahwa komite beasiswa unggulan mencari keberanian intelektual, ketangguhan, dan visi pribadi melampaui nilai kertas."
+        },
+        {
+          id: "s10_ep1_q2",
+          questionEn: "Which sentence correctly demonstrates a C1 introductory participle clause?",
+          questionId: "Kalimat mana yang secara tepat menunjukkan participle clause pembuka tingkat C1?",
+          options: [
+            "Having endured severe maritime gales, Maya understood the unforgiving nature of open reefs.",
+            "Maya having endured gales because she understood reefs.",
+            "Maya was enduring gales and so Maya understands reefs.",
+            "To endure gales, Maya will understand reefs."
+          ],
+          correctIndex: 0,
+          explanationEn: "'Having endured severe maritime gales, ...' is a perfect active participle clause setting the prior experiential context.",
+          explanationId: "'Having endured severe maritime gales, ...' adalah perfect participle clause yang menerangkan latar pengalaman sebelumnya secara elegan."
+        },
+        {
+          id: "s10_ep1_q3",
+          questionEn: "What was Maya's strategy for managing pre-interview nervousness?",
+          questionId: "Apa strategi Maya dalam mengelola kegugupan sebelum wawancara?",
+          options: [
+            "Focusing on her ecological purpose and grounded data rather than rehearsing anxious scripts",
+            "Drinking six cups of espresso in the lobby",
+            "Complaining about the room temperature to the receptionist",
+            "Hiding her research notebooks under the chair"
+          ],
+          correctIndex: 0,
+          explanationEn: "Maya grounded her composure in her genuine passion and mission to protect marine sanctuaries.",
+          explanationId: "Maya melandasi ketenangannya pada dedikasi sejati dan misi pelestarian suaka kelautan."
+        },
+        {
+          id: "s10_ep1_q4",
+          questionEn: "Which noun signifies 'a feeling of self-assurance arising from an appreciation of one's abilities'?",
+          questionId: "Kata benda mana yang bermakna 'rasa percaya diri yang timbul dari kesadaran atas kemampuan diri'?",
+          options: [
+            "confidence",
+            "nervous",
+            "criticism",
+            "pressure"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Confidence' denotes poise, self-assurance, and trust in one's skills.",
+          explanationId: "'Confidence' bermakna rasa percaya diri, keteguhan hati, dan keyakinan atas kapasitas diri."
+        },
+        {
+          id: "s10_ep1_q5",
+          questionEn: "What is the tone of the interaction between Maya and Julian in the waiting lounge?",
+          questionId: "Bagaimana nada interaksi antara Maya dan Julian di ruang tunggu?",
+          options: [
+            "Collegiate, supportive, and mutually encouraging despite the high stakes",
+            "Hostile, sarcastic, and aggressively competitive",
+            "Completely silent and indifferent",
+            "Fearful, hopeless, and complaining"
+          ],
+          correctIndex: 0,
+          explanationEn: "The dialogue reflects mutual respect and uplifting encouragement between mature scholars.",
+          explanationId: "Dialog tersebut mencerminkan rasa saling menghormati dan dorongan semangat yang hangat antar-cendekiawan matang."
+        }
+      ],
+      takeaways: [
+        "Mempersiapkan kematangan mental sebelum menghadapi wawancara panel tingkat tinggi.",
+        "Menggunakan konstruksi *Advanced Participle Clauses* untuk membingkai argumen secara berbobot.",
+        "Menguasai kosakata Oxford 3000: *interview*, *candidate*, *nervous*, *room*, *impress*, *confidence*."
+      ],
+      cliffhanger: "Pintu ganda mahoni terbuka perlahan. 'Maya Lin, dewan penguji telah siap menyambut Anda...'"
+    },
+
+    // EPISODE 2
+    {
+      id: 2,
+      number: 2,
+      title: "Melangkah ke Ruang Dewan Panelis",
+      titleEn: "Entering the Boardroom",
+      estimatedMinutes: 9,
+      recap: "Maya melangkah memasuki ruang sidang eksekutif dan menyapa panel penguji yang dipimpin oleh Prof. Thorne dan Duta Besar Vance.",
+      dialogue: [
+        {
+          id: "s10e2_d1",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Please be seated, Ms. Lin. On behalf of the fellowship selection board, I welcome you to this final deliberative session.",
+          textId: "Silakan duduk, Nn. Lin. Atas nama dewan seleksi beasiswa, saya menyambut Anda dalam sidang pertimbangan akhir ini.",
+          audioText: "Please be seated, Ms. Lin. On behalf of the fellowship selection board, I welcome you to this final deliberative session."
+        },
+        {
+          id: "s10e2_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "Thank you, Professor Thorne, Ambassador Vance, and Dr. Wu. It is a profound honor to introduce my fieldwork and discuss our marine stewardship initiatives before this esteemed panel.",
+          textId: "Terima kasih, Profesor Thorne, Duta Besar Vance, dan Dr. Wu. Merupakan kehormatan mendalam untuk memperkenalkan riset lapangan saya dan mendiskusikan inisiatif pelestarian laut di hadapan panel terhormat ini.",
+          audioText: "Thank you, Professor Thorne, Ambassador Vance, and Dr. Wu. It is a profound honor to introduce my fieldwork and discuss our marine stewardship initiatives before this esteemed panel."
+        },
+        {
+          id: "s10e2_d3",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "We have reviewed your dossier with great respect. We noticed that Dr. Adrian Vance spoke very highly of your resilience during the off-grid typhoon crisis.",
+          textId: "Kami telah menelaah berkas Anda dengan penuh rasa hormat. Kami mencatat bahwa Dr. Adrian Vance memberikan apresiasi sangat tinggi atas ketangguhan Anda selama krisis topan di pulau terpencil.",
+          audioText: "We have reviewed your dossier with great respect. We noticed that Dr. Adrian Vance spoke very highly of your resilience during the off-grid typhoon crisis."
+        },
+        {
+          id: "s10e2_choice_1",
+          type: "interactive_choice",
+          promptEn: "How does Maya acknowledge the praise while opening her defense?",
+          promptId: "Bagaimana cara Maya menanggapi pujian tersebut seraya mengawali pemaparannya?",
+          options: [
+            {
+              id: "s10e2_opt_1a",
+              textEn: "Acknowledge that field adversity was a collaborative crucible that tested both ethical leadership and observational rigor.",
+              textId: "Menegaskan bahwa tantangan lapangan adalah tempaan kolaboratif yang menguji kepemimpinan beretika sekaligus ketelitian observasi.",
+              feedbackEn: "Impeccable academic humility! The panel nods in unison at your collaborative maturity.",
+              feedbackId: "Kerendahan hati akademik yang sempurna! Dewan mengangguk serempak atas kedewasaan kolaboratif Anda."
+            },
+            {
+              id: "s10e2_opt_1b",
+              textEn: "Boast that she single-handedly saved the station while everyone else panicked.",
+              textId: "Membanggakan diri bahwa dialah satu-satunya yang menyelamatkan stasiun sementara yang lain panik.",
+              feedbackEn: "Arrogant and unconvincing; scholarship committees look for teamwork and humility.",
+              feedbackId: "Arogan dan tidak meyakinkan; komite beasiswa mengutamakan kerja tim dan kerendahan hati."
+            }
+          ]
+        },
+        {
+          id: "s10e2_d4",
+          speaker: "Dr. Wu",
+          speakerRole: "Quantitative Specialist",
+          textEn: "Well articulated. Let us delve straight into the substance of your research dossier. Professor Thorne, the floor is yours.",
+          textId: "Artikulasi yang sangat baik. Mari kita langsung membedah substansi berkas penelitian Anda. Profesor Thorne, waktu dan tempat saya persilakan.",
+          audioText: "Well articulated. Let us delve straight into the substance of your research dossier. Professor Thorne, the floor is yours."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-panel",
+          word: "panel",
+          partOfSpeech: "noun",
+          enDefinition: "A small group of people brought together to discuss, investigate, or decide on a particular matter.",
+          idMeaning: "dewan penguji atau juri ahli",
+          contextSentenceEn: "The interview panel comprises eminent professors and senior international diplomats.",
+          contextSentenceId: "Dewan pewawancara terdiri atas para guru besar terkemuka dan diplomat senior internasional."
+        },
+        {
+          wordId: "oxford-board",
+          word: "board",
+          partOfSpeech: "noun",
+          enDefinition: "A group of people constituted as the decision-making body of an organization.",
+          idMeaning: "dewan direksi atau komite pengambil keputusan",
+          contextSentenceEn: "The fellowship board allocates five fully funded postgraduate research grants annually.",
+          contextSentenceId: "Dewan beasiswa mengalokasikan lima hibah riset pascasarjana dengan pendanaan penuh setiap tahunnya."
+        },
+        {
+          wordId: "oxford-introduce",
+          word: "introduce",
+          partOfSpeech: "verb",
+          enDefinition: "Bring (something, especially a personal background or proposal) to the attention of someone for the first time.",
+          idMeaning: "memperkenalkan, menyajikan gagasan",
+          contextSentenceEn: "Maya was invited to introduce the core hypothesis of her marine conservation thesis.",
+          contextSentenceId: "Maya dipersilakan untuk memperkenalkan hipotesis inti dari tesis konservasi lautnya."
+        },
+        {
+          wordId: "oxford-welcome",
+          word: "welcome",
+          partOfSpeech: "verb",
+          enDefinition: "Greet (someone arriving) in a polite or friendly way.",
+          idMeaning: "menyambut dengan penuh penghormatan",
+          contextSentenceEn: "The chair rose to welcome the candidate into the executive chamber.",
+          contextSentenceId: "Ketua sidang bangkit untuk menyambut kandidat ke dalam ruang eksekutif."
+        },
+        {
+          wordId: "oxford-respect",
+          word: "respect",
+          partOfSpeech: "noun",
+          enDefinition: "A feeling of deep admiration for someone or something elicited by their abilities, qualities, or achievements.",
+          idMeaning: "rasa hormat mendalam",
+          contextSentenceEn: "Scholars conduct debates with mutual respect even when academic perspectives diverge.",
+          contextSentenceId: "Para cendekiawan berdebat dengan rasa saling menghormati meski perspektif akademik mereka berseberangan."
+        },
+        {
+          wordId: "oxford-honor",
+          word: "honor",
+          partOfSpeech: "noun",
+          enDefinition: "High respect; great esteem; a privilege.",
+          idMeaning: "kehormatan istimewa",
+          contextSentenceEn: "It is an immense honor to address researchers whose textbooks shaped my undergraduate education.",
+          contextSentenceId: "Merupakan kehormatan luar biasa untuk berbicara di hadapan peneliti yang buku teksnya membentuk pendidikan sarjana saya."
+        }
+      ],
+      grammarFocus: {
+        topic: "Formal Inversion & High-Register Deference Formulas",
+        explanationEn: "In academic diplomacy (C1), candidates convey respect using formulaic structures such as 'Seldom have I been more honored than...', 'It is a profound privilege to...', and inverted fronting.",
+        explanationId: "Dalam diplomasi akademik (C1), kandidat menyampaikan rasa hormat menggunakan struktur baku seperti 'Seldom have I been more honored than...' (Jarang sekali saya merasa lebih terhormat daripada...), 'It is a profound privilege to...' (Merupakan kehormatan mendalam untuk...), dan penempatan penegasan di awal kalimat.",
+        examples: [
+          {
+            en: "Seldom has a research panel assembled scholars of such distinguished caliber.",
+            id: "Jarang sekali dewan penguji riset menghimpun cendekiawan dengan kaliber sekaliber ini."
+          },
+          {
+            en: "It is with sincere humility that I present our island findings before this committee.",
+            id: "Dengan ketulusan dan kerendahan hati saya mempersembahkan temuan pulau kami di hadapan komite ini."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "Diplomatic Academic Salutations",
+        titleId: "Tata Krama Menyapa Dewan Penguji Akademik",
+        contentEn: "Addressing each panel member by their exact professional title ('Professor Thorne', 'Ambassador Vance', 'Dr. Wu') shows acute situational awareness and institutional literacy.",
+        contentId: "Menyapa setiap anggota dewan dengan gelar profesional yang tepat ('Professor Thorne', 'Ambassador Vance', 'Dr. Wu') menunjukkan kepekaan situasional yang tajam dan penghargaan atas tatanan institusional."
+      },
+      quiz: [
+        {
+          id: "s10_ep2_q1",
+          questionEn: "How did Maya address the three committee members upon entering the room?",
+          questionId: "Bagaimana cara Maya menyapa ketiga anggota komite saat memasuki ruangan?",
+          options: [
+            "Addressed each member specifically by their formal title and acknowledged the profound honor of the session",
+            "Waved casually and said 'Hey guys, let's get started'",
+            "Sat down without speaking and waited for them to notice her",
+            "Addressed only Professor Thorne and ignored the others"
+          ],
+          correctIndex: 0,
+          explanationEn: "Using individualized professional titles acknowledges institutional hierarchy and academic prestige.",
+          explanationId: "Menyapa dengan gelar profesional individual menghormati jenjang kelembagaan dan kehormatan akademik."
+        },
+        {
+          id: "s10_ep2_q2",
+          questionEn: "Which sentence illustrates a high-register deferential opening?",
+          questionId: "Kalimat mana yang mengilustrasikan pembukaan santun berlaras tinggi?",
+          options: [
+            "Seldom have I experienced a greater privilege than addressing this distinguished fellowship committee.",
+            "I want you guys to give me this money because I worked hard.",
+            "You are lucky that I decided to apply for your scholarship.",
+            "Can we finish early because I have a train to catch?"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Seldom have I experienced...' uses elegant negative inversion to convey graceful deference.",
+          explanationId: "'Seldom have I experienced...' memanfaatkan inversi negatif yang anggun untuk menyampaikan rasa hormat mendalam."
+        },
+        {
+          id: "s10_ep2_q3",
+          questionEn: "How did Maya frame the challenges faced during the off-grid island storm?",
+          questionId: "Bagaimana Maya membingkai tantangan yang dihadapi selama badai di pulau terpencil?",
+          options: [
+            "As a collaborative crucible that sharpened team leadership and observational rigor",
+            "As a terrible mistake that she regrets participating in",
+            "As proof that Dr. Vance was an incompetent director",
+            "As an amusing vacation story with no scientific relevance"
+          ],
+          correctIndex: 0,
+          explanationEn: "Reframing hardship as a crucible of shared leadership reveals maturity and collaborative resilience.",
+          explanationId: "Membingkai kesulitan sebagai tempaan kepemimpinan bersama memperlihatkan kedewasaan dan ketangguhan kolaboratif."
+        },
+        {
+          id: "s10_ep2_q4",
+          questionEn: "What is the primary role of the noun 'board' in this context?",
+          questionId: "Apa peran utama kata benda 'board' dalam konteks ini?",
+          options: [
+            "A governing committee responsible for high-level institutional decisions and fellowship grants",
+            "A flat piece of wood used for surfing ocean waves",
+            "A chalkboard used for solving elementary math equations",
+            "A cutting board used in a restaurant kitchen"
+          ],
+          correctIndex: 0,
+          explanationEn: "In corporate and academic governance, a 'board' is the executive trustee body that renders final selections.",
+          explanationId: "Dalam tata kelola akademik, 'board' adalah dewan wali amanat eksekutif yang mengambil keputusan seleksi akhir."
+        },
+        {
+          id: "s10_ep2_q5",
+          questionEn: "Which word means 'a feeling of deep admiration elicited by abilities or achievements'?",
+          questionId: "Kata mana yang bermakna 'rasa kekaguman mendalam yang timbul dari kemampuan atau pencapaian'?",
+          options: [
+            "respect",
+            "pressure",
+            "criticism",
+            "nervous"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Respect' signifies deference, esteem, and positive recognition of worth.",
+          explanationId: "'Respect' bermakna rasa hormat, penghargaan tinggi, dan pengakuan atas nilai keluhuran."
+        }
+      ],
+      takeaways: [
+        "Mempraktikkan etika menyapa dewan penguji internasional secara profesional dan berbobot.",
+        "Menggunakan konstruksi *Formal Inversion* (*Seldom have I...*) untuk pembukaan yang memukau.",
+        "Menguasai kosakata Oxford 3000: *panel*, *board*, *introduce*, *welcome*, *respect*, *honor*."
+      ],
+      cliffhanger: "Prof. Thorne membalik halaman pertama proposal Maya dan menatap langsung ke matanya dengan sorot analitis..."
+    },
+
+    // EPISODE 3
+    {
+      id: 3,
+      number: 3,
+      title: "Pernyataan Tujuan & Visi Akademik",
+      titleEn: "The Statement of Purpose",
+      estimatedMinutes: 9,
+      recap: "Maya memaparkan visi penelitian doktoralnya: memadukan pemantauan karang tradisional dengan sensor akustik berbiaya terjangkau untuk negara berkembang.",
+      dialogue: [
+        {
+          id: "s10e3_d1",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Ms. Lin, your statement of purpose sets forth an ambitious goal. In your own words, what is the core academic purpose of your proposed research?",
+          textId: "Nn. Lin, pernyataan tujuan Anda menggariskan sasaran yang sangat ambisius. Dengan kata-kata Anda sendiri, apa tujuan akademik inti dari riset yang Anda usulkan?",
+          audioText: "Ms. Lin, your statement of purpose sets forth an ambitious goal. In your own words, what is the core academic purpose of your proposed research?"
+        },
+        {
+          id: "s10e3_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "My overarching ambition is to bridge the chasm between high-cost satellite oceanography and resource-constrained coastal communities.",
+          textId: "Aspirasi utama saya adalah menjembatani jurang pemisah antara oseanografi satelit berbiaya tinggi dengan masyarakat pesisir yang memiliki keterbatasan sumber daya.",
+          audioText: "My overarching ambition is to bridge the chasm between high-cost satellite oceanography and resource-constrained coastal communities."
+        },
+        {
+          id: "s10e3_d3",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "A compelling vision, Ms. Lin. How will this fellowship specifically empower you to achieve tangible conservation outcomes across international waters?",
+          textId: "Visi yang sangat memikat, Nn. Lin. Bagaimana beasiswa ini secara spesifik akan memberdayakan Anda untuk mencapai hasil konservasi nyata di perairan internasional?",
+          audioText: "A compelling vision, Ms. Lin. How will this fellowship specifically empower you to achieve tangible conservation outcomes across international waters?"
+        },
+        {
+          id: "s10e3_choice_1",
+          type: "interactive_choice",
+          promptEn: "How does Maya articulate her strategic pathway?",
+          promptId: "Bagaimana cara Maya mengartikulasikan peta jalan strategisnya?",
+          options: [
+            {
+              id: "s10e3_opt_1a",
+              textEn: "By coupling Oxford's advanced marine bioacoustics laboratory with open-source acoustic monitors deployed directly by artisanal fishing fleets.",
+              textId: "Dengan memadukan laboratorium bioakustik laut canggih di Oxford dengan pemantau akustik bersumber terbuka yang dipasang langsung oleh armada nelayan tradisional.",
+              feedbackEn: "Brilliant synthesis! Grounding elite laboratory science in community deployment thrills the panel.",
+              feedbackId: "Sintesis yang cemerlang! Memadukan sains laboratorium terkemuka dengan penerapan di masyarakat memukau dewan penguji."
+            },
+            {
+              id: "s10e3_opt_1b",
+              textEn: "By spending the entire fellowship reading books in the library without talking to any coastal communities.",
+              textId: "Dengan menghabiskan seluruh masa beasiswa membaca buku di perpustakaan tanpa berbicara dengan masyarakat pesisir.",
+              feedbackEn: "Lacks real-world impact; global fellowships prioritize actionable translational research.",
+              feedbackId: "Kurang memiliki dampak nyata; beasiswa global memprioritaskan riset translasi yang dapat diterapkan."
+            }
+          ]
+        },
+        {
+          id: "s10e3_d4",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Your clarity of vision is commendable, Ms. Lin. It is refreshing to hear a candidate articulate how academic discovery translates into equitable community stewardship.",
+          textId: "Kejelasan visi Anda sangat patut dipuji, Nn. Lin. Sangat menyegarkan mendengar seorang kandidat mampu mengartikulasikan bagaimana penemuan akademik diterjemahkan menjadi pelestarian masyarakat yang berkeadilan.",
+          audioText: "Your clarity of vision is commendable, Ms. Lin. It is refreshing to hear a candidate articulate how academic discovery translates into equitable community stewardship."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-purpose",
+          word: "purpose",
+          partOfSpeech: "noun",
+          enDefinition: "The reason for which something is done or created or for which something exists.",
+          idMeaning: "tujuan luhur, maksud utama",
+          contextSentenceEn: "A well-crafted statement of purpose articulates both scholarly focus and societal relevance.",
+          contextSentenceId: "Pernyataan tujuan yang dirancang baik mengartikulasikan fokus keilmuan sekaligus relevansi kemasyarakatan."
+        },
+        {
+          wordId: "oxford-academic",
+          word: "academic",
+          partOfSpeech: "adjective",
+          enDefinition: "Relating to education and scholarship, especially at a college or university level.",
+          idMeaning: "akademik, bersifat keilmuan",
+          contextSentenceEn: "Maya demonstrated rigorous academic literacy throughout her graduate coursework.",
+          contextSentenceId: "Maya menunjukkan literasi akademik yang ketat di sepanjang perkuliahan pascasarjananya."
+        },
+        {
+          wordId: "oxford-goal",
+          word: "goal",
+          partOfSpeech: "noun",
+          enDefinition: "The object of a person's ambition or effort; an aim or desired result.",
+          idMeaning: "sasaran target, capaian terukur",
+          contextSentenceEn: "Her primary goal is establishing affordable ecological monitoring networks.",
+          contextSentenceId: "Sasaran utamanya adalah membangun jaringan pemantauan ekologi yang terjangkau."
+        },
+        {
+          wordId: "oxford-ambition",
+          word: "ambition",
+          partOfSpeech: "noun",
+          enDefinition: "A strong desire to do or to achieve something, typically requiring determination and hard work.",
+          idMeaning: "ambisi mulia, tekad kuat",
+          contextSentenceEn: "Scholarly ambition must always be guided by ethical responsibility toward nature.",
+          contextSentenceId: "Ambisi keilmuan harus senantiasa dipandu oleh tanggung jawab etis terhadap alam."
+        },
+        {
+          wordId: "oxford-vision",
+          word: "vision",
+          partOfSpeech: "noun",
+          enDefinition: "The ability to think about or plan the future with imagination or wisdom.",
+          idMeaning: "visi masa depan yang bijaksana",
+          contextSentenceEn: "Effective global leaders articulate a clear vision that rallies diverse stakeholders.",
+          contextSentenceId: "Pemimpin global yang efektif mengartikulasikan visi jelas yang merangkul beragam pemangku kepentingan."
+        },
+        {
+          wordId: "oxford-achieve",
+          word: "achieve",
+          partOfSpeech: "verb",
+          enDefinition: "Successfully bring about or reach (a desired objective, level, or result) by effort, skill, or courage.",
+          idMeaning: "mencapai target prestasi",
+          contextSentenceEn: "Through international cooperation, scientists can achieve breakthroughs in ocean preservation.",
+          contextSentenceId: "Melalui kerja sama internasional, para ilmuwan dapat mencapai terobosan dalam pelestarian samudra."
+        }
+      ],
+      grammarFocus: {
+        topic: "Nominalization & Elevated Verb-Noun Collocations in C1 Rhetoric",
+        explanationEn: "In C1 formal academic statements, replacing simple verbs with nominalized abstract nouns ('my ambition is...', 'bridging the chasm between...', 'translates into equitable stewardship') elevates propositional density.",
+        explanationId: "Dalam pernyataan akademik formal tingkat C1, mengganti kata kerja sederhana dengan bentuk pembendaan abstrak (*nominalization*) seperti 'my ambition is...', 'bridging the chasm between...', dan 'translates into equitable stewardship' meningkatkan bobot dan ketajaman argumen.",
+        examples: [
+          {
+            en: "Rather than merely stating 'I want to help fishermen', she framed it as 'fostering participatory bioacoustic stewardship'.",
+            id: "Alih-alih sekadar menyatakan 'Saya ingin membantu nelayan', ia membingkainya sebagai 'menumbuhkan pelestarian bioakustik partisipatif'."
+          },
+          {
+            en: "The integration of low-cost hardware empowers localized ecological governance.",
+            id: "Integrasi peranti keras berbiaya terjangkau memberdayakan tata kelola ekologis berbasis lokal."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "The Anatomy of a Winning Statement of Purpose",
+        titleId: "Anatomi Pernyataan Tujuan Beasiswa Internasional",
+        contentEn: "Elite selection panels evaluate candidates on the 'Translational Arc': how fundamental academic research conducted in top Western universities will directly empower and regenerate the scholar's home region upon completion.",
+        contentId: "Panel seleksi elit menilai kandidat berdasarkan 'Busur Translasi': bagaimana penelitian akademik mendasar di universitas top dunia akan langsung memberdayakan dan memajukan kawasan asal sang cendekiawan setelah kelulusan."
+      },
+      quiz: [
+        {
+          id: "s10_ep3_q1",
+          questionEn: "What is the core objective of Maya's proposed research?",
+          questionId: "Apa tujuan inti dari penelitian yang diusulkan oleh Maya?",
+          options: [
+            "Bridging high-cost satellite oceanography with affordable, open-source acoustic monitoring for artisanal fishing communities",
+            "Building luxury underwater tourist submarines for wealthy travelers",
+            "Stopping all global shipping traffic across the Pacific Ocean",
+            "Selling bottled coral reef water as a health beverage"
+          ],
+          correctIndex: 0,
+          explanationEn: "Maya seeks to democratize marine science by pairing elite laboratory analytics with affordable community sensors.",
+          explanationId: "Maya berupaya mendemokratisasi sains kelautan dengan memadukan analisis laboratorium unggulan bersama sensor komunitas yang terjangkau."
+        },
+        {
+          id: "s10_ep3_q2",
+          questionEn: "Which sentence demonstrates C1-level nominalization and propositional density?",
+          questionId: "Kalimat mana yang menunjukkan pembendaan (*nominalization*) dan kepadatan proposisi tingkat C1?",
+          options: [
+            "The implementation of decentralized bioacoustic monitoring facilitates real-time habitat evaluation.",
+            "We put microphones in water and we hear fish making noise today.",
+            "Fish make noise so we will listen to them very nicely.",
+            "I want to listen because fish are cool animals."
+          ],
+          correctIndex: 0,
+          explanationEn: "'The implementation of decentralized bioacoustic monitoring facilitates...' displays high academic nominalization.",
+          explanationId: "'The implementation of decentralized bioacoustic monitoring facilitates...' memperlihatkan pembendaan akademik yang sangat berbobot."
+        },
+        {
+          id: "s10_ep3_q3",
+          questionEn: "What did Professor Thorne find 'refreshing' about Maya's presentation?",
+          questionId: "Apa yang dinilai 'menyegarkan' oleh Profesor Thorne dari pemaparan Maya?",
+          options: [
+            "Her ability to articulate how academic discovery translates into equitable, real-world community stewardship",
+            "Her stylish colorful business outfit",
+            "The fact that she brought cold glasses of lemonade for the panel",
+            "Her promise to finish her doctorate in three months"
+          ],
+          correctIndex: 0,
+          explanationEn: "Prof. Thorne praised Maya's clear translational connection between high theory and grassroots societal benefit.",
+          explanationId: "Prof. Thorne memuji kejelasan jembatan translasi Maya antara teori tingkat tinggi dan manfaat nyata bagi masyarakat akar rumput."
+        },
+        {
+          id: "s10_ep3_q4",
+          questionEn: "Which noun means 'a strong desire to achieve something, typically requiring determination and perseverance'?",
+          questionId: "Kata benda mana yang bermakna 'keinginan kuat untuk mencapai sesuatu yang menuntut kegigihan dan kerja keras'?",
+          options: [
+            "ambition",
+            "nervous",
+            "conflict",
+            "room"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Ambition' describes an aspirational drive toward significant, meaningful accomplishment.",
+          explanationId: "'Ambition' menggambarkan dorongan aspirasi menuju pencapaian yang bermakna dan berdampak luas."
+        },
+        {
+          id: "s10_ep3_q5",
+          questionEn: "What is the 'Translational Arc' in fellowship applications?",
+          questionId: "Apa yang dimaksud dengan 'Busur Translasi' (*Translational Arc*) dalam seleksi beasiswa?",
+          options: [
+            "Demonstrating how elite academic study will be practically applied to solve urgent challenges in the scholar's home society",
+            "Translating an English thesis into ten different foreign languages",
+            "Drawing a rainbow diagram on the front page of the application",
+            "Flying back and forth between two countries every weekend"
+          ],
+          correctIndex: 0,
+          explanationEn: "Translational research shows a concrete bridge from university laboratories to real-world community upliftment.",
+          explanationId: "Riset translasi menunjukkan jembatan konkret dari laboratorium universitas ke pemecahan masalah nyata di masyarakat."
+        }
+      ],
+      takeaways: [
+        "Menyusun *Statement of Purpose* yang memadukan keunggulan teoritis dengan dampak sosial nyata.",
+        "Menggunakan teknik *Nominalization* untuk meningkatkan kepadatan dan keanggunan proposisi akademik.",
+        "Menguasai kosakata Oxford 3000: *purpose*, *academic*, *goal*, *ambition*, *vision*, *achieve*."
+      ],
+      cliffhanger: "Pernyataan tujuan diterima hangat, namun Dr. Wu mencondongkan tubuh ke mikrofonnya untuk melancarkan serangan metodologis..."
+    },
+
+    // EPISODE 4
+    {
+      id: 4,
+      number: 4,
+      title: "Mempertahankan Metodologi Lapangan",
+      titleEn: "Defending Field Methodology",
+      estimatedMinutes: 9,
+      recap: "Dr. Wu menguji Maya dengan mempertanyakan validitas statistik dari sampel air analog berukuran kecil yang dikumpulkan selama badai.",
+      dialogue: [
+        {
+          id: "s10e4_d1",
+          speaker: "Dr. Wu",
+          speakerRole: "Quantitative Specialist",
+          textEn: "Ms. Lin, I examined your dossier tables. You collected a mere twelve physical water samples across forty square kilometers. In quantitative science, how can you prove that your data is not statistically negligible?",
+          textId: "Nn. Lin, saya memeriksa tabel berkas Anda. Anda hanya mengumpulkan dua belas sampel air fisik di area seluas empat puluh kilometer persegi. Dalam sains kuantitatif, bagaimana Anda membuktikan bahwa data Anda tidak dapat diabaikan secara statistik?",
+          audioText: "Ms. Lin, I examined your dossier tables. You collected a mere twelve physical water samples across forty square kilometers. In quantitative science, how can you prove that your data is not statistically negligible?"
+        },
+        {
+          id: "s10e4_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "Dr. Wu raises an entirely valid methodological criticism. However, those twelve samples were not collected at random; they were stratified across three distinct bathymetric trenches during an active barometric drop.",
+          textId: "Dr. Wu mengangkat kritik metodologis yang sepenuhnya sahih. Namun, kedua belas sampel tersebut tidak diambil secara acak; melainkan distratifikasi melintasi tiga palung batimetri berbeda saat terjadi penurunan tekanan barometer aktif.",
+          audioText: "Dr. Wu raises an entirely valid methodological criticism. However, those twelve samples were not collected at random. They were stratified across three distinct bathymetric trenches during an active barometric drop."
+        },
+        {
+          id: "s10e4_d3",
+          speaker: "Dr. Wu",
+          speakerRole: "Quantitative Specialist",
+          textEn: "Even so, when you analyze such limited sample sizes, how do you defend against confirmation bias when evaluating coral polyp stress markers?",
+          textId: "Meski demikian, saat Anda menganalisis ukuran sampel yang begitu terbatas, bagaimana Anda membentengi diri dari bias konfirmasi saat mengevaluasi penanda stres polip karang?",
+          audioText: "Even so, when you analyze such limited sample sizes, how do you defend against confirmation bias when evaluating coral polyp stress markers?"
+        },
+        {
+          id: "s10e4_choice_1",
+          type: "interactive_choice",
+          promptEn: "How does Maya defend her scientific rigor under quantitative scrutiny?",
+          promptId: "Bagaimana cara Maya mempertahankan ketelitian ilmiahnya di bawah bedah kuantitatif?",
+          options: [
+            {
+              id: "s10e4_opt_1a",
+              textEn: "Demonstrate that manual physical samples were cross-calibrated against forty-eight hours of continuous analog barometric readings and blind duplicate titrations.",
+              textId: "Membuktikan bahwa sampel fisik manual dikalibrasi silang terhadap catatan barometrik analog empat puluh delapan jam tanpa henti dan titrasi duplikat buta.",
+              feedbackEn: "Formidable methodological defense! Dr. Wu jots down notes with visible appreciation.",
+              feedbackId: "Pembelaan metodologis yang tangguh! Dr. Wu mencatat dengan penghargaan yang terlihat jelas."
+            },
+            {
+              id: "s10e4_opt_1b",
+              textEn: "Argue that statistics do not matter because nature is too beautiful to be measured by numbers.",
+              textId: "Membantah bahwa statistik tidak penting karena alam terlalu indah untuk diukur dengan angka.",
+              feedbackEn: "Fatal academic mistake; quantitative rigor cannot be dismissed with sentimentalism.",
+              feedbackId: "Kesalahan akademik fatal; ketelitian kuantitatif tidak boleh ditolak dengan sentimentalitas."
+            }
+          ]
+        },
+        {
+          id: "s10e4_d4",
+          speaker: "Dr. Wu",
+          speakerRole: "Quantitative Specialist",
+          textEn: "Blind duplicate titrations under field constraints? That provides verifiable evidence of reproducibility. Your method demonstrates exemplary empirical integrity, Ms. Lin.",
+          textId: "Titrasi duplikat buta di bawah keterbatasan lapangan? Itu memberikan bukti keterulangan yang dapat diverifikasi. Metode Anda menunjukkan integritas empiris yang patut diteladani, Nn. Lin.",
+          audioText: "Blind duplicate titrations under field constraints? That provides verifiable evidence of reproducibility. Your method demonstrates exemplary empirical integrity, Ms. Lin."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-method",
+          word: "method",
+          partOfSpeech: "noun",
+          enDefinition: "A particular procedure for accomplishing or approaching something, especially a systematic or established one.",
+          idMeaning: "metode penelitian sistematis",
+          contextSentenceEn: "A robust research method anticipates confounding variables before data collection begins.",
+          contextSentenceId: "Metode riset yang tangguh mengantisipasi variabel pengganggu sebelum pengumpulan data dimulai."
+        },
+        {
+          wordId: "oxford-data",
+          word: "data",
+          partOfSpeech: "noun",
+          enDefinition: "Facts and statistics collected together for reference or analysis.",
+          idMeaning: "data empiris penelitian",
+          contextSentenceEn: "Empirical field data must be corroborated through independent replication.",
+          contextSentenceId: "Data lapangan empiris harus diperkuat melalui replikasi independen."
+        },
+        {
+          wordId: "oxford-analyze",
+          word: "analyze",
+          partOfSpeech: "verb",
+          enDefinition: "Examine methodically and in detail the constitution or structure of something.",
+          idMeaning: "menganalisis, membedah secara cermat",
+          contextSentenceEn: "Biometricians analyze salinity curves to trace sub-surface freshwater upwellings.",
+          contextSentenceId: "Ahli biometri menganalisis kurva salinitas untuk melacak naiknya air tawar bawah permukaan."
+        },
+        {
+          wordId: "oxford-prove",
+          word: "prove",
+          partOfSpeech: "verb",
+          enDefinition: "Demonstrate the truth or existence of (something) by evidence or argument.",
+          idMeaning: "membuktikan keabsahan ilmiah",
+          contextSentenceEn: "Replicated control trials help prove that the observed reef bleaching was caused by thermal shock.",
+          contextSentenceId: "Uji kontrol terulang membantu membuktikan bahwa pemutihan karang yang diamati disebabkan oleh kejutan termal."
+        },
+        {
+          wordId: "oxford-evidence",
+          word: "evidence",
+          partOfSpeech: "noun",
+          enDefinition: "The available body of facts or information indicating whether a belief or proposition is true or valid.",
+          idMeaning: "bukti ilmiah yang sah dan sahih",
+          contextSentenceEn: "Anecdotal impressions cannot substitute for verifiable empirical evidence.",
+          contextSentenceId: "Kesan anekdotal tidak dapat menggantikan bukti empiris yang dapat diverifikasi."
+        },
+        {
+          wordId: "oxford-criticism",
+          word: "criticism",
+          partOfSpeech: "noun",
+          enDefinition: "The expression of disapproval of someone or something based on perceived faults or mistakes, or the analysis and judgment of the merits and faults of a work.",
+          idMeaning: "kritik akademik yang membangun",
+          contextSentenceEn: "A mature scholar welcomes methodological criticism as an opportunity to fortify thesis rigor.",
+          contextSentenceId: "Cendekiawan matang menyambut kritik metodologis sebagai peluang untuk memperkokoh ketelitian tesis."
+        }
+      ],
+      grammarFocus: {
+        topic: "Diplomatic Validation & Concessive Counter-Argumentation",
+        explanationEn: "In C1 scholarly discourse, candidates never become defensive. Instead, they employ diplomatic acknowledgment ('Dr. Wu raises an entirely valid concern; nevertheless, ...') followed by evidential rebuttal.",
+        explanationId: "Dalam diskursus ilmiah C1, kandidat tidak pernah bersikap defensif emosional. Mereka menerapkan pengakuan diplomatik ('Dr. Wu raises an entirely valid concern; nevertheless, ...') yang segera disusul oleh pembuktian berbasis data.",
+        examples: [
+          {
+            en: "While I acknowledge the statistical limitations of the sample size, the stratification ensured representative data.",
+            id: "Meskipun saya mengakui keterbatasan statistik dari ukuran sampel tersebut, stratifikasi yang dilakukan menjamin data yang representatif."
+          },
+          {
+            en: "Dr. Wu's skepticism is well founded; however, subsequent blind titrations substantiated the findings.",
+            id: "Sikap skeptis Dr. Wu memiliki dasar kuat; namun, titrasi buta lanjutan berhasil membuktikan kebenaran temuan tersebut."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "The Art of the Academic Defense",
+        titleId: "Seni Mempertahankan Tesis di Depan Penguji",
+        contentEn: "At elite scholarship levels, aggressive questioning is not a personal attack; it is an intellectual stress-test designed to see whether the candidate responds with emotional reactivity or disciplined, evidence-based poise.",
+        contentId: "Pada seleksi beasiswa tingkat elit, pertanyaan tajam dan menekan bukanlah serangan pribadi; melainkan uji ketahanan intelektual untuk melihat apakah kandidat reaktif secara emosional atau menjawab dengan ketenangan berbasis bukti."
+      },
+      quiz: [
+        {
+          id: "s10_ep4_q1",
+          questionEn: "What specific concern did Dr. Wu raise regarding Maya's field dataset?",
+          questionId: "Kekhawatiran spesifik apa yang diangkat oleh Dr. Wu mengenai kumpulan data lapangan Maya?",
+          options: [
+            "The small sample size of twelve physical vials across forty square kilometers might be statistically negligible",
+            "The seawater vials were stored in the wrong brand of glass bottles",
+            "Maya did not take enough underwater selfie photos with the coral",
+            "The handwriting in the analog field journal was written in cursive"
+          ],
+          correctIndex: 0,
+          explanationEn: "Dr. Wu questioned whether a small sample size could reliably represent a forty-square-kilometer marine zone.",
+          explanationId: "Dr. Wu mempertanyakan apakah ukuran sampel yang kecil dapat mewakili zona laut seluas empat puluh kilometer persegi secara andal."
+        },
+        {
+          id: "s10_ep4_q2",
+          questionEn: "How did Maya effectively counter Dr. Wu's methodological skepticism?",
+          questionId: "Bagaimana cara Maya membalas keraguan metodologis Dr. Wu secara efektif?",
+          options: [
+            "Explained that samples were bathymetrically stratified and validated via blind duplicate titrations",
+            "Started crying and asked the panel to be more gentle",
+            "Insisted that numbers do not matter in marine biology",
+            "Claimed that Captain Riko personally guaranteed the numbers"
+          ],
+          correctIndex: 0,
+          explanationEn: "Highlighting bathymetric stratification and blind duplicate titrations proved reproducibility and empirical rigor.",
+          explanationId: "Menjelaskan stratifikasi batimetri dan titrasi duplikat buta membuktikan keterulangan dan ketelitian empiris."
+        },
+        {
+          id: "s10_ep4_q3",
+          questionEn: "Which phrase best models C1 diplomatic concession before presenting evidence?",
+          questionId: "Frasa mana yang paling mencerminkan konsesi diplomatik tingkat C1 sebelum memaparkan bukti?",
+          options: [
+            "Dr. Wu raises an entirely valid methodological criticism; nevertheless, our controls demonstrated...",
+            "Dr. Wu is completely wrong and does not know anything about islands.",
+            "I don't care about what Dr. Wu said.",
+            "Whatever you say, but I think my data is cool."
+          ],
+          correctIndex: 0,
+          explanationEn: "Acknowledging the examiner's point gracefully before countering with facts is the hallmark of C1 academic diplomacy.",
+          explanationId: "Mengakui poin penguji secara santun sebelum membalas dengan fakta adalah ciri khas diplomasi akademik tingkat C1."
+        },
+        {
+          id: "s10_ep4_q4",
+          questionEn: "What does 'confirmation bias' mean in scientific research?",
+          questionId: "Apa yang dimaksud dengan 'bias konfirmasi' (*confirmation bias*) dalam riset ilmiah?",
+          options: [
+            "The tendency to interpret data in a way that confirms one's preconceptions while ignoring contrary evidence",
+            "Confirming an airplane flight ticket two days in advance",
+            "Asking five colleagues to sign a birthday card",
+            "Verifying that a computer software license is active"
+          ],
+          correctIndex: 0,
+          explanationEn: "Confirmation bias occurs when researchers selectively favor information that validates their initial hypotheses.",
+          explanationId: "Bias konfirmasi terjadi saat peneliti secara selektif menyukai informasi yang membenarkan hipotesis awal mereka seraya mengabaikan bukti yang berlawanan."
+        },
+        {
+          id: "s10_ep4_q5",
+          questionEn: "Which noun means 'the available body of facts or information indicating whether a proposition is valid'?",
+          questionId: "Kata benda mana yang bermakna 'kumpulan fakta atau informasi yang menunjukkan apakah sebuah proposisi itu sahih'?",
+          options: [
+            "evidence",
+            "pressure",
+            "candidate",
+            "room"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Evidence' denotes factual proof that corroborates scientific claims.",
+          explanationId: "'Evidence' bermakna bukti faktual yang memperkuat dan memvalidasi klaim ilmiah."
+        }
+      ],
+      takeaways: [
+        "Menghadapi kritik metodologis kuantitatif dengan ketenangan dan konsesi diplomatik.",
+        "Mengartikulasikan teknik kalibrasi data empiris (*blind duplicate titrations* & *stratification*).",
+        "Menguasai kosakata Oxford 3000: *method*, *data*, *analyze*, *prove*, *evidence*, *criticism*."
+      ],
+      cliffhanger: "Dr. Wu mengangguk puas, namun Duta Besar Vance kini mengambil giliran untuk menguji ketahanan kepemimpinan di bawah krisis..."
+    },
+
+    // EPISODE 5
+    {
+      id: 5,
+      number: 5,
+      title: "Menghadapi Ujian Silang Bertekanan Tinggi",
+      titleEn: "High-Pressure Cross-Examination",
+      estimatedMinutes: 9,
+      recap: "Duta Besar Vance menguji ketahanan emosional Maya melalui skenario hipotetis: apa yang akan ia lakukan jika pendanaan riset tiba-tiba dipangkas di tengah badai krisis?",
+      dialogue: [
+        {
+          id: "s10e5_d1",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "Ms. Lin, let us shift to crisis leadership. Suppose you are in the field, diplomatic tensions escalate, and institutional funding is terminated overnight. How do you respond under extreme pressure?",
+          textId: "Nn. Lin, mari kita beralih ke kepemimpinan saat krisis. Andaikan Anda sedang berada di lapangan, ketegangan diplomatik meningkat, dan pendanaan institusional diputus dalam semalam. Bagaimana Anda menanggapi di bawah tekanan ekstrem?",
+          audioText: "Ms. Lin, let us shift to crisis leadership. Suppose you are in the field, diplomatic tensions escalate, and institutional funding is terminated overnight. How do you respond under extreme pressure?"
+        },
+        {
+          id: "s10e5_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "When institutional support collapses, a leader must remain calm and prioritize human safety and core ecological assets over bureaucratic panic.",
+          textId: "Ketika dukungan institusional runtuh, seorang pemimpin harus tetap tenang dan memprioritaskan keselamatan manusia serta aset ekologis inti di atas kepanikan birokrasi.",
+          audioText: "When institutional support collapses, a leader must remain calm and prioritize human safety and core ecological assets over bureaucratic panic."
+        },
+        {
+          id: "s10e5_d3",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "A noble principle, but how do you defend that stance to local authorities who might view an unfunded foreign station as an economic burden or an ecological challenge?",
+          textId: "Prinsip yang mulia, namun bagaimana Anda mempertahankan pendirian itu di hadapan otoritas lokal yang mungkin memandang stasiun tanpa dana sebagai beban ekonomi atau tantangan ekologis?",
+          audioText: "A noble principle, but how do you defend that stance to local authorities who might view an unfunded foreign station as an economic burden or an ecological challenge?"
+        },
+        {
+          id: "s10e5_choice_1",
+          type: "interactive_choice",
+          promptEn: "What strategic solution does Maya outline?",
+          promptId: "Solusi strategis apa yang diuraikan oleh Maya?",
+          options: [
+            {
+              id: "s10e5_opt_1a",
+              textEn: "Pivot immediately to community co-management, transferring station monitoring tools to local maritime cooperatives so ecological data serves local food security.",
+              textId: "Beralih segera ke pengelolaan bersama masyarakat (*co-management*), mentransfer alat pemantau stasiun ke koperasi maritim lokal agar data ekologi menopang ketahanan pangan lokal.",
+              feedbackEn: "Masterclass in crisis diplomacy! Ambassador Vance's eyes light up with admiration.",
+              feedbackId: "Kelas master dalam diplomasi krisis! Mata Duta Besar Vance berbinar penuh kekaguman."
+            },
+            {
+              id: "s10e5_opt_1b",
+              textEn: "Demand that the embassy send a military gunboat to evacuate her research immediately.",
+              textId: "Menuntut agar kedutaan mengirim kapal perang militer untuk segera mengevakuasi penelitiannya.",
+              feedbackEn: "Diplomatic disaster; displays entitlement and complete detachment from community partnership.",
+              feedbackId: "Bencana diplomatik; memperlihatkan arogansi dan keterputusan total dari kemitraan masyarakat."
+            }
+          ]
+        },
+        {
+          id: "s10e5_d4",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "Transforming an administrative crisis into grassroots empowerment is precisely the diplomatic solution this foundation champions. You have defended your leadership philosophy with stellar poise, Ms. Lin.",
+          textId: "Mentransformasi krisis administratif menjadi pemberdayaan akar rumput adalah solusi diplomatik tepat yang dijunjung tinggi yayasan ini. Anda telah mempertahankan filosofi kepemimpinan Anda dengan wibawa luar biasa, Nn. Lin.",
+          audioText: "Transforming an administrative crisis into grassroots empowerment is precisely the diplomatic solution this foundation champions. You have defended your leadership philosophy with stellar poise, Ms. Lin."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-pressure",
+          word: "pressure",
+          partOfSpeech: "noun",
+          enDefinition: "The use of persuasion, influence, or intimidation to make someone do something, or the stress of demanding circumstances.",
+          idMeaning: "tekanan situasi kritis atau stres mental",
+          contextSentenceEn: "Leaders distinguish themselves by maintaining clear ethical reasoning under intense pressure.",
+          contextSentenceId: "Para pemimpin membedakan diri mereka dengan mempertahankan penalaran etis yang jernih di bawah tekanan hebat."
+        },
+        {
+          wordId: "oxford-respond",
+          word: "respond",
+          partOfSpeech: "verb",
+          enDefinition: "Say or do something in reply or as a reaction to something.",
+          idMeaning: "menanggapi secara taktis dan tenang",
+          contextSentenceEn: "How a scholar chooses to respond to unexpected setbacks defines their research resilience.",
+          contextSentenceId: "Bagaimana seorang cendekiawan memilih menanggapi rintangan tak terduga menentukan ketangguhan risetnya."
+        },
+        {
+          wordId: "oxford-challenge",
+          word: "challenge",
+          partOfSpeech: "noun",
+          enDefinition: "A call to take part in a contest or competition, or an obstacle that requires great mental or physical effort.",
+          idMeaning: "tantangan berat yang menguji ketahanan",
+          contextSentenceEn: "Global ecological degradation presents a formidable challenge that transcends national borders.",
+          contextSentenceId: "Degradasi ekologi global menghadirkan tantangan berat yang melampaui batas-batas negara."
+        },
+        {
+          wordId: "oxford-defend",
+          word: "defend",
+          partOfSpeech: "verb",
+          enDefinition: "Conduct the defense of (an argument or thesis) against criticism or opposition.",
+          idMeaning: "mempertahankan argumen atau prinsip",
+          contextSentenceEn: "Candidates must defend their policy recommendations with empirical data and moral clarity.",
+          contextSentenceId: "Para kandidat harus mempertahankan rekomendasi kebijakan mereka dengan data empiris dan kejelasan moral."
+        },
+        {
+          wordId: "oxford-calm",
+          word: "calm",
+          partOfSpeech: "adjective",
+          enDefinition: "Not showing or feeling nervousness, anger, or other strong emotions; untroubled.",
+          idMeaning: "tenang, berkepala dingin dalam krisis",
+          contextSentenceEn: "Remaining calm in maritime emergencies prevents hasty decisions that endanger crew lives.",
+          contextSentenceId: "Tetap tenang dalam keadaan darurat maritim mencegah keputusan tergesa-gesa yang membahayakan nyawa kru."
+        },
+        {
+          wordId: "oxford-solution",
+          word: "solution",
+          partOfSpeech: "noun",
+          enDefinition: "A means of solving a problem or dealing with a difficult situation.",
+          idMeaning: "solusi strategis pemecahan masalah",
+          contextSentenceEn: "True conservation solutions align environmental protection with community economic survival.",
+          contextSentenceId: "Solusi konservasi sejati menyelaraskan perlindungan lingkungan dengan kelangsungan ekonomi masyarakat."
+        }
+      ],
+      grammarFocus: {
+        topic: "Modal Auxiliaries for Ethical Duty & Conditional Crisis Management",
+        explanationEn: "In C1 diplomatic scenarios, modals of strong obligation ('must prioritize', 'ought to transition') combined with subjunctive conditionals ('Were funding to cease, our primary mandate would be...') articulate executive judgment.",
+        explanationId: "Dalam skenario diplomatik C1, modal keharusan etis ('must prioritize', 'ought to transition') yang dipadukan dengan pengandaian subjungtif ('Were funding to cease, our primary mandate would be...') mencerminkan kepemimpinan eksekutif yang matang.",
+        examples: [
+          {
+            en: "Were geopolitical tensions to sever our external links, we ought to empower local cooperatives immediately.",
+            id: "Seandainya ketegangan geopolitik memutus jalur eksternal kita, kita harus memberdayakan koperasi lokal seketika."
+          },
+          {
+            en: "Under crisis conditions, ethical leaders must balance immediate survival with long-term ecological integrity.",
+            id: "Di bawah kondisi krisis, pemimpin beretika harus menyeimbangkan keselamatan mendesak dengan integritas ekologis jangka panjang."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "Community Co-Management in Global Conservation",
+        titleId: "Prinsip Pengelolaan Bersama Masyarakat (*Co-Management*)",
+        contentEn: "Modern international development agencies reject 'fortress conservation' (locking locals out of nature reserves). True sustainability requires shared governance where indigenous and artisanal fishers hold co-ownership of data and marine protected areas.",
+        contentId: "Lembaga pembangunan internasional modern menolak 'konservasi benteng' (mengisolasi warga lokal dari alam). Keberlanjutan sejati menuntut tata kelola bersama tempat nelayan tradisional memegang kepemilikan data dan kawasan lindung laut."
+      },
+      quiz: [
+        {
+          id: "s10_ep5_q1",
+          questionEn: "What crisis scenario did Ambassador Vance pose to test Maya's leadership?",
+          questionId: "Skenario krisis apa yang diajukan oleh Duta Besar Vance untuk menguji kepemimpinan Maya?",
+          options: [
+            "A sudden termination of institutional funding amidst escalating diplomatic tensions in the field",
+            "A power outage during a cinema movie screening",
+            "Losing her passport at an international airport",
+            "A disagreement with Julian over which restaurant to visit"
+          ],
+          correctIndex: 0,
+          explanationEn: "Ambassador Vance tested her response to catastrophic institutional abandonment and geopolitical friction.",
+          explanationId: "Duta Besar Vance menguji responsnya terhadap terhentinya pendanaan institusional secara tiba-tiba di tengah gesekan geopolitik."
+        },
+        {
+          id: "s10_ep5_q2",
+          questionEn: "What was Maya's proposed solution to the sudden loss of external funding?",
+          questionId: "Apa solusi yang diusulkan Maya terhadap hilangnya pendanaan eksternal secara tiba-tiba?",
+          options: [
+            "Pivoting to community co-management and transferring research tools to local maritime cooperatives",
+            "Abandoning the island immediately on the first available boat",
+            "Selling the research station buildings to a resort developer",
+            "Protesting outside the local mayor's office with loud megaphones"
+          ],
+          correctIndex: 0,
+          explanationEn: "Transferring tools and data ownership to local fishing cooperatives ensures durable grassroots stewardship.",
+          explanationId: "Mentransfer alat dan kepemilikan data ke koperasi nelayan lokal menjamin kelestarian berbasis akar rumput yang berkelanjutan."
+        },
+        {
+          id: "s10_ep5_q3",
+          questionEn: "Which sentence features an inverted conditional denoting a hypothetical crisis?",
+          questionId: "Kalimat mana yang memuat inversi pengandaian yang menyatakan krisis hipotetis?",
+          options: [
+            "Were institutional support to evaporate overnight, our allegiance would shift directly to the coastal community.",
+            "If support evaporates tomorrow, we will run away.",
+            "Support is evaporating because people are angry.",
+            "To evaporate support is a very bad thing."
+          ],
+          correctIndex: 0,
+          explanationEn: "'Were institutional support to evaporate...' is a sophisticated C1 inverted conditional replacing 'If support were to evaporate'.",
+          explanationId: "'Were institutional support to evaporate...' adalah inversi pengandaian tingkat C1 yang sangat elegan menggantikan 'If support were to evaporate'."
+        },
+        {
+          id: "s10_ep5_q4",
+          questionEn: "Why is 'fortress conservation' criticized in modern ecological diplomacy?",
+          questionId: "Mengapa 'konservasi benteng' (*fortress conservation*) dikritik dalam diplomasi ekologi modern?",
+          options: [
+            "Because it excludes indigenous and local populations from their ancestral resources, creating resentment and poaching",
+            "Because building stone castles on beaches is too expensive",
+            "Because wild animals do not like seeing stone walls",
+            "Because foreign tourists prefer visiting shopping malls instead"
+          ],
+          correctIndex: 0,
+          explanationEn: "Excluding local communities alienates the very people whose daily stewardship sustains the ecosystem.",
+          explanationId: "Mengasingkan warga lokal memicu alienasi pada pihak yang sejatinya menjaga kelestarian ekosistem tersebut sehari-hari."
+        },
+        {
+          id: "s10_ep5_q5",
+          questionEn: "Which adjective means 'not showing or feeling nervousness, anger, or strong emotion under stress'?",
+          questionId: "Kata sifat mana yang bermakna 'tidak menunjukkan kegugupan atau kemarahan di bawah tekanan; berkepala dingin'?",
+          options: [
+            "calm",
+            "nervous",
+            "electric",
+            "remote"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Calm' denotes serene, undisturbed emotional balance during adversity.",
+          explanationId: "'Calm' bermakna ketenangan emosional yang jernih dan tak tergoyahkan di tengah cobaan."
+        }
+      ],
+      takeaways: [
+        "Mendemonstrasikan kepemimpinan krisis berbasis pemberdayaan masyarakat (*co-management*).",
+        "Menggunakan konstruksi *Inverted Conditionals* (*Were support to cease...*) dalam retorika pemecahan masalah.",
+        "Menguasai kosakata Oxford 3000: *pressure*, *respond*, *challenge*, *defend*, *calm*, *solution*."
+      ],
+      cliffhanger: "Ujian kepemimpinan terlewati dengan pujian, kini Profesor Thorne beralih ke ranah pertanggungjawaban moral dan etika sains..."
+    },
+
+    // EPISODE 6
+    {
+      id: 6,
+      number: 6,
+      title: "Dimensi Etika & Dampak Kemasyarakatan",
+      titleEn: "Ethical Responsibility & Community Impact",
+      estimatedMinutes: 9,
+      recap: "Profesor Thorne menantang Maya mengenai potensi eksploitasi data biologis oleh korporasi farmasi multinasional dan etika kekayaan intelektual hayati.",
+      dialogue: [
+        {
+          id: "s10e6_d1",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Ms. Lin, your field notes identify a bioluminescent algae with potential anticancer biomedical properties. What ethical responsibility do researchers bear when commercial pharmaceutical entities seek to patent such organisms?",
+          textId: "Nn. Lin, catatan lapangan Anda mengidentifikasi alga pendar dengan potensi biomedis antikanker. Tanggung jawab etis apa yang diemban peneliti saat entitas farmasi komersial berupaya mematenkan organisme tersebut?",
+          audioText: "Ms. Lin, your field notes identify a bioluminescent algae with potential anticancer biomedical properties. What ethical responsibility do researchers bear when commercial pharmaceutical entities seek to patent such organisms?"
+        },
+        {
+          id: "s10e6_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "Scientific exploration without a robust moral compass becomes nothing more than biopiracy. Our fundamental principle must be benefit-sharing and sovereign genetic custodianship for the indigenous island community.",
+          textId: "Eksplorasi ilmiah tanpa kompas moral yang kokoh tidak lebih dari sekadar pembajakan hayati (biopiracy). Prinsip fundamental kita haruslah pembagian manfaat dan perwalian genetik berdaulat bagi masyarakat pulau setempat.",
+          audioText: "Scientific exploration without a robust moral compass becomes nothing more than biopiracy. Our fundamental principle must be benefit-sharing and sovereign genetic custodianship for the indigenous island community."
+        },
+        {
+          id: "s10e6_d3",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Corporations possess teams of intellectual property attorneys. In concrete terms, how would your fellowship project ensure that the scientific impact genuinely enriches the coastal community rather than distant boardrooms?",
+          textId: "Korporasi memiliki tim pengacara hak kekayaan intelektual. Secara konkret, bagaimana proyek beasiswa Anda memastikan bahwa dampak ilmiah benar-benar memperkaya masyarakat pesisir, bukan ruang rapat korporasi yang jauh?",
+          audioText: "Corporations possess teams of intellectual property attorneys. In concrete terms, how would your fellowship project ensure that the scientific impact genuinely enriches the coastal community rather than distant boardrooms?"
+        },
+        {
+          id: "s10e6_choice_1",
+          type: "interactive_choice",
+          promptEn: "What concrete governance mechanism does Maya advocate?",
+          promptId: "Mekanisme tata kelola konkret apa yang diperjuangkan oleh Maya?",
+          options: [
+            {
+              id: "s10e6_opt_1a",
+              textEn: "Deposit all genomic sequences into the public domain under an Open Access Nagoya Protocol framework that legally mandates royalty reinvestment into local reef conservation schools.",
+              textId: "Menyetorkan seluruh sekuens genomik ke domain publik di bawah kerangka Protokol Nagoya Akses Terbuka yang mewajibkan royalti diinvestasikan kembali ke sekolah konservasi karang lokal.",
+              feedbackEn: "Stunning mastery of international environmental law! Prof. Thorne is deeply impressed.",
+              feedbackId: "Penguasaan hukum lingkungan internasional yang memukau! Prof. Thorne sangat terkesan."
+            },
+            {
+              id: "s10e6_opt_1b",
+              textEn: "Sell the patent rights secretly to buy a faster boat for personal weekend trips.",
+              textId: "Menjual hak paten secara rahasia untuk membeli perahu cepat demi liburan pribadi akhir pekan.",
+              feedbackEn: "Unacceptable ethical violation; immediate disqualification from any academic grant.",
+              feedbackId: "Pelanggaran etika berat yang tak dapat diterima; diskualifikasi langsung dari hibah akademik."
+            }
+          ]
+        },
+        {
+          id: "s10e6_d4",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Invoking the Nagoya Protocol demonstrates profound international legal literacy, Ms. Lin. You recognize that true scholarship must defend the vulnerable against predatory extraction.",
+          textId: "Mengutip Protokol Nagoya membuktikan literasi hukum internasional yang sangat mendalam, Nn. Lin. Anda menyadari bahwa beasiswa sejati harus membela pihak yang rentan dari ekstraksi predatoris.",
+          audioText: "Invoking the Nagoya Protocol demonstrates profound international legal literacy, Ms. Lin. You recognize that true scholarship must defend the vulnerable against predatory extraction."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-ethical",
+          word: "ethical",
+          partOfSpeech: "adjective",
+          enDefinition: "Relating to moral principles or the branch of knowledge dealing with these.",
+          idMeaning: "etis, mematuhi kode moral",
+          contextSentenceEn: "Ethical research requires free, prior, and informed consent from local inhabitants.",
+          contextSentenceId: "Penelitian yang etis mewajibkan persetujuan awal tanpa paksaan dan berpengetahuan dari warga lokal."
+        },
+        {
+          wordId: "oxford-moral",
+          word: "moral",
+          partOfSpeech: "adjective",
+          enDefinition: "Concerned with the principles of right and wrong behavior and the goodness or badness of human character.",
+          idMeaning: "moral, berlandaskan kebajikan",
+          contextSentenceEn: "Scientists have a moral duty to prevent the commercial weaponization of their biological discoveries.",
+          contextSentenceId: "Para ilmuwan memiliki kewajiban moral untuk mencegah komersialisasi predatoris atas penemuan biologis mereka."
+        },
+        {
+          wordId: "oxford-responsibility",
+          word: "responsibility",
+          partOfSpeech: "noun",
+          enDefinition: "The state or fact of having a duty to deal with something or having control over someone.",
+          idMeaning: "tanggung jawab amanah",
+          contextSentenceEn: "Holding a prestigious international fellowship confers a solemn responsibility to serve society.",
+          contextSentenceId: "Menyandang beasiswa internasional bergengsi membawa tanggung jawab agung untuk mengabdi pada masyarakat."
+        },
+        {
+          wordId: "oxford-community",
+          word: "community",
+          partOfSpeech: "noun",
+          enDefinition: "A group of people living in the same place or having a particular characteristic in common.",
+          idMeaning: "masyarakat lokal pesisir",
+          contextSentenceEn: "No ecological policy succeeds without the active consent of the resident fishing community.",
+          contextSentenceId: "Tidak ada kebijakan ekologi yang berhasil tanpa persetujuan aktif dari masyarakat nelayan setempat."
+        },
+        {
+          wordId: "oxford-impact",
+          word: "impact",
+          partOfSpeech: "noun",
+          enDefinition: "The marked effect or influence of something on a situation or society.",
+          idMeaning: "dampak perubahan nyata",
+          contextSentenceEn: "Our research seeks real societal impact, not merely citation counts in paywalled journals.",
+          contextSentenceId: "Riset kita mencari dampak sosial yang nyata, bukan sekadar jumlah sitasi di jurnal berbayar."
+        },
+        {
+          wordId: "oxford-principle",
+          word: "principle",
+          partOfSpeech: "noun",
+          enDefinition: "A fundamental truth or proposition that serves as the foundation for a system of belief or behavior or for a chain of reasoning.",
+          idMeaning: "prinsip dasar integritas",
+          contextSentenceEn: "Adhering to ethical principles safeguards research from corporate co-optation.",
+          contextSentenceId: "Mematuhi prinsip-prinsip etika membentengi riset dari kooptasi korporasi."
+        }
+      ],
+      grammarFocus: {
+        topic: "Rhetorical Balance & Parallel Structures in Ethical Argumentation",
+        explanationEn: "In C1 ethical rhetoric, parallel structures ('not merely X, but rather Y', 'neither predatory extraction nor paternalistic charity') deliver balanced moral force and persuasive authority.",
+        explanationId: "Dalam retorika etis C1, struktur paralel ('not merely X, but rather Y', 'neither predatory extraction nor paternalistic charity') memberikan ketegasan moral yang seimbang dan wibawa persuasif yang tinggi.",
+        examples: [
+          {
+            en: "True conservation represents neither predatory extraction nor paternalistic charity, but rather sovereign partnership.",
+            id: "Konservasi sejati bukanlah ekstraksi predatoris maupun santunan paternalistik, melainkan kemitraan yang berdaulat."
+          },
+          {
+            en: "Our allegiance lies not with corporate patent holders, but with the fragile reef ecosystems of tomorrow.",
+            id: "Kesetiaan kita bukan pada pemegang paten korporat, melainkan pada ekosistem terumbu karang masa depan yang rapuh."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "The Nagoya Protocol on Genetic Resources",
+        titleId: "Protokol Nagoya & Perlindungan Kekayaan Hayati Adat",
+        contentEn: "Adopted under the UN Convention on Biological Diversity, the Nagoya Protocol legally prevents 'biopiracy' by mandating that benefits derived from genetic resources and traditional indigenous knowledge be shared fairly and equitably with originating communities.",
+        contentId: "Diterapkan di bawah Konvensi PBB tentang Keanekaragaman Hayati, Protokol Nagoya secara hukum mencegah 'pembajakan hayati' dengan mewajibkan pembagian manfaat sumber daya genetik dan kearifan tradisional secara adil dan setara bagi masyarakat asal."
+      },
+      quiz: [
+        {
+          id: "s10_ep6_q1",
+          questionEn: "What ethical hazard did Professor Thorne highlight regarding bioactive marine discoveries?",
+          questionId: "Bahaya etis apa yang disoroti oleh Profesor Thorne mengenai penemuan senyawa bioaktif laut?",
+          options: [
+            "Multinational pharmaceutical corporations patenting indigenous biological organisms without sharing benefits with local communities",
+            "Fishermen using algae to paint their boats bright green",
+            "The algae multiplying so fast that it covers all city buildings",
+            "Scientists refusing to publish their research in English"
+          ],
+          correctIndex: 0,
+          explanationEn: "Biopiracy involves commercial entities patenting biological treasures without equitable benefit-sharing with native stewards.",
+          explanationId: "Pembajakan hayati (*biopiracy*) terjadi saat korporasi mematenkan kekayaan biologis tanpa membagikan manfaat secara adil bagi masyarakat adat pemelihara."
+        },
+        {
+          id: "s10_ep6_q2",
+          questionEn: "Which international treaty did Maya invoke to ensure legal protection and benefit-sharing?",
+          questionId: "Perjanjian internasional mana yang dikutip oleh Maya untuk menjamin perlindungan hukum dan pembagian manfaat?",
+          options: [
+            "The Nagoya Protocol on Access and Benefit-Sharing",
+            "The Geneva Conventions on Warfare",
+            "The Bretton Woods Monetary Agreement",
+            "The International Olympic Charter"
+          ],
+          correctIndex: 0,
+          explanationEn: "The Nagoya Protocol specifically governs genetic resource rights and equitable community benefit-sharing.",
+          explanationId: "Protokol Nagoya secara khusus mengatur hak akses sumber daya genetik dan pembagian keuntungan yang adil bagi masyarakat lokal."
+        },
+        {
+          id: "s10_ep6_q3",
+          questionEn: "Which sentence features C1 rhetorical parallelism for moral emphasis?",
+          questionId: "Kalimat mana yang memuat paralelisme retorika C1 untuk penegasan moral?",
+          options: [
+            "Our mission represents neither predatory exploitation nor passive charity, but rather sovereign community co-custodianship.",
+            "Our mission is good and other things are bad.",
+            "We want to do research because money is nice.",
+            "Fish are very pretty animals and we like them a lot."
+          ],
+          correctIndex: 0,
+          explanationEn: "'Neither X nor Y, but rather Z' is a classical parallel structure displaying formidable rhetorical elegance.",
+          explanationId: "'Neither X nor Y, but rather Z' adalah struktur paralel klasik yang menampilkan keanggunan retorika tingkat tinggi."
+        },
+        {
+          id: "s10_ep6_q4",
+          questionEn: "What is 'biopiracy' in international environmental ethics?",
+          questionId: "Apa yang dimaksud dengan 'biopiracy' dalam etika lingkungan internasional?",
+          options: [
+            "The commercial exploitation of biological resources or indigenous knowledge without fair authorization and compensation",
+            "Sailing on a pirate ship with parrots and treasure maps",
+            "Stealing fish from a neighborhood pet store aquarium",
+            "Downloading academic science articles from illegal websites"
+          ],
+          correctIndex: 0,
+          explanationEn: "Biopiracy refers to exploiting indigenous genetic materials and ecological knowledge without equitable compensation.",
+          explanationId: "Biopiracy merujuk pada eksploitasi materi genetik dan pengetahuan ekologi adat tanpa kompensasi dan izin yang adil."
+        },
+        {
+          id: "s10_ep6_q5",
+          questionEn: "Which noun means 'a fundamental truth or proposition that serves as the foundation for ethical conduct'?",
+          questionId: "Kata benda mana yang bermakna 'kebenaran fundamental atau proposisi yang menjadi landasan bagi perilaku etis'?",
+          options: [
+            "principle",
+            "room",
+            "battery",
+            "interview"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Principle' denotes a foundational moral rule that directs integrity and judgment.",
+          explanationId: "'Principle' bermakna aturan moral fundamental yang memandu integritas dan pertimbangan bijak."
+        }
+      ],
+      takeaways: [
+        "Memahami dan mengutip kerangka hukum internasional (*Nagoya Protocol*) untuk mencegah biopiracy.",
+        "Menggunakan teknik *Rhetorical Parallelism* (*neither X nor Y, but rather Z*) dalam pertahanan etika.",
+        "Menguasai kosakata Oxford 3000: *ethical*, *moral*, *responsibility*, *community*, *impact*, *principle*."
+      ],
+      cliffhanger: "Pertahanan etika memukau dewan, kini saatnya beralih ke dimensi kepemimpinan dan diplomasi antar-bangsa..."
+    },
+
+    // EPISODE 7
+    {
+      id: 7,
+      number: 7,
+      title: "Kepemimpinan Global & Inisiatif Kerjasama",
+      titleEn: "Global Leadership & Collaborative Initiatives",
+      estimatedMinutes: 9,
+      recap: "Duta Besar Vance menanyakan bagaimana Maya akan menjembatani perbedaan geopolitik antar negara kawasan untuk membangun suaka laut lintas batas.",
+      dialogue: [
+        {
+          id: "s10e7_d1",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "Ms. Lin, migrating marine species do not recognize national boundaries. How would you mobilize regional leadership across neighboring countries that frequently harbor maritime border disputes?",
+          textId: "Nn. Lin, spesies laut yang bermigrasi tidak mengenal batas-batas negara. Bagaimana Anda akan memobilisasi kepemimpinan regional di antara negara-negara tetangga yang kerap berselisih sengketa batas maritim?",
+          audioText: "Ms. Lin, migrating marine species do not recognize national boundaries. How would you mobilize regional leadership across neighboring countries that frequently harbor maritime border disputes?"
+        },
+        {
+          id: "s10e7_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "Diplomatic history proves that science diplomacy often succeeds where political rhetoric stalls. We must inspire young scientists to form a trans-boundary conservation initiative.",
+          textId: "Sejarah diplomasi membuktikan bahwa diplomasi sains kerap berhasil di saat retorika politik mengalami jalan buntu. Kita harus menginspirasi para ilmuwan muda untuk membentuk inisiatif konservasi lintas batas.",
+          audioText: "Diplomatic history proves that science diplomacy often succeeds where political rhetoric stalls. We must inspire young scientists to form a trans-boundary conservation initiative."
+        },
+        {
+          id: "s10e7_d3",
+          speaker: "Dr. Wu",
+          speakerRole: "Quantitative Specialist",
+          textEn: "Establishing such international networks requires sustained institutional support. How do you propose to foster mutual trust among competing regional ministries?",
+          textId: "Membangun jaringan internasional seperti itu membutuhkan dukungan institusional berkelanjutan. Bagaimana Anda mengusulkan untuk menumbuhkan rasa saling percaya di antara kementerian kawasan yang saling bersaing?",
+          audioText: "Establishing such international networks requires sustained institutional support. How do you propose to foster mutual trust among competing regional ministries?"
+        },
+        {
+          id: "s10e7_choice_1",
+          type: "interactive_choice",
+          promptEn: "What leadership strategy does Maya offer?",
+          promptId: "Strategi kepemimpinan apa yang ditawarkan oleh Maya?",
+          options: [
+            {
+              id: "s10e7_opt_1a",
+              textEn: "Propose a neutral, shared open-data portal where satellite tracking of endangered turtle corridors is co-monitored, cultivating scientific trust before political treaties are drafted.",
+              textId: "Mengusulkan portal data terbuka bersama yang netral tempat pelacakan satelit koridor penyu langka dipantau bersama, menumbuhkan kepercayaan ilmiah sebelum perjanjian politik dirumuskan.",
+              feedbackEn: "Visionary science diplomacy! Ambassador Vance smiles in total agreement.",
+              feedbackId: "Diplomasi sains yang visioner! Duta Besar Vance tersenyum dengan persetujuan penuh."
+            },
+            {
+              id: "s10e7_opt_1b",
+              textEn: "Issue unilateral ultimatums and publicly criticize the governments on international television.",
+              textId: "Mengeluarkan ultimatum sepihak dan mengkritik pemerintah terkait secara terbuka di televisi internasional.",
+              feedbackEn: "Tactless and destructive; alienates foreign governments and ruins conservation cooperation.",
+              feedbackId: "Kurang bijak dan destruktif; mengasingkan pemerintah mitra dan menghancurkan kerja sama konservasi."
+            }
+          ]
+        },
+        {
+          id: "s10e7_d4",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "Shared data as the cornerstone of regional peace—that is the mark of a true global citizen. You understand that leadership is not about dominion, but about building bridges.",
+          textId: "Data bersama sebagai landasan perdamaian kawasan—itulah tanda seorang warga dunia sejati. Anda memahami bahwa kepemimpinan bukanlah soal dominasi, melainkan soal membangun jembatan persatuan.",
+          audioText: "Shared data as the cornerstone of regional peace, that is the mark of a true global citizen. You understand that leadership is not about dominion, but about building bridges."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-leadership",
+          word: "leadership",
+          partOfSpeech: "noun",
+          enDefinition: "The action of leading a group of people or an organization, or the ability to do this.",
+          idMeaning: "kepemimpinan visioner yang menyatukan",
+          contextSentenceEn: "Global leadership in environmental conservation requires cultural empathy and strategic patience.",
+          contextSentenceId: "Kepemimpinan global dalam konservasi lingkungan membutuhkan empati kultural dan kesabaran strategis."
+        },
+        {
+          wordId: "oxford-global",
+          word: "global",
+          partOfSpeech: "adjective",
+          enDefinition: "Relating to the whole world; worldwide.",
+          idMeaning: "mendunia, bertaraf internasional",
+          contextSentenceEn: "Ocean currents create a global hydrological circulation that connects all continents.",
+          contextSentenceId: "Arus samudra menciptakan sirkulasi hidrologi global yang menghubungkan seluruh benua."
+        },
+        {
+          wordId: "oxford-citizen",
+          word: "citizen",
+          partOfSpeech: "noun",
+          enDefinition: "A legally recognized subject or national of a state, or an inhabitant of a particular town or city; metaphorically, an active participant in world welfare.",
+          idMeaning: "warga dunia yang bertanggung jawab",
+          contextSentenceEn: "As a responsible global citizen, a scholar advocates for shared ecological patrimony.",
+          contextSentenceId: "Sebagai warga dunia yang bertanggung jawab, seorang cendekiawan memperjuangkan warisan ekologi bersama."
+        },
+        {
+          wordId: "oxford-inspire",
+          word: "inspire",
+          partOfSpeech: "verb",
+          enDefinition: "Fill (someone) with the urge or ability to do or feel something, especially something creative or noble.",
+          idMeaning: "menginspirasi, menggerakkan jiwa orang lain",
+          contextSentenceEn: "Mentors inspire students to pursue transformative solutions to systemic crises.",
+          contextSentenceId: "Para mentor menginspirasi mahasiswa untuk mencari solusi transformatif atas krisis sistemik."
+        },
+        {
+          wordId: "oxford-initiative",
+          word: "initiative",
+          partOfSpeech: "noun",
+          enDefinition: "An act or strategy intended to resolve a difficulty or improve a situation; a fresh approach to something.",
+          idMeaning: "inisiatif terobosan baru",
+          contextSentenceEn: "The trans-boundary coral initiative brought five sovereign maritime nations to the negotiation table.",
+          contextSentenceId: "Inisiatif terumbu karang lintas batas membawa lima negara maritim berdaulat ke meja perundingan."
+        },
+        {
+          wordId: "oxford-support",
+          word: "support",
+          partOfSpeech: "noun",
+          enDefinition: "Material or moral assistance, or approval and encouragement given to someone or something.",
+          idMeaning: "dukungan institusional dan moral",
+          contextSentenceEn: "Long-term conservation requires multilateral support from universities, NGOs, and governments.",
+          contextSentenceId: "Konservasi jangka panjang membutuhkan dukungan multilateral dari universitas, LSM, dan pemerintah."
+        }
+      ],
+      grammarFocus: {
+        topic: "Subjunctive Conditionals & Inverted Counterfactuals in Strategic Diplomacy",
+        explanationEn: "In C1 diplomatic discourse, inverted conditionals with 'Should' or 'Were' ('Should regional disputes arise...', 'Were nations to pool monitoring telemetry...') propose solutions with maximal diplomatic courtesy.",
+        explanationId: "Dalam diplomasi C1, inversi pengandaian dengan 'Should' atau 'Were' ('Should regional disputes arise...', 'Were nations to pool monitoring telemetry...') mengajukan solusi dengan kesantunan diplomatik tertinggi.",
+        examples: [
+          {
+            en: "Should territorial tensions flare, neutral oceanographic data provides an unassailable common ground.",
+            id: "Apabila ketegangan teritorial memanas, data oseanografi netral menyediakan titik temu bersama yang tak terbantahkan."
+          },
+          {
+            en: "Were member states to establish joint patrols, illegal industrial trawling would diminish substantially.",
+            id: "Seandainya negara-negara anggota membentuk patroli gabungan, penangkapan ikan ilegal dengan pukat harimau akan berkurang drastis."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "Science Diplomacy: Track II Environmental Alliances",
+        titleId: "Diplomasi Sains: Jalur Kedua Aliansi Lingkungan Internasional",
+        contentEn: "Even during the height of the Cold War, Soviet and American scientists cooperated in Antarctica and space exploration. 'Science diplomacy' enables collaborative breakthroughs by depoliticizing shared planetary challenges.",
+        contentId: "Bahkan pada puncak Perang Dingin, ilmuwan Soviet dan Amerika bekerja sama di Antartika dan penjelajahan luar angkasa. 'Diplomasi sains' memungkinkan terobosan kolaboratif dengan mendepolitisasi tantangan bersama planet bumi."
+      },
+      quiz: [
+        {
+          id: "s10_ep7_q1",
+          questionEn: "Why does marine conservation inherently require international diplomacy according to Ambassador Vance?",
+          questionId: "Mengapa konservasi kelautan secara inheren membutuhkan diplomasi internasional menurut Duta Besar Vance?",
+          options: [
+            "Because migrating marine wildlife and ocean currents do not respect man-made geopolitical borders",
+            "Because passports are required for sea turtles to swim across the reef",
+            "Because international telephone calls are very cheap across oceans",
+            "Because all scientists must speak five languages fluently"
+          ],
+          correctIndex: 0,
+          explanationEn: "Ecosystems and oceanic currents cross political borders, demanding cross-border multilateral governance.",
+          explanationId: "Ekosistem dan arus samudra melintasi perbatasan politik, menuntut tata kelola multilateral lintas batas negara."
+        },
+        {
+          id: "s10_ep7_q2",
+          questionEn: "What was Maya's proposed vehicle for fostering cross-border trust between disputed maritime neighbors?",
+          questionId: "Apa instrumen yang diusulkan Maya untuk menumbuhkan rasa saling percaya lintas batas antara negara bertetangga?",
+          options: [
+            "A neutral, shared open-data portal where satellite tracking of endangered corridors is co-monitored by regional scientists",
+            "A military naval blockade across the disputed strait",
+            "Canceling all research programs until borders are redrawn",
+            "Demanding that one country surrender its fishing rights entirely"
+          ],
+          correctIndex: 0,
+          explanationEn: "Shared, unpoliticized ecological data establishes scientific trust that lays the foundation for diplomatic cooperation.",
+          explanationId: "Data ekologis bersama yang tidak terpolitisasi membangun kepercayaan ilmiah yang meletakkan dasar bagi kerja sama diplomatik."
+        },
+        {
+          id: "s10_ep7_q3",
+          questionEn: "Which inverted structure politely introduces a future contingency in formal diplomatic speech?",
+          questionId: "Struktur inversi mana yang secara santun mengintroduksi kemungkinan di masa depan dalam pidato diplomatik formal?",
+          options: [
+            "Should regional disagreements occur, shared telemetry offers an objective factual foundation.",
+            "If they disagree, they will fight loudly.",
+            "Disagreements are happening because politicians are bad.",
+            "To disagree is not very nice."
+          ],
+          correctIndex: 0,
+          explanationEn: "'Should regional disagreements occur...' is the formal C1 inversion replacing 'If regional disagreements occur'.",
+          explanationId: "'Should regional disagreements occur...' adalah bentuk inversi formal tingkat C1 menggantikan 'If regional disagreements occur'."
+        },
+        {
+          id: "s10_ep7_q4",
+          questionEn: "What is 'Track II Diplomacy' in international relations?",
+          questionId: "Apa yang dimaksud dengan 'Diplomasi Jalur Dua' (*Track II Diplomacy*) dalam hubungan internasional?",
+          options: [
+            "Non-governmental, informal scientific or cultural dialogue that builds trust outside official political channels",
+            "Building a second railway line between two capital cities",
+            "Using two microphones simultaneously during a speech",
+            "Running twice around a running track before a meeting"
+          ],
+          correctIndex: 0,
+          explanationEn: "Track II diplomacy utilizes non-official contacts (such as scientific alliances) to resolve international deadlocks.",
+          explanationId: "Diplomasi jalur dua memanfaatkan kontak non-resmi (seperti aliansi ilmiah) untuk mengurai kebuntuan politik formal."
+        },
+        {
+          id: "s10_ep7_q5",
+          questionEn: "Which noun refers to an act or fresh strategy intended to resolve a difficulty or improve a situation?",
+          questionId: "Kata benda mana yang merujuk pada tindakan atau strategi baru yang ditujukan untuk mengatasi kesulitan atau memperbaiki situasi?",
+          options: [
+            "initiative",
+            "battery",
+            "damage",
+            "room"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Initiative' denotes a proactive pioneering enterprise designed to tackle challenges.",
+          explanationId: "'Initiative' bermakna tindakan terobosan proaktif yang dirancang untuk menjawab tantangan."
+        }
+      ],
+      takeaways: [
+        "Memahami prinsip diplomasi sains (*Science Diplomacy & Track II Alliances*).",
+        "Menggunakan konstruksi *Inverted Contingencies* (*Should disagreements occur...*) dalam diplomasi kebijakan.",
+        "Menguasai kosakata Oxford 3000: *leadership*, *global*, *citizen*, *inspire*, *initiative*, *support*."
+      ],
+      cliffhanger: "Visi diplomasi memukau dewan, namun kini dewan memberikan tantangan langsung: sebuah simulasi studi kasus krisis yang tidak terduga!"
+    },
+
+    // EPISODE 8
+    {
+      id: 8,
+      number: 8,
+      title: "Simulasi Studi Kasus Krisis",
+      titleEn: "Case Study Crisis Simulation",
+      estimatedMinutes: 9,
+      recap: "Profesor Thorne memberikan studi kasus darurat mendadak: tumpahan minyak industri mengancam terumbu karang saat musim bertelur penyu.",
+      dialogue: [
+        {
+          id: "s10e8_d1",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "We now commence our live simulation. A commercial tanker has grounded on an outer shoal fifteen kilometers from your sanctuary. Heavy bunker oil is drifting toward nesting beaches. You have twenty minutes to formulate your crisis strategy.",
+          textId: "Kita sekarang memulai simulasi langsung. Sebuah kapal tanker komersial kandas di dangkalan luar lima belas kilometer dari suaka Anda. Minyak bunker tebal hanyut menuju pantai peneluran penyu. Anda memiliki waktu dua puluh menit untuk merumuskan strategi krisis Anda.",
+          audioText: "We now commence our live simulation. A commercial tanker has grounded on an outer shoal fifteen kilometers from your sanctuary. Heavy bunker oil is drifting toward nesting beaches. You have twenty minutes to formulate your crisis strategy."
+        },
+        {
+          id: "s10e8_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "In this critical situation, my immediate strategy prioritizes three simultaneous operational tracks: biological containment, community mobilization, and legal documentation.",
+          textId: "Dalam situasi kritis ini, strategi segera saya memprioritaskan tiga jalur operasional simultan: lokalisir biologis, mobilisasi masyarakat, dan dokumentasi hukum.",
+          audioText: "In this critical situation, my immediate strategy prioritizes three simultaneous operational tracks: biological containment, community mobilization, and legal documentation."
+        },
+        {
+          id: "s10e8_d3",
+          speaker: "Dr. Wu",
+          speakerRole: "Quantitative Specialist",
+          textEn: "The shipping corporation's lawyers will immediately attempt to settle out of court, offering quick cash to silence local protests. How do you resolve this conflict of interest?",
+          textId: "Pengacara korporasi perkapalan akan segera mencoba menyelesaikan perkara di luar pengadilan, menawarkan uang tunai cepat untuk membungkam protes warga. Bagaimana Anda menyelesaikan konflik kepentingan ini?",
+          audioText: "The shipping corporation's lawyers will immediately attempt to settle out of court, offering quick cash to silence local protests. How do you resolve this conflict of interest?"
+        },
+        {
+          id: "s10e8_choice_1",
+          type: "interactive_choice",
+          promptEn: "What ethical and operational decision does Maya announce?",
+          promptId: "Keputusan etis dan operasional apa yang diumumkan oleh Maya?",
+          options: [
+            {
+              id: "s10e8_opt_1a",
+              textEn: "Refuse non-transparent settlements; mandate that all ecological compensation be transparently audited and escrowed into a legally binding environmental restoration trust.",
+              textId: "Menolak penyelesaian damai yang tidak transparan; mewajibkan seluruh ganti rugi ekologis diaudit secara terbuka dan ditempatkan dalam dana perwalian pemulihan lingkungan yang mengikat hukum.",
+              feedbackEn: "Incorruptible crisis management! The panel exchanges glances of profound admiration.",
+              feedbackId: "Manajemen krisis yang berintegritas tanpa kompromi! Para panelis saling bertatap mata dengan kekaguman mendalam."
+            },
+            {
+              id: "s10e8_opt_1b",
+              textEn: "Advise the villagers to accept whatever cash is offered and leave the oil on the sand.",
+              textId: "Menyarankan warga desa untuk menerima uang berapapun yang ditawarkan dan membiarkan minyak di pasir.",
+              feedbackEn: "Moral capitulation; permits catastrophic ecological destruction for short-term payoff.",
+              feedbackId: "Kekalahan moral yang fatal; membiarkan kehancuran ekologi demi keuntungan jangka pendek."
+            }
+          ]
+        },
+        {
+          id: "s10e8_d4",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Decisive, principled, and operationally rigorous. You have demonstrated that when a crisis strikes, your decision-making remains anchor-steady.",
+          textId: "Tegas, berprinsip, dan berdisiplin operasional tinggi. Anda telah membuktikan bahwa ketika krisis menerjang, pengambilan keputusan Anda tetap sekokoh jangkar kapal.",
+          audioText: "Decisive, principled, and operationally rigorous. You have demonstrated that when a crisis strikes, your decision making remains anchor steady."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-situation",
+          word: "situation",
+          partOfSpeech: "noun",
+          enDefinition: "A set of circumstances in which one finds oneself; a state of affairs.",
+          idMeaning: "keadaan darurat atau situasi kritis",
+          contextSentenceEn: "Navigating a volatile crisis situation requires rapid triage and unwavering ethical clarity.",
+          contextSentenceId: "Menavigasi situasi krisis yang rentan membutuhkan pemilahan cepat dan kejelasan etis yang kokoh."
+        },
+        {
+          wordId: "oxford-conflict",
+          word: "conflict",
+          partOfSpeech: "noun",
+          enDefinition: "A serious disagreement or argument, or an incompatibility between two or more opinions, principles, or interests.",
+          idMeaning: "konflik kepentingan atau perselisihan",
+          contextSentenceEn: "When financial incentives clash with environmental conservation, severe conflict of interest emerges.",
+          contextSentenceId: "Ketika insentif finansial bertentangan dengan konservasi lingkungan, konflik kepentingan yang parah akan muncul."
+        },
+        {
+          wordId: "oxford-settle",
+          word: "settle",
+          partOfSpeech: "verb",
+          enDefinition: "Resolve or reach an agreement about (an argument or problem), especially out of court.",
+          idMeaning: "menyelesaikan sengketa atau perselisihan",
+          contextSentenceEn: "Polluters often seek to settle legal claims out of court to evade permanent environmental accountability.",
+          contextSentenceId: "Pencemar sering berupaya menyelesaikan gugatan hukum di luar pengadilan untuk menghindari pertanggungjawaban lingkungan jangka panjang."
+        },
+        {
+          wordId: "oxford-resolve",
+          word: "resolve",
+          partOfSpeech: "verb",
+          enDefinition: "Settle or find a solution to (a problem, dispute, or contentious matter).",
+          idMeaning: "menuntaskan masalah secara adil",
+          contextSentenceEn: "Mediators work tirelessly to resolve resource allocation disputes between coastal industries.",
+          contextSentenceId: "Para mediator bekerja tanpa lelah untuk menuntaskan sengketa alokasi sumber daya antar-industri pesisir."
+        },
+        {
+          wordId: "oxford-strategy",
+          word: "strategy",
+          partOfSpeech: "noun",
+          enDefinition: "A plan of action or policy designed to achieve a major or overall aim.",
+          idMeaning: "strategi manajemen taktis dan jangka panjang",
+          contextSentenceEn: "A successful disaster response strategy integrates mechanical containment and volunteer mobilization.",
+          contextSentenceId: "Strategi tanggap bencana yang berhasil mengintegrasikan lokalisir mekanis dan mobilisasi relawan."
+        },
+        {
+          wordId: "oxford-decision",
+          word: "decision",
+          partOfSpeech: "noun",
+          enDefinition: "A conclusion or resolution reached after consideration.",
+          idMeaning: "keputusan akhir yang berbobot",
+          contextSentenceEn: "In moments of environmental peril, an executive decision must prioritize ecological restoration.",
+          contextSentenceId: "Pada saat genting bagi lingkungan, sebuah keputusan eksekutif harus memprioritaskan pemulihan ekologis."
+        }
+      ],
+      grammarFocus: {
+        topic: "Imperative Sequencing & Structured Problem-Solving in C1 Presentations",
+        explanationEn: "In case study simulations (C1), structuring responses with formal signposting ('Our immediate strategy prioritizes three simultaneous operational tracks: X, Y, and Z') demonstrates structured mental agility.",
+        explanationId: "Dalam simulasi studi kasus (C1), menyusun tanggapan menggunakan penanda struktural formal ('Our immediate strategy prioritizes three simultaneous operational tracks: X, Y, and Z') menunjukkan ketangkasan berpikir sistematis dan kepemimpinan terarah.",
+        examples: [
+          {
+            en: "We must proceed along three synchronized axes: containment of contaminants, mobilization of civil society, and preservation of legal integrity.",
+            id: "Kita harus bergerak di sepanjang tiga sumbu sinkron: lokalisir zat pencemar, mobilisasi masyarakat sipil, dan penjagaan integritas hukum."
+          },
+          {
+            en: "Any out-of-court settlement must be contingent upon transparent ecological oversight.",
+            id: "Setiap penyelesaian sengketa di luar pengadilan harus bersyaratkan pengawasan ekologis yang transparan."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "The Role of Escrow Environmental Trusts",
+        titleId: "Peran Dana Perwalian Lingkungan (*Escrow Trusts*)",
+        contentEn: "In international environmental law (following landmark disasters like Exxon Valdez), damages paid by polluters are placed into independent 'escrow trusts' governed jointly by scientists, judges, and native representatives to guarantee that funds are never siphoned by political corruption.",
+        contentId: "Dalam hukum lingkungan internasional (berkaca pada bencana besar seperti Exxon Valdez), ganti rugi pencemar ditempatkan dalam 'dana perwalian terikat' yang dikelola bersama oleh ilmuwan, hakim, dan perwakilan warga adat guna menjamin dana tidak disalahgunakan oleh korupsi politik."
+      },
+      quiz: [
+        {
+          id: "s10_ep8_q1",
+          questionEn: "What crisis scenario was simulated during the live examination?",
+          questionId: "Skenario krisis apa yang disimulasikan selama ujian langsung?",
+          options: [
+            "A grounded commercial tanker leaking bunker oil fifteen kilometers from the reef during sea turtle nesting season",
+            "A sudden invasion of giant jellyfish in a hotel swimming pool",
+            "A missing boat paddle during a calm sunny afternoon",
+            "A computer virus deleting social media photos"
+          ],
+          correctIndex: 0,
+          explanationEn: "The simulation forced Maya to react to an urgent industrial oil spill threatening fragile wildlife nesting beaches.",
+          explanationId: "Simulasi tersebut menguji reaksi Maya terhadap tumpahan minyak industri mendesak yang mengancam pantai peneluran satwa langka."
+        },
+        {
+          id: "s10_ep8_q2",
+          questionEn: "How did Maya structure her multi-track response strategy?",
+          questionId: "Bagaimana cara Maya menyusun strategi tanggapan multi-jalurnya?",
+          options: [
+            "Along three simultaneous tracks: biological containment, community mobilization, and legal documentation",
+            "By running away to the airport immediately",
+            "By blaming the ship captain on television without taking any field action",
+            "By waiting three weeks for a committee to meet in the capital"
+          ],
+          correctIndex: 0,
+          explanationEn: "Triangulating physical containment, community volunteers, and evidentiary legal documentation shows comprehensive crisis command.",
+          explanationId: "Mengombinasikan lokalisir fisik, sukarelawan warga, dan dokumentasi hukum pembuktian memperlihatkan kendali krisis yang paripurna."
+        },
+        {
+          id: "s10_ep8_q3",
+          questionEn: "Why did Maya refuse backroom out-of-court financial settlements from the shipping lawyers?",
+          questionId: "Mengapa Maya menolak penyelesaian uang damai bawah meja dari pengacara perkapalan?",
+          options: [
+            "Because non-transparent cash settlements evade accountability and fail to guarantee legally binding ecological restoration",
+            "Because she wanted more money for herself",
+            "Because she dislikes lawyers personally",
+            "Because the lawyers did not bring cash in gold coins"
+          ],
+          correctIndex: 0,
+          explanationEn: "Opaque settlements silence communities without providing transparent, audited funds for long-term ecological rehabilitation.",
+          explanationId: "Penyelesaian gelap membungkam masyarakat tanpa menyediakan dana pemulihan ekologi jangka panjang yang diaudit transparan."
+        },
+        {
+          id: "s10_ep8_q4",
+          questionEn: "Which verb means 'to resolve or reach an agreement about an argument or problem'?",
+          questionId: "Kata kerja mana yang bermakna 'menyelesaikan atau mencapai kesepakatan mengenai suatu perselisihan atau masalah'?",
+          options: [
+            "settle",
+            "injure",
+            "damage",
+            "catch"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Settle' means to resolve a legal or practical dispute through agreed terms.",
+          explanationId: "'Settle' bermakna menyelesaikan sengketa hukum atau praktis melalui kesepakatan bersama."
+        },
+        {
+          id: "s10_ep8_q5",
+          questionEn: "What is an 'escrow trust' in environmental jurisprudence?",
+          questionId: "Apa yang dimaksud dengan 'dana perwalian terikat' (*escrow trust*) dalam yurisprudensi lingkungan?",
+          options: [
+            "An independent financial fund legally locked to ensure compensation is exclusively spent on audited ecological restoration",
+            "A personal savings account at a local bank",
+            "A secret vault hidden under the sand on the beach",
+            "A box of paper receipts kept in the research station"
+          ],
+          correctIndex: 0,
+          explanationEn: "An escrow trust legally prevents funds from being diverted to non-restoration purposes.",
+          explanationId: "Dana perwalian terikat secara hukum mencegah dana dialihkan ke tujuan di luar pemulihan lingkungan."
+        }
+      ],
+      takeaways: [
+        "Merespons simulasi krisis (*live case study*) dengan struktur tiga jalur (*multi-track sequencing*).",
+        "Menolak kompromi etis dan memperjuangkan dana pemulihan ekologis transparan (*escrow trust*).",
+        "Menguasai kosakata Oxford 3000: *situation*, *conflict*, *settle*, *resolve*, *strategy*, *decision*."
+      ],
+      cliffhanger: "Simulasi berhasil diselesaikan dengan gemilang, dan kini Profesor Thorne mempersilakan Maya untuk mengajukan pertanyaan balasan kepada dewan..."
+    },
+
+    // EPISODE 9
+    {
+      id: 9,
+      number: 9,
+      title: "Pertanyaan Bernas untuk Dewan Penguji",
+      titleEn: "Asking Insightful Questions",
+      estimatedMinutes: 9,
+      recap: "Maya memanfaatkan alokasi waktu terakhir untuk mengajukan pertanyaan strategis kepada dewan mengenai komitmen yayasan terhadap kolaborasi ilmiah belahan bumi selatan.",
+      dialogue: [
+        {
+          id: "s10e9_d1",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "We have concluded our examination, Ms. Lin. We now offer you the opportunity to address any question to this committee.",
+          textId: "Kami telah mengakhiri sesi ujian kami, Nn. Lin. Kami sekarang memberikan Anda kesempatan untuk mengajukan pertanyaan apa pun kepada komite ini.",
+          audioText: "We have concluded our examination, Ms. Lin. We now offer you the opportunity to address any question to this committee."
+        },
+        {
+          id: "s10e9_d2",
+          speaker: "Maya",
+          speakerRole: "Fellowship Candidate",
+          textEn: "Thank you, Professor Thorne. If I may, I should like to inquire how the foundation intends to structure its research program to ensure equitable reciprocal relation between European laboratories and Global South institutions.",
+          textId: "Terima kasih, Profesor Thorne. Jika diperkenankan, saya ingin menanyakan bagaimana yayasan bermaksud menyusun program risetnya untuk menjamin relasi timbal balik yang setara antara laboratorium Eropa dengan institusi di Belahan Bumi Selatan.",
+          audioText: "Thank you, Professor Thorne. If I may, I should like to inquire how the foundation intends to structure its research program to ensure equitable reciprocal relation between European laboratories and Global South institutions."
+        },
+        {
+          id: "s10e9_d3",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "A magnificent question! We are currently reforming our endowment bylaws so that every international scholarship grant entails a reciprocal knowledge-transfer contribution to the scholar's home department.",
+          textId: "Pertanyaan yang sangat luar biasa! Kami saat ini sedang mereformasi anggaran dasar dana abadi kami sehingga setiap hibah beasiswa internasional memuat kontribusi transfer pengetahuan timbal balik ke almamater sang cendekiawan.",
+          audioText: "A magnificent question! We are currently reforming our endowment bylaws so that every international scholarship grant entails a reciprocal knowledge-transfer contribution to the scholar's home department."
+        },
+        {
+          id: "s10e9_choice_1",
+          type: "interactive_choice",
+          promptEn: "How does Maya close her dialogue with the panel?",
+          promptId: "Bagaimana cara Maya menutup dialognya dengan dewan penguji?",
+          options: [
+            {
+              id: "s10e9_opt_1a",
+              textEn: "Express heartfelt gratitude, affirming that the ultimate measure of scholarship lies not in individual prestige, but in collective preservation for the future of our living planet.",
+              textId: "Menyampaikan rasa terima kasih mendalam, menegaskan bahwa tolok ukur utama beasiswa bukanlah prestise pribadi, melainkan pelestarian bersama demi masa depan bumi tercinta.",
+              feedbackEn: "Resounding, unforgettable conclusion! The committee members smile warmly and exchange nod of unanimous conviction.",
+              feedbackId: "Penutup yang membahana dan tak terlupakan! Para anggota komite tersenyum hangat dan saling mengangguk penuh keyakinan bulat."
+            },
+            {
+              id: "s10e9_opt_1b",
+              textEn: "Ask what date the stipend money will be deposited into her checking account.",
+              textId: "Menanyakan tanggal berapa uang saku beasiswa akan ditransfer ke rekening banknya.",
+              feedbackEn: "Crass and premature; ruins an otherwise stellar impression at the finish line.",
+              feedbackId: "Kurang pantas dan terlalu dini; merusak kesan gemilang tepat di garis akhir."
+            }
+          ]
+        },
+        {
+          id: "s10e9_d4",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Thank you, Ms. Lin. You have represented your research, your community, and your ideals with extraordinary grace. Please withdraw to the lounge while the board deliberates.",
+          textId: "Terima kasih, Nn. Lin. Anda telah mewakili penelitian Anda, masyarakat Anda, dan cita-cita luhur Anda dengan keanggunan luar biasa. Silakan kembali ke ruang tunggu selagi dewan menggelar musyawarah mufakat.",
+          audioText: "Thank you, Ms. Lin. You have represented your research, your community, and your ideals with extraordinary grace. Please withdraw to the lounge while the board deliberates."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-question",
+          word: "question",
+          partOfSpeech: "noun",
+          enDefinition: "A sentence worded or expressed so as to elicit information; a matter requiring resolution or discussion.",
+          idMeaning: "pertanyaan bernas dan strategis",
+          contextSentenceEn: "An insightful reverse question proves that a candidate has researched the sponsoring foundation.",
+          contextSentenceId: "Pertanyaan balik yang bernas membuktikan bahwa kandidat telah menelaah yayasan penyelenggara secara mendalam."
+        },
+        {
+          wordId: "oxford-opportunity",
+          word: "opportunity",
+          partOfSpeech: "noun",
+          enDefinition: "A set of circumstances that makes it possible to do something.",
+          idMeaning: "peluang emas untuk berkontribusi",
+          contextSentenceEn: "This fellowship offers an unparalleled opportunity to bridge academic research with coastal conservation.",
+          contextSentenceId: "Beasiswa ini menawarkan peluang tak tertandingi untuk menjembatani riset akademik dengan konservasi pesisir."
+        },
+        {
+          wordId: "oxford-program",
+          word: "program",
+          partOfSpeech: "noun",
+          enDefinition: "A planned series of future events, items, or performances, especially a curriculum or course of academic study.",
+          idMeaning: "program beasiswa dan riset doktoral",
+          contextSentenceEn: "The doctoral program requires fellows to publish peer-reviewed open-access monographs.",
+          contextSentenceId: "Program doktoral mewajibkan para penerima beasiswa mempublikasikan monograf akses terbuka yang ditelaah sejawat."
+        },
+        {
+          wordId: "oxford-contribution",
+          word: "contribution",
+          partOfSpeech: "noun",
+          enDefinition: "A gift or payment to a common fund or collection, or the part played by a person or thing in bringing about a result or helping something to advance.",
+          idMeaning: "kontribusi keilmuan dan kemasyarakatan",
+          contextSentenceEn: "Her proposed contribution will fundamentally reshape bioacoustic monitoring in Southeast Asian archipelagos.",
+          contextSentenceId: "Kontribusi yang diusulkannya akan mengubah secara mendasar pemantauan bioakustik di kepulauan Asia Tenggara."
+        },
+        {
+          wordId: "oxford-relation",
+          word: "relation",
+          partOfSpeech: "noun",
+          enDefinition: "The way in which two or more concepts, objects, or people are connected; a thing's effect on or relevance to another.",
+          idMeaning: "relasi kemitraan yang setara",
+          contextSentenceEn: "Fostering an equitable relation between global universities and local institutes dismantles academic neocolonialism.",
+          contextSentenceId: "Menumbuhkan relasi yang setara antara universitas global dan institut lokal menghapus neokolonialisme akademik."
+        },
+        {
+          wordId: "oxford-future",
+          word: "future",
+          partOfSpeech: "noun",
+          enDefinition: "A period of time following the moment of speaking or writing; time regarded as still to come.",
+          idMeaning: "masa depan generasi mendatang",
+          contextSentenceEn: "We protect oceanic sanctuaries not for our own present comfort, but for the future of all living creatures.",
+          contextSentenceId: "Kita melindungi suaka samudra bukan demi kenyamanan saat ini, melainkan demi masa depan seluruh makhluk hidup."
+        }
+      ],
+      grammarFocus: {
+        topic: "High-Courtesy Inquiries & C1 Subjunctive Modals",
+        explanationEn: "In C1 formal academic questioning, candidates avoid direct queries ('What will you do?'), opting for embedded subjunctive formulas ('If I may, I should like to inquire how the foundation intends to...').",
+        explanationId: "Dalam sesi tanya jawab akademik formal C1, kandidat menghindari pertanyaan langsung bernada mendesak ('What will you do?'), melainkan menggunakan formula subjungtif santun ('If I may, I should like to inquire how the foundation intends to...').",
+        examples: [
+          {
+            en: "If I may take this opportunity, I should be grateful to understand how faculty mentors support fieldwork.",
+            id: "Jika diperkenankan, saya akan sangat berterima kasih untuk memahami bagaimana para mentor dosen mendukung penelitian lapangan."
+          },
+          {
+            en: "Could the committee elaborate on how international fellows collaborate with regional conservation trusts?",
+            id: "Dapatkah komite menguraikan bagaimana para penerima beasiswa internasional berkolaborasi dengan lembaga konservasi kawasan?"
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "The Power of the Reverse Question",
+        titleId: "Kekuatan Pertanyaan Balik dalam Wawancara Elit",
+        contentEn: "At final rounds of world fellowships, examiners frequently judge a candidate's intellectual caliber by the questions they ask rather than the answers they give. A strategic reverse question signals that the candidate views the fellowship as a collaborative partnership, not a one-way handout.",
+        contentId: "Pada babak final beasiswa dunia, penguji kerap menilai kaliber intelektual seorang kandidat dari pertanyaan yang diajukannya, bukan sekadar jawaban yang diberikannya. Pertanyaan strategis menandakan bahwa kandidat memandang beasiswa sebagai kemitraan kolaboratif, bukan sekadar santunan satu arah."
+      },
+      quiz: [
+        {
+          id: "s10_ep9_q1",
+          questionEn: "What strategic question did Maya ask the scholarship panel?",
+          questionId: "Pertanyaan strategis apa yang diajukan Maya kepada dewan beasiswa?",
+          options: [
+            "How the foundation plans to ensure equitable reciprocal relation between European research laboratories and Global South institutions",
+            "What the cafeteria menu serves on Friday afternoons",
+            "Whether she could bring her pet cat to the doctoral campus",
+            "How much discount students get on clothing stores"
+          ],
+          correctIndex: 0,
+          explanationEn: "Maya asked about equitable, reciprocal knowledge-sharing to ensure scholarship research empowers developing nations.",
+          explanationId: "Maya menanyakan pertukaran pengetahuan yang setara dan timbal balik agar riset beasiswa memberdayakan negara berkembang."
+        },
+        {
+          id: "s10_ep9_q2",
+          questionEn: "Which sentence correctly demonstrates a C1 high-courtesy inquiry formula?",
+          questionId: "Kalimat mana yang secara tepat menunjukkan formula pertanyaan santun berlaras C1?",
+          options: [
+            "If I may, I should like to inquire how the foundation intends to foster international institutional reciprocity.",
+            "Tell me right now what you will do with the money.",
+            "I want to know your plan because I asked.",
+            "Why do you not have more students from my city?"
+          ],
+          correctIndex: 0,
+          explanationEn: "'If I may, I should like to inquire...' is the gold standard of high-courtesy formal academic inquiry.",
+          explanationId: "'If I may, I should like to inquire...' adalah standar emas dari pertanyaan akademik formal yang sangat santun dan berwibawa."
+        },
+        {
+          id: "s10_ep9_q3",
+          questionEn: "How did Ambassador Vance respond to Maya's reverse question?",
+          questionId: "Bagaimana tanggapan Duta Besar Vance terhadap pertanyaan balik Maya?",
+          options: [
+            "Enthusiastically praised the question and explained that endowment bylaws are being reformed to mandate reciprocal knowledge-transfer contributions",
+            "Became angry that a student dared to ask a question",
+            "Refused to answer and told Maya to leave the room",
+            "Laughed and said nobody cares about the Global South"
+          ],
+          correctIndex: 0,
+          explanationEn: "Ambassador Vance enthusiastically affirmed that the foundation is actively structuring reciprocal knowledge transfer into its grants.",
+          explanationId: "Duta Besar Vance menegaskan dengan antusias bahwa yayasan sedang merestrukturisasi transfer pengetahuan timbal balik ke dalam dana hibahnya."
+        },
+        {
+          id: "s10_ep9_q4",
+          questionEn: "Why is the reverse question crucial in elite fellowship selections?",
+          questionId: "Mengapa pertanyaan balik sangat krusial dalam seleksi beasiswa tingkat elit?",
+          options: [
+            "It proves the candidate views the fellowship as a collaborative bilateral partnership rather than a passive grant",
+            "It gives the examiners time to check their email",
+            "It makes the interview last longer so other candidates have to wait",
+            "It shows that the candidate has memorized the dictionary"
+          ],
+          correctIndex: 0,
+          explanationEn: "Asking mature, institutional questions signals intellectual co-ownership and leadership vision.",
+          explanationId: "Mengajukan pertanyaan kelembagaan yang matang menandakan kepemilikan intelektual bersama dan visi kepemimpinan sejati."
+        },
+        {
+          id: "s10_ep9_q5",
+          questionEn: "Which noun means 'the way in which two or more concepts, people, or groups are connected'?",
+          questionId: "Kata benda mana yang bermakna 'cara bagaimana dua atau lebih konsep, orang, atau kelompok saling terhubung'?",
+          options: [
+            "relation",
+            "battery",
+            "criticism",
+            "room"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Relation' denotes mutual association, connection, and equitable partnership.",
+          explanationId: "'Relation' bermakna hubungan timbal balik, keterkaitan, dan kemitraan yang setara."
+        }
+      ],
+      takeaways: [
+        "Memanfaatkan sesi pertanyaan balik (*the reverse question*) untuk memperlihatkan literasi kemitraan global.",
+        "Menggunakan konstruksi *High-Courtesy Inquiries* (*If I may, I should like to inquire...*).",
+        "Menguasai kosakata Oxford 3000: *question*, *opportunity*, *program*, *contribution*, *relation*, *future*."
+      ],
+      cliffhanger: "Maya kembali ke ruang tunggu. Dewan menutup pintu rapat mahoni untuk menggelar sidang putusan akhir..."
+    },
+
+    // EPISODE 10
+    {
+      id: 10,
+      number: 10,
+      title: "Pengumuman Hasil & Penghargaan Tertinggi",
+      titleEn: "The Award Announcement & Final Reflection",
+      estimatedMinutes: 9,
+      recap: "Pintu ruang sidang terbuka. Profesor Thorne dan Duta Besar Vance menyerahkan surat keputusan resmi: Maya dianugerahi Beasiswa Riset Kelautan Bergengsi Global!",
+      dialogue: [
+        {
+          id: "s10e10_d1",
+          speaker: "Prof. Thorne",
+          speakerRole: "Panel Chair",
+          textEn: "Ms. Lin, on behalf of the Global Scholars Foundation, it is our distinct privilege to present you with this official award letter.",
+          textId: "Nn. Lin, atas nama Global Scholars Foundation, merupakan kehormatan istimewa bagi kami untuk menyerahkan surat keputusan anugerah resmi ini kepada Anda.",
+          audioText: "Ms. Lin, on behalf of the Global Scholars Foundation, it is our distinct privilege to present you with this official award letter."
+        },
+        {
+          id: "s10e10_d2",
+          speaker: "Ambassador Vance",
+          speakerRole: "Diplomatic Member",
+          textEn: "The board voted unanimously to accept your candidacy for the fully funded doctoral fellowship. You will pursue your doctoral degree at Oxford, partnering with conservation field stations worldwide.",
+          textId: "Dewan telah sepakat bulat untuk menerima pencalonan Anda bagi beasiswa doktoral dengan pendanaan penuh. Anda akan menempuh gelar doktor di Oxford, bermitra dengan stasiun lapangan konservasi di seluruh dunia.",
+          audioText: "The board voted unanimously to accept your candidacy for the fully funded doctoral fellowship. You will pursue your doctoral degree at Oxford, partnering with conservation field stations worldwide."
+        },
+        {
+          id: "s10e10_d3",
+          speaker: "Maya",
+          speakerRole: "Fellowship Recipient",
+          textEn: "I am overwhelmed with gratitude. This award belongs equally to Dr. Adrian Vance, Captain Riko, Liam, and the island community who taught me that true science begins with humility and patience.",
+          textId: "Saya diliputi rasa syukur yang mendalam. Anugerah ini sama-sama milik Dr. Adrian Vance, Kapten Riko, Liam, dan masyarakat pulau yang mengajari saya bahwa sains sejati berakar dari kerendahan hati dan kesabaran.",
+          audioText: "I am overwhelmed with gratitude. This award belongs equally to Dr. Adrian Vance, Captain Riko, Liam, and the island community who taught me that true science begins with humility and patience."
+        },
+        {
+          id: "s10e10_choice_1",
+          type: "interactive_choice",
+          promptEn: "What closing vow does Maya declare as she receives the fellowship scroll?",
+          promptId: "Ikrar penutup apa yang diucapkan Maya saat menerima gulungan sertifikat beasiswa?",
+          options: [
+            {
+              id: "s10e10_opt_1a",
+              textEn: "Pledge to dedicate her doctoral research to safeguarding vulnerable marine ecosystems and mentoring the next generation of underprivileged coastal scientists.",
+              textId: "Berikrar mendedikasikan riset doktoralnya untuk melindungi ekosistem laut yang rentan dan membimbing generasi ilmuwan pesisir prasejahtera berikutnya.",
+              feedbackEn: "A transcendent, noble crescendo! The entire foundation hall erupts into standing applause.",
+              feedbackId: "Puncak penutup yang agung dan mulia! Seluruh aula yayasan berdiri memberikan tepuk tangan penghormatan."
+            },
+            {
+              id: "s10e10_opt_1b",
+              textEn: "Vow to frame the certificate in pure gold and put it in a luxury bank safety deposit box.",
+              textId: "Berikrar membingkai sertifikat dengan emas murni dan menyimpannya di kotak deposit bank mewah.",
+              feedbackEn: "Superficial sentiment that misses the profound societal mandate of the fellowship.",
+              feedbackId: "Sentimen dangkal yang meleset dari amanah luhur kemasyarakatan beasiswa ini."
+            }
+          ]
+        },
+        {
+          id: "s10e10_d4",
+          speaker: "Julian",
+          speakerRole: "Fellow Finalist",
+          textEn: "Congratulations, Maya! Your success inspires all of us. Tonight, we celebrate a monumental victory for community-rooted marine science!",
+          textId: "Selamat, Maya! Keberhasilanmu menginspirasi kita semua. Malam ini, kita merayakan kemenangan monumental bagi sains kelautan yang berakar di masyarakat!",
+          audioText: "Congratulations, Maya! Your success inspires all of us. Tonight, we celebrate a monumental victory for community-rooted marine science!"
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-letter",
+          word: "letter",
+          partOfSpeech: "noun",
+          enDefinition: "A written, typed, or printed communication, especially an official document conveying formal decision.",
+          idMeaning: "surat keputusan resmi",
+          contextSentenceEn: "Maya held the embossed award letter that marked the beginning of her international doctoral journey.",
+          contextSentenceId: "Maya menggenggam surat keputusan berlogo timbul yang menandai awal perjalanan doktoral internasionalnya."
+        },
+        {
+          wordId: "oxford-accept",
+          word: "accept",
+          partOfSpeech: "verb",
+          enDefinition: "Consent to receive (a thing offered) or formally admit someone into an academic program.",
+          idMeaning: "menerima dengan penuh amanah",
+          contextSentenceEn: "The committee voted unanimously to accept Maya into the prestigious research cohort.",
+          contextSentenceId: "Komite bersepakat bulat untuk menerima Maya ke dalam kohort riset bergengsi tersebut."
+        },
+        {
+          wordId: "oxford-award",
+          word: "award",
+          partOfSpeech: "noun",
+          enDefinition: "A prize or other mark of recognition given in honor of an achievement.",
+          idMeaning: "anugerah beasiswa prestisius",
+          contextSentenceEn: "Receiving the Global Scholars award provides full funding, equipment stipends, and research travel grants.",
+          contextSentenceId: "Menerima anugerah Global Scholars menyediakan pendanaan penuh, tunjangan peralatan, dan hibah perjalanan riset."
+        },
+        {
+          wordId: "oxford-degree",
+          word: "degree",
+          partOfSpeech: "noun",
+          enDefinition: "An academic title conferred by a university or college as an indication of the completion of a course of study.",
+          idMeaning: "gelar akademik doktoral",
+          contextSentenceEn: "Pursuing a doctoral degree empowers researchers to pioneer breakthrough conservation methodologies.",
+          contextSentenceId: "Menempuh gelar doktoral memberdayakan peneliti untuk memelopori metodologi konservasi terobosan."
+        },
+        {
+          wordId: "oxford-success",
+          word: "success",
+          partOfSpeech: "noun",
+          enDefinition: "The accomplishment of an aim or purpose, or the attainment of prosperity, reputation, or honors.",
+          idMeaning: "keberhasilan gemilang yang bermakna",
+          contextSentenceEn: "True scholarly success is measured by the ecosystems preserved and the minds enlightened.",
+          contextSentenceId: "Keberhasilan ilmiah sejati diukur dari ekosistem yang terlestarikan dan jiwa-jiwa yang tercerahkan."
+        },
+        {
+          wordId: "oxford-celebrate",
+          word: "celebrate",
+          partOfSpeech: "verb",
+          enDefinition: "Acknowledge (a significant or happy day or event) with a social gathering or enjoyable activity.",
+          idMeaning: "merayakan kemenangan bersama",
+          contextSentenceEn: "Fellows, mentors, and family gathered to celebrate the culmination of years of tireless discipline.",
+          contextSentenceId: "Para penerima beasiswa, mentor, dan keluarga berkumpul untuk merayakan puncak dari disiplin tak kenal lelah selama bertahun-tahun."
+        }
+      ],
+      grammarFocus: {
+        topic: "Mastery Synthesis: Concessive Elegance, Elevated Modals & Grand Closures",
+        explanationEn: "In C1/C2 master closures, candidates synthesize their entire learning arc using concessive clauses ('Notwithstanding the trials...'), elevated modals of dedication ('shall dedicate...'), and unifying rhetorical dignity.",
+        explanationId: "Dalam puncak penutup tingkat C1/C2, kandidat menyintesis seluruh perjalanan belajar mereka menggunakan klausa konsesif ('Notwithstanding the trials...'), modal ikrar luhur ('shall dedicate...'), dan wibawa retorika pemersatu yang mendalam.",
+        examples: [
+          {
+            en: "Notwithstanding the tempestuous trials of the remote island, our dedication to ecological justice remains unyielding.",
+            id: "Terlepas dari cobaan badai di pulau terpencil, dedikasi kita pada keadilan ekologis tetap tak tergoyahkan."
+          },
+          {
+            en: "It is with profound humility and steadfast resolve that I accept this sacred academic trust.",
+            id: "Dengan kerendahan hati yang mendalam dan tekad yang teguh saya menerima amanah akademik yang suci ini."
+          }
+        ]
+      },
+      culturalTip: {
+        titleEn: "The Sacred Mandate of the Global Scholar",
+        titleId: "Amanah Agung Cendekiawan Global",
+        contentEn: "At Oxford, Cambridge, and leading research institutions worldwide, receiving a full doctoral fellowship is celebrated not as personal triumph, but as a solemn commissioning ceremony—a vow to employ the power of knowledge in service of truth, human dignity, and the ecological preservation of our fragile Earth.",
+        contentId: "Di Oxford, Cambridge, dan institusi riset terkemuka dunia, menerima beasiswa doktoral penuh dirayakan bukan sebagai kemenangan pribadi, melainkan upacara pelantikan amanah agung—sebuah ikrar mendedikasikan ilmu pengetahuan demi kebenaran, martabat manusia, dan kelestarian ekologis bumi kita yang rapuh."
+      },
+      quiz: [
+        {
+          id: "s10_ep10_q1",
+          questionEn: "What was the final verdict of the Global Scholars Foundation board regarding Maya's candidacy?",
+          questionId: "Apa keputusan akhir dewan Global Scholars Foundation mengenai pencalonan Maya?",
+          options: [
+            "Voted unanimously to accept her candidacy for the fully funded international doctoral fellowship",
+            "Rejected her application and advised her to become an accountant",
+            "Offered her an unpaid administrative internship",
+            "Postponed the decision for ten years"
+          ],
+          correctIndex: 0,
+          explanationEn: "The board voted unanimously to award Maya the prestigious, fully funded doctoral fellowship.",
+          explanationId: "Dewan sepakat bulat menganugerahkan beasiswa doktoral bergengsi dengan pendanaan penuh kepada Maya."
+        },
+        {
+          id: "s10_ep10_q2",
+          questionEn: "To whom did Maya attribute the honor and success of the scholarship award?",
+          questionId: "Kepada siapa Maya mempersembahkan kehormatan dan keberhasilan anugerah beasiswa tersebut?",
+          options: [
+            "Equally to Dr. Adrian Vance, Captain Riko, Liam, and the island community who taught her scientific humility",
+            "Entirely to herself because she claims to be a lone genius",
+            "To the hotel staff who ironed her blazer",
+            "To the airline that flew her to the city"
+          ],
+          correctIndex: 0,
+          explanationEn: "Maya recognized that true scholarship is co-created with field mentors, maritime guides, and local communities.",
+          explanationId: "Maya menyadari bahwa keilmuan sejati terlahir dari kerja bersama para mentor lapangan, pemandu maritim, dan masyarakat lokal."
+        },
+        {
+          id: "s10_ep10_q3",
+          questionEn: "Which sentence features C1 concessive elegance and solemn dedication?",
+          questionId: "Kalimat mana yang memuat keanggunan konsesif C1 dan ikrar dedikasi yang khidmat?",
+          options: [
+            "Notwithstanding the hardships of the off-grid storm, I accept this academic trust with unyielding resolve to safeguard our oceans.",
+            "I got the award and now I am the richest student in my town.",
+            "Give me the paper so I can go party with Julian.",
+            "I am happy because Oxford is a famous school."
+          ],
+          correctIndex: 0,
+          explanationEn: "'Notwithstanding the hardships..., I accept this academic trust with unyielding resolve...' displays master-level rhetorical synthesis.",
+          explanationId: "'Notwithstanding the hardships..., I accept this academic trust with unyielding resolve...' menampilkan sintesis retorika tingkat mahir yang sangat anggun."
+        },
+        {
+          id: "s10_ep10_q4",
+          questionEn: "What is the true measure of scholarly success according to the story's philosophical conclusion?",
+          questionId: "Apa tolok ukur sejati keberhasilan ilmiah menurut kesimpulan filosofis cerita?",
+          options: [
+            "The fragile ecosystems preserved, the communities empowered, and the minds enlightened",
+            "The amount of luxury cars purchased with research grants",
+            "How many television commercials a scientist appears in",
+            "The thickness of a textbook sold in bookstores"
+          ],
+          correctIndex: 0,
+          explanationEn: "True scholarship finds its ultimate fulfillment in service, ecological preservation, and societal enlightenment.",
+          explanationId: "Keilmuan sejati menemukan kepenuhan hakikinya dalam pengabdian, pelestarian ekologi, dan pencerahan kemanusiaan."
+        },
+        {
+          id: "s10_ep10_q5",
+          questionEn: "Which verb means 'to acknowledge a significant or happy milestone with shared joy and celebration'?",
+          questionId: "Kata kerja mana yang bermakna 'merayakan pencapaian bermakna atau peristiwa bahagia dengan kegembiraan bersama'?",
+          options: [
+            "celebrate",
+            "prevent",
+            "injure",
+            "damage"
+          ],
+          correctIndex: 0,
+          explanationEn: "'Celebrate' denotes rejoicing in a hard-won victory with community, mentors, and loved ones.",
+          explanationId: "'Celebrate' bermakna merayakan kemenangan yang diraih dengan perjuangan keras bersama masyarakat, mentor, dan orang terkasih."
+        }
+      ],
+      takeaways: [
+        "Menyambut puncak keberhasilan akademik dengan kerendahan hati dan kesiapan mengabdi (*academic humility*).",
+        "Menguasai sintesis retorika penutup tingkat C1/C2 (*Notwithstanding the trials...*).",
+        "Menguasai kosakata Oxford 3000: *letter*, *accept*, *award*, *degree*, *success*, *celebrate*."
+      ],
+      cliffhanger: "Tepuk tangan membahana di menara kaca; sepuluh petualangan telah tuntas dilayari, membuktikan bahwa ketekunan, ilmu pengetahuan, dan keluhuran budi mampu menembus batas mimpi tertinggi!"
+    }
+  ]
+};
+
+const outputPath = path.resolve("src/data/stories/story-10.json");
+fs.writeFileSync(outputPath, JSON.stringify(story10, null, 2), "utf8");
+
+console.log("✓ SUCCESS: Story 10 (story-10.json) successfully created with all 10 full-length episodes!");
+console.log("Total Episodes:", story10.episodes.length);
+console.log("Total Quiz Questions:", story10.episodes.length * 5);
+console.log("Total Oxford 3000 Vocabularies:", story10.episodes.length * 6);

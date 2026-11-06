@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F4F0E8">
+  <meta name="description" content="Ruang Belajar SinauEnglish V2: Kosakata Oxford 3000, Kurikulum Grammar, Spaced Repetition, dan HABIT Reading. 100% lokal dan bebas biaya.">
+  <link rel="icon" type="image/svg+xml" href="/public/assets/sinauu-mark.svg">
+  <title>Ruang Belajar — SinauEnglish V2</title>
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#app-content">Lewati ke konten utama</a>
+  <div class="modal-overlay" id="nav-backdrop"></div>
+
+  <div class="app-shell">
+    <!-- Collapsible Neobrutalist Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar" aria-label="Navigasi Ruang Belajar">
+      <div class="sidebar-header">
+        <a class="brand" href="/" aria-label="SinauEnglish V2 Beranda">
+          <span class="brand-badge">S</span>
+          <span class="brand-text">sinauu<span>english</span></span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="sidebar-link is-active" data-view="overview" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Beranda</span>
+        </button>
+
+        <button class="sidebar-link" data-view="vocabulary" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+          <span>Kosakata</span>
+          <span class="sidebar-count" id="sidebar-vocab-count">2.971</span>
+        </button>
+
+        <button class="sidebar-link" data-view="study" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          <span>Latihan Fokus</span>
+        </button>
+
+        <button class="sidebar-link" data-view="grammar" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+          <span>Grammar</span>
+          <span class="sidebar-count" id="sidebar-grammar-count">19</span>
+        </button>
+
+        <button class="sidebar-link" data-view="reading" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span>HABIT Reading</span>
+          <span class="sidebar-count" id="sidebar-reading-count">156</span>
+        </button>
+
+        <button class="sidebar-link" data-view="adventure" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          <span>Petualangan</span>
+        </button>
+
+        <button class="sidebar-link" data-view="review" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          <span>Review (SRS)</span>
+          <span class="sidebar-count" id="sidebar-review-count">0</span>
+        </button>
+
+        <button class="sidebar-link" data-view="progress" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          <span>Progres</span>
+        </button>
+
+        <button class="sidebar-link" data-view="settings" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Pengaturan</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <strong style="display: block; color: var(--color-text-primary); margin-bottom: 2px;">Local-First Storage</strong>
+        <p style="margin: 0;">Data dan kemajuan belajarmu tersimpan otomatis di browser ini.</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="app-content" id="app-content">
+      <!-- Topbar -->
+      <header class="app-topbar">
+        <div class="topbar-title-wrap">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" type="button" aria-label="Buka menu samping">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <h1 class="topbar-title" id="topbar-title">Beranda Belajar</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="storage-pill">
+            <span class="storage-dot"></span>
+            <span id="storage-status-text">Tersimpan di perangkat</span>
+          </div>
+
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Ganti mode gelap/terang">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Workspace Body -->
+      <div class="workspace-body">
+        <!-- VIEW 1: OVERVIEW / DASHBOARD -->
+        <section class="view-section is-active" id="view-overview">
+          <div class="card card-tint-sand" style="margin-bottom: var(--space-8); padding: var(--space-8);">
+            <span class="section-eyebrow">Dashboard Harian</span>
+            <h2 style="font-size: var(--text-3xl); margin-bottom: var(--space-2);">Selamat datang di SinauEnglish V2!</h2>
+            <p style="color: var(--color-text-secondary); max-width: 600px; margin-bottom: var(--space-6);">
+              Konsistensi kecil setiap hari mengalahkan belajar maraton yang lekas lupa. Targetkan 10 kata per hari untuk hasil optimal.
+            </p>
+            <button class="btn btn-primary btn-lg" id="overview-quick-start" type="button">Lanjutkan Belajar Sekarang ↗</button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="card stat-card">
+              <span class="stat-label">Kata Dikuasai</span>
+              <span class="stat-value" id="stat-mastered">0</span>
+              <span class="stat-desc">Memenuhi kriteria mastery & review berulang</span>
+            </div>
+
+            <div class="card stat-card">
+              <span class="stat-label">Perlu Review</span>
+              <span class="stat-value" id="stat-due">0</span>
+              <span class="stat-desc">Waktunya diulang hari ini (Spaced Repetition)</span>
+            </div>
+
+            <div class="card stat-card">
+              <span class="stat-label">Target Hari Ini</span>
+              <span class="stat-value" id="stat-goal">0/10</span>
+              <span class="stat-desc">Kata baru dipelajari hari ini</span>
+            </div>
+
+            <div class="card stat-card">
+              <span class="stat-label">Total Corpus</span>
+              <span class="stat-value">2.971</span>
+              <span class="stat-desc">Oxford 3000 American English</span>
+            </div>
+          </div>
+
+          <!-- Level Progress Trackers -->
+          <div class="card card-tint-slate" style="padding: var(--space-6);">
+            <h3 style="font-size: var(--text-xl); margin-bottom: var(--space-4);">Progres Penguasaan Level CEFR</h3>
+            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: var(--text-sm); margin-bottom: 4px;">
+                  <span>Level A1 (Beginner)</span>
+                  <span id="lvl-text-a1">0/892 (0%)</span>
+                </div>
+                <div class="study-progress-track" style="margin-bottom: 0;">
+                  <div class="study-progress-fill" id="lvl-fill-a1" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: var(--text-sm); margin-bottom: 4px;">
+                  <span>Level A2 (Elementary)</span>
+                  <span id="lvl-text-a2">0/792 (0%)</span>
+                </div>
+                <div class="study-progress-track" style="margin-bottom: 0;">
+                  <div class="study-progress-fill" id="lvl-fill-a2" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: var(--text-sm); margin-bottom: 4px;">
+                  <span>Level B1 (Intermediate)</span>
+                  <span id="lvl-text-b1">0/689 (0%)</span>
+                </div>
+                <div class="study-progress-track" style="margin-bottom: 0;">
+                  <div class="study-progress-fill" id="lvl-fill-b1" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: var(--text-sm); margin-bottom: 4px;">
+                  <span>Level B2 (Upper Intermediate)</span>
+                  <span id="lvl-text-b2">0/597 (0%)</span>
+                </div>
+                <div class="study-progress-track" style="margin-bottom: 0;">
+                  <div class="study-progress-fill" id="lvl-fill-b2" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 2: VOCABULARY LIST -->
+        <section class="view-section" id="view-vocabulary">
+          <div class="vocab-controls">
+            <div class="input-wrap">
+              <input class="input" id="vocab-search" type="search" placeholder="Cari kata Inggris atau arti bahasa Indonesia..." aria-label="Cari kata">
+            </div>
+
+            <div class="filter-chips">
+              <button class="chip is-active" data-level="all" type="button">Semua Kata (2.971)</button>
+              <button class="chip" data-level="A1" type="button">Level A1 (892)</button>
+              <button class="chip" data-level="A2" type="button">Level A2 (792)</button>
+              <button class="chip" data-level="B1" type="button">Level B1 (689)</button>
+              <button class="chip" data-level="B2" type="button">Level B2 (597)</button>
+            </div>
+
+            <span style="font-size: var(--text-xs); color: var(--color-text-secondary); font-weight: 700;" id="vocab-total-count">Memuat kosakata...</span>
+          </div>
+
+          <div class="vocab-grid" id="vocab-list"></div>
+
+          <div style="text-align: center; margin-top: var(--space-8);">
+            <button class="btn btn-secondary btn-lg" id="vocab-load-more" type="button">Muat Lebih Banyak Kata ↺</button>
+          </div>
+        </section>
+
+        <!-- VIEW 3: STUDY / 3-STAGE PRACTICE -->
+        <section class="view-section" id="view-study">
+          <div id="study-view-container">
+            <div class="card card-tint-sand" style="text-align: center; padding: var(--space-12);">
+              <h2 style="font-size: var(--text-2xl); margin-bottom: var(--space-3);">Pilih Kata untuk Mulai Latihan</h2>
+              <p style="color: var(--color-text-secondary); margin-bottom: var(--space-6);">Buka menu Kosakata atau klik tombol di bawah untuk melatih kata berikutnya.</p>
+              <button class="btn btn-primary" onclick="window.sinauApp.switchView('vocabulary')">Buka Daftar Kosakata ↗</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 4: GRAMMAR HUB -->
+        <section class="view-section" id="view-grammar">
+          <div id="grammar-grid-wrap">
+            <div class="section-header">
+              <span class="section-eyebrow">Kurikulum Terstruktur</span>
+              <h2 class="section-title">19 Topik Pelajaran Grammar (A1–B2)</h2>
+              <p class="section-desc">Pahami aturan pola kalimat, rumus praktis, dan hindari kesalahan umum yang sering dilakukan penutur bahasa Indonesia.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4);" id="grammar-grid"></div>
+          </div>
+
+          <div id="grammar-detail-container" style="display: none;"></div>
+        </section>
+
+        <!-- VIEW 5: QUIZ -->
+        <section class="view-section" id="view-quiz">
+          <div id="quiz-view-container">
+            <div class="card card-tint-sand" style="text-align: center; padding: var(--space-12);">
+              <h2 style="font-size: var(--text-2xl); margin-bottom: var(--space-3);">Pilih Topik Grammar untuk Mengikuti Kuis</h2>
+              <p style="color: var(--color-text-secondary); margin-bottom: var(--space-6);">Kuis dirancang untuk menguji pemahaman konsep secara langsung.</p>
+              <button class="btn btn-primary" onclick="window.sinauApp.switchView('grammar')">Pilih Topik Grammar ↗</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 6: READING HABIT -->
+        <section class="view-section" id="view-reading">
+          <div class="section-header">
+            <span class="section-eyebrow">63.309 Kata Konten</span>
+            <h2 class="section-title">Perpustakaan Membaca HABIT</h2>
+            <p class="section-desc">156 bacaan berbobot untuk membiasakan mata dan pikiran mencerna teks bahasa Inggris secara alami.</p>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4);" id="reading-passages-list"></div>
+        </section>
+
+        <!-- VIEW 7: ADVENTURE -->
+        <section class="view-section" id="view-adventure">
+          <div class="section-header">
+            <span class="section-eyebrow">Latihan Terpadu</span>
+            <h2 class="section-title">Everyday Adventure Series</h2>
+            <p class="section-desc">Cerita interaktif, percakapan sehari-hari, latihan mendengarkan, dan studio pengucapan.</p>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4);" id="adventure-stories-grid"></div>
+        </section>
+
+        <!-- VIEW 8: REVIEW (SPACED REPETITION) -->
+        <section class="view-section" id="view-review">
+          <div class="section-header">
+            <span class="section-eyebrow">Sistem Pengulangan Berjeda</span>
+            <h2 class="section-title">Jadwal Review Hari Ini</h2>
+            <p class="section-desc" id="review-total-due">0 kata perlu diulang</p>
+          </div>
+          <div id="review-due-list"></div>
+        </section>
+
+        <!-- VIEW 9: PROGRESS -->
+        <section class="view-section" id="view-progress">
+          <div class="section-header">
+            <span class="section-eyebrow">Catatan Perkembangan</span>
+            <h2 class="section-title">Statistik Penguasaan Materi</h2>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4);">
+            <div class="card stat-card card-tint-sage">
+              <span class="stat-label">Total Kata Mastered</span>
+              <span class="stat-value" id="progress-total-mastered">0</span>
+              <span class="stat-desc">Daya ingat permanen</span>
+            </div>
+            <div class="card stat-card card-tint-sand">
+              <span class="stat-label">Kata Sedang Dipelajari</span>
+              <span class="stat-value" id="progress-total-learning">0</span>
+              <span class="stat-desc">Dalam siklus review</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 10: SETTINGS & BACKUP -->
+        <section class="view-section" id="view-settings">
+          <div class="section-header">
+            <span class="section-eyebrow">Preferensi & Cadangan</span>
+            <h2 class="section-title">Pengaturan Aplikasi</h2>
+          </div>
+
+          <div class="card card-tint-sand" style="display: flex; flex-direction: column; gap: var(--space-6); max-width: 600px;">
+            <div>
+              <label for="setting-goal" style="display: block; font-weight: 700; margin-bottom: var(--space-2);">Target Belajar Harian:</label>
+              <select class="input" id="setting-goal">
+                <option value="5">5 kata per hari (Santai)</option>
+                <option value="10" selected>10 kata per hari (Rekomendasi)</option>
+                <option value="15">15 kata per hari (Intensif)</option>
+                <option value="20">20 kata per hari (Ambisius)</option>
+              </select>
+            </div>
+
+            <div style="border-top: var(--border-sm); padding-top: var(--space-4);">
+              <strong style="display: block; margin-bottom: var(--space-2);">Ekspor Cadangan (Backup JSON):</strong>
+              <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-3);">Unduh seluruh riwayat belajar dan penguasaan kata ke file cadangan untuk dipindahkan ke perangkat lain.</p>
+              <button class="btn btn-secondary" id="btn-export-backup" type="button">Unduh File Cadangan JSON 💾</button>
+            </div>
+
+            <div style="border-top: var(--border-sm); padding-top: var(--space-4);">
+              <strong style="display: block; margin-bottom: var(--space-2);">Impor Cadangan:</strong>
+              <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-3);">Pulihkan kemajuan belajar dari file JSON backup sebelumnya.</p>
+              <input type="file" id="file-import-backup" accept=".json" style="display: block; margin-bottom: var(--space-2);">
+            </div>
+
+            <div style="border-top: var(--border-sm); padding-top: var(--space-4);">
+              <strong style="display: block; color: var(--color-danger); margin-bottom: var(--space-2);">Reset Kemajuan:</strong>
+              <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-3);">Menghapus seluruh progres belajar dari browser ini dan kembali ke kondisi awal.</p>
+              <button class="btn btn-outline" id="btn-reset-data" type="button" style="color: var(--color-danger);">Reset Seluruh Data Lokal</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reusable Modal Sheet -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div id="modal-content"></div>
+      <button class="btn btn-outline btn-sm" id="modal-close-btn" style="position: absolute; top: 16px; right: 16px;" type="button" aria-label="Tutup">✕</button>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notification -->
+  <div class="toast-notice" id="toast-notice" role="status" aria-live="polite"></div>
+
+  <!-- App Bootstrap -->
+  <script type="module" src="/src/workspace.ts"></script>
+</body>
+</html>
+

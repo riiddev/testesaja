@@ -1,0 +1,654 @@
+{
+  "quizzes": {
+    "the-tiny-tenants-inside-you": {
+      "passageId": "the-tiny-tenants-inside-you",
+      "title": "Kuis Pemahaman: The Tiny Tenants Inside You",
+      "passageTitle": "The Tiny Tenants Inside You",
+      "category": "Sains & alam",
+      "targetLevel": "B1-B2",
+      "questions": [
+        {
+          "id": "q1",
+          "category": "General Info",
+          "subType": "Main Idea",
+          "question": "What is the central thesis of the passage regarding the human gut microbiome?",
+          "options": [
+            "Commercial probiotics and single dietary pills have conclusively solved human digestive diseases.",
+            "Gut microbes are vital partners in digestion and immunity, but current scientific evidence calls for healthy skepticism rather than uncritical commercial faith.",
+            "Scientists still consider gut bacteria to be simple passive passengers with zero measurable impact on systemic health.",
+            "Because microbiome studies are primarily small-scale, modern medicine should avoid researching microbial treatments."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 1, 2, dan 6 menegaskan bahwa mikroba usus adalah mitra penting dalam pencernaan dan imunitas ('powerful partners in digestion and immunity'), namun kita harus menyikapinya dengan kehati-hatian ilmiah, bukan keyakinan buta terhadap klaim komersial ('deserve respect, but not blind faith').",
+            "wrongAnalysis": [
+              "Opsi A salah karena Paragraf 5 secara eksplisit membantah klaim produk tunggal penyembuh penyakit ('rarely backed by solid evidence').",
+              "Opsi C salah karena Paragraf 2 menyatakan pandangan mikroba sebagai 'simple passengers' sudah ditinggalkan sejak dua dekade lalu.",
+              "Opsi D salah karena Paragraf 6 menekankan bahwa penelitian mikroba berpeluang besar melahirkan terapi medis nyata di masa depan."
+            ],
+            "readingStrategy": "Fokus pada kalimat tesis di paragraf pembuka (P1) dan sintesis di paragraf penutup (P6). Abaikan opsi yang mengandung generalisasi ekstrem seperti 'conclusively solved' atau 'zero impact'.",
+            "keywords": ["gut microbiome", "vital partners", "immunity", "skepticism", "blind faith"]
+          }
+        },
+        {
+          "id": "q2",
+          "category": "General Info",
+          "subType": "Author's Purpose",
+          "question": "What is the primary purpose of Paragraph 4 in the overall argument of the text?",
+          "options": [
+            "To prove that all microbiome research conducted over the past twenty years is fundamentally flawed.",
+            "To explain the critical distinction between correlation and causation in microbiome studies.",
+            "To demonstrate how bacteria travel from the digestive tract into other bodily organs.",
+            "To persuade readers to participate in clinical trials involving microbial transplants."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 4 berfokus menjelaskan batasan metodologis ilmiah: bukti saat ini baru menunjukkan korelasi/hubungan ('links'), bukan bukti sebab-akibat ('not proof of cause'). Penulis menjelaskan bahwa penyakit bisa saja mengubah mikroba, bukan mikroba yang memicu penyakit.",
+            "wrongAnalysis": [
+              "Opsi A salah karena penulis tidak menyebut semua riset cacat, melainkan membutuhkan kehati-hatian ('care is needed') dan replikasi studi.",
+              "Opsi C salah karena paragraf 4 tidak membahas rute fisik perjalanan bakteri.",
+              "Opsi D salah karena paragraf 4 membahas metodologi ilmiah, bukan ajakan menjadi relawan uji klinis."
+            ],
+            "readingStrategy": "Analisis fungsi retoris paragraf. Perhatikan kata transisi penanda seperti 'Yet this is exactly where care is needed' dan kontras 'links, not proof of cause'.",
+            "keywords": ["Paragraph 4", "links", "proof of cause", "correlation", "direction of the arrow"]
+          }
+        },
+        {
+          "id": "q3",
+          "category": "Specific Info",
+          "subType": "Factual Detail",
+          "question": "According to Paragraph 2, in what surprising way do gut microbes support human biology?",
+          "options": [
+            "They replace the need for physical exercise by boosting metabolic rate.",
+            "They train and guide the immune system on how to respond to threats.",
+            "They completely eliminate the human body's requirement for dietary carbohydrates.",
+            "They generate artificial white blood cells directly in the intestine."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 2 menyatakan secara harfiah: 'Perhaps most surprising, they help train and guide the immune system, teaching it how to respond to threats.'",
+            "wrongAnalysis": [
+              "Opsi A salah karena tidak pernah disebutkan teks bahwa mikroba menggantikan kebutuhan olahraga.",
+              "Opsi C salah karena mikroba membantu mencerna serat ('break down fibre'), bukan menghapus kebutuhan karbohidrat.",
+              "Opsi D salah karena teks tidak menyatakan mikroba memproduksi sel darah putih sintetis."
+            ],
+            "readingStrategy": "Cari penanda spesifik teks seperti 'most surprising' di Paragraf 2, lalu cocokkan secara langsung dengan pilihan jawaban yang menggunakan sinonim akurat.",
+            "keywords": ["Paragraph 2", "most surprising", "train and guide", "immune system", "respond to threats"]
+          }
+        },
+        {
+          "id": "q4",
+          "category": "Specific Info",
+          "subType": "Referent",
+          "question": "In Paragraph 4, what does the metaphor 'which direction the arrow points' refer to?",
+          "options": [
+            "The physical direction that food moves along the digestive tract.",
+            "The geographical origin of different microbial species.",
+            "Whether illness causes changes in microbes or microbial changes cause the illness.",
+            "The mathematical angle used to calibrate medical microscope lenses."
+          ],
+          "correctIndex": 2,
+          "explanation": {
+            "correctReason": "Klausa sebelumnya menjelaskan: 'The illness might change the microbes, rather than the microbes causing the illness, and often it is hard to be sure which direction the arrow points.' Arah panah adalah metafora arah hubungan kausalitas (sebab $\\rightarrow$ akibat).",
+            "wrongAnalysis": [
+              "Opsi A salah karena 'arrow' bukan rujukan arah mekanis gerakan makanan.",
+              "Opsi B salah karena teks tidak membahas peta geografis spesies mikroba.",
+              "Opsi D salah karena tidak ada konteks instrumen mikroskop di paragraf 4."
+            ],
+            "readingStrategy": "Bacalah satu kalimat sebelum dan sesudah rujukan metafora. 'The arrow' merujuk langsung pada hubungan sebab-akibat yang dijelaskan pada kalimat yang sama.",
+            "keywords": ["Paragraph 4", "direction the arrow points", "illness change microbes", "causing illness"]
+          }
+        },
+        {
+          "id": "q5",
+          "category": "Specific Info",
+          "subType": "Paraphrase",
+          "question": "Which sentence best paraphrases the author's statement in Paragraph 5: 'Many of these claims run far ahead of the science'?",
+          "options": [
+            "Commercial marketing assertions exaggerate benefits well beyond what validated research currently supports.",
+            "Scientific researchers are actively outpacing retailers in creating miracle cures.",
+            "Scientists and wellness merchants agree on all advertised medical treatments.",
+            "Laboratory research has progressed so rapidly that commercial shops cannot keep up."
+          ],
+          "correctIndex": 0,
+          "explanation": {
+            "correctReason": "Ungkapan 'run far ahead of the science' berarti klaim penjualan produk kesehatan menjanjikan hal-hal spektakuler yang belum terbukti secara ilmiah ('exaggerate benefits well beyond what validated research currently supports').",
+            "wrongAnalysis": [
+              "Opsi B salah karena membalikkan fakta; produsen komersial lah yang mendahului sains, bukan peneliti.",
+              "Opsi C salah karena Paragraf 5 justru menyoroti ketidaksesuaian antara klaim toko dan bukti sains yang jujur ('honest position is more modest').",
+              "Opsi D salah karena bertentangan dengan makna asli."
+            ],
+            "readingStrategy": "Pahami idiom bahasa Inggris 'run ahead of' (mendahului/berlebihan tanpa dasar). Cari parafrase yang mempertahankan makna 'klaim komersial melebih-lebihkan bukti penelitian'.",
+            "keywords": ["Paragraph 5", "claims run far ahead of the science", "commercial wellness", "exaggerate benefits"]
+          }
+        },
+        {
+          "id": "q6",
+          "category": "Implied Info",
+          "subType": "Inference",
+          "question": "What can be inferred from the author's discussion of fecal microbe transplants in Paragraph 3?",
+          "options": [
+            "Microbial transplants have successfully replaced antibiotics for every known human ailment.",
+            "Direct intervention shows the microbiome is genuinely active in health, not just a passive byproduct.",
+            "Transferring bacteria from sick patients to healthy donors strengthens communal immunity.",
+            "Health authorities have mandated daily microbial transplants for all hospital admissions."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 3 menyatakan: 'Transferring healthy gut microbes into a sick patient, for example, can cure certain stubborn infections, which suggests the microbiome truly matters for health.' Ini membuktikan bahwa mikroba memiliki peran aktif nyata (bukan kebetulan semata).",
+            "wrongAnalysis": [
+              "Opsi A salah karena teks menyebut 'certain stubborn infections' (infeksi membandel tertentu), bukan semua penyakit.",
+              "Opsi C salah karena donor adalah orang sehat ('healthy gut microbes') ke pasien sakit, bukan sebaliknya.",
+              "Opsi D salah karena tidak ada regulasi wajib rumah sakit yang disebutkan teks."
+            ],
+            "readingStrategy": "Perhatikan kata kunci inferensi 'which suggests'. Tarik kesimpulan logis bahwa keberhasilan terapi tersebut membuktikan mikroba memang berpengaruh langsung terhadap pemulihan kesehatan.",
+            "keywords": ["Paragraph 3", "transferring healthy gut microbes", "suggests", "truly matters for health"]
+          }
+        },
+        {
+          "id": "q7",
+          "category": "Implied Info",
+          "subType": "Author's Tone",
+          "question": "How would you describe the author's attitude toward popular commercial diets promising to 'fix' the microbiome in Paragraph 5 and 6?",
+          "options": [
+            "Enthusiastically uncritical and supportive of retail trends.",
+            "Completely dismissive of any connection between food and gut health.",
+            "Measured, evidence-based, and prudently skeptical.",
+            "Aggressively hostile toward medical researchers."
+          ],
+          "correctIndex": 2,
+          "explanation": {
+            "correctReason": "Penulis menggunakan nada yang tenang, berimbang, dan berbasis bukti ('honest position is more modest', 'treat the bolder promises with a healthy dose of doubt') seraya tetap menganjurkan pola makan sehat kaya serat.",
+            "wrongAnalysis": [
+              "Opsi A salah karena penulis secara terbuka meragukan klaim komersial toko wellness.",
+              "Opsi B salah karena penulis tetap menegaskan bahwa diet kaya serat sangat mendukung mikrobiom ('plenty of fibre supports it').",
+              "Opsi D salah karena penulis mendukung riset ilmiah, bukan memusuhinya."
+            ],
+            "readingStrategy": "Evaluasi diksi (*word choice*) penulis: 'honest', 'modest', 'solid evidence', 'stay curious', 'healthy dose of doubt'. Ini mencerminkan sikap ilmiah yang bijak dan berhati-hati (measured & prudently skeptical).",
+            "keywords": ["author's attitude", "tone", "healthy dose of doubt", "measured", "skeptical"]
+          }
+        },
+        {
+          "id": "q8",
+          "category": "Vocabulary in Context",
+          "subType": "Contextual Meaning",
+          "targetWord": "thrive",
+          "question": "In Paragraph 2, what does the word 'thrives' in 'the whole group thrives in the warm, food-rich environment' most nearly mean?",
+          "options": [
+            "Flourishes and prospers successfully",
+            "Gradually struggles to survive",
+            "Shrinks rapidly in total numbers",
+            "Remains completely dormant and inactive"
+          ],
+          "correctIndex": 0,
+          "explanation": {
+            "correctReason": "Dalam konteks lingkungan usus yang hangat dan kaya makanan ('warm, food-rich environment'), kata 'thrives' bermakna mikroba tumbuh subur, berkembang biak dengan sangat baik, dan aktif (flourishes/prospers).",
+            "wrongAnalysis": [
+              "Opsi B salah karena 'struggles to survive' adalah kebalikan dari makna thrive.",
+              "Opsi C salah karena jumlah bakteri justru melimpah triliunan, bukan menyusut.",
+              "Opsi D salah karena bakteri aktif melakukan metabolisme, bukan dorman."
+            ],
+            "readingStrategy": "Gunakan konteks kalimat pendukung ('warm, food-rich environment'). Lingkungan yang hangat dan kaya makanan pasti membuat organisme hidup berkembang subur (flourish).",
+            "keywords": ["thrives", "Paragraph 2", "flourishes", "warm, food-rich environment"]
+          }
+        },
+        {
+          "id": "q9",
+          "category": "Vocabulary in Context",
+          "subType": "Contextual Meaning",
+          "targetWord": "untangle",
+          "question": "In Paragraph 4, what does the word 'untangle' in 'careful research is still needed to untangle these threads' closest in meaning to?",
+          "options": [
+            "Complicate further into greater confusion",
+            "Clarify and separate complex connections",
+            "Ignore and abandon unresolved issues",
+            "Fabricate artificial experimental correlations"
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Frasa 'untangle these threads' adalah metafora dari mengurai benang kusut, yang dalam penelitian sains berarti memperjelas, memilah, dan membedakan mana faktor penyebab dan mana akibat (clarify and separate complex connections).",
+            "wrongAnalysis": [
+              "Opsi A salah karena 'complicate' adalah lawan kata dari mengurai.",
+              "Opsi C salah karena penelitian justru aktif dilakukan, bukan diabaikan.",
+              "Opsi D salah karena sains berupaya mencari kebenaran, bukan memalsukan data."
+            ],
+            "readingStrategy": "Bayangkan arti harfiah 'untangle' (mengurai benang yang kusut). Dalam konteks data sains yang rumit, maknanya adalah mengklarifikasi dan mengurai kaitan yang kompleks.",
+            "keywords": ["untangle", "Paragraph 4", "untangle these threads", "clarify", "separate complex connections"]
+          }
+        }
+      ]
+    },
+    "how-the-screen-knows-what-you-want": {
+      "passageId": "how-the-screen-knows-what-you-want",
+      "title": "Kuis Pemahaman: How the Screen Knows What You Want",
+      "passageTitle": "How the Screen Knows What You Want",
+      "category": "Teknologi & rekayasa",
+      "targetLevel": "B1-B2",
+      "questions": [
+        {
+          "id": "q1",
+          "category": "General Info",
+          "subType": "Main Idea",
+          "question": "What is the primary concept explained in the passage regarding algorithmic recommendations?",
+          "options": [
+            "Smartphones possess telepathic capabilities that read human brain waves directly.",
+            "Recommendation systems operate by predicting preferences through behavioral patterns, offering convenience while creating echo-chamber risks.",
+            "Online streaming platforms intend primarily to trap users in harmful political conspiracies.",
+            "Recommendation algorithms rely solely on item tags without comparing individual user actions."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Teks secara komprehensif mengupas cara kerja sistem rekomendasi berbasis pola perilaku ('studying behaviour rather than reading thoughts') serta dampaknya: kemudahan hiburan sekaligus risiko penyempitan wawasan ('comfortable bubble').",
+            "wrongAnalysis": [
+              "Opsi A salah karena Paragraf 1 secara eksplisit menyatakan sistem tidak membaca pikiran ('reading thoughts').",
+              "Opsi C salah karena Paragraf 5 menegaskan mesin tidak berniat menjebak siapa pun ('The machine is not trying to trap anyone').",
+              "Opsi D salah karena Paragraf 2 menjelaskan metode kedua justru mempelajari orang ('studies people instead')."
+            ],
+            "readingStrategy": "Cari jawaban yang mencakup kedua aspek yang dibahas teks: prinsip operasional sistem (behavioral patterns) dan dampak gandanya (manfaat vs risiko bubble).",
+            "keywords": ["recommendation system", "studying behaviour", "convenience", "echo-chamber", "comfortable bubble"]
+          }
+        },
+        {
+          "id": "q2",
+          "category": "General Info",
+          "subType": "Summary",
+          "question": "According to Paragraph 2, how do modern digital services combine recommendation strategies?",
+          "options": [
+            "By analyzing both the intrinsic attributes of items and collaborative behavior from similar users.",
+            "By solely measuring the duration of video playback and device battery levels.",
+            "By outsourcing personal data to human sales representatives for manual selection.",
+            "By exclusively filtering content based on alphabetical order and release dates."
+          ],
+          "correctIndex": 0,
+          "explanation": {
+            "correctReason": "Paragraf 2 memaparkan dua metode: metode pertama melihat fitur konten ('features of the items themselves') dan metode kedua melihat kesamaan perilaku orang lain ('studies people instead'). Layanan modern menggabungkan keduanya ('mixing what an item is with who else has liked it').",
+            "wrongAnalysis": [
+              "Opsi B salah karena tidak ada penyebutan baterai perangkat dalam teks.",
+              "Opsi C salah karena proses berjalan otomatis lewat perangkat lunak, bukan agen penjualan manual.",
+              "Opsi D salah karena urutan abjad tidak relevan dengan sistem rekomendasi prediktif."
+            ],
+            "readingStrategy": "Rangkum dua pilar utama Paragraf 2: content-based filtering (fitur item) dan collaborative filtering (perilaku pengguna serupa).",
+            "keywords": ["Paragraph 2", "two main ways", "features of items", "studies people", "blend both methods"]
+          }
+        },
+        {
+          "id": "q3",
+          "category": "Specific Info",
+          "subType": "Factual Detail",
+          "question": "In Paragraph 3, why is the giant matrix table described as 'mostly empty'?",
+          "options": [
+            "Software engineers frequently delete user data to conserve server disk space.",
+            "Any single user interacts with only a tiny fraction of the millions of items available.",
+            "Users typically reject all recommended suggestions offered by the app.",
+            "The recommendation system requires users to fill in empty boxes manually."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 3 menyatakan secara gamblang: 'This table is mostly empty, because any single person touches only a tiny slice of everything on offer.'",
+            "wrongAnalysis": [
+              "Opsi A salah karena kekosongan tabel bukan akibat penghapusan data server.",
+              "Opsi C salah karena pengguna justru menikmati rekomendasi ('keep its users happy').",
+              "Opsi D salah karena tabel diisi secara otomatis oleh algoritma komputasi."
+            ],
+            "readingStrategy": "Temukan kata kunci 'mostly empty' di Paragraf 3 dan baca klausa penjelas yang diawali kata 'because'.",
+            "keywords": ["Paragraph 3", "table is mostly empty", "tiny slice of everything on offer"]
+          }
+        },
+        {
+          "id": "q4",
+          "category": "Specific Info",
+          "subType": "Referent",
+          "question": "In Paragraph 5, what does the pronoun 'they' refer to in the sentence 'For all their usefulness, they carry a hidden risk'?",
+          "options": [
+            "Smartphone screen protectors",
+            "Recommendation systems",
+            "Action film directors",
+            "Government regulatory agencies"
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Kalimat ini membuka paragraf 5 sebagai kelanjutan pembahasan 'recommendation systems' yang dibahas secara mendalam di paragraf sebelumnya.",
+            "wrongAnalysis": [
+              "Opsi A, C, dan D salah karena tidak pernah menjadi subjek pembahasan di paragraf 4 dan 5."
+            ],
+            "readingStrategy": "Perhatikan subjek utama yang dibahas sepanjang teks. 'They' merujuk kembali pada 'these systems' di akhir Paragraf 4.",
+            "keywords": ["Paragraph 5", "they carry a hidden risk", "recommendation systems"]
+          }
+        },
+        {
+          "id": "q5",
+          "category": "Specific Info",
+          "subType": "Paraphrase",
+          "question": "Which of the following best paraphrases the warning about the 'comfortable bubble' in Paragraph 5?",
+          "options": [
+            "Repeated exposure only to confirmed preferences can isolate users from diverse viewpoints and novel perspectives.",
+            "Using mobile applications for long hours can cause physical discomfort in human vision.",
+            "Online recommendations make users completely immune to misleading commercial advertising.",
+            "Recommendation systems guarantee that all internet consumers receive unbiased objective news."
+          ],
+          "correctIndex": 0,
+          "explanation": {
+            "correctReason": "Paragraf 5 menjelaskan: 'Because the system keeps offering more of what you already like, it can slowly narrow the range of things you see... rarely meeting a surprising idea or an opposing view.' Ini sepadan dengan isolasi wawasan dari pandangan beragam.",
+            "wrongAnalysis": [
+              "Opsi B salah karena 'bubble' di sini adalah metafora ruang informasi kognitif, bukan gangguan fisik mata.",
+              "Opsi C dan D salah karena bertolak belakang dengan kenyataan bahaya filter bubble."
+            ],
+            "readingStrategy": "Analisis metafora 'comfortable bubble'. Cari pilihan jawaban yang menekankan penyempitan cakupan informasi dan hilangnya perspektif baru (*diverse viewpoints*).",
+            "keywords": ["comfortable bubble", "narrow the range", "opposing view", "isolate from diverse viewpoints"]
+          }
+        },
+        {
+          "id": "q6",
+          "category": "Implied Info",
+          "subType": "Inference",
+          "question": "What can be inferred from Paragraph 5 regarding why recommendation systems can lead users toward extreme content?",
+          "options": [
+            "The system is engineered by malicious programmers designed to intentionally polarize citizens.",
+            "The algorithm optimizes for behavioral engagement patterns without ethical or moral discernment.",
+            "Users are legally compelled to accept every recommendation proposed by online platforms.",
+            "Video streaming apps restrict access to educational and scientific material."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 5 menegaskan: 'The machine is not trying to trap anyone. It is simply following the patterns...' Ini membuktikan algoritma tidak memiliki niat jahat, ia murni mengoptimalkan pola interaksi pengguna tanpa pertimbangan moralitas.",
+            "wrongAnalysis": [
+              "Opsi A salah karena teks menyatakan secara tegas 'The machine is not trying to trap anyone'.",
+              "Opsi C salah karena pengguna tidak dipaksa secara hukum.",
+              "Opsi D salah karena aplikasi tidak melarang konten sains."
+            ],
+            "readingStrategy": "Korelasikan kalimat 'The machine is not trying to trap anyone' dengan 'simply following the patterns'. Mesin bertindak secara mekanis matematis, bukan atas dasar moral.",
+            "keywords": ["Paragraph 5", "not trying to trap anyone", "following the patterns", "extreme content"]
+          }
+        },
+        {
+          "id": "q7",
+          "category": "Implied Info",
+          "subType": "Author's Tone",
+          "question": "What is the author's concluding advice in Paragraph 5 regarding digital recommendation platforms?",
+          "options": [
+            "Users must completely delete all digital accounts and avoid modern technology.",
+            "Understanding the system's operational logic enables users to interact with it critically rather than passively.",
+            "Governments should outlaw all automated predictive software across the internet.",
+            "Consumers should trust recommendation algorithms entirely to make life decisions."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Kalimat penutup Paragraf 5 menyatakan: 'Knowing how the system works is the first step to using it wisely rather than being used by it.' Penulis mendorong kesadaran literasi digital kritis.",
+            "wrongAnalysis": [
+              "Opsi A salah karena penulis tidak menyarankan berhenti total memakai teknologi.",
+              "Opsi C salah karena penulis tidak menuntut pelarangan hukum sistem rekomendasi.",
+              "Opsi D salah karena berlawanan dengan pesan kehati-hatian teks."
+            ],
+            "readingStrategy": "Perhatikan kalimat pamungkas teks: 'using it wisely rather than being used by it'. Cari opsi yang menekankan penggunaan bijak dan kritis berbasis pemahaman.",
+            "keywords": ["using it wisely", "rather than being used by it", "first step", "critical digital literacy"]
+          }
+        },
+        {
+          "id": "q8",
+          "category": "Vocabulary in Context",
+          "subType": "Contextual Meaning",
+          "targetWord": "nudge",
+          "question": "In Paragraph 5, what does the word 'nudges' in 'gentle nudges can lead a viewer, step by step, toward more extreme content' most nearly mean?",
+          "options": [
+            "Aggressive physical strikes",
+            "Subtle prompts and algorithmic recommendations",
+            "Mandatory legal regulations",
+            "Accidental software server errors"
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Dalam konteks antarmuka digital dan algoritma penayangan video, 'gentle nudges' bermakna dorongan halus berupa rekomendasi video berikutnya yang perlahan mengarahkan penonton ke konten tertentu.",
+            "wrongAnalysis": [
+              "Opsi A salah karena 'nudge' di sini bukan pukulan fisik.",
+              "Opsi C salah karena bukan regulasi hukum formal.",
+              "Opsi D salah karena bukan kesalahan teknis eror perangkat lunak."
+            ],
+            "readingStrategy": "Analisis konteks kalimat: 'gentle nudges can lead a viewer, step by step...'. Di dunia teknologi digital, 'nudge' adalah petunjuk atau dorongan sugestif halus yang membimbing aksi pengguna.",
+            "keywords": ["nudges", "Paragraph 5", "gentle nudges", "subtle prompts", "algorithmic suggestions"]
+          }
+        },
+        {
+          "id": "q9",
+          "category": "Vocabulary in Context",
+          "subType": "Contextual Meaning",
+          "targetWord": "blend",
+          "question": "In Paragraph 2, what does the word 'blend' in 'services blend both methods together' closest in meaning to?",
+          "options": [
+            "Combine and integrate harmoniously",
+            "Separate and divide sharply",
+            "Discontinue and replace entirely",
+            "Disguise and conceal suspiciously"
+          ],
+          "correctIndex": 0,
+          "explanation": {
+            "correctReason": "Kata 'blend' berarti mencampurkan atau mengintegrasikan dua pendekatan yang berbeda (fitur konten dan perilaku pengguna) menjadi satu sistem terpadu ('mixing what an item is with who else has liked it').",
+            "wrongAnalysis": [
+              "Opsi B salah karena memisahkan adalah lawan kata dari blend.",
+              "Opsi C salah karena kedua metode tetap dipakai bersamaan, bukan dihentikan.",
+              "Opsi D salah karena bukan menyembunyikan."
+            ],
+            "readingStrategy": "Cocokkan dengan sinonim 'mixing' yang digunakan pada klausa penjelas di kalimat yang sama di Paragraf 2.",
+            "keywords": ["blend", "Paragraph 2", "blend both methods", "combine", "mixing"]
+          }
+        }
+      ]
+    },
+    "trees-or-machines": {
+      "passageId": "trees-or-machines",
+      "title": "Kuis Pemahaman: Trees or Machines?",
+      "passageTitle": "Trees or Machines?",
+      "category": "Sains & alam",
+      "targetLevel": "B1-B2",
+      "questions": [
+        {
+          "id": "q1",
+          "category": "General Info",
+          "subType": "Main Idea",
+          "question": "What is the primary message of the text regarding climate solutions for carbon removal?",
+          "options": [
+            "Direct air capture machines should entirely replace global reforestation initiatives immediately.",
+            "Tree planting has proven completely ineffective and should be abandoned in favor of fossil-fueled factories.",
+            "Both forests and direct air capture machines are essential complementary tools, each balancing the other's distinct limitations.",
+            "Global carbon removal is unnecessary as long as renewable solar energy expansion continues."
+          ],
+          "correctIndex": 2,
+          "explanation": {
+            "correctReason": "Kesimpulan paragraf 6 secara tegas menjawab pertanyaan judul: 'Most experts answer: both... Neither tool is perfect. Each simply trades one weakness for another... planting and guarding forests today while patiently building better machines for tomorrow.'",
+            "wrongAnalysis": [
+              "Opsi A salah karena mesin saat ini masih sangat kecil kapasitasnya dan mahal.",
+              "Opsi B salah karena hutan menyerap 2 miliar ton karbon per tahun dengan biaya murah.",
+              "Opsi D salah karena paragraf 1 menegaskan menarik kembali karbon berlebih adalah keharusan ('must pull surplus carbon back out of the air')."
+            ],
+            "readingStrategy": "Perhatikan resolusi pada paragraf terakhir (P6). Penulis tidak memilih salah satu secara eksklusif, melainkan mengadvokasi kombinasi keduanya (*both tools are necessary*).",
+            "keywords": ["trees or machines", "carbon removal", "complementary tools", "trade-offs", "both"]
+          }
+        },
+        {
+          "id": "q2",
+          "category": "General Info",
+          "subType": "Author's Purpose",
+          "question": "What is the author's primary goal in comparing trees and direct air capture machines in Paragraph 4?",
+          "options": [
+            "To highlight the staggering disparity in current scale, operational maturity, and economic cost between the two approaches.",
+            "To advertise a specific engineering firm manufacturing industrial fan systems.",
+            "To criticize forestry workers for failing to prevent seasonal wildfires.",
+            "To prove that clean electricity can never power mechanical air filters."
+          ],
+          "correctIndex": 0,
+          "explanation": {
+            "correctReason": "Paragraf 4 membandingkan kesenjangan drastis antara kapasitas alam (2 miliar ton) vs mesin (10 ribu ton) serta perbedaan biaya yang mencapai 50 kali lipat lebih mahal.",
+            "wrongAnalysis": [
+              "Opsi B salah karena teks ilmiah ini tidak mempromosikan merek komersial tertentu.",
+              "Opsi C salah karena tidak ada kritik terhadap rimbawan.",
+              "Opsi D salah karena listrik bersih justru dinyatakan mutlak diperlukan ('clean electricity is essential')."
+            ],
+            "readingStrategy": "Identifikasi kalimat topik Paragraf 4: 'Yet the two tools sit worlds apart in scale and cost.' Tujuan utama paragraf adalah menunjukkan disparitas skala dan biaya.",
+            "keywords": ["Paragraph 4", "worlds apart in scale and cost", "disparity", "two billion vs ten thousand"]
+          }
+        },
+        {
+          "id": "q3",
+          "category": "Specific Info",
+          "subType": "Factual Detail",
+          "question": "According to Paragraph 2, which of the following is an ecological co-benefit provided by forest ecosystems?",
+          "options": [
+            "Supplying concentrated industrial carbon streams for underground burial.",
+            "Providing natural wildlife habitats, enriching soil health, and mitigating floods.",
+            "Generating unlimited geothermal energy to power city electrical grids.",
+            "Consuming large quantities of electrical grid power during night photosynthesis."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 2 secara eksplisit menyebutkan: 'Forests bring bonus gifts too, such as homes for wildlife, healthier soil, and protection against floods.'",
+            "wrongAnalysis": [
+              "Opsi A salah karena penyimpanan bawah tanah adalah karakteristik mesin direct air capture (P3).",
+              "Opsi C dan D salah karena tidak pernah disebutkan dan bertentangan dengan fakta bahwa hutan beroperasi dengan sinar matahari gratis ('run on free sunlight')."
+            ],
+            "readingStrategy": "Temukan frasa 'bonus gifts' di Paragraf 2 untuk menemukan daftar manfaat ekologis sekunder yang diberikan hutan.",
+            "keywords": ["Paragraph 2", "bonus gifts", "homes for wildlife", "healthier soil", "protection against floods"]
+          }
+        },
+        {
+          "id": "q4",
+          "category": "Specific Info",
+          "subType": "Referent",
+          "question": "In Paragraph 4, what does the author emphasize by describing direct air capture's annual removal capacity as 'a speck'?",
+          "options": [
+            "The microscopic diameter of physical dust particles captured by filters.",
+            "How utterly minuscule the machines' current contribution is compared to planetary vegetation.",
+            "The high quality of diamond carbon stored inside subterranean caverns.",
+            "The optical clarity of lenses installed on industrial exhaust towers."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Kata 'speck' (butir debu/titik amat kecil) mengontraskan angka 10.000 ton yang dihisap mesin dengan 2.000.000.000 ton yang diserap pepohonan bumi ('a speck beside the two billion tonnes handled by plants').",
+            "wrongAnalysis": [
+              "Opsi A salah karena 'speck' digunakan sebagai metafora perbandingan kuantitas, bukan partikel debu harfiah.",
+              "Opsi C dan D salah karena tidak ada konteks berlian atau lensa kamera di paragraf 4."
+            ],
+            "readingStrategy": "Perhatikan angka perbandingan di Paragraf 4: 10 ribu ton vs 2 miliar ton. 'A speck' menegaskan betapa kecilnya kapasitas mesin saat ini.",
+            "keywords": ["Paragraph 4", "a speck", "minuscule", "ten thousand vs two billion"]
+          }
+        },
+        {
+          "id": "q5",
+          "category": "Specific Info",
+          "subType": "Paraphrase",
+          "question": "Which statement best captures the principal vulnerability of forest carbon storage described in Paragraph 5?",
+          "options": [
+            "Trees require high amounts of synthetic chemical fertilizer to absorb gas.",
+            "Carbon sequestered in biomass can be abruptly released back into the atmosphere by fire or logging.",
+            "Tree bark dissolves when exposed to natural rainwater over prolonged periods.",
+            "Forests can only grow in countries that produce surplus industrial carbon dioxide."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 5 menyatakan: 'A single fire or a wave of logging can release years of captured carbon back into the sky. Their storage is cheap and natural, but it can be undone.'",
+            "wrongAnalysis": [
+              "Opsi A salah karena hutan tidak membutuhkan pupuk sintetis mahal.",
+              "Opsi C salah karena kulit pohon tidak larut dalam air hujan.",
+              "Opsi D salah karena tidak relevan secara ilmiah."
+            ],
+            "readingStrategy": "Fokus pada kelemahan utama hutan di Paragraf 5: penyimpanan alami murah tetapi tidak permanen karena risiko kebakaran dan pembalakan liar (*fire and logging*).",
+            "keywords": ["Paragraph 5", "vulnerability of forest", "fire or logging", "release carbon back"]
+          }
+        },
+        {
+          "id": "q6",
+          "category": "Implied Info",
+          "subType": "Inference",
+          "question": "What can be inferred from Paragraph 4 about why powering direct air capture with fossil fuels is counterproductive?",
+          "options": [
+            "Fossil fuel companies refuse to sell energy to carbon capture facilities.",
+            "Burning fossil fuels releases new carbon, nullifying the environmental benefit of capturing carbon from the air.",
+            "Direct air capture turbines explode when exposed to petroleum vapor.",
+            "Machines powered by coal operate at significantly faster speeds than those on solar power."
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Paragraf 4 menjelaskan: 'If that energy comes from burning fuel, much of the benefit is lost before it even begins.' Jika mesin penangkap karbon digerakkan oleh listrik dari bahan bakar fosil yang membuang emisi karbon, maka operasinya menjadi sia-sia.",
+            "wrongAnalysis": [
+              "Opsi A salah karena bukan masalah penolakan penjualan bahan bakar.",
+              "Opsi C salah karena tidak ada klaim turbin meledak.",
+              "Opsi D salah karena kecepatan mesin bukan poin pembahasannya."
+            ],
+            "readingStrategy": "Terapkan logika kausalitas lingkungan: jika Anda mengeluarkan karbon untuk menjalankan mesin yang menyedot karbon, manfaat bersihnya menjadi nol atau negatif.",
+            "keywords": ["Paragraph 4", "burning fuel", "benefit is lost", "clean electricity is essential"]
+          }
+        },
+        {
+          "id": "q7",
+          "category": "Implied Info",
+          "subType": "Author's Tone",
+          "question": "What is the author's tone when discussing the competing merits of trees versus machines in Paragraph 6?",
+          "options": [
+            "Pragmatic, balanced, and constructively realistic.",
+            "Sarcastic and deeply pessimistic about planetary survival.",
+            "Overly partisan toward mechanical technology lobbies.",
+            "Carelessly indifferent and unconcerned with environmental issues."
+          ],
+          "correctIndex": 0,
+          "explanation": {
+            "correctReason": "Penulis menggunakan pendekatan yang sangat pragmatis dan seimbang ('Neither tool is perfect... the climate needs every honest solution it can get. In practice, that means planting and guarding forests today while patiently building better machines for tomorrow').",
+            "wrongAnalysis": [
+              "Opsi B salah karena penulis tidak sarkastik atau putus asa.",
+              "Opsi C salah karena penulis tidak memihak satu kubu secara membabi buta.",
+              "Opsi D salah karena teks menunjukkan kepedulian mendalam terhadap krisis iklim."
+            ],
+            "readingStrategy": "Analisis nada kesimpulan: 'plant forests today while building machines for tomorrow'. Ini adalah nada pragmatis realistis (*pragmatic and balanced*).",
+            "keywords": ["Paragraph 6", "tone", "pragmatic", "balanced", "every honest solution"]
+          }
+        },
+        {
+          "id": "q8",
+          "category": "Vocabulary in Context",
+          "subType": "Contextual Meaning",
+          "targetWord": "devour",
+          "question": "In Paragraph 4, what does the word 'devour' in 'they devour huge amounts of energy to run' most nearly mean?",
+          "options": [
+            "Consume voraciously in massive quantities",
+            "Carefully store and preserve for future generations",
+            "Generate and distribute freely to nearby residences",
+            "Inspect and evaluate with meticulous scientific tools"
+          ],
+          "correctIndex": 0,
+          "explanation": {
+            "correctReason": "Dalam konteks operasional mesin industri berat yang menyedot daya listrik sangat besar ('huge amounts of energy'), kata 'devour' (melahap) bermakna mengonsumsi energi dalam jumlah luar biasa besar (consume voraciously/heavily).",
+            "wrongAnalysis": [
+              "Opsi B salah karena mesin menghabiskan energi, bukan menyimpannya.",
+              "Opsi C salah karena mesin adalah beban konsumen daya, bukan generator pembangkit.",
+              "Opsi D salah karena bukan tindakan inspeksi alat."
+            ],
+            "readingStrategy": "Gunakan konteks frasa 'devour huge amounts of energy to run'. Metafora 'melahap' digunakan untuk menekankan konsumsi daya yang sangat boros/rakus.",
+            "keywords": ["devour", "Paragraph 4", "consume voraciously", "huge amounts of energy"]
+          }
+        },
+        {
+          "id": "q9",
+          "category": "Vocabulary in Context",
+          "subType": "Contextual Meaning",
+          "targetWord": "surplus",
+          "question": "In Paragraph 1, what does the word 'surplus' in 'pull some of the surplus carbon dioxide back out of the air' closest in meaning to?",
+          "options": [
+            "Severely lacking or deficient",
+            "Excess and leftover beyond safe normal limits",
+            "Naturally occurring and permanently harmless",
+            "Artificially synthesized for agricultural fertilizer"
+          ],
+          "correctIndex": 1,
+          "explanation": {
+            "correctReason": "Kata 'surplus' dalam konteks pemanasan global ('As the world warms') bermakna jumlah karbon dioksida yang berlebih melampaui batas normal alami biosfer (excess/extra/leftover beyond normal levels).",
+            "wrongAnalysis": [
+              "Opsi A salah karena 'lacking or deficient' adalah kebalikan dari surplus.",
+              "Opsi C salah karena karbon berlebih memicu pemanasan global berbahaya, bukan tidak berbahaya.",
+              "Opsi D salah karena bukan karbon sintetis pupuk."
+            ],
+            "readingStrategy": "Kaitkan dengan konteks pemanasan global di kalimat yang sama: 'As the world warms... pull surplus carbon dioxide back out of the air'. Karbon yang harus ditarik kembali adalah gas berlebih (excess).",
+            "keywords": ["surplus", "Paragraph 1", "surplus carbon dioxide", "excess", "leftover"]
+          }
+        }
+      ]
+    }
+  }
+}
+

@@ -1,0 +1,1844 @@
+{
+  "id": "story-07",
+  "number": 7,
+  "title": "Kamera yang Hilang",
+  "titleEn": "The Missing Camera",
+  "level": "B1",
+  "levelReq": 7,
+  "totalEpisodes": 10,
+  "themeColor": "#702459",
+  "description": "Misteri pencarian kamera analog antik yang raib dari etalase pameran galeri seni kota tua, menginterogasi saksi mata, mendeskripsikan ciri-ciri orang mencurigakan, dan menarik kesimpulan inferensial logis.",
+  "learningFocus": "Past Continuous for Events in Progress, Modal Verbs of Deduction ('must have been', 'could not have'), Physical Descriptions & Adjective Order, Reported Speech, Detective Vocabulary.",
+  "episodes": [
+    {
+      "id": 1,
+      "number": 1,
+      "title": "Pembukaan Pameran di Galeri Seni",
+      "titleEn": "Opening Night at the Grand Gallery",
+      "estimatedMinutes": 10,
+      "recap": "Sabtu malam di Old Town Art Gallery yang megah, kamu dan mentor Sarah menghadiri pameran fotografi internasional yang menampilkan kamera antik legendaris milik Elena Vance.",
+      "dialogue": [
+        {
+          "id": "s6e1_d1",
+          "speaker": "Narator",
+          "en": "Soft spotlight beams illuminate historic black-and-white photographs displayed along the high brick gallery walls.",
+          "idText": "Sorot lampu lembut menyinari foto-foto hitam-putih bersejarah yang dipajang di sepanjang dinding bata tinggi galeri."
+        },
+        {
+          "id": "s6e1_d2",
+          "speaker": "Sarah",
+          "en": "Look at the center glass display case! That is Elena Vance's original 1954 analog camera, valued at over fifty thousand dollars.",
+          "idText": "Lihat etalase kaca di tengah ruangan! Itu kamera analog asli tahun 1954 milik Elena Vance, bernilai lebih dari lima puluh ribu dolar."
+        },
+        {
+          "id": "s6e1_d3",
+          "speaker": "Kanci",
+          "en": "Kamera itu memiliki bodi logam krom dan lensa kristal yang sangat indah! Fotografer legendaris Elena Vance sedang diwawancarai wartawan!",
+          "idText": "Kamera itu memiliki bodi logam krom dan lensa kristal yang sangat indah! Fotografer legendaris Elena Vance sedang diwawancarai wartawan!"
+        },
+        {
+          "id": "s6e1_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Julian Croft, kurator galeri seni berjas beludru merah marun, menyapa kalian di dekat etalase utama. Apa tanggapanmu?",
+          "options": [
+            {
+              "id": "s6e1_opt_1a",
+              "text": "Good evening Mr. Croft! The lighting and presentation of this vintage camera exhibition are truly magnificent.",
+              "speakerReply": "Julian Croft",
+              "reactionEn": "Thank you so much! This exhibition honors sixty years of master photography. The camera inside this locked glass case has captured world history.",
+              "reactionId": "Terima kasih banyak! Pameran ini menghormati enam puluh tahun mahakarya fotografi. Kamera di dalam etalase kaca terkunci ini telah mengabadikan sejarah dunia."
+            },
+            {
+              "id": "s6e1_opt_1b",
+              "text": "Could you tell us about the roll of film currently loaded inside the historic camera?",
+              "speakerReply": "Julian Croft",
+              "reactionEn": "It contains Elena's unpublished final negatives from her Sahara expedition. They are completely irreplaceable!",
+              "reactionId": "Kamera itu memuat klise negatif terakhir Elena yang belum diterbitkan dari ekspedisi Sahara. Klise itu sama sekali tak tergantikan!"
+            }
+          ]
+        },
+        {
+          "id": "s6e1_d4",
+          "speaker": "You",
+          "en": "An extraordinary piece of art history. The entire gallery crowd is captivated by its craftsmanship.",
+          "idText": "Karya sejarah seni yang luar biasa. Seluruh kerumunan pengunjung galeri terpikat oleh keindahan buatannya."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-gallery",
+          "word": "gallery",
+          "partOfSpeech": "noun",
+          "enDefinition": "A room or building for the display or sale of works of art.",
+          "idMeaning": "galeri seni",
+          "contextSentence": "The historic art gallery hosts prestigious international exhibitions."
+        },
+        {
+          "wordId": "oxford-exhibition",
+          "word": "exhibition",
+          "partOfSpeech": "noun",
+          "enDefinition": "A public display of works of art or items of interest, held in an art gallery or museum.",
+          "idMeaning": "pameran seni / ekshibisi",
+          "contextSentence": "Hundreds of art collectors attended the opening night exhibition."
+        },
+        {
+          "wordId": "oxford-camera",
+          "word": "camera",
+          "partOfSpeech": "noun",
+          "enDefinition": "A device for recording visual images in the form of photographs, film, or video signals.",
+          "idMeaning": "kamera fotografi",
+          "contextSentence": "The vintage analog camera rested on velvet inside the glass box."
+        },
+        {
+          "wordId": "oxford-photographer",
+          "word": "photographer",
+          "partOfSpeech": "noun",
+          "enDefinition": "A person who takes photographs, especially as a job or profession.",
+          "idMeaning": "fotografer / juru foto",
+          "contextSentence": "Elena Vance is an internationally acclaimed documentary photographer."
+        },
+        {
+          "wordId": "oxford-original",
+          "word": "original",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Present or existing from the beginning; not a copy or imitation.",
+          "idMeaning": "asli / orisinal",
+          "contextSentence": "The original 1954 lens is preserved in mint condition."
+        },
+        {
+          "wordId": "oxford-display",
+          "word": "display",
+          "partOfSpeech": "noun",
+          "enDefinition": "An arrangement of items that may be viewed by the public.",
+          "idMeaning": "etalase pajangan pameran",
+          "contextSentence": "The security lights focused directly on the central artifact display."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Kata Sifat Deskriptif Karya Seni (*magnificent, vintage, unique, original*)",
+        "topicId": "art-adjectives",
+        "explanation": "Gunakan kata sifat bernilai tinggi saat mengapresiasi dan mendeskripsikan karya seni bernilai sejarah tinggi.",
+        "formula": "[Article] + [Adjective] + [Noun] / An extraordinary original vintage camera."
+      },
+      "culturalTip": {
+        "title": "Malam Pembukaan Galeri Seni (*Vernissage / Opening Reception*)",
+        "content": "Di dunia seni internasional, *opening night* (vernissage) dihadiri oleh seniman, kurator, jurnalis, dan kolektor dengan busana formal (*smart elegant*). Tamu berkeliling menikmati karya sambil berbincang santai (*mingling*)."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep1_q1",
+          "question": "Where is the prestigious photography exhibition taking place?",
+          "options": [
+            "At a crowded train platform",
+            "At the Old Town Art Gallery",
+            "Inside the university laboratory",
+            "On top of a commercial airport terminal"
+          ],
+          "correctIndex": 1,
+          "explanation": "Pameran fotografi bergengsi berlangsung di Old Town Art Gallery."
+        },
+        {
+          "id": "s7_ep1_q2",
+          "question": "Why is Elena Vance's 1954 analog camera considered irreplaceable?",
+          "options": [
+            "It holds unpublished final negative rolls from her Sahara expedition",
+            "It is made entirely of edible candy",
+            "It belongs to a cartoon character",
+            "It was bought yesterday at a cheap grocery shop"
+          ],
+          "correctIndex": 0,
+          "explanation": "Kamera tersebut memuat klise negatif terakhir yang belum diterbitkan dari ekspedisi Sahara."
+        },
+        {
+          "id": "s7_ep1_q3",
+          "question": "Which noun refers to a public showcase of art held in a museum or gallery?",
+          "options": [
+            "Exhibition",
+            "Garbage",
+            "Pocket",
+            "Machine"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Exhibition' adalah pameran karya seni atau barang bersejarah di galeri atau museum."
+        },
+        {
+          "id": "s7_ep1_q4",
+          "question": "Which adjective means 'not a copy or imitation; created directly by the artist'?",
+          "options": [
+            "Original",
+            "Noisy",
+            "Broken",
+            "Late"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Original' bermakna asli, murni, dan bukan tiruan atau salinan."
+        },
+        {
+          "id": "s7_ep1_q5",
+          "question": "Complete the sentence: 'The master artifact was placed inside a secured glass ______ in the main hall.'",
+          "options": [
+            "display",
+            "trash",
+            "throw",
+            "noise"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Display' (display case / etalase pajangan) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata galeri dan fotografi: gallery, exhibition, camera, photographer, original, display.",
+        "Menggunakan kata sifat apresiatif seni untuk mendeskripsikan artefak bersejarah.",
+        "Memahami atmosfer etis pada malam pembukaan pameran seni internasional."
+      ],
+      "cliffhanger": "Tepat pukul 19.45 saat gelas sampanye diangkat untuk bersulang, seluruh lampu chandelier di langit-langit galeri tiba-tiba padam! Suara denting kaca pecah terdengar samar dalam kegelapan..."
+    },
+    {
+      "id": 2,
+      "number": 2,
+      "title": "Lampu Padam dan Etalase yang Kosong",
+      "titleEn": "The Blackout & The Empty Glass Case",
+      "estimatedMinutes": 10,
+      "recap": "Pemadaman listrik mendadak selama tiga puluh detik memicu kepanikan singkat. Saat lampu darurat menyala, etalase kaca telah terbuka dan kamera antik raib tanpa jejak.",
+      "dialogue": [
+        {
+          "id": "s6e2_d1",
+          "speaker": "Narator",
+          "en": "Complete dark engulfs the grand hall. Gasps and urgent shouts ripple through the startled crowd of gallery guests.",
+          "idText": "Kegelapan pekat menyelimuti aula utama. Desah kaget dan teriakan panik beriak di antara kerumunan tamu galeri."
+        },
+        {
+          "id": "s6e2_d2",
+          "speaker": "Julian Croft",
+          "en": "Stay calm everyone! Security, activate the auxiliary emergency generator immediately!",
+          "idText": "Tetap tenang semuanya! Petugas keamanan, segera aktifkan generator darurat cadangan!"
+        },
+        {
+          "id": "s6e2_d3",
+          "speaker": "Kanci",
+          "en": "Suara sirine alarm berdengung kencang! Lampu darurat kuning mulai menyala! Lihat ke arah meja tengah!",
+          "idText": "Suara sirine alarm berdengung kencang! Lampu darurat kuning mulai menyala! Lihat ke arah meja tengah!"
+        },
+        {
+          "id": "s6e2_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Lampu kuning redup menyorot etalase tengah. Apa yang kamu perhatikan di atas meja beludru?",
+          "options": [
+            {
+              "id": "s6e2_opt_1a",
+              "text": "The glass case has been unlocked and the velvet cushion is completely bare! The camera has disappeared!",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "My Leica! Someone took advantage of the sudden darkness to steal my life's work!",
+              "reactionId": "Kamera Leicaku! Seseorang memanfaatkan kegelapan mendadak untuk mencuri karya hidupku!"
+            },
+            {
+              "id": "s6e2_opt_1b",
+              "text": "Marcus, seal all the gallery exit doors immediately so nobody can leave with the artifact!",
+              "speakerReply": "Guard Marcus",
+              "reactionEn": "The security gates are locked automatically! Nobody has left through the front entrance yet.",
+              "reactionId": "Pintu gerbang keamanan telah terkunci otomatis! Belum ada yang keluar lewat pintu depan."
+            }
+          ]
+        },
+        {
+          "id": "s6e2_d4",
+          "speaker": "Sarah",
+          "en": "The high-pitched alarm is ringing. We must stay objective and examine the scene before evidence is contaminated.",
+          "idText": "Alarm bernada tinggi berdengung nyaring. Kita harus tetap objektif dan memeriksa lokasi kejadian sebelum barang bukti terkontaminasi."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-glass",
+          "word": "glass",
+          "partOfSpeech": "noun",
+          "enDefinition": "A hard, brittle substance, typically transparent, used for windows, bottles, and display cases.",
+          "idMeaning": "kaca etalase pelindung",
+          "contextSentence": "The protective glass lid of the case was lifted open."
+        },
+        {
+          "wordId": "oxford-disappear",
+          "word": "disappear",
+          "partOfSpeech": "verb",
+          "enDefinition": "To cease to be visible; vanish from sight unexpectedly.",
+          "idMeaning": "menghilang lenyap tanpa jejak",
+          "contextSentence": "The valuable artifact seemed to disappear within thirty seconds."
+        },
+        {
+          "wordId": "oxford-shout",
+          "word": "shout",
+          "partOfSpeech": "verb",
+          "enDefinition": "To utter a loud cry or call, typically as an expression of a strong emotion.",
+          "idMeaning": "berteriak memperingatkan",
+          "contextSentence": "The curator began to shout for security as the lights went out."
+        },
+        {
+          "wordId": "oxford-crowd",
+          "word": "crowd",
+          "partOfSpeech": "noun",
+          "enDefinition": "A large number of people gathered together in a disorganized or unruly way.",
+          "idMeaning": "kerumunan orang banyak",
+          "contextSentence": "A stunned crowd gathered around the empty pedestal."
+        },
+        {
+          "wordId": "oxford-dark",
+          "word": "dark",
+          "partOfSpeech": "adjective",
+          "enDefinition": "With little or no light; in the absence of illumination.",
+          "idMeaning": "gelap gulita",
+          "contextSentence": "The exhibition room turned completely dark during the power cut."
+        },
+        {
+          "wordId": "oxford-alarm",
+          "word": "alarm",
+          "partOfSpeech": "noun",
+          "enDefinition": "An anxious awareness of danger, or a warning sound signaling an emergency.",
+          "idMeaning": "suara sirine alarm darurat",
+          "contextSentence": "The gallery security alarm sounded throughout the complex."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Past Continuous untuk Kejadian yang Terinterupsi (*While the crowd was mingling, the lights went out*)",
+        "topicId": "past-continuous-mystery",
+        "explanation": "Gunakan Past Continuous (was/were + verb-ing) untuk aksi yang sedang berlangsung di latar belakang, dipotong oleh aksi mendadak berformat Simple Past (V2).",
+        "formula": "While + Subject + was/were + [Verb-ing], Subject + [Past Simple V2] / While the guests were admiring the photos, the room went dark."
+      },
+      "culturalTip": {
+        "title": "Protokol 'Lockdown' Galeri Seni Internasional",
+        "content": "Saat barang seni bernilai tinggi dilaporkan hilang, protokol standar museum (*Art Loss Register Protocol*) mewajibkan penguncian pintu otomatis (*lockdown*), pemeriksaan rekaman CCTV, dan pendataan identitas seluruh pengunjung yang hadir di lokasi."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep2_q1",
+          "question": "What sudden event caused confusion inside the art gallery?",
+          "options": [
+            "A complete electrical power blackout plunging the hall into dark",
+            "A sudden thunderstorm flooding the floor",
+            "An earthquake shaking the city bridge",
+            "A wild animal running through the reception"
+          ],
+          "correctIndex": 0,
+          "explanation": "Pemadaman listrik mendadak membuat aula galeri gelap gulita."
+        },
+        {
+          "id": "s7_ep2_q2",
+          "question": "What was discovered on the central pedestal when the emergency lights turned on?",
+          "options": [
+            "A hot plate of vegetable noodles",
+            "The glass display case was open and the vintage camera had disappeared",
+            "A bouquet of red roses",
+            "A sleeping security dog"
+          ],
+          "correctIndex": 1,
+          "explanation": "Etalase kaca telah terbuka dan kamera antik telah raib tanpa jejak."
+        },
+        {
+          "id": "s7_ep2_q3",
+          "question": "Which sentence correctly pairs Past Continuous with an interrupting Simple Past action?",
+          "options": [
+            "While the guests were chatting, the lights suddenly failed.",
+            "While guests chatting, lights will was dark.",
+            "Guests were chat when lights are off.",
+            "Guests chatted while lights falling."
+          ],
+          "correctIndex": 0,
+          "explanation": "'While the guests were chatting, the lights suddenly failed' adalah kombinasi Past Continuous dan Simple Past yang tepat."
+        },
+        {
+          "id": "s7_ep2_q4",
+          "question": "Which verb means 'to cease to be visible or vanish from sight unexpectedly'?",
+          "options": [
+            "Disappear",
+            "Sweep",
+            "Cook",
+            "Print"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Disappear' berarti lenyap atau menghilang dari pandangan secara tak terduga."
+        },
+        {
+          "id": "s7_ep2_q5",
+          "question": "Complete the sentence: 'The piercing sound of the security ______ warned everyone to stay inside the building.'",
+          "options": [
+            "alarm",
+            "garbage",
+            "carpet",
+            "pan"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Alarm' (sirine alarm) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata situasi darurat galeri: glass, disappear, shout, crowd, dark, alarm.",
+        "Menguasai pola kalimat Past Continuous saat menceritakan kronologi peristiwa tak terduga.",
+        "Memahami prosedur pengamanan ketat (*lockdown*) saat terjadi insiden di galeri seni."
+      ],
+      "cliffhanger": "Kamu berjongkok di samping etalase kaca yang terbuka. Di atas kain beludru merah, tergeletak sebuah petunjuk ganjil yang ditinggalkan pelaku..."
+    },
+    {
+      "id": 3,
+      "number": 3,
+      "title": "Memeriksa Tempat Kejadian Perkara",
+      "titleEn": "Examining the Scene of Incident",
+      "estimatedMinutes": 10,
+      "recap": "Dengan cermat dan penuh kehati-hatian, kamu mengamati etalase pameran untuk mencari barang bukti fisik dan petunjuk forensik yang tertinggal.",
+      "dialogue": [
+        {
+          "id": "s6e3_d1",
+          "speaker": "Julian Croft",
+          "en": "The brass padlock was not forced open! The thief must have used a duplicate key or picked the lock skillfully.",
+          "idText": "Gembok kuningan tidak dirusak paksa! Pencuri pasti menggunakan kunci duplikat atau membobol gembok dengan sangat terampil."
+        },
+        {
+          "id": "s6e3_d2",
+          "speaker": "Kanci",
+          "en": "Gunakan kaca pembesarmu! Lihat serat kain abu-abu gelap yang tersangkut di sudut engsel logam etalase!",
+          "idText": "Gunakan kaca pembesarmu! Lihat serat kain abu-abu gelap yang tersangkut di sudut engsel logam etalase!"
+        },
+        {
+          "id": "s6e3_d3",
+          "speaker": "You",
+          "en": "There is also a faint smudge mark on the glass corner. We must be very careful not to smudge any evidence.",
+          "idText": "Ada juga bekas noda samar di sudut kaca. Kita harus sangat berhati-hati agar tidak merusak barang bukti."
+        },
+        {
+          "id": "s6e3_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Sarah mengambil pinset forensik kecil dari tasnya. Bagaimana caramu mengamankan barang bukti tersebut?",
+          "options": [
+            {
+              "id": "s6e3_opt_1a",
+              "text": "Let us collect the wool fiber clue into a clean envelope and investigate who was wearing a charcoal wool coat.",
+              "speakerReply": "Sarah",
+              "reactionEn": "Smart thinking! A charcoal wool overcoat is distinctive. Let's document this evidence immediately.",
+              "reactionId": "Pemikiran cerdas! Mantel wol abu-abu arang sangat khas. Mari catat barang bukti ini segera."
+            },
+            {
+              "id": "s6e3_opt_1b",
+              "text": "Look at the lock mechanism: there is a tiny drop of fresh machine oil. The thief prepared this beforehand!",
+              "speakerReply": "Julian Croft",
+              "reactionEn": "You are right! The lock was oiled in advance to open noiselessly in the dark.",
+              "reactionId": "Kamu benar! Gemboknya telah diberi minyak pelumas sebelumnya agar terbuka tanpa suara dalam gelap."
+            }
+          ]
+        },
+        {
+          "id": "s6e3_d4",
+          "speaker": "You",
+          "en": "Every clue tells a story. This theft was premeditated, but the thief left critical evidence behind.",
+          "idText": "Setiap petunjuk mengisahkan sebuah cerita. Pencurian ini direncanakan matang, namun pelaku meninggalkan bukti krusial."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-clue",
+          "word": "clue",
+          "partOfSpeech": "noun",
+          "enDefinition": "A piece of evidence or information used in the detection of a crime or solving of a mystery.",
+          "idMeaning": "petunjuk penyelidikan",
+          "contextSentence": "The gray wool thread provided an essential investigative clue."
+        },
+        {
+          "wordId": "oxford-investigate",
+          "word": "investigate",
+          "partOfSpeech": "verb",
+          "enDefinition": "To carry out a systematic or formal inquiry to discover and examine the facts of an incident.",
+          "idMeaning": "menyelidiki / menginvestigasi",
+          "contextSentence": "Security officers investigate how the display case was opened."
+        },
+        {
+          "wordId": "oxford-lock",
+          "word": "lock",
+          "partOfSpeech": "noun",
+          "enDefinition": "A mechanism for keeping a door, lid, or container fastened.",
+          "idMeaning": "gembok kunci pengaman",
+          "contextSentence": "The brass lock showed no signs of violent breakage."
+        },
+        {
+          "wordId": "b1-evidence",
+          "word": "evidence",
+          "partOfSpeech": "noun",
+          "enDefinition": "The available body of facts or information indicating whether a belief or proposition is true.",
+          "idMeaning": "barang bukti kejahatan",
+          "contextSentence": "Handle all physical evidence with protective cotton gloves."
+        },
+        {
+          "wordId": "oxford-careful",
+          "word": "careful",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Making sure of avoiding potential danger, mishap, or harm; cautious.",
+          "idMeaning": "berhati-hati / cermat",
+          "contextSentence": "Be extremely careful when inspecting the crime scene perimeter."
+        },
+        {
+          "wordId": "oxford-mark",
+          "word": "mark",
+          "partOfSpeech": "noun",
+          "enDefinition": "A visible trace or impression, such as a spot, stain, or scratch on a surface.",
+          "idMeaning": "bekas jejak / noda samar",
+          "contextSentence": "A distinct smudge mark was visible near the hinge."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Modal Verbs Deduksi Masa Lampau (*must have used, could not have opened*)",
+        "topicId": "modals-past-deduction",
+        "explanation": "Gunakan modal of deduction lampau (must have + V3) untuk menyatakan kesimpulan yang hampir pasti terjadi berdasarkan bukti logis, dan (could not have + V3) untuk menyatakan ketidakmungkinan.",
+        "formula": "Subject + must have / could not have + [Past Participle V3] / The thief must have prepared a duplicate key."
+      },
+      "culturalTip": {
+        "title": "Pelestarian Tempat Kejadian Perkara (*Preserving the Scene*)",
+        "content": "Di dunia investigasi profesional, aturan pertama adalah *'Do not touch anything with bare hands'*. Jejak sidik jari dan serat kain (*fiber analysis*) adalah bukti mikroskopis yang paling rentan rusak bila tersentuh."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep3_q1",
+          "question": "What physical clue was discovered caught on the metal hinge of the display case?",
+          "options": [
+            "A strand of dark gray wool fiber",
+            "A slice of yellow cheese",
+            "A metal train ticket",
+            "A plastic bottle cap"
+          ],
+          "correctIndex": 0,
+          "explanation": "Serat kain wol abu-abu gelap ditemukan tersangkut di engsel etalase kaca."
+        },
+        {
+          "id": "s7_ep3_q2",
+          "question": "Why did Julian Croft deduce that the lock was not forced open violently?",
+          "options": [
+            "The glass was shattered with a hammer",
+            "The brass lock mechanism was completely intact without scratch marks",
+            "The lock was made of chocolate",
+            "The door was wide open all day"
+          ],
+          "correctIndex": 1,
+          "explanation": "Gembok kuningan utuh tanpa bekas congkelan paksa, menandakan penggunaan kunci khusus."
+        },
+        {
+          "id": "s7_ep3_q3",
+          "question": "Which modal phrase correctly expresses a logical deduction about the past?",
+          "options": [
+            "The perpetrator must have planned this in advance.",
+            "The perpetrator will was planning tomorrow.",
+            "The perpetrator can planning right now.",
+            "The perpetrator is must planned."
+          ],
+          "correctIndex": 0,
+          "explanation": "'Must have planned' menyatakan deduksi logis masa lampau yang berbobot kepastian tinggi."
+        },
+        {
+          "id": "s7_ep3_q4",
+          "question": "Which noun refers to facts or items indicating whether a crime has occurred?",
+          "options": [
+            "Evidence",
+            "Garbage",
+            "Pocket",
+            "Machine"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Evidence' adalah barang bukti atau fakta yang membuktikan suatu peristiwa."
+        },
+        {
+          "id": "s7_ep3_q5",
+          "question": "Complete the sentence: 'Investigators must be very ______ not to disturb fragile clues on the floor.'",
+          "options": [
+            "careful",
+            "noisy",
+            "broken",
+            "careless"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Careful' (berhati-hati) adalah kata sifat yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata penyelidikan forensik: clue, investigate, lock, evidence, careful, mark.",
+        "Menggunakan modal verbs deduksi lampau (must have + V3) untuk menyusun hipotesis logis.",
+        "Menyadari pentingnya menjaga keaslian tempat kejadian perkara."
+      ],
+      "cliffhanger": "Sarah menunjuk ke sudut plafon lorong: 'Kamera pengawas CCTV nomor empat menyorot langsung ke arah etalase tengah. Ayo kita temui petugas keamanan Marcus di ruang monitor!'..."
+    },
+    {
+      "id": 4,
+      "number": 4,
+      "title": "Mewawancarai Petugas Keamanan CCTV",
+      "titleEn": "Interviewing the Security Guard",
+      "estimatedMinutes": 10,
+      "recap": "Di ruang pengawas keamanan, petugas Marcus memutar ulang rekaman video CCTV beresolusi tinggi sebelum dan sesudah insiden pemadaman listrik.",
+      "dialogue": [
+        {
+          "id": "s6e4_d1",
+          "speaker": "Marcus",
+          "en": "I was monitoring the cameras when the blackout hit. Every video screen on this wall went static for thirty seconds.",
+          "idText": "Saya sedang mengawasi kamera saat listrik padam. Setiap layar video di dinding ini mendadak mati statis selama tiga puluh detik."
+        },
+        {
+          "id": "s6e4_d2",
+          "speaker": "Sarah",
+          "en": "What about the backup footage recorded right before the blackout? Did you notice anyone acting suspiciously near the hall?",
+          "idText": "Bagaimana dengan rekaman cadangan tepat sebelum pemadaman? Apakah Anda melihat seseorang bersikap mencurigakan di dekat lorong?"
+        },
+        {
+          "id": "s6e4_d3",
+          "speaker": "Kanci",
+          "en": "Perhatikan sudut kiri rekaman pada menit 19.43! Ada sosok yang mondar-mandir menatap jam tangan dan memeriksa gembok!",
+          "idText": "Perhatikan sudut kiri rekaman pada menit 19.43! Ada sosok yang mondar-mandir menatap jam tangan dan memeriksa gembok!"
+        },
+        {
+          "id": "s6e4_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Marcus memperlambat rekaman video digital frame demi frame. Apa yang kamu minta kepadanya?",
+          "options": [
+            {
+              "id": "s6e4_opt_1a",
+              "text": "Could you freeze the screen at 19:44 and zoom in on the person standing beside the hall pillar?",
+              "speakerReply": "Marcus",
+              "reactionEn": "Enhancing the image now. The person is carrying a heavy brown leather messenger bag over their shoulder.",
+              "reactionId": "Memperjelas gambar sekarang. Orang tersebut membawa tas selempang kulit cokelat tebal di pundaknya."
+            },
+            {
+              "id": "s6e4_opt_1b",
+              "text": "Who was the last official witness standing near the west corridor before the lights went out?",
+              "speakerReply": "Marcus",
+              "reactionEn": "Clara, our courtyard cafe barista! She stepped in to deliver sparkling water right before the blackout.",
+              "reactionId": "Clara, barista kafe pelataran kita! Dia baru saja masuk mengantarkan air soda tepat sebelum pemadaman."
+            }
+          ]
+        },
+        {
+          "id": "s6e4_d4",
+          "speaker": "You",
+          "en": "The timestamp proves the suspect moved toward the courtyard exit during the blackout. Let's speak to Clara next.",
+          "idText": "Cap waktu membuktikan pelaku bergerak menuju pintu keluar pelataran saat pemadaman. Mari kita temui Clara selanjutnya."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-guard",
+          "word": "guard",
+          "partOfSpeech": "noun",
+          "enDefinition": "A person who keeps watch, especially a person whose job is to protect people or property.",
+          "idMeaning": "petugas keamanan / satpam",
+          "contextSentence": "The security guard monitored twenty camera angles simultaneously."
+        },
+        {
+          "wordId": "oxford-monitor",
+          "word": "monitor",
+          "partOfSpeech": "verb",
+          "enDefinition": "To observe and check the progress or quality of something over a period of time.",
+          "idMeaning": "mengawasi / memantau layar",
+          "contextSentence": "Guards continuously monitor all gallery corridors."
+        },
+        {
+          "wordId": "oxford-screen",
+          "word": "screen",
+          "partOfSpeech": "noun",
+          "enDefinition": "A flat panel or area on an electronic device on which images, data, or video are displayed.",
+          "idMeaning": "layar monitor video",
+          "contextSentence": "The control room screen revealed critical video timestamps."
+        },
+        {
+          "wordId": "oxford-hall",
+          "word": "hall",
+          "partOfSpeech": "noun",
+          "enDefinition": "A large room or corridor in a building used for public gatherings, exhibitions, or passage.",
+          "idMeaning": "aula / lorong pameran",
+          "contextSentence": "Camera three covers the east exhibition hall."
+        },
+        {
+          "wordId": "oxford-record",
+          "word": "record",
+          "partOfSpeech": "noun",
+          "enDefinition": "A thing constituting a piece of evidence about the past; an audio or visual recording.",
+          "idMeaning": "rekaman video pengawas",
+          "contextSentence": "Check the digital video record from seven forty-five PM."
+        },
+        {
+          "wordId": "oxford-witness",
+          "word": "witness",
+          "partOfSpeech": "noun",
+          "enDefinition": "A person who sees an event, typically a crime or accident, take place.",
+          "idMeaning": "saksi mata kejadian",
+          "contextSentence": "A key witness saw the individual hurrying toward the courtyard."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Pertanyaan Investigatif Masa Lampau (*Where were you standing?, Did you see...?*)",
+        "topicId": "investigative-questions",
+        "explanation": "Gunakan kombinasi 'Where were you + verb-ing?' untuk menanyakan keberadaan saat insiden terjadi, dan 'Did you + base verb?' untuk mengonfirmasi tindakan spesifik.",
+        "formula": "What were you doing when [event]? / Did you notice anyone near the door?"
+      },
+      "culturalTip": {
+        "title": "Integritas Bukti Rekaman CCTV dalam Investigasi",
+        "content": "Di bawah hukum internasional (*Chain of Custody*), rekaman video digital tidak boleh diubah atau diedit sembarangan. Waktu (*timestamp*) pada rekaman menjadi patokan mutlak menyusun garis waktu penyelidikan."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep4_q1",
+          "question": "What happened to the security monitors during the thirty-second blackout?",
+          "options": [
+            "They turned into color television cartoons",
+            "Every video screen went static without signal",
+            "They showed a live soccer match",
+            "They started playing upbeat classical music"
+          ],
+          "correctIndex": 1,
+          "explanation": "Semua layar monitor mengalami gangguan statis tanpa sinyal selama 30 detik pemadaman."
+        },
+        {
+          "id": "s7_ep4_q2",
+          "question": "What accessory was the suspicious individual carrying over their shoulder on the CCTV record?",
+          "options": [
+            "A heavy brown leather messenger bag",
+            "A green plastic watering can",
+            "A silver birdcage",
+            "A guitar amplifier"
+          ],
+          "correctIndex": 0,
+          "explanation": "Sosok mencurigakan membawa tas selempang kulit cokelat tebal di pundaknya."
+        },
+        {
+          "id": "s7_ep4_q3",
+          "question": "Which question correctly asks about a person's activity during an incident?",
+          "options": [
+            "Where were you standing when the alarm sounded?",
+            "Where did you standing yesterday will be?",
+            "Where was you stand tomorrow?",
+            "Where you are stand when alarm?"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Where were you standing when the alarm sounded?' adalah pertanyaan investigatif yang tepat secara tata bahasa."
+        },
+        {
+          "id": "s7_ep4_q4",
+          "question": "Which noun refers to a person who sees an incident take place firsthand?",
+          "options": [
+            "Witness",
+            "Garbage",
+            "Machine",
+            "Button"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Witness' adalah saksi mata yang melihat langsung suatu peristiwa terjadi."
+        },
+        {
+          "id": "s7_ep4_q5",
+          "question": "Complete the sentence: 'Security officers reviewed the digital video ______ to confirm the exact timeline.'",
+          "options": [
+            "record",
+            "trash",
+            "carpet",
+            "pocket"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Record' (video record / rekaman video) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mempelajari kosakata pengawasan keamanan: guard, monitor, screen, hall, record, witness.",
+        "Menyusun pertanyaan investigatif masa lampau untuk mewawancarai saksi.",
+        "Menghubungkan bukti rekaman visual dengan kronologi waktu kejadian."
+      ],
+      "cliffhanger": "Di kafe sudut pelataran galeri, seorang barista muda bercelemek linen hijau sedang mengelap meja marmer sambil menatap cemas ke arah pintu gerbang..."
+    },
+    {
+      "id": 5,
+      "number": 5,
+      "title": "Kesaksian Barista Kafe Galeri",
+      "titleEn": "Witness Testimony from the Cafe Barista",
+      "estimatedMinutes": 10,
+      "recap": "Clara, barista kafe pelataran, memberikan keterangan krusial mengenai seorang pelanggan yang tampak gugup dan bergegas pergi sesaat setelah lampu padam.",
+      "dialogue": [
+        {
+          "id": "s6e5_d1",
+          "speaker": "Clara",
+          "en": "I was pouring a double espresso when the lights went out. A customer at the corner table immediately leaped up and hurried away.",
+          "idText": "Saya sedang menuangkan espresso ganda saat lampu padam. Seorang pelanggan di meja sudut langsung melompat berdiri dan bergegas pergi."
+        },
+        {
+          "id": "s6e5_d2",
+          "speaker": "You",
+          "en": "Can you describe what you remember about this customer's appearance and behavior, Clara?",
+          "idText": "Bisakah kamu mendeskripsikan apa yang kamu ingat tentang penampilan dan gerak-gerik pelanggan ini, Clara?"
+        },
+        {
+          "id": "s6e5_d3",
+          "speaker": "Kanci",
+          "en": "Catat setiap detail fisik yang dia sebutkan! Bentuk wajah, pakaian, dan warna jaketnya sangat penting!",
+          "idText": "Catat setiap detail fisik yang dia sebutkan! Bentuk wajah, pakaian, dan warna jaketnya sangat penting!"
+        },
+        {
+          "id": "s6e5_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Clara mengingat pakaian khusus yang dikenakan orang tersebut. Pertanyaan apa yang kamu ajukan?",
+          "options": [
+            {
+              "id": "s6e5_opt_1a",
+              "text": "Did you mention earlier that he was wearing a heavy dark jacket and clutching a leather bag?",
+              "speakerReply": "Clara",
+              "reactionEn": "Yes! He wore a dark charcoal wool coat over a navy suit, and he held his leather bag tightly against his chest.",
+              "reactionId": "Ya! Dia mengenakan mantel wol abu-abu arang di atas setelan jas biru tua, dan dia mendekap tas kulitnya erat-erat di dada."
+            },
+            {
+              "id": "s6e5_opt_1b",
+              "text": "Did he drop anything or say anything to you before hurrying toward the exit corridor?",
+              "speakerReply": "Clara",
+              "reactionEn": "He dropped a gallery admission ticket stub on the cafe floor! It has a printed seat number from the reception desk.",
+              "reactionId": "Dia menjatuhkan sobekan tiket masuk galeri di lantai kafe! Ada nomor kursi tercetak dari meja resepsionis."
+            }
+          ]
+        },
+        {
+          "id": "s6e5_d4",
+          "speaker": "Sarah",
+          "en": "That ticket stub is a vital breakthrough! We can match the printed number directly against the guest registry.",
+          "idText": "Sobekan tiket itu terobosan sangat penting! Kita bisa mencocokkan nomor cetak itu langsung dengan buku tamu pendaftaran."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-mention",
+          "word": "mention",
+          "partOfSpeech": "verb",
+          "enDefinition": "To refer to something briefly and without going into detail.",
+          "idMeaning": "menyebutkan / menyinggung",
+          "contextSentence": "The witness did not mention hearing any loud footsteps."
+        },
+        {
+          "wordId": "oxford-describe",
+          "word": "describe",
+          "partOfSpeech": "verb",
+          "enDefinition": "To give an account in words of someone or something, including all the relevant characteristics.",
+          "idMeaning": "mendeskripsikan / menggambarkan ciri",
+          "contextSentence": "Please describe the suspect's height and clothing accurately."
+        },
+        {
+          "wordId": "oxford-hurry",
+          "word": "hurry",
+          "partOfSpeech": "verb",
+          "enDefinition": "To move or act with great speed or urgency.",
+          "idMeaning": "bergegas terburu-buru",
+          "contextSentence": "The suspicious visitor seemed to hurry toward the side exit."
+        },
+        {
+          "wordId": "oxford-jacket",
+          "word": "jacket",
+          "partOfSpeech": "noun",
+          "enDefinition": "An outer garment extending either to the waist or the hips, typically having sleeves and a fastening down the front.",
+          "idMeaning": "jaket pakaian luar",
+          "contextSentence": "He zipped up his dark wool jacket before leaving the counter."
+        },
+        {
+          "wordId": "oxford-customer",
+          "word": "customer",
+          "partOfSpeech": "noun",
+          "enDefinition": "A person or organization that buys goods or services from a store or other business.",
+          "idMeaning": "pelanggan kafe / toko",
+          "contextSentence": "The cafe barista remembered the customer who ordered espresso."
+        },
+        {
+          "wordId": "oxford-remember",
+          "word": "remember",
+          "partOfSpeech": "verb",
+          "enDefinition": "To have in or be able to bring to one's mind an awareness of someone or something from the past.",
+          "idMeaning": "mengingat kembali fakta",
+          "contextSentence": "Can you remember what time the visitor left the cafe table?"
+        }
+      ],
+      "grammarFocus": {
+        "title": "Reported Speech Dasar untuk Pernyataan Saksi (*She mentioned that he was wearing...*)",
+        "topicId": "reported-speech-witness",
+        "explanation": "Gunakan Reported Speech (kalimat tidak langsung) saat merangkum kesaksian para saksi: kata kerja pelapor 'stated / mentioned / explained' diikuti klausa dengan pergeseran tenses lampau.",
+        "formula": "Subject + mentioned/stated that + Subject + was/were + [Past verb/adj] / Clara stated that the customer hurried toward the door."
+      },
+      "culturalTip": {
+        "title": "Metode Wawancara Saksi 'Cognitive Interview'",
+        "content": "Dalam wawancara kepolisian modern, saksi tidak diarahkan dengan pertanyaan menjebak (*leading questions*). Penyelidik meminta saksi membayangkan kembali suasana panca indra (suara, pencahayaan, aroma) untuk memicu memori yang akurat."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep5_q1",
+          "question": "What physical item did the hurried customer accidentally drop on the cafe floor?",
+          "options": [
+            "A gallery admission ticket stub",
+            "A gold wristwatch",
+            "A box of crayons",
+            "A plastic coffee stirrer"
+          ],
+          "correctIndex": 0,
+          "explanation": "Pelanggan tersebut tak sengaja menjatuhkan sobekan tiket masuk galeri di lantai kafe."
+        },
+        {
+          "id": "s7_ep5_q2",
+          "question": "What was the customer holding tightly against his chest while hurrying away?",
+          "options": [
+            "A heavy leather messenger bag",
+            "A loaf of garlic bread",
+            "A large umbrella",
+            "A basketball"
+          ],
+          "correctIndex": 0,
+          "explanation": "Pelanggan itu mendekap tas selempang kulit tebal erat-erat di dadanya."
+        },
+        {
+          "id": "s7_ep5_q3",
+          "question": "Which sentence correctly uses Reported Speech to summarize a witness statement?",
+          "options": [
+            "Clara mentioned that the man was wearing a dark wool coat.",
+            "Clara say the man wear coat today.",
+            "Clara mentions that the man will was run.",
+            "Clara mentioned man is wearing tomorrow."
+          ],
+          "correctIndex": 0,
+          "explanation": "'Clara mentioned that the man was wearing a dark wool coat' menggunakan Reported Speech dengan pergeseran lampau yang tepat."
+        },
+        {
+          "id": "s7_ep5_q4",
+          "question": "Which verb means 'to give an account in words of someone's physical appearance'?",
+          "options": [
+            "Describe",
+            "Throw",
+            "Lock",
+            "Cook"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Describe' berarti mendeskripsikan atau menggambarkan ciri-ciri seseorang dengan kata-kata."
+        },
+        {
+          "id": "s7_ep5_q5",
+          "question": "Complete the sentence: 'Try to ______ any distinctive details about his shoes or accessories.'",
+          "options": [
+            "remember",
+            "garbage",
+            "sweep",
+            "carpet"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Remember' (mengingat) adalah kata kerja yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata keterangan saksi: mention, describe, hurry, jacket, customer, remember.",
+        "Menggunakan Reported Speech untuk merangkum pernyataan saksi secara objektif.",
+        "Memanfaatkan bukti fisik yang terjatuh (*ticket stub*) untuk mempersempit pencarian."
+      ],
+      "cliffhanger": "Bersama Clara dan Marcus, kalian mengumpulkan seluruh ciri fisik pelaku untuk menyusun profil deskriptif terperinci sebelum memeriksa buku pendaftaran tamu..."
+    },
+    {
+      "id": 6,
+      "number": 6,
+      "title": "Mendeskripsikan Ciri-Ciri Orang Mencurigakan",
+      "titleEn": "Describing the Suspect's Appearance",
+      "estimatedMinutes": 10,
+      "recap": "Menyusun deskripsi fisik terperinci (tinggi badan, gaya rambut, pakaian luar, dan aksesori) membantu menyaring ratusan tamu pameran menjadi beberapa kandidat utama.",
+      "dialogue": [
+        {
+          "id": "s6e6_d1",
+          "speaker": "Sarah",
+          "en": "Let us assemble our suspect profile systematically: height, hair style, clothing, and carried accessories.",
+          "idText": "Mari kita susun profil terduga pelaku secara sistematis: tinggi badan, gaya rambut, pakaian, dan aksesori bawaan."
+        },
+        {
+          "id": "s6e6_d2",
+          "speaker": "Clara",
+          "en": "He was a tall man, about 185 centimeters, with dark curly hair and sharp eyeglasses.",
+          "idText": "Dia pria yang berpostur tinggi, sekitar 185 sentimeter, berambut ikal gelap dan berkacamata tajam."
+        },
+        {
+          "id": "s6e6_d3",
+          "speaker": "Kanci",
+          "en": "Perhatikan urutan kata sifatnya! Di bahasa Inggris, ukuran mendahului bentuk dan warna rambut: 'tall with dark curly hair'!",
+          "idText": "Perhatikan urutan kata sifatnya! Di bahasa Inggris, ukuran mendahului bentuk dan warna rambut: 'tall with dark curly hair'!"
+        },
+        {
+          "id": "s6e6_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Bagaimana caramu merangkum deskripsi pakaian dan tas pelaku secara baku?",
+          "options": [
+            {
+              "id": "s6e6_opt_1a",
+              "text": "The suspect is a tall man with dark curly hair, wearing a long charcoal wool coat and carrying a brown leather bag.",
+              "speakerReply": "Sarah",
+              "reactionEn": "Flawless adjective order! That precise description narrows our search to someone fitting this exact profile.",
+              "reactionId": "Urutan kata sifat yang sempurna! Deskripsi presisi itu mempersempit pencarian kita pada orang dengan profil tepat ini."
+            },
+            {
+              "id": "s6e6_opt_1b",
+              "text": "Could the brown leather bag be an antique camera bag designed specifically to hold vintage Leica equipment?",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "Yes! Vintage camera collectors often carry padded leather messenger bags with brass buckles.",
+              "reactionId": "Tepat! Kolektor kamera antik sering kali membawa tas selempang kulit berlapis bantalan dengan gesper kuningan."
+            }
+          ]
+        },
+        {
+          "id": "s6e6_d4",
+          "speaker": "You",
+          "en": "We have our profile: tall, curly dark hair, heavy charcoal coat, and a leather bag. Now let's cross-check the guest book.",
+          "idText": "Kita punya profilnya: tinggi, rambut ikal gelap, mantel abu-abu tebal, dan tas kulit. Sekarang mari periksa buku tamu."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-tall",
+          "word": "tall",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Of great or more than average height, especially of a person.",
+          "idMeaning": "berpostur tinggi",
+          "contextSentence": "The suspect was a tall gentleman standing by the archway."
+        },
+        {
+          "wordId": "oxford-curly",
+          "word": "curly",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Made of curls or having curls; waving or spiral in shape.",
+          "idMeaning": "berambut ikal / keriting",
+          "contextSentence": "The witness clearly observed dark curly hair under the hat."
+        },
+        {
+          "wordId": "oxford-hair",
+          "word": "hair",
+          "partOfSpeech": "noun",
+          "enDefinition": "Any of the fine threadlike strands growing from the skin of humans and animals.",
+          "idMeaning": "rambut kepala",
+          "contextSentence": "His distinctive curly hair helped identify him on CCTV."
+        },
+        {
+          "wordId": "oxford-coat",
+          "word": "coat",
+          "partOfSpeech": "noun",
+          "enDefinition": "An outer garment with sleeves, worn outdoors for warmth or protection.",
+          "idMeaning": "mantel luar panjang",
+          "contextSentence": "He wore a heavy charcoal wool coat on that autumn evening."
+        },
+        {
+          "wordId": "oxford-leather",
+          "word": "leather",
+          "partOfSpeech": "noun",
+          "enDefinition": "A material made from the skin of an animal by tanning or a similar process.",
+          "idMeaning": "kulit samak asli",
+          "contextSentence": "The antique camera was housed in a padded leather bag."
+        },
+        {
+          "wordId": "oxford-bag",
+          "word": "bag",
+          "partOfSpeech": "noun",
+          "enDefinition": "A container made of flexible material with an opening at the top, used for carrying items.",
+          "idMeaning": "tas selempang",
+          "contextSentence": "The leather bag was large enough to conceal the analog camera."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Susunan Kata Sifat Deskripsi Fisik & Busana (*opinion + size + age + color + material + noun*)",
+        "topicId": "adjective-order-descriptions",
+        "explanation": "Dalam bahasa Inggris, susunan kata sifat mengikuti aturan baku: Size/Length (tall/long) -> Shape/Texture (curly) -> Color (dark/charcoal) -> Material (wool/leather) -> Noun. Contoh: 'a long charcoal wool coat'.",
+        "formula": "[Size/Shape] + [Color] + [Material] + [Noun] / A handsome tall man wearing a heavy dark leather coat."
+      },
+      "culturalTip": {
+        "title": "Akurasi Deskripsi Fisik dalam Penyelidikan Kriminal",
+        "content": "Penyelidik profesional menghindari asumsi subjektif (seperti *'he looked evil'*). Deskripsi yang dapat diverifikasi secara ilmiah mencakup tinggi estimasi (*estimated height*), warna pakaian (*clothing color*), dan benda yang dibawa (*carried belongings*)."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep6_q1",
+          "question": "What physical features describe the suspect according to Clara and the CCTV footage?",
+          "options": [
+            "A short boy with blonde hair and red sneakers",
+            "A tall man with dark curly hair wearing a charcoal wool coat",
+            "An elderly lady carrying an umbrella",
+            "A clown wearing a yellow hat"
+          ],
+          "correctIndex": 1,
+          "explanation": "Profil pelaku adalah pria berpostur tinggi dengan rambut ikal gelap mengenakan mantel wol abu-abu arang."
+        },
+        {
+          "id": "s7_ep6_q2",
+          "question": "Which phrase follows the correct grammatical order of adjectives?",
+          "options": [
+            "A long charcoal wool coat",
+            "A wool charcoal long coat",
+            "A coat charcoal wool long",
+            "A long wool coat charcoal"
+          ],
+          "correctIndex": 0,
+          "explanation": "'A long charcoal wool coat' mengikuti urutan Size (long) -> Color (charcoal) -> Material (wool) -> Noun (coat)."
+        },
+        {
+          "id": "s7_ep6_q3",
+          "question": "Which material was used to manufacture the suspect's padded camera messenger bag?",
+          "options": [
+            "Leather",
+            "Cardboard",
+            "Glass",
+            "Ice"
+          ],
+          "correctIndex": 0,
+          "explanation": "Tas selempang tersebut terbuat dari bahan kulit (leather)."
+        },
+        {
+          "id": "s7_ep6_q4",
+          "question": "Which adjective means 'having curls or spiral waves' when describing human hair?",
+          "options": [
+            "Curly",
+            "Broken",
+            "Noisy",
+            "Silent"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Curly' bermakna berombak, ikal, atau bergelombang pada rambut."
+        },
+        {
+          "id": "s7_ep6_q5",
+          "question": "Complete the sentence: 'He wore a stylish brown ______ bag across his chest.'",
+          "options": [
+            "leather",
+            "garbage",
+            "glass",
+            "carpet"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Leather' (kulit) adalah kata benda atributif yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata deskripsi ciri fisik: tall, curly, hair, coat, leather, bag.",
+        "Menguasai formula urutan kata sifat (adjective order) dalam bahasa Inggris.",
+        "Menyusun profil terduga pelaku secara sistematis dan objektif."
+      ],
+      "cliffhanger": "Julian Croft membawa buku pendaftaran tamu VIP dari meja resepsionis depan: 'Nomor pada sobekan tiket kafe adalah 042. Mari kita buka halaman pendaftarannya!'..."
+    },
+    {
+      "id": 7,
+      "number": 7,
+      "title": "Mencocokkan Buku Tamu dan Tiket Masuk",
+      "titleEn": "Cross-Referencing the Guest Registry",
+      "estimatedMinutes": 10,
+      "recap": "Membandingkan nomor tiket masuk yang terjatuh di kafe dengan daftar hadir registrasi membuka fakta mengejutkan mengenai identitas pemegang tiket nomor 042.",
+      "dialogue": [
+        {
+          "id": "s6e7_d1",
+          "speaker": "Julian Croft",
+          "en": "Here is the master registry list. Ticket 042 was registered under the name 'Dr. Arthur Sterling', an antique collector.",
+          "idText": "Ini daftar registrasi utama. Tiket 042 terdaftar atas nama 'Dr. Arthur Sterling', seorang kolektor barang antik."
+        },
+        {
+          "id": "s6e7_d2",
+          "speaker": "Sarah",
+          "en": "Let us check his arrival timestamp. He checked in at 18:50 and matched Clara's physical description perfectly.",
+          "idText": "Mari kita periksa cap waktu kedatangannya. Dia check-in pukul 18.50 dan sangat cocok dengan deskripsi fisik Clara."
+        },
+        {
+          "id": "s6e7_d3",
+          "speaker": "Kanci",
+          "en": "Tapi tunggu! Bandingkan tanda tangannya di buku tamu dengan tanda tangan di kartu anggota museumnya!",
+          "idText": "Tapi tunggu! Bandingkan tanda tangannya di buku tamu dengan tanda tangan di kartu anggota museumnya!"
+        },
+        {
+          "id": "s6e7_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Kamu membandingkan catatan registrasi dan rekaman CCTV pintu keluar. Apa yang kamu simpulkan?",
+          "options": [
+            {
+              "id": "s6e7_opt_1a",
+              "text": "The security turnstiles show Dr. Sterling never exited through the front gates! He must still be inside this building.",
+              "speakerReply": "Julian Croft",
+              "reactionEn": "Heavens, you are right! The front doors were locked before he could leave. He is trapped inside the gallery!",
+              "reactionId": "Astaga, kamu benar! Pintu depan terkunci sebelum dia sempat keluar. Dia terjebak di dalam galeri!"
+            },
+            {
+              "id": "s6e7_opt_1b",
+              "text": "Look at the false signature on the registry: he wrote in a hurry and misspelled his own title as 'Collector'.",
+              "speakerReply": "Sarah",
+              "reactionEn": "Sharp observation! That nervousness indicates he was under immense pressure.",
+              "reactionId": "Pengamatan yang sangat tajam! Kegugupan itu menandakan dia berada di bawah tekanan besar."
+            }
+          ]
+        },
+        {
+          "id": "s6e7_d4",
+          "speaker": "You",
+          "en": "Since he cannot exit through the front, where in this historic building could someone hide a vintage camera?",
+          "idText": "Karena dia tidak bisa keluar lewat pintu depan, di bagian mana gedung bersejarah ini seseorang bisa menyembunyikan kamera antik?"
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-list",
+          "word": "list",
+          "partOfSpeech": "noun",
+          "enDefinition": "A number of connected items or names written or printed consecutively, typically one below the other.",
+          "idMeaning": "daftar nama tamu pendaftar",
+          "contextSentence": "Check ticket number 042 on the VIP attendee list."
+        },
+        {
+          "wordId": "oxford-match",
+          "word": "match",
+          "partOfSpeech": "verb",
+          "enDefinition": "To correspond or cause to correspond in some essential respect; be equal.",
+          "idMeaning": "cocok / sesuai dengan bukti",
+          "contextSentence": "The suspect's coat color matches Clara's description."
+        },
+        {
+          "wordId": "oxford-ticket",
+          "word": "ticket",
+          "partOfSpeech": "noun",
+          "enDefinition": "A piece of paper or card that gives the holder a certain right, especially of entry.",
+          "idMeaning": "tiket masuk pameran",
+          "contextSentence": "The numbered admission ticket was issued at the reception desk."
+        },
+        {
+          "wordId": "oxford-false",
+          "word": "false",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Not according with truth or fact; incorrect or deceptive.",
+          "idMeaning": "palsu / keliru sengaja",
+          "contextSentence": "The nervous registrant gave a false telephone number."
+        },
+        {
+          "wordId": "oxford-compare",
+          "word": "compare",
+          "partOfSpeech": "verb",
+          "enDefinition": "To estimate, measure, or note the similarity or dissimilarity between things.",
+          "idMeaning": "membandingkan data berkas",
+          "contextSentence": "Compare the registry signature with past museum archives."
+        },
+        {
+          "wordId": "oxford-check",
+          "word": "check",
+          "partOfSpeech": "verb",
+          "enDefinition": "To examine something in order to determine its accuracy, quality, or condition.",
+          "idMeaning": "memeriksa catatan",
+          "contextSentence": "Please check all turnstile exit logs from the past hour."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Konjungsi Kontras & Waktu dalam Rekonstruksi (*although, whereas, since*)",
+        "topicId": "conjunctions-deduction",
+        "explanation": "Gunakan kata hubung logis untuk menghubungkan premis dan kesimpulan penyelidikan: 'Since he could not exit...' (karena ia tak bisa keluar), 'Although the alarm sounded...' (meskipun alarm berbunyi).",
+        "formula": "Since + [Clause 1], [Subject] + must + [Base verb] / Since the front gate was locked, the suspect must still be inside."
+      },
+      "culturalTip": {
+        "title": "Sistem Registrasi Tiket 'Digital vs Paper Registry'",
+        "content": "Di acara lelang dan ekshibisi bernilai tinggi, setiap tiket memiliki nomor seri unik yang terikat pada data paspor atau kartu identitas resmi untuk mencegah aksi kejahatan seni (*art crime*)."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep7_q1",
+          "question": "Under what name was ticket number 042 registered in the guest book?",
+          "options": [
+            "Dr. Arthur Sterling, an antique collector",
+            "Sherlock Holmes, private investigator",
+            "Captain Blackbeard, pirate",
+            "Peter Pan from Neverland"
+          ],
+          "correctIndex": 0,
+          "explanation": "Tiket 042 terdaftar atas nama Dr. Arthur Sterling, seorang kolektor barang antik."
+        },
+        {
+          "id": "s7_ep7_q2",
+          "question": "What crucial fact did the turnstile security logs reveal about Dr. Sterling?",
+          "options": [
+            "He never passed through the exit turnstiles and is still inside the building",
+            "He flew away in a hot air balloon",
+            "He was sleeping in the public library across town",
+            "He was singing on the roof"
+          ],
+          "correctIndex": 0,
+          "explanation": "Catatan palang pintu otomatis membuktikan ia belum keluar dan masih berada di dalam gedung."
+        },
+        {
+          "id": "s7_ep7_q3",
+          "question": "Which conjunction correctly connects the premise to the deduction?",
+          "options": [
+            "Since the gates were locked, he must still be inside.",
+            "Although gates locked, because inside.",
+            "Where gates were locked, but inside.",
+            "Unless locked gates, will inside."
+          ],
+          "correctIndex": 0,
+          "explanation": "'Since the gates were locked, he must still be inside' menyusun relasi sebab-akibat deduktif yang sempurna."
+        },
+        {
+          "id": "s7_ep7_q4",
+          "question": "Which verb means 'to note the similarity or dissimilarity between two items'?",
+          "options": [
+            "Compare",
+            "Throw",
+            "Sweep",
+            "Cook"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Compare' berarti membandingkan dua hal untuk melihat persamaan atau perbedaannya."
+        },
+        {
+          "id": "s7_ep7_q5",
+          "question": "Complete the sentence: 'Please ______ the guest attendance list to verify the registrant.'",
+          "options": [
+            "check",
+            "garbage",
+            "carpet",
+            "pocket"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Check' (memeriksa) adalah kata kerja yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata verifikasi data: list, match, ticket, false, compare, check.",
+        "Menggunakan konjungsi logis (since, although) untuk menarik simpulan tempat.",
+        "Memverifikasi data log keamanan otomatis untuk membuktikan keberadaan terduga pelaku."
+      ],
+      "cliffhanger": "Julian Croft berseru pelan: 'Hanya ada satu tempat di gedung ini yang memiliki pintu keluar darurat tua tanpa sensor digital: Ruang Restorasi Lukisan Kuno di lantai bawah tanah!'..."
+    },
+    {
+      "id": 8,
+      "number": 8,
+      "title": "Jejak Kaki Menuju Ruang Restorasi",
+      "titleEn": "Footprints Leading to the Restoration Room",
+      "estimatedMinutes": 10,
+      "recap": "Mengikuti jejak debu di lantai tangga batu mengarahkan penyelidikan menuju ruang restorasi lukisan yang sunyi di bawah tanah galeri.",
+      "dialogue": [
+        {
+          "id": "s6e8_d1",
+          "speaker": "Narator",
+          "en": "A narrow spiral stone staircase descends beneath the gallery into a quiet, dimly lit vaulted corridor.",
+          "idText": "Tangga batu melingkar sempit menurun ke bawah galeri menuju koridor berkubah sunyi dengan penerangan redup."
+        },
+        {
+          "id": "s6e8_d2",
+          "speaker": "Kanci",
+          "en": "Arahkan sentermu ke lantai batu kapur! Ada jejak tapak sepatu kulit baru yang tercetak di atas debu tipis!",
+          "idText": "Arahkan sentermu ke lantai batu kapur! Ada jejak tapak sepatu kulit baru yang tercetak di atas debu tipis!"
+        },
+        {
+          "id": "s6e8_d3",
+          "speaker": "You",
+          "en": "Each step leads directly along this quiet floor toward the heavy iron-bound oak door marked 'Restoration Studio'.",
+          "idText": "Setiap langkah mengarah lurus di sepanjang lantai yang sunyi ini menuju pintu oak berpaku besi bertuliskan 'Studio Restorasi'."
+        },
+        {
+          "id": "s6e8_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Pintu studio restorasi sedikit merenggang dan lampu pijar kuning menyala di dalam. Apa yang kamu lakukan?",
+          "options": [
+            {
+              "id": "s6e8_opt_1a",
+              "text": "Let us follow the track quietly and push the door gently without making any creaking noise.",
+              "speakerReply": "Sarah",
+              "reactionEn": "Stealthy approach! Marcus and I will flank the entrance while you peer through the opening.",
+              "reactionId": "Pendekatan senyap! Marcus dan saya akan berjaga di samping pintu saat kamu mengintip lewat celah."
+            },
+            {
+              "id": "s6e8_opt_1b",
+              "text": "Marcus, keep your flashlight ready on the door handle in case the suspect attempts to bolt.",
+              "speakerReply": "Guard Marcus",
+              "reactionEn": "Flashlight trained on the door! There is nowhere for him to run from this room.",
+              "reactionId": "Senter terarah ke pintu! Tidak ada celah baginya untuk kabur dari ruangan ini."
+            }
+          ]
+        },
+        {
+          "id": "s6e8_d4",
+          "speaker": "You",
+          "en": "The footsteps stop right beside the wooden storage cabinets. Someone is breathing nervously inside.",
+          "idText": "Jejak langkah kaki berhenti tepat di samping lemari penyimpanan kayu. Seseorang bernapas dengan gugup di dalam."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-track",
+          "word": "track",
+          "partOfSpeech": "noun",
+          "enDefinition": "A mark or marks left by a person, animal, or vehicle in passing.",
+          "idMeaning": "jejak tapak langkah",
+          "contextSentence": "The dusty footprints formed a clear track along the basement hall."
+        },
+        {
+          "wordId": "oxford-step",
+          "word": "step",
+          "partOfSpeech": "noun",
+          "enDefinition": "An act or movement of putting one leg in front of the other in walking; a stair tread.",
+          "idMeaning": "langkah kaki / anak tangga",
+          "contextSentence": "Take each step down the spiral staircase carefully."
+        },
+        {
+          "wordId": "oxford-door",
+          "word": "door",
+          "partOfSpeech": "noun",
+          "enDefinition": "A hinged, sliding, or revolving barrier at the entrance to a room or building.",
+          "idMeaning": "pintu studio restorasi",
+          "contextSentence": "The heavy wooden door stood slightly ajar."
+        },
+        {
+          "wordId": "oxford-floor",
+          "word": "floor",
+          "partOfSpeech": "noun",
+          "enDefinition": "The lower surface of a room, on which one may walk.",
+          "idMeaning": "lantai batu galeri",
+          "contextSentence": "Fine limestone dust coated the restoration floor."
+        },
+        {
+          "wordId": "oxford-follow",
+          "word": "follow",
+          "partOfSpeech": "verb",
+          "enDefinition": "To go or come after a person or thing; track the course of.",
+          "idMeaning": "mengikuti jejak",
+          "contextSentence": "Follow the footprints to discover where the suspect fled."
+        },
+        {
+          "wordId": "oxford-quiet",
+          "word": "quiet",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Making little or no noise; calm, serene, and undisturbed.",
+          "idMeaning": "sunyi / hening tanpa suara",
+          "contextSentence": "The subterranean studio was completely quiet and eerie."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Preposisi Gerakan & Arah (*down the stairs, along the hall, toward the door*)",
+        "topicId": "prepositions-movement",
+        "explanation": "Gunakan preposisi gerak terarah untuk mendeskripsikan pengejaran fisik: 'down' (turun melewati), 'along' (menyusuri), 'through' (menembus), dan 'toward' (mengarah ke).",
+        "formula": "Subject + walked/descended + [preposition] + [destination] / We followed the dusty footprints down the stairs and toward the studio."
+      },
+      "culturalTip": {
+        "title": "Ruang Restorasi Seni (*Conservation Studio*)",
+        "content": "Di museum dan galeri bersejarah, ruang konservasi/restorasi biasanya terletak di lantai dasar atau bawah tanah dengan suhu dan kelembapan terkontrol ketat (*humidity-controlled environment*) untuk melindungi lukisan dan artefak rapuh."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep8_q1",
+          "question": "Where did the dusty shoe footprints lead the investigators?",
+          "options": [
+            "Down the spiral stone staircase to the quiet restoration studio",
+            "Out to the open street sidewalk",
+            "Onto the roof of the public bus",
+            "Inside the kitchen refrigerator"
+          ],
+          "correctIndex": 0,
+          "explanation": "Jejak sepatu berdebu mengarah turun melewati tangga batu melingkar ke studio restorasi."
+        },
+        {
+          "id": "s7_ep8_q2",
+          "question": "What preposition describes moving along the length of a corridor?",
+          "options": [
+            "Along",
+            "Over through up",
+            "Underneath down",
+            "Between across"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Along' berarti menyusuri sepanjang koridor."
+        },
+        {
+          "id": "s7_ep8_q3",
+          "question": "Which adjective means 'making little or no noise; peaceful and undisturbed'?",
+          "options": [
+            "Quiet",
+            "Noisy",
+            "Broken",
+            "Heavy"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Quiet' bermakna hening, tenang, dan tidak menimbulkan suara."
+        },
+        {
+          "id": "s7_ep8_q4",
+          "question": "Which verb means 'to go or move behind someone by following their path'?",
+          "options": [
+            "Follow",
+            "Throw",
+            "Lock",
+            "Cook"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Follow' berarti mengikuti jalur atau jejak langkah seseorang."
+        },
+        {
+          "id": "s7_ep8_q5",
+          "question": "Complete the sentence: 'The heavy wooden ______ was standing open by a few inches.'",
+          "options": [
+            "door",
+            "carpet",
+            "trash",
+            "garbage"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Door' (pintu kayu) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mempelajari kosakata penelusuran fisik: track, step, door, floor, follow, quiet.",
+        "Menggunakan preposisi gerak (along, toward, down) untuk mendeskripsikan pelacakan.",
+        "Menerapkan kehati-hatian tinggi saat mendekati lokasi persembunyian terduga."
+      ],
+      "cliffhanger": "Kamu mendorong pintu studio hingga terbuka lebar. Di balik meja restorasi lukisan, seorang pria jangkung bertubuh kurus sedang gemetar menatap tas kulit yang terbuka di atas meja..."
+    },
+    {
+      "id": 9,
+      "number": 9,
+      "title": "Menemukan Tas yang Tertukar di Loker",
+      "titleEn": "The Swapped Messenger Bag in the Locker",
+      "estimatedMinutes": 10,
+      "recap": "Sebuah pengakuan mengejutkan terkuak: insiden ini bukan pencurian terencana kriminal, melainkan ketidaksengajaan dan tas yang tertukar dalam kepanikan gelap.",
+      "dialogue": [
+        {
+          "id": "s6e9_d1",
+          "speaker": "Arthur Sterling",
+          "en": "Please don't call the police! I am not a thief! It was an absolute mistake in the dark!",
+          "idText": "Tolong jangan panggil polisi! Saya bukan pencuri! Ini benar-benar sebuah kekeliruan dalam kegelapan!"
+        },
+        {
+          "id": "s6e9_d2",
+          "speaker": "Sarah",
+          "en": "Calm down, Dr. Sterling. Explain exactly what happened to Elena Vance's camera and why you are hiding here.",
+          "idText": "Tenanglah, Dr. Sterling. Jelaskan apa yang sebenarnya terjadi pada kamera Elena Vance dan mengapa Anda bersembunyi di sini."
+        },
+        {
+          "id": "s6e9_d3",
+          "speaker": "Arthur Sterling",
+          "en": "I bought an identical vintage Leica replica at the gift shop and placed it in my brown bag. When the blackout hit, the glass lid opened!",
+          "idText": "Saya membeli replika kamera Leica antik yang serupa di toko cinderamata dan menaruhnya di tas cokelat saya. Saat pemadaman terjadi, tutup kacanya terbuka!"
+        },
+        {
+          "id": "s6e9_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Dr. Sterling menunjuk kotak kayu penyimpanan di samping meja. Apa yang kamu temukan di dalamnya?",
+          "options": [
+            {
+              "id": "s6e9_opt_1a",
+              "text": "Let me open this wooden box: the original 1954 camera is nestled completely safe inside velvet cloth!",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "My camera! Not a single scratch on the lens, and the precious film roll is fully intact! What a tremendous relief!",
+              "reactionId": "Kameraku! Tidak ada satu goresan pun pada lensa, dan rol film berharganya utuh sempurna! Sungguh kelegaan luar biasa!"
+            },
+            {
+              "id": "s6e9_opt_1b",
+              "text": "You panicked because you thought you broke the display case and took the original by accident, didn't you?",
+              "speakerReply": "Arthur Sterling",
+              "reactionEn": "Exactly! In the dark chaos, someone bumped me into the pedestal. I grabbed what I thought was my bag and fled in fear.",
+              "reactionId": "Tepat sekali! Dalam kekacauan gelap, seseorang menubruk saya ke etalase. Saya menyambar apa yang saya kira tas saya dan kabur ketakutan."
+            }
+          ]
+        },
+        {
+          "id": "s6e9_d4",
+          "speaker": "Julian Croft",
+          "en": "A colossal misunderstanding fueled by panic. What a massive relief to discover the priceless camera unharmed!",
+          "idText": "Sebuah kesalahpahaman raksasa yang dipicu oleh kepanikan. Sungguh kelegaan yang luar biasa menemukan kamera tak ternilai ini tanpa cedera!"
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-box",
+          "word": "box",
+          "partOfSpeech": "noun",
+          "enDefinition": "A container with a flat base and sides, typically square or rectangular and having a lid.",
+          "idMeaning": "kotak penyimpanan kayu",
+          "contextSentence": "The precious camera rested securely inside a velvet-lined box."
+        },
+        {
+          "wordId": "oxford-mistake",
+          "word": "mistake",
+          "partOfSpeech": "noun",
+          "enDefinition": "An action or judgment that is misguided or wrong.",
+          "idMeaning": "kekeliruan / ketidaksengajaan",
+          "contextSentence": "The entire incident was caused by an honest mistake during the dark."
+        },
+        {
+          "wordId": "oxford-safe",
+          "word": "safe",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Protected from or not exposed to danger or risk; not harmed.",
+          "idMeaning": "aman tanpa kerusakan",
+          "contextSentence": "Elena's original camera lens remained completely safe."
+        },
+        {
+          "wordId": "oxford-belong",
+          "word": "belong",
+          "partOfSpeech": "verb",
+          "enDefinition": "To be the property of someone.",
+          "idMeaning": "milik / kepunyaan seseorang",
+          "contextSentence": "The historic negatives belong to the renowned photographer."
+        },
+        {
+          "wordId": "oxford-discover",
+          "word": "discover",
+          "partOfSpeech": "verb",
+          "enDefinition": "To find unexpectedly or in the course of a search.",
+          "idMeaning": "menemukan benda yang dicari",
+          "contextSentence": "We discover the intact camera hidden in the restoration cabinet."
+        },
+        {
+          "wordId": "oxford-relief",
+          "word": "relief",
+          "partOfSpeech": "noun",
+          "enDefinition": "A feeling of reassurance and relaxation following release from anxiety or distress.",
+          "idMeaning": "rasa lega yang mendalam",
+          "contextSentence": "Everyone sighed with immense relief upon seeing the intact camera."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Past Perfect Tense untuk Peristiwa yang Terjadi Lebih Awal (*He had mistakenly picked up the bag*)",
+        "topicId": "past-perfect-explanation",
+        "explanation": "Gunakan Past Perfect Tense (had + past participle V3) saat menjelaskan urutan kejadian lampau yang telah selesai sebelum aksi masa lalu lainnya terjadi.",
+        "formula": "Subject + had + [Past Participle V3] / Dr. Sterling had bought a replica before the blackout occurred."
+      },
+      "culturalTip": {
+        "title": "Diferensiasi 'Theft vs Misplaced Mistake' dalam Hukum",
+        "content": "Dalam hukum pidana internasional (*Mens Rea / Criminal Intent*), sebuah tindak pidana pencurian mensyaratkan adanya niat jahat terencana (*intention to permanently deprive*). Kejadian tertukar tanpa niat jahat diselesaikan secara administratif kekeluargaan."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep9_q1",
+          "question": "What actually caused Dr. Arthur Sterling to take the historic Leica camera?",
+          "options": [
+            "A professional heist ordered by art smugglers",
+            "An honest accident and panic caused by someone bumping him into the pedestal during the blackout",
+            "He wanted to sell it on the street for bus fare",
+            "He thought it was a toy flashlight"
+          ],
+          "correctIndex": 1,
+          "explanation": "Penyebab sebenarnya adalah ketidaksengajaan dan kepanikan saat seseorang menubruknya ke etalase saat gelap."
+        },
+        {
+          "id": "s7_ep9_q2",
+          "question": "In what condition was Elena Vance's original 1954 camera found?",
+          "options": [
+            "Completely safe, undamaged, with its film roll intact",
+            "Shattered into a thousand pieces",
+            "Melted in hot cooking oil",
+            "Covered in thick paint"
+          ],
+          "correctIndex": 0,
+          "explanation": "Kamera ditemukan dalam kondisi aman tanpa kerusakan sama sekali beserta rol filmnya."
+        },
+        {
+          "id": "s7_ep9_q3",
+          "question": "Which sentence correctly uses the Past Perfect tense to explain prior events?",
+          "options": [
+            "He had purchased a replica before the lights failed.",
+            "He has purchase a replica when lights dark.",
+            "He will had purchasing a replica yesterday.",
+            "He having purchased a replica already."
+          ],
+          "correctIndex": 0,
+          "explanation": "'He had purchased a replica before the lights failed' adalah konstruksi Past Perfect yang tepat (had + purchased)."
+        },
+        {
+          "id": "s7_ep9_q4",
+          "question": "Which word means 'a feeling of reassurance and relaxation following anxiety'?",
+          "options": [
+            "Relief",
+            "Garbage",
+            "Noise",
+            "Jam"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Relief' adalah rasa lega yang dirasakan setelah ketakutan atau kekhawatiran mereda."
+        },
+        {
+          "id": "s7_ep9_q5",
+          "question": "Complete the sentence: 'The irreplaceable negative films ______ to Elena Vance's lifetime heritage.'",
+          "options": [
+            "belong",
+            "throw",
+            "sweep",
+            "lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Belong' (milik/kepunyaan) adalah kata kerja yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata resolusi kesalahpahaman: box, mistake, safe, belong, discover, relief.",
+        "Menggunakan Past Perfect (had + V3) untuk menguraikan urutan kronologis kejadian masa lalu.",
+        "Mampu membedakan antara tindakan kriminal berencana dan kekeliruan akibat kepanikan."
+      ],
+      "cliffhanger": "Elena Vance memeluk kameranya dengan mata berkaca-kaca penuh haru. Julian Croft menyalakan seluruh lampu aula galeri dan mengumumkan perayaan spesial untuk merayakan ditemukannya sang mahakarya..."
+    },
+    {
+      "id": 10,
+      "number": 10,
+      "title": "Mengembalikan Kamera Bersejarah",
+      "titleEn": "Restoring the Heirloom & The Victorious Toast",
+      "estimatedMinutes": 10,
+      "recap": "Kamera bersejarah dikembalikan ke etalasenya di hadapan seluruh pengunjung galeri. Ketajaman analisis deduktifmu dipuji oleh kurator dan seniman dunia.",
+      "dialogue": [
+        {
+          "id": "s6e10_d1",
+          "speaker": "Julian Croft",
+          "en": "Ladies and gentlemen, thanks to the brilliant deduction of our guest Alex, Elena Vance's legendary camera is safely returned!",
+          "idText": "Hadirin sekalian, berkat deduksi brilian dari tamu kita Alex, kamera legendaris Elena Vance telah dikembalikan dengan selamat!"
+        },
+        {
+          "id": "s6e10_d2",
+          "speaker": "Elena Vance",
+          "en": "I cannot thank you enough, Alex. Your logical mind and calm observation saved sixty years of my visual truth and memory.",
+          "idText": "Saya tak henti-hentinya berterima kasih, Alex. Pikiran logis dan pengamatan tenangmu telah menyelamatkan enam puluh tahun kebenaran visual dan kenangan saya."
+        },
+        {
+          "id": "s6e10_d3",
+          "speaker": "Kanci",
+          "en": "Tepuk tangan meriah membahana untukmu! Dari detektif amatir hingga pahlawan pameran seni kota!",
+          "idText": "Tepuk tangan meriah membahana untukmu! Dari detektif amatir hingga pahlawan pameran seni kota!"
+        },
+        {
+          "id": "s6e10_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Elena Vance mengangkat gelasnya untuk bersulang menghormati keberhasilanmu. Apa responmu?",
+          "options": [
+            {
+              "id": "s6e10_opt_1a",
+              "text": "It is an immense honor to celebrate the truth with everyone tonight. Art and heritage belong to the whole world.",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "Hear, hear! To truth, art, and the brilliance of sharp minds! You deserve the highest praise.",
+              "reactionId": "Setuju sekali! Demi kebenaran, seni, dan kecemerlangan pikiran yang tajam! Kamu layak menerima pujian tertinggi."
+            },
+            {
+              "id": "s6e10_opt_1b",
+              "text": "Thank you Elena! Teamwork with Sarah, Marcus, and Clara made this peaceful resolution possible.",
+              "speakerReply": "Sarah",
+              "reactionEn": "Modest and brilliant as always! We are so proud of your exemplary problem-solving skills.",
+              "reactionId": "Rendah hati dan brilian seperti biasa! Kami sangat bangga dengan keahlian pemecahan masalahmu yang patut dicontoh."
+            }
+          ]
+        },
+        {
+          "id": "s6e10_d4",
+          "speaker": "You",
+          "en": "Solving this gallery mystery taught me that patience, logic, and empathy will always uncover the truth.",
+          "idText": "Memecahkan misteri galeri ini mengajarkanku bahwa kesabaran, logika, dan empati akan selalu menyingkap kebenaran."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-return",
+          "word": "return",
+          "partOfSpeech": "verb",
+          "enDefinition": "To come or go back to a place or person; give, put, or send back.",
+          "idMeaning": "mengembalikan benda ke tempat asal",
+          "contextSentence": "We return the vintage camera to its velvet pedestal."
+        },
+        {
+          "wordId": "oxford-thank",
+          "word": "thank",
+          "partOfSpeech": "verb",
+          "enDefinition": "To express gratitude to someone, especially by saying 'Thank you'.",
+          "idMeaning": "berterima kasih dengan tulus",
+          "contextSentence": "Elena smiled warmly to thank the investigators."
+        },
+        {
+          "wordId": "oxford-celebrate",
+          "word": "celebrate",
+          "partOfSpeech": "verb",
+          "enDefinition": "To acknowledge a significant or happy day or event with a social gathering or enjoyable activity.",
+          "idMeaning": "merayakan kesuksesan",
+          "contextSentence": "The entire gallery gathered to celebrate the safe recovery."
+        },
+        {
+          "wordId": "oxford-truth",
+          "word": "truth",
+          "partOfSpeech": "noun",
+          "enDefinition": "The quality or state of being true; that which is true or in accordance with fact or reality.",
+          "idMeaning": "kebenaran fakta nyata",
+          "contextSentence": "Careful deduction will always reveal the underlying truth."
+        },
+        {
+          "wordId": "oxford-honor",
+          "word": "honor",
+          "partOfSpeech": "noun",
+          "enDefinition": "High respect or great esteem; a privilege that brings pride.",
+          "idMeaning": "kehormatan yang membanggakan",
+          "contextSentence": "It is a great honor to protect world-class cultural heritage."
+        },
+        {
+          "wordId": "oxford-praise",
+          "word": "praise",
+          "partOfSpeech": "noun",
+          "enDefinition": "The expression of approval or admiration for someone or something.",
+          "idMeaning": "pujian apresiasi tinggi",
+          "contextSentence": "Alex received unanimous praise from artists and collectors alike."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Ungkapan Apresiasi & Kesimpulan Deduksi (*Thanks to your sharp deduction..., It is an honor to...*)",
+        "topicId": "appreciation-conclusion",
+        "explanation": "Gunakan frasa apresiasi formal berkelas tinggi saat menutup penyelesaian masalah besar: 'Thanks to + noun phrase', 'It is an immense honor to + base verb'.",
+        "formula": "Thanks to [Noun Phrase], [Result Clause] / It is an honor to celebrate this resolution."
+      },
+      "culturalTip": {
+        "title": "Tradisi 'Toast of Honor' di Acara Budaya Mancanegara",
+        "content": "Di jamuan resmi Eropa, tradisi bersulang (*toast of honor*) dipimpin oleh tokoh utama yang mengetuk gelas secara lembut, menyampaikan ucapan terima kasih singkat, dan disambut hadirin dengan seruan *'Hear, hear!'* atau *'Cheers!'*."
+      },
+      "quiz": [
+        {
+          "id": "s7_ep10_q1",
+          "question": "Who was publicly credited with solving the gallery camera mystery?",
+          "options": [
+            "Alex, whose logical deduction uncovered the truth",
+            "A passing taxi driver on the avenue",
+            "A cartoon rabbit on the billboard",
+            "The street maintenance worker"
+          ],
+          "correctIndex": 0,
+          "explanation": "Alex dipuji di hadapan publik atas deduksi logisnya yang menyingkap kebenaran."
+        },
+        {
+          "id": "s7_ep10_q2",
+          "question": "Which phrase is standard for expressing formal appreciation for team effort?",
+          "options": [
+            "Thanks to your sharp deduction...",
+            "Get away from me now...",
+            "Whatever you broke...",
+            "Never mind about anything..."
+          ],
+          "correctIndex": 0,
+          "explanation": "'Thanks to your sharp deduction...' adalah ungkapan apresiasi formal yang baku."
+        },
+        {
+          "id": "s7_ep10_q3",
+          "question": "Which noun refers to the state of being in accordance with fact or reality?",
+          "options": [
+            "Truth",
+            "Garbage",
+            "Noise",
+            "Trash"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Truth' adalah kebenaran yang sesuai dengan fakta dan kenyataan."
+        },
+        {
+          "id": "s7_ep10_q4",
+          "question": "Which verb means 'to give back something to its rightful owner or location'?",
+          "options": [
+            "Return",
+            "Throw",
+            "Break",
+            "Sweep"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Return' berarti mengembalikan sesuatu kepada pemilik atau tempat asalnya."
+        },
+        {
+          "id": "s7_ep10_q5",
+          "question": "Complete the sentence: 'Alex received enthusiastic ______ from all the curators and visitors.'",
+          "options": [
+            "praise",
+            "trash",
+            "garbage",
+            "jam"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Praise' (pujian apresiasi) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata apresiasi dan kehormatan: return, thank, celebrate, truth, honor, praise.",
+        "Menggunakan ungkapan formal perayaan dan rasa syukur (thanks to, it is an honor).",
+        "Menghargai nilai kejujuran, deduksi analitis, dan empati dalam menuntaskan persoalan."
+      ],
+      "cliffhanger": "Sebagai tanda terima kasih yang mendalam, Elena Vance menyerahkan sebuah amplop beludru emas berisi kartu VIP: 'Minggu depan adalah Festival Kota Tua tahunan, perayaan budaya terbesar dengan pawai lampion dan pertunjukan panggung rakyat. Kamu harus menjadi tamu kehormatanku!' Petualangan Cerita 8: Festival Kota Tua siap dimulai!"
+    }
+  ]
+}

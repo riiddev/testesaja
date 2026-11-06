@@ -1,0 +1,498 @@
+{
+  "id": "present-continuous",
+  "title": "Present Continuous",
+  "level": "A1",
+  "category": "Verb tenses",
+  "estimatedMinutes": 12,
+  "prerequisites": ["present-simple"],
+  "nextTopics": ["past-continuous", "future-plans-predictions"],
+  "learningObjectives": {
+    "goal": "Menguasai cara menyatakan aksi yang sedang berlangsung saat ini, situasi sementara, tren terkini, dan rencana masa depan yang sudah terkonfirmasi, serta memahami batasan kata kerja statis (stative verbs).",
+    "whenToUse": [
+      {
+        "situation": "Aksi yang Sedang Terjadi Detik Ini (At the moment of speaking)",
+        "description": "Peristiwa nyata yang sedang berlangsung tepat saat percakapan terjadi.",
+        "triggerWords": ["now", "right now", "at the moment", "Look!", "Listen!"]
+      },
+      {
+        "situation": "Situasi Sementara (Temporary Situations)",
+        "description": "Aktivitas yang sedang dilakukan di periode waktu saat ini, namun bersifat tidak permanen.",
+        "triggerWords": ["these days", "this week", "this month", "currently"]
+      },
+      {
+        "situation": "Tren atau Perubahan Bertahap (Changing / Developing Situations)",
+        "description": "Kondisi yang sedang berkembang atau berubah ke arah tertentu.",
+        "triggerWords": ["getting better", "becoming", "improving", "rising"]
+      },
+      {
+        "situation": "Rencana Pasti di Masa Depan Dekat (Definite Arrangements)",
+        "description": "Janji temu atau agenda yang sudah dipesan tiketnya atau disepakati dengan orang lain.",
+        "triggerWords": ["tonight", "tomorrow morning", "this Saturday", "next weekend"]
+      }
+    ]
+  },
+  "patternTable": [
+    {
+      "type": "Positif (+)",
+      "subjectGroup": "I",
+      "formula": "I + am + Verb-ing + Object/Pelengkap",
+      "example": "I am studying English grammar right now."
+    },
+    {
+      "type": "Positif (+)",
+      "subjectGroup": "He / She / It / Subjek Tunggal",
+      "formula": "Subject + is + Verb-ing + Object/Pelengkap",
+      "example": "She is writing an email to her supervisor."
+    },
+    {
+      "type": "Positif (+)",
+      "subjectGroup": "You / We / They / Jamak",
+      "formula": "Subject + are + Verb-ing + Object/Pelengkap",
+      "example": "They are preparing dinner together."
+    },
+    {
+      "type": "Negatif (-)",
+      "subjectGroup": "I",
+      "formula": "I + am not + Verb-ing",
+      "example": "I am not watching TV at the moment."
+    },
+    {
+      "type": "Negatif (-)",
+      "subjectGroup": "He / She / It / Subjek Tunggal",
+      "formula": "Subject + is not (isn't) + Verb-ing",
+      "example": "He isn't working today; he took a day off."
+    },
+    {
+      "type": "Negatif (-)",
+      "subjectGroup": "You / We / They / Jamak",
+      "formula": "Subject + are not (aren't) + Verb-ing",
+      "example": "We aren't staying at a hotel this time."
+    },
+    {
+      "type": "Tanya (?)",
+      "subjectGroup": "I / You / We / They / He / She / It",
+      "formula": "Am / Is / Are + Subject + Verb-ing?",
+      "example": "Are you listening to the teacher?"
+    }
+  ],
+  "progressiveExplanation": {
+    "step1_intuition": "Jika Present Simple adalah foto panorama diam yang stabil, maka Present Continuous adalah 'kamera video yang merekam aksi aktif'. Fokus tenses ini adalah gerak dinamis yang belum selesai pada bingkai waktu tertentu.",
+    "step2_coreRules": [
+      "Wajib memasangkan dua elemen penting: to be (am/is/are) DAN kata kerja berakhiran -ing. Keduanya adalah satu paket tak terpisahkan.",
+      "Hilangnya to be membuat kalimat menjadi cacat grammatis (misalnya: 'I studying' adalah salah besar).",
+      "Sebaliknya, menyisipkan to be tanpa -ing pada kalimat aksi juga salah (misalnya: 'I am study' adalah salah)."
+    ],
+    "step3_spellingRules": [
+      "Sebagian besar verb: cukup tambahkan -ing (read → reading, play → playing).",
+      "Verb berakhiran huruf 'e' diam: hilangkan huruf 'e' lalu tambah -ing (write → writing, make → making, dance → dancing).",
+      "Verb satu suku kata dengan pola Konsonan-Vokal-Konsonan (CVC): gandakan konsonan terakhir (run → running, sit → sitting, swim → swimming, stop → stopping).",
+      "Verb berakhiran 'ie': ubah 'ie' menjadi 'y' lalu tambah -ing (die → dying, lie → lying)."
+    ],
+    "step4_exceptions": [
+      "Stative Verbs (Kata Kerja Keadaan/Pikiran/Perasaan): Kata-kata seperti know, understand, believe, want, need, like, love, hate, seem, taste, smell, dan belong TIDAK boleh digunakan dalam bentuk continuous (misal: 'I am wanting coffee' adalah SALAH; yang benar 'I want coffee').",
+      "Verb 'have': Bila bermakna 'memiliki' (kepemilikan statis), TIDAK boleh continuous ('I am having a car' SALAH). Namun bila bermakna 'mengalami / memakan' (aksi dinamis), BISA dipakai continuous ('I am having breakfast' BENAR)."
+    ]
+  },
+  "useCaseExamples": [
+    {
+      "category": "Detik Ini (Right Now)",
+      "sentences": [
+        { "en": "Look! The sun is rising over the hills.", "id": "Lihat! Matahari sedang terbit di atas perbukitan." },
+        { "en": "Please speak softly, the baby is sleeping.", "id": "Tolong bicara pelan, bayinya sedang tidur." }
+      ]
+    },
+    {
+      "category": "Situasi Sementara (Temporary)",
+      "sentences": [
+        { "en": "I am staying with my cousin this week until my apartment is ready.", "id": "Saya tinggal bersama sepupu saya minggu ini sampai apartemen saya siap." },
+        { "en": "She is reading a captivating book about marine biology.", "id": "Dia sedang membaca buku menarik tentang biologi laut (progres belakangan ini)." }
+      ]
+    },
+    {
+      "category": "Rencana Pasti Terdekat (Fixed Arrangements)",
+      "sentences": [
+        { "en": "We are having dinner with our clients tomorrow evening.", "id": "Kami makan malam bersama klien kami besok malam (sudah diagendakan)." },
+        { "en": "Are you flying to Bali this weekend?", "id": "Apakah kamu berangkat naik pesawat ke Bali akhir pekan ini?" }
+      ]
+    }
+  ],
+  "indonesianContrast": {
+    "fundamentalDifference": "Dalam bahasa Indonesia, kita cukup menambahkan kata bantu 'sedang' atau 'lagi' di depan kata kerja apa pun tanpa mengubah bentuk kata kerja maupun subjeknya ('saya sedang makan', 'dia lagi makan').",
+    "whyIndonesiansStruggle": "Penutur Indonesia kerap membuat kesalahan fatal: (1) Lupa menyertakan to be ('She reading a book'), (2) Menerjemahkan kata statis secara harfiah dengan -ing ('I am knowing that person' dari 'Saya sedang mengetahui'), atau (3) Tertukar antara rutinitas umum dengan aksi sesaat.",
+    "contrastTable": [
+      {
+        "concept": "Aksi langsung",
+        "bahasaIndonesia": "Dia sedang tidur. (Kata 'sedang' terpisah)",
+        "bahasaInggris": "He is sleeping. (To be 'is' + verb-ing terpadu)"
+      },
+      {
+        "concept": "Kata kerja statis",
+        "bahasaIndonesia": "Saya sedang butuh uang. (Kata 'butuh' boleh pakai 'sedang')",
+        "bahasaInggris": "I need money. (Dilarang keras memakai 'I am needing')"
+      },
+      {
+        "concept": "Pertanyaan",
+        "bahasaIndonesia": "Apakah kamu sedang mendengarkan? (Cukup nada tanya)",
+        "bahasaInggris": "Are you listening? (To be 'are' membalik posisi ke depan subjek)"
+      }
+    ]
+  },
+  "commonMistakes": [
+    {
+      "wrong": "She working on her final thesis right now.",
+      "correct": "She is working on her final thesis right now.",
+      "trapType": "To be yang hilang (Missing auxiliary)",
+      "explanation": "Verb-ing tidak dapat berfungsi sebagai predikat tenses continuous tanpa didampingi to be (is/am/are)."
+    },
+    {
+      "wrong": "I am knowing the answer to this question.",
+      "correct": "I know the answer to this question.",
+      "trapType": "Stative Verb Violation",
+      "explanation": "'Know' adalah kata kerja kognitif statis. Seseorang tahu atau tidak tahu, tidak ada proses fisik 'sedang mengetahui', sehingga wajib memakai Present Simple."
+    },
+    {
+      "wrong": "Are you agree with his statement?",
+      "correct": "Do you agree with his statement?",
+      "trapType": "Tertukar auxiliary tenses",
+      "explanation": "'Agree' bukan bentuk -ing dan merupakan kata kerja dasar, sehingga tidak boleh menggunakan 'Are you', melainkan 'Do you'."
+    },
+    {
+      "wrong": "They is runing in the park.",
+      "correct": "They are running in the park.",
+      "trapType": "Subject agreement & Spelling ganda",
+      "explanation": "Subjek 'They' berpasangan dengan to be 'are', dan 'run' berakhiran CVC sehingga huruf 'n' harus digandakan menjadi 'running'."
+    }
+  ],
+  "cheatSheet": {
+    "keyTakeaways": [
+      "Rumus paten: Subject + AM / IS / ARE + Verb-ing.",
+      "I → am | He / She / It → is | You / We / They → are.",
+      "Wajib punya to be: Dilarang 'I working'!",
+      "Stative verbs (know, want, like, believe, own) pantang memakai -ing.",
+      "Bisa untuk rencana masa depan yang sudah terkonfirmasi (tomorrow, next week)."
+    ],
+    "quickGoldenRule": "Jika Anda bisa mengambil foto atau merekam video dari aksi fisik yang sedang bergerak, gunakan Present Continuous. Jika aksi itu berada di dalam pikiran atau perasaan statis, gunakan Present Simple!"
+  },
+  "practiceExercises": [
+    {
+      "id": "pc-ex-1",
+      "type": "multiple-choice",
+      "level": "Dasar",
+      "prompt": "Pilihlah bentuk kata kerja yang benar: 'Listen! Someone ___ at the front door.'",
+      "options": ["knocks", "is knocking", "knock", "are knocking"],
+      "correctIndex": 1,
+      "explanation": "Kata seru 'Listen!' menandakan peristiwa sedang berlangsung saat ini. Subjek 'Someone' adalah kata ganti tunggal, maka menggunakan 'is knocking'."
+    },
+    {
+      "id": "pc-ex-2",
+      "type": "multiple-choice",
+      "level": "Dasar",
+      "prompt": "Kalimat manakah yang memiliki ejaan kata kerja berakhiran -ing yang tepat?",
+      "options": [
+        "She is writting a romantic letter.",
+        "They are swiming in the deep pool.",
+        "He is making a wooden toy for his son.",
+        "We are runing towards the shelter."
+      ],
+      "correctIndex": 2,
+      "explanation": "Verb 'make' berakhiran huruf 'e' diam, sehingga huruf 'e' dihilangkan menjadi 'making'. (Writing hanya 1 't', swimming harus 2 'm', running harus 2 'n')."
+    },
+    {
+      "id": "pc-ex-3",
+      "type": "fill-in",
+      "level": "Dasar",
+      "prompt": "Lengkapi kalimat dengan Present Continuous: 'I ___ (study) for my final biology exam this evening.'",
+      "acceptedAnswers": ["am studying", "'m studying"],
+      "explanation": "Subjek 'I' dipasangkan dengan to be 'am' dan verb 'study' berubah menjadi 'studying'."
+    },
+    {
+      "id": "pc-ex-4",
+      "type": "fill-in",
+      "level": "Menengah",
+      "prompt": "Lengkapi kalimat negatif: 'They ___ (not / participate) in the football match today.'",
+      "acceptedAnswers": ["are not participating", "aren't participating"],
+      "explanation": "Subjek 'they' menggunakan to be 'are not' atau contraction 'aren't', dan 'participate' menjadi 'participating'."
+    },
+    {
+      "id": "pc-ex-5",
+      "type": "error-correction",
+      "level": "Menengah",
+      "prompt": "Perbaiki kata yang salah: 'Hani is wanting a glass of warm water right now.'",
+      "errorWord": "is wanting",
+      "correctWord": "wants",
+      "explanation": "'Want' adalah stative verb yang tidak boleh digunakan dalam bentuk continuous. Gunakan Present Simple: 'wants'."
+    },
+    {
+      "id": "pc-ex-6",
+      "type": "error-correction",
+      "level": "Menengah",
+      "prompt": "Perbaiki kalimat yang to be-nya hilang: 'Look at the sky! It raining very heavily.'",
+      "errorWord": "raining",
+      "correctWord": "is raining",
+      "explanation": "Verb-ing tidak dapat berdiri sendiri sebagai predikat tanpa to be. Kalimat yang benar adalah 'It is raining'."
+    },
+    {
+      "id": "pc-ex-7",
+      "type": "word-scramble",
+      "level": "Menengah",
+      "prompt": "Susun kata-kata acak berikut menjadi pertanyaan yang benar: [are / what / for / looking / you / ?]",
+      "words": ["what", "are", "you", "looking", "for", "?"],
+      "targetSentence": "What are you looking for?",
+      "explanation": "Rumus pertanyaan Wh- Present Continuous: Wh-word + are/is + Subject + Verb-ing: 'What are you looking for?'."
+    },
+    {
+      "id": "pc-ex-8",
+      "type": "word-scramble",
+      "level": "Menengah",
+      "prompt": "Susun kata-kata acak menjadi kalimat negatif: [working / my / laptop / not / properly / is]",
+      "words": ["my", "laptop", "is", "not", "working", "properly"],
+      "targetSentence": "My laptop is not working properly.",
+      "explanation": "Struktur negatif: Subject (My laptop) + is not + verb-ing (working) + adverb (properly)."
+    },
+    {
+      "id": "pc-ex-9",
+      "type": "transformation",
+      "level": "Lanjutan",
+      "prompt": "Ubahlah kalimat ini menjadi bentuk tanya (interogatif): 'Rendra is repairing his motorcycle.'",
+      "acceptedAnswers": ["Is Rendra repairing his motorcycle?", "is rendra repairing his motorcycle?"],
+      "explanation": "Tukar posisi to be 'is' ke depan subjek 'Rendra': 'Is Rendra repairing his motorcycle?'."
+    },
+    {
+      "id": "pc-ex-10",
+      "type": "transformation",
+      "level": "Lanjutan",
+      "prompt": "Ubahlah kalimat pernyataan ini menjadi negatif menggunakan contraction: 'We are leaving for the airport now.'",
+      "acceptedAnswers": ["We aren't leaving for the airport now.", "we aren't leaving for the airport now."],
+      "explanation": "Gunakan bentuk contraction 'aren't': 'We aren't leaving for the airport now.'."
+    },
+    {
+      "id": "pc-ex-11",
+      "type": "multiple-choice",
+      "level": "Lanjutan",
+      "prompt": "Manakah kalimat yang menyatakan rencana masa depan yang sudah pasti disepakati (fixed arrangement)?",
+      "options": [
+        "Water is freezing at zero degrees.",
+        "I am meeting the marketing director at 3 PM tomorrow.",
+        "She is loving classical piano music.",
+        "They are usually having breakfast early."
+      ],
+      "correctIndex": 1,
+      "explanation": "Present Continuous umum dipakai untuk rencana terjadwal dengan pihak lain di masa depan dekat: 'I am meeting the marketing director at 3 PM tomorrow'."
+    },
+    {
+      "id": "pc-ex-12",
+      "type": "fill-in",
+      "level": "Lanjutan",
+      "prompt": "Pilihlah bentuk yang benar antara Present Simple atau Continuous untuk kata dalam kurung: 'Quiet please! The jury ___ (evaluate) the final contestants.'",
+      "acceptedAnswers": ["is evaluating"],
+      "explanation": "Konteks seruan 'Quiet please!' menunjukkan aksi evaluasi sedang berlangsung secara aktif saat ini, dan jury (singular entity) menggunakan 'is evaluating'."
+    }
+  ],
+  "finalQuiz": [
+    {
+      "id": "pc-q1",
+      "question": "Which sentence correctly illustrates an action happening at the exact moment of speaking?",
+      "options": [
+        "Be quiet! The professor is explaining an important concept.",
+        "The professor explains an important concept every day.",
+        "The professor is explain an important concept right now.",
+        "Be quiet! The professor explains an important concept."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Tanda seru 'Be quiet!' mengindikasikan bahwa peristiwa penjelasan sedang terjadi saat ini, sehingga wajib menggunakan Present Continuous: 'is explaining'.",
+        "wrongAnalysis": [
+          "Opsi B menggunakan Present Simple untuk rutinitas, bukan peristiwa instan di depan mata.",
+          "Opsi C salah karena memadukan 'is' dengan kata kerja dasar 'explain' tanpa akhiran -ing.",
+          "Opsi D keliru dalam konteks seruan yang menuntut aksi aktif yang sedang berlangsung."
+        ],
+        "readingStrategy": "Cari petunjuk situasional seperti 'Be quiet!', 'Look!', atau 'Listen!' yang menandai aksi sedang terjadi.",
+        "keywords": ["Be quiet", "is explaining", "moment of speaking", "in progress"]
+      }
+    },
+    {
+      "id": "pc-q2",
+      "question": "Why is the sentence 'I am understanding this chapter very well' considered grammatically incorrect?",
+      "options": [
+        "Because 'understand' is a stative verb that describes a state of mind, not a continuous physical action.",
+        "Because the auxiliary verb 'am' should be changed to 'is'.",
+        "Because 'chapter' is an uncountable noun.",
+        "Because continuous tenses can never be used in affirmative sentences."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "'Understand' adalah kata kerja kognisi statis (stative verb). Pemahaman adalah kondisi mental utuh, bukan aksi fisik yang dapat dipotong per detik, sehingga harus berbentuk Present Simple: 'I understand this chapter'.",
+        "wrongAnalysis": [
+          "Opsi B salah karena subjek 'I' selalu berpasangan dengan 'am', bukan 'is'.",
+          "Opsi C salah karena 'chapter' adalah kata benda yang dapat dihitung (countable).",
+          "Opsi D salah karena tenses continuous sangat umum pada kalimat afirmatif."
+        ],
+        "readingStrategy": "Hafalkan klasifikasi stative verbs (kognisi, emosi, kepemilikan, indera) yang pantang memakai akhiran -ing.",
+        "keywords": ["understand", "stative verb", "state of mind", "mental state"]
+      }
+    },
+    {
+      "id": "pc-q3",
+      "question": "Choose the sentence that correctly spells the -ing form for a consonant-vowel-consonant (CVC) verb:",
+      "options": [
+        "The athlete is runing as fast as he can.",
+        "The athlete is running as fast as he can.",
+        "The athlete is runeing as fast as he can.",
+        "The athlete is runnning as fast as he can."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Verb 'run' bersuku kata satu dan berpola Konsonan (r) - Vokal (u) - Konsonan (n). Aturan ejaannya mewajibkan penggandaan konsonan terakhir menjadi 'running'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena lupa menggandakan huruf 'n'.",
+          "Opsi C salah karena menambahkan huruf 'e' yang tidak ada dalam kata asal.",
+          "Opsi D salah karena huruf 'n' berlebihan (tiga huruf n)."
+        ],
+        "readingStrategy": "Periksa struktur ejaan kata kerja pendek satu suku kata sebelum menambahkan -ing.",
+        "keywords": ["run", "CVC rule", "double consonant", "running"]
+      }
+    },
+    {
+      "id": "pc-q4",
+      "question": "Which sentence correctly demonstrates Present Continuous used for a temporary situation?",
+      "options": [
+        "I live in Bandung permanently with my family.",
+        "I am living with my aunt for two weeks while my house is being renovated.",
+        "I am always living in Bandung with my family.",
+        "I lives with my aunt for two weeks."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Tinggal selama dua minggu saat rumah direnovasi ('for two weeks') adalah situasi sementara (temporary situation), yang secara tepat diekspresikan dengan Present Continuous: 'I am living with my aunt'.",
+        "wrongAnalysis": [
+          "Opsi A menyatakan domisili permanen yang merupakan ranah Present Simple.",
+          "Opsi C tidak alami karena menggabungkan 'permanently' dengan continuous tenses.",
+          "Opsi D salah secara grammar karena subjek 'I' tidak boleh menggunakan 'lives'."
+        ],
+        "readingStrategy": "Perhatikan keterangan waktu terbatas (for two weeks, this month) sebagai penanda situasi sementara.",
+        "keywords": ["temporary situation", "am living", "two weeks", "renovated"]
+      }
+    },
+    {
+      "id": "pc-q5",
+      "question": "Choose the grammatically sound question in Present Continuous:",
+      "options": [
+        "Why is you shouting at the television?",
+        "Why are you shouting at the television?",
+        "Why you are shouting at the television?",
+        "Why do you shouting at the television?"
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Subjek 'you' mewajibkan kata bantu 'are'. Pada kalimat tanya Wh-, posisi to be harus mendahului subjek (inversion): 'Why are you shouting...?'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena subjek 'you' tidak boleh berpasangan dengan 'is'.",
+          "Opsi C salah karena tidak melakukan pembalikan to be ke depan subjek (word order error).",
+          "Opsi D salah karena 'do' tidak dapat dipadukan dengan kata kerja berakhiran -ing."
+        ],
+        "readingStrategy": "Pastikan urutan kata kalimat tanya: Wh-word + to be + Subject + Verb-ing.",
+        "keywords": ["Why are you", "inversion", "shouting", "interrogative"]
+      }
+    },
+    {
+      "id": "pc-q6",
+      "question": "Identify the sentence that correctly uses the verb 'have' in the continuous form:",
+      "options": [
+        "She is having three expensive sports cars in her garage.",
+        "She is having breakfast with her colleagues at the cafeteria.",
+        "She is having a master's degree in computer science.",
+        "She is having a lot of relatives in Surabaya."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "'Have' dalam arti memakan sarapan ('having breakfast') adalah aksi fisik dinamis, sehingga BISA digunakan dalam Present Continuous. Pada ketiga opsi lain, 'have' bermakna kepemilikan statis yang tidak boleh continuous.",
+        "wrongAnalysis": [
+          "Opsi A salah karena kepemilikan mobil adalah keadaan statis ('She has three cars').",
+          "Opsi C salah karena kepemilikan gelar akademis adalah fakta statis ('She has a degree').",
+          "Opsi D salah karena hubungan kekerabatan adalah relasi statis ('She has many relatives')."
+        ],
+        "readingStrategy": "Uji makna kata 'have': jika bermakna 'makan/minum/mengalami acara', boleh pakai -ing. Jika bermakna 'punya/memiliki', dilarang pakai -ing.",
+        "keywords": ["have", "having breakfast", "dynamic action", "stative possession"]
+      }
+    },
+    {
+      "id": "pc-q7",
+      "question": "Which sentence correctly expresses a pre-arranged future schedule (fixed arrangement)?",
+      "options": [
+        "We are flying to Tokyo next Tuesday morning.",
+        "We are fly to Tokyo next Tuesday morning.",
+        "We flying to Tokyo next Tuesday morning.",
+        "We will flying to Tokyo next Tuesday morning."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Jadwal penerbangan yang sudah dibeli tiketnya ('next Tuesday morning') sering dan paling alami diungkapkan dengan Present Continuous: 'We are flying...'.",
+        "wrongAnalysis": [
+          "Opsi B salah karena memadukan 'are' dengan kata dasar 'fly'.",
+          "Opsi C salah karena to be 'are' hilang dari kalimat.",
+          "Opsi D salah karena modal 'will' harus diikuti bare infinitive 'will fly', bukan 'will flying'."
+        ],
+        "readingStrategy": "Pahami bahwa Present Continuous adalah salah satu cara paling alami untuk mengungkapkan rencana masa depan yang sudah matang disepakati.",
+        "keywords": ["fixed arrangement", "are flying", "next Tuesday", "future plan"]
+      }
+    },
+    {
+      "id": "pc-q8",
+      "question": "What is the common Indonesian learner error in: 'Listen, the phone ringing'?",
+      "options": [
+        "Omission of the required auxiliary 'to be' before the participle.",
+        "Using a continuous tense for an electronic device.",
+        "Misspelling of the word 'ringing'.",
+        "Placing the word 'Listen' at the beginning of the clause."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Penutur Indonesia kerap menghilangkan to be ('the phone ringing') karena dalam bahasa Indonesia cukup mengatakan 'teleponnya bunyi' tanpa kata bantu penjelas waktu.",
+        "wrongAnalysis": [
+          "Opsi B tidak tepat karena perangkat elektronik yang berdering adalah aksi nyata yang valid.",
+          "Opsi C tidak tepat karena ejaan 'ringing' sudah benar.",
+          "Opsi D tidak tepat karena peletakan kata seru 'Listen' di awal adalah hal lazim."
+        ],
+        "readingStrategy": "Ingat rumus paten: Tidak ada Continuous tenses tanpa to be (is/am/are).",
+        "keywords": ["omission of to be", "phone is ringing", "Indonesian transfer", "auxiliary"]
+      }
+    },
+    {
+      "id": "pc-q9",
+      "question": "Complete the negative sentence: 'Hendra ___ on the project this afternoon because he is unwell.'",
+      "options": ["isn't working", "doesn't working", "not working", "aren't working"],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Subjek 'Hendra' adalah orang ketiga tunggal (he). Bentuk negatif Present Continuous adalah 'is not' atau 'isn't working'.",
+        "wrongAnalysis": [
+          "Opsi B salah karena auxiliary 'doesn't' tidak boleh berpasangan dengan verb-ing.",
+          "Opsi C salah karena kata 'not' berdiri sendiri tanpa to be.",
+          "Opsi D salah karena 'aren't' hanya untuk subjek jamak (they/we/you)."
+        ],
+        "readingStrategy": "Sesuaikan to be dengan subjek tunggal Hendra (he → is not/isn't).",
+        "keywords": ["Hendra", "isn't working", "negative continuous", "this afternoon"]
+      }
+    },
+    {
+      "id": "pc-q10",
+      "question": "Which sentence correctly contrasts a routine with an ongoing action?",
+      "options": [
+        "I usually drive to work, but today I am taking the train.",
+        "I am usually driving to work, but today I take the train.",
+        "I usually drive to work, but today I take the train.",
+        "I am usually drive to work, but today I am taking the train."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Rutinitas sehari-hari memakai Present Simple ('I usually drive'), sedangkan deviasi/pengecualian aksi hari ini memakai Present Continuous ('today I am taking the train').",
+        "wrongAnalysis": [
+          "Opsi B membalik tenses (kebiasaan malah pakai continuous, aksi hari ini malah pakai simple).",
+          "Opsi C kurang tajam karena mengabaikan sifat aksi sesaat hari ini yang sedang berlangsung.",
+          "Opsi D salah secara grammar karena 'am usually drive' menggabungkan to be dan verb dasar."
+        ],
+        "readingStrategy": "Gunakan Present Simple untuk 'pola umum' (usually) dan Present Continuous untuk 'pengecualian saat ini' (today / this time).",
+        "keywords": ["usually drive", "today I am taking", "routine vs ongoing", "contrast"]
+      }
+    }
+  ]
+}

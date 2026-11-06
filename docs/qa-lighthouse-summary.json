@@ -1,0 +1,26 @@
+{
+  "page": "index.html",
+  "formFactor": "mobile-375x812",
+  "loadDurationMs": 1260,
+  "metrics": {
+    "fcpMs": 632,
+    "domContentLoadedMs": 616,
+    "loadMs": 741,
+    "transferSize": 15479
+  },
+  "a11yChecks": {
+    "hasDoctype": true,
+    "hasLang": true,
+    "hasTitle": true,
+    "hasViewport": true,
+    "hasSkipLink": true,
+    "unlabeledButtons": 0,
+    "unlabeledInputs": 0,
+    "missingImageAlts": 0
+  },
+  "scores": {
+    "performance": 98,
+    "accessibility": 100
+  },
+  "targetMet": true
+}

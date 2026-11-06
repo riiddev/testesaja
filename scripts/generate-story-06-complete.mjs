@@ -1,0 +1,1898 @@
+import fs from "fs";
+import path from "path";
+
+// Define the full Story 6 data
+const story06 = {
+  id: "story-06",
+  number: 6,
+  title: "Magang Hari Pertama",
+  titleEn: "First Day as an Intern",
+  level: "B1",
+  levelReq: 6,
+  totalEpisodes: 10,
+  themeColor: "#1A365D",
+  description: "Memasuki dunia kerja profesional di gedung perkantoran multinasional, menulis email resmi, menerima panggilan telepon bisnis, mengatasi kendala teknis kantor, dan presentasi singkat perkenalan diri di depan tim.",
+  learningFocus: "Professional Workplace English, Office Etiquette, Formal Business Emails, Telephone Manners, Present Perfect for Work Status, Signposting Language.",
+  episodes: [
+    // EPISODE 1
+    {
+      id: 1,
+      number: 1,
+      title: "Kartu Akses di Meja Resepsionis",
+      titleEn: "Badge & Access Card at the Reception Desk",
+      estimatedMinutes: 10,
+      recap: "Pagi cerah pukul 08.15 di kawasan pusat bisnis kota, kamu berdiri mengenakan pakaian kerja rapi di lobi marmer megah Global Innovation Hub.",
+      dialogue: [
+        {
+          id: "s6e1_d1",
+          speaker: "Narator",
+          en: "Glass automatic turnstiles chime softly as hundreds of employees tap their digital smart cards to enter the tower.",
+          idText: "Pintu putar kaca otomatis berdentang lembut saat ratusan karyawan mengetuk kartu pintar digital mereka untuk masuk gedung."
+        },
+        {
+          id: "s6e1_d2",
+          speaker: "Kanci",
+          en: "Kerapian pakaianmu sudah sempurna! Mari lapor ke meja resepsionis utama untuk mengambil kartu akses magangmu!",
+          idText: "Kerapian pakaianmu sudah sempurna! Mari lapor ke meja resepsionis utama untuk mengambil kartu akses magangmu!"
+        },
+        {
+          id: "s6e1_d3",
+          speaker: "Receptionist",
+          en: "Good morning! Welcome to Global Innovation Hub. Are you visiting a client or arriving for orientation?",
+          idText: "Selamat pagi! Selamat datang di Global Innovation Hub. Apakah Anda bertamu ke klien atau hadir untuk orientasi?"
+        },
+        {
+          id: "s6e1_choice_1",
+          type: "interactive_choice",
+          prompt: "Resepsionis tersenyum ramah di balik meja marmer hitam. Bagaimana caramu memperkenalkan diri secara profesional?",
+          options: [
+            {
+              id: "s6e1_opt_1a",
+              text: "Good morning! My name is Alex, and I am the new project intern reporting to Sarah Jenkins on the twelfth floor.",
+              speakerReply: "Receptionist",
+              reactionEn: "Welcome Alex! We have your credentials prepared. Please show your ID card so I can issue your building access card.",
+              reactionId: "Selamat datang Alex! Berkasmu sudah disiapkan. Tolong tunjukkan kartu identitasmu agar saya bisa menerbitkan kartu akses gedung."
+            },
+            {
+              id: "s6e1_opt_1b",
+              text: "Hello! Here is my internship invitation letter from the Human Resources department.",
+              speakerReply: "Receptionist",
+              reactionEn: "Thank you! Everything is verified in the system. Here is your magnetic security card and lanyard.",
+              reactionId: "Terima kasih! Semuanya telah terverifikasi di sistem. Ini kartu keamanan magnetik dan tali gantunganmu."
+            }
+          ]
+        },
+        {
+          id: "s6e1_d4",
+          speaker: "You",
+          en: "Thank you very much. I will tap this card at the security gate and take the elevator up.",
+          idText: "Terima kasih banyak. Saya akan mengetuk kartu ini di gerbang keamanan dan naik menggunakan lift."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-card",
+          word: "card",
+          partOfSpeech: "noun",
+          enDefinition: "A small piece of plastic or thick paper used for identification or security access.",
+          idMeaning: "kartu akses identitas",
+          contextSentence: "Always wear your magnetic access card while inside the building."
+        },
+        {
+          wordId: "oxford-reception",
+          word: "reception",
+          partOfSpeech: "noun",
+          enDefinition: "The area in a hotel or office where visitors are greeted and appointments are checked.",
+          idMeaning: "meja resepsionis kantor",
+          contextSentence: "Please check in at the reception desk upon your arrival."
+        },
+        {
+          wordId: "oxford-security",
+          word: "security",
+          partOfSpeech: "noun",
+          enDefinition: "Procedures and staff ensuring safety and protection against danger or unauthorized entry.",
+          idMeaning: "pos keamanan gedung",
+          contextSentence: "Pass through the security gates before heading to the elevators."
+        },
+        {
+          wordId: "oxford-building",
+          word: "building",
+          partOfSpeech: "noun",
+          enDefinition: "A structure with a roof and walls, such as a house, factory, or office tower.",
+          idMeaning: "gedung perkantoran",
+          contextSentence: "The office building is thirty stories tall with glass windows."
+        },
+        {
+          wordId: "oxford-visitor",
+          word: "visitor",
+          partOfSpeech: "noun",
+          enDefinition: "A person visiting someone or somewhere, especially on business or as a guest.",
+          idMeaning: "pengunjung / tamu resmi",
+          contextSentence: "All visitors must register their names in the digital guestbook."
+        },
+        {
+          wordId: "oxford-enter",
+          word: "enter",
+          partOfSpeech: "verb",
+          enDefinition: "To come or go into a place or premises.",
+          idMeaning: "masuk melewati gerbang",
+          contextSentence: "Tap your badge on the turnstile sensor to enter the lobby."
+        }
+      ],
+      grammarFocus: {
+        title: "Passive Voice Dasar untuk Prosedur Resmi ('Badges are issued at...')",
+        topicId: "passive-voice-official",
+        explanation: "Gunakan kalimat pasif (is/are + past participle V3) saat menjelaskan prosedur resmi korporat dan peraturan keamanan di tempat kerja.",
+        formula: "Subject + is/are + [Past Participle V3] / All visitors are required to wear security cards."
+      },
+      culturalTip: {
+        title: "Protokol Keamanan Gedung Perkantoran Multinasional",
+        content: "Di gedung perkantoran modern (*Class-A office towers*), *access badge* wajib dikalungkan (*lanyard*) atau dijepit di pakaian setinggi dada selama berada di dalam gedung sebagai tanda otorisasi resmi."
+      },
+      quiz: [
+        {
+          id: "s6_ep1_q1",
+          question: "Where does the new intern report first upon arriving at the office tower?",
+          options: [
+            "At the rooftop helipad",
+            "At the reception desk in the ground floor lobby",
+            "Inside the basement parking garage",
+            "At the public subway ticket booth"
+          ],
+          correctIndex: 1,
+          explanation: "Peserta magang melapor pertama kali di meja resepsionis di lobi lantai dasar."
+        },
+        {
+          id: "s6_ep1_q2",
+          question: "What item is issued to employees and interns to pass through security gates?",
+          options: [
+            "A magnetic access card",
+            "A paper train ticket",
+            "A wooden toy key",
+            "A metal coffee mug"
+          ],
+          correctIndex: 0,
+          explanation: "Kartu akses magnetik ('magnetic access card') diterbitkan untuk melewati gerbang keamanan."
+        },
+        {
+          id: "s6_ep1_q3",
+          question: "Which sentence uses the correct passive voice for an official company rule?",
+          options: [
+            "Identification badges are required at all times.",
+            "Everyone require badges tomorrow morning.",
+            "The badge is wearing the employee.",
+            "Security will walking around the doors."
+          ],
+          correctIndex: 0,
+          explanation: "'Identification badges are required at all times' menggunakan konstruksi Passive Voice yang tepat (are + required)."
+        },
+        {
+          id: "s6_ep1_q4",
+          question: "Which noun refers to a person visiting a place for business or pleasure?",
+          options: [
+            "Visitor",
+            "Machine",
+            "Carpet",
+            "Shelf"
+          ],
+          correctIndex: 0,
+          explanation: "'Visitor' adalah pengunjung atau tamu resmi di suatu gedung perkantoran."
+        },
+        {
+          id: "s6_ep1_q5",
+          question: "Complete the sentence: 'Please tap your badge on the sensor to ______ the office area.'",
+          options: [
+            "enter",
+            "throw",
+            "sweep",
+            "cook"
+          ],
+          correctIndex: 0,
+          explanation: "'Enter' (masuk) adalah kata kerja yang tepat untuk masuk ke area kantor."
+        }
+      ],
+      takeaways: [
+        "Menguasai kosakata lobi kantor: card, reception, security, building, visitor, enter.",
+        "Menggunakan Passive Voice untuk memahami aturan resmi gedung perkantoran.",
+        "Menampilkan sikap sopan dan profesional saat melapor di meja resepsionis."
+      ],
+      cliffhanger: "Pintu lift kaca meluncur mulus ke lantai 12. Pintu lift mendenting terbuka memperlihatkan pemandangan lantai kantor terbuka yang luas dengan dinding kaca menghadap panorama kota..."
+    },
+
+    // EPISODE 2
+    {
+      id: 2,
+      number: 2,
+      title: "Menjelajahi Lantai Kantor Terbuka",
+      titleEn: "Tour of the Open Office Floor",
+      estimatedMinutes: 10,
+      recap: "Kamu tiba di lantai 12 dan mengagumi tata letak ruang kerja modern (*open-plan office*) lengkap dengan ruang konferensi kedap suara dan bilik kolaborasi.",
+      dialogue: [
+        {
+          id: "s6e2_d1",
+          speaker: "Sarah",
+          en: "Welcome to the twelfth floor! I am Sarah Jenkins, Senior Project Manager. Let me show you around our open office.",
+          idText: "Selamat datang di lantai 12! Saya Sarah Jenkins, Senior Project Manager. Mari saya tunjukkan sekeliling kantor terbuka kita."
+        },
+        {
+          id: "s6e2_d2",
+          speaker: "You",
+          en: "Thank you Sarah! The natural light and open layout make this workplace look very dynamic.",
+          idText: "Terima kasih Sarah! Cahaya alami dan tata letak terbuka membuat tempat kerja ini terlihat sangat dinamis."
+        },
+        {
+          id: "s6e2_d3",
+          speaker: "Kanci",
+          en: "Lihat layar monitor ganda dan kursi ergonomis di setiap meja! Semua perlengkapan kerja tersusun rapi!",
+          idText: "Lihat layar monitor ganda dan kursi ergonomis di setiap meja! Semua perlengkapan kerja tersusun rapi!"
+        },
+        {
+          id: "s6e2_choice_1",
+          type: "interactive_choice",
+          prompt: "Sarah menunjuk workstation di samping jendela besar. Apa tanggapanmu?",
+          options: [
+            {
+              id: "s6e2_opt_1a",
+              text: "This desk setup is fantastic. Where are the team conference rooms located for group discussions?",
+              speakerReply: "Sarah",
+              reactionEn: "The main conference rooms are behind the glass partition on the east wing. Room A is booked for our 10 AM meeting.",
+              reactionId: "Ruang konferensi utama ada di balik partisi kaca di sayap timur. Ruang A sudah dipesan untuk rapat jam 10 kita."
+            },
+            {
+              id: "s6e2_opt_1b",
+              text: "Could you tell me how different departments collaborate across this floor?",
+              speakerReply: "Sarah",
+              reactionEn: "Design sits next to engineering, and our project management department coordinates product sprints in the center.",
+              reactionId: "Tim desain duduk di sebelah tim teknis, dan departemen manajemen proyek mengoordinasikan sprint produk di area tengah."
+            }
+          ]
+        },
+        {
+          id: "s6e2_d4",
+          speaker: "Sarah",
+          en: "Our modern office equipment is designed to help you communicate freely and do your best work.",
+          idText: "Perlengkapan kantor modern kita dirancang untuk membantumu berkomunikasi leluasa dan menghasilkan karya terbaik."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-office",
+          word: "office",
+          partOfSpeech: "noun",
+          enDefinition: "A room, set of rooms, or building used as a place for commercial, professional, or bureaucratic work.",
+          idMeaning: "kantor tempat bekerja",
+          contextSentence: "The tech company office features open desks and quiet phone booths."
+        },
+        {
+          wordId: "oxford-floor",
+          word: "floor",
+          partOfSpeech: "noun",
+          enDefinition: "A level or story of a building.",
+          idMeaning: "lantai bertingkat gedung",
+          contextSentence: "Our digital product team works on the twelfth floor."
+        },
+        {
+          wordId: "oxford-desk",
+          word: "desk",
+          partOfSpeech: "noun",
+          enDefinition: "A piece of furniture with a flat top, suitable for writing, computer work, or reading.",
+          idMeaning: "meja kerja",
+          contextSentence: "Keep your work desk organized with notebooks and stationery."
+        },
+        {
+          wordId: "oxford-equipment",
+          word: "equipment",
+          partOfSpeech: "noun",
+          enDefinition: "The necessary items for a particular purpose or operational function.",
+          idMeaning: "perlengkapan kerja kantor",
+          contextSentence: "Every workstation is supplied with high-speed computing equipment."
+        },
+        {
+          wordId: "oxford-conference",
+          word: "conference",
+          partOfSpeech: "noun",
+          enDefinition: "A formal meeting for discussion or consultation.",
+          idMeaning: "ruang konferensi / rapat resmi",
+          contextSentence: "The weekly project sprint takes place in the main conference room."
+        },
+        {
+          wordId: "oxford-department",
+          word: "department",
+          partOfSpeech: "noun",
+          enDefinition: "A division of a large organization such as a government, university, or business.",
+          idMeaning: "departemen / divisi kerja",
+          contextSentence: "The design department works closely with software engineers."
+        }
+      ],
+      grammarFocus: {
+        title: "Preposisi Ruang Terbuka Perkantoran ('adjacent to', 'opposite', 'designated for')",
+        topicId: "prepositions-office",
+        explanation: "Gunakan preposisi formal untuk mendeskripsikan lokasi departemen di kantor: 'adjacent to' (bersebelahan dengan), 'opposite' (berhadapan langsung), dan 'designated for' (diperuntukkan bagi).",
+        formula: "The conference room is [prepositional phrase] / The quiet booths are designated for private calls."
+      },
+      culturalTip: {
+        title: "Kultur Kantor Terbuka (*Open-Plan Office Etiquette*)",
+        content: "Di kantor berkonsep terbuka, mengenakan headphone saat mendengarkan audio dan berbicara dengan volume suara terkontrol adalah etika mutlak agar tidak mengganggu konsentrasi rekan kerja di meja sebelah."
+      },
+      quiz: [
+        {
+          id: "s6_ep2_q1",
+          question: "On which floor of the building is Sarah Jenkins' team located?",
+          options: [
+            "The 2nd floor",
+            "The 5th floor",
+            "The 12th floor",
+            "The 30th floor"
+          ],
+          correctIndex: 2,
+          explanation: "Tim Sarah Jenkins berlokasi di lantai 12 ('the twelfth floor')."
+        },
+        {
+          id: "s6_ep2_q2",
+          question: "What feature characterizes the main office layout shown by Sarah?",
+          options: [
+            "A dark underground maze",
+            "A modern open-plan layout with natural light",
+            "A crowded noisy shopping center",
+            "An outdoor sports field"
+          ],
+          correctIndex: 1,
+          explanation: "Tata letak kantor berupa ruang terbuka modern dengan pencahayaan alami yang melimpah."
+        },
+        {
+          id: "s6_ep2_q3",
+          question: "Which word means 'a division of a large business or company'?",
+          options: [
+            "Department",
+            "Carpet",
+            "Garbage",
+            "Notice"
+          ],
+          correctIndex: 0,
+          explanation: "'Department' adalah divisi atau bagian kerja dalam suatu organisasi bisnis."
+        },
+        {
+          id: "s6_ep2_q4",
+          question: "Which preposition correctly completes: 'The conference room is situated ______ the design department.'?",
+          options: [
+            "adjacent to",
+            "inside of down",
+            "under off",
+            "through into"
+          ],
+          correctIndex: 0,
+          explanation: "'Adjacent to' adalah preposisi formal yang berarti bersebelahan langsung dengan."
+        },
+        {
+          id: "s6_ep2_q5",
+          question: "Complete the sentence: 'Please maintain clean desk ______ after completing your tasks.'",
+          options: [
+            "equipment",
+            "trash",
+            "noise",
+            "throw"
+          ],
+          correctIndex: 0,
+          explanation: "'Equipment' (perlengkapan kerja) adalah kata benda yang tepat."
+        }
+      ],
+      takeaways: [
+        "Memahami kosakata tata letak kantor: office, floor, desk, equipment, conference, department.",
+        "Menggunakan preposisi formal (adjacent to, opposite) untuk navigasi lantai kerja.",
+        "Mengetahui etika berkomunikasi di lingkungan kantor berkonsep open-plan."
+      ],
+      cliffhanger: "Setelah menaruh tas kerja di meja barumu, Sarah mengundangmu ke ruang rapat kecil berkaca bening: 'Ayo duduk sebentar untuk sesi 1-on-1 pertama kita membahas target proyek magangmu'..."
+    },
+
+    // EPISODE 3
+    {
+      id: 3,
+      number: 3,
+      title: "Pertemuan Pertama dengan Manajer Mentor",
+      titleEn: "First 1-on-1 with the Manager",
+      estimatedMinutes: 10,
+      recap: "Dalam sesi bimbingan tatap muka perdana, Sarah memaparkan ruang lingkup proyek, target capaian mingguan, dan ekspektasi profesional perusahaan.",
+      dialogue: [
+        {
+          id: "s6e3_d1",
+          speaker: "Sarah",
+          en: "As your project manager, my goal is to help you grow your skills and contribute directly to our mobile app launch.",
+          idText: "Sebagai manajer proyekmu, tujuan saya adalah membantumu mengembangkan keahlian dan berkontribusi langsung pada peluncuran aplikasi mobile kami."
+        },
+        {
+          id: "s6e3_d2",
+          speaker: "You",
+          en: "I am eager to learn, Sarah. I have prepared a list of milestones I hope to achieve during this internship.",
+          idText: "Saya sangat bersemangat untuk belajar, Sarah. Saya telah menyiapkan daftar target capaian yang ingin saya raih selama magang ini."
+        },
+        {
+          id: "s6e3_d3",
+          speaker: "Kanci",
+          en: "Buka buku catatanmu dan catat setiap arahan mentor dengan teliti! Keterampilan mendengar adalah kunci sukses di kantor!",
+          idText: "Buka buku catatanmu dan catat setiap arahan mentor dengan teliti! Keterampilan mendengar adalah kunci sukses di kantor!"
+        },
+        {
+          id: "s6e3_choice_1",
+          type: "interactive_choice",
+          prompt: "Sarah menanyakan pengalaman kerjamu sebelumnya dengan perangkat lunak manajemen proyek. Apa jawabanmu?",
+          options: [
+            {
+              id: "s6e3_opt_1a",
+              text: "I have used digital kanban boards in university group projects, but I am excited to receive your professional advice on enterprise tools.",
+              speakerReply: "Sarah",
+              reactionEn: "That background is very helpful! I will send you access invites to Jira and Slack right after our meeting.",
+              reactionId: "Latar belakang itu sangat membantu! Saya akan mengirimkan undangan akses Jira dan Slack segera setelah rapat kita."
+            },
+            {
+              id: "s6e3_opt_1b",
+              text: "What key project outcomes do you expect me to deliver by the end of my first month?",
+              speakerReply: "Sarah",
+              reactionEn: "By week four, you will analyze user onboarding metrics and present improvement recommendations to our team.",
+              reactionId: "Pada minggu keempat, kamu akan menganalisis metrik onboarding pengguna dan mempresentasikan rekomendasi perbaikan kepada tim kita."
+            }
+          ]
+        },
+        {
+          id: "s6e3_d4",
+          speaker: "Sarah",
+          en: "Always ask questions whenever you need advice. Being proactive and professional will take you far in your career.",
+          idText: "Selalu tanyakan bila kamu membutuhkan masukan. Bersikap proaktif dan profesional akan membawamu melangkah jauh dalam karier."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-manager",
+          word: "manager",
+          partOfSpeech: "noun",
+          enDefinition: "A person responsible for controlling or administering an organization, group, or project.",
+          idMeaning: "manajer / pengelola proyek",
+          contextSentence: "Sarah is an experienced project manager who supports intern growth."
+        },
+        {
+          wordId: "oxford-project",
+          word: "project",
+          partOfSpeech: "noun",
+          enDefinition: "An individual or collaborative enterprise that is carefully planned to achieve a particular aim.",
+          idMeaning: "proyek kerja perusahaan",
+          contextSentence: "Our software development project is scheduled for release in spring."
+        },
+        {
+          wordId: "oxford-goal",
+          word: "goal",
+          partOfSpeech: "noun",
+          enDefinition: "The object of a person's ambition or effort; an aim or desired result.",
+          idMeaning: "target sasaran / capaian",
+          contextSentence: "Setting clear weekly goals keeps your work organized."
+        },
+        {
+          wordId: "oxford-advice",
+          word: "advice",
+          partOfSpeech: "noun",
+          enDefinition: "Guidance or recommendations offered with regard to prudent future action.",
+          idMeaning: "saran nasihat / bimbingan",
+          contextSentence: "Listen carefully to professional advice from experienced senior leaders."
+        },
+        {
+          wordId: "oxford-expect",
+          word: "expect",
+          partOfSpeech: "verb",
+          enDefinition: "To regard something as likely to happen, or consider someone obligated to do something.",
+          idMeaning: "mengharapkan hasil kerja",
+          contextSentence: "Our managers expect punctual attendance at sprint meetings."
+        },
+        {
+          wordId: "oxford-professional",
+          word: "professional",
+          partOfSpeech: "adjective",
+          enDefinition: "Relating to or connected with a profession; competent or skillful.",
+          idMeaning: "profesional dan beretika",
+          contextSentence: "Maintain a polite and professional tone in all business communications."
+        }
+      ],
+      grammarFocus: {
+        title: "Present Perfect untuk Pengalaman & Kesiapan Kerja ('I have prepared...', 'Have you ever worked with...')",
+        topicId: "present-perfect-work",
+        explanation: "Gunakan Present Perfect Tense saat mendiskusikan latar belakang pengalaman terdahulu yang relevan dengan tugas saat ini.",
+        formula: "Subject + have/has + [past participle V3] / I have completed the preliminary orientation training."
+      },
+      culturalTip: {
+        title: "Pentingnya Pertemuan 1-on-1 (*Check-in Meetings*)",
+        content: "Di korporasi modern, sesi 1-on-1 rutin bersama manajer adalah ruang aman bagi pekerja dan pemagang untuk menyelaraskan ekspektasi (*alignment*), meminta masukan (*feedback*), dan mendiskusikan pengembangan karier."
+      },
+      quiz: [
+        {
+          id: "s6_ep3_q1",
+          question: "What is Sarah Jenkins' official job role at the company?",
+          options: [
+            "Senior Project Manager",
+            "Head Chef of the Cafeteria",
+            "Building Security Guard",
+            "Commercial Airline Pilot"
+          ],
+          correctIndex: 0,
+          explanation: "Sarah Jenkins menjabat sebagai Senior Project Manager."
+        },
+        {
+          id: "s6_ep3_q2",
+          question: "What primary software project will the new intern be contributing to?",
+          options: [
+            "A mobile app launch",
+            "A wooden ship construction",
+            "A highway paving contract",
+            "A botanical garden book"
+          ],
+          correctIndex: 0,
+          explanation: "Peserta magang berkontribusi pada peluncuran aplikasi mobile ('mobile app launch')."
+        },
+        {
+          id: "s6_ep3_q3",
+          question: "Which word means 'guidance or recommendations offered regarding future action'?",
+          options: [
+            "Advice",
+            "Garbage",
+            "Notice",
+            "Pocket"
+          ],
+          correctIndex: 0,
+          explanation: "'Advice' adalah nasihat atau saran bimbingan yang diberikan seseorang."
+        },
+        {
+          id: "s6_ep3_q4",
+          question: "Choose the correct verb form: 'I ______ the project proposal document already.'",
+          options: [
+            "have prepared",
+            "preparing",
+            "prepares",
+            "am prepare"
+          ],
+          correctIndex: 0,
+          explanation: "'Have prepared' adalah bentuk Present Perfect yang tepat untuk menyatakan kesiapan dokumen saat ini."
+        },
+        {
+          id: "s6_ep3_q5",
+          question: "Complete the sentence: 'Being proactive and ______ will help you succeed in any industry.'",
+          options: [
+            "professional",
+            "noisy",
+            "broken",
+            "careless"
+          ],
+          correctIndex: 0,
+          explanation: "'Professional' (profesional) adalah kata sifat yang melengkapi kalimat dengan sempurna."
+        }
+      ],
+      takeaways: [
+        "Mendalami kosakata bimbingan karier: manager, project, goal, advice, expect, professional.",
+        "Menggunakan Present Perfect untuk mengomunikasikan pengalaman dan kesiapan tugas.",
+        "Memaksimalkan sesi bimbingan 1-on-1 dengan mencatat arahan dan mengajukan pertanyaan proaktif."
+      ],
+      cliffhanger: "Sarah membuka laptopnya dan tersenyum: 'Tugas pertamamu pagi ini adalah menyusun surel perkenalan resmi kepada seluruh tim produk beranggotakan 25 orang. Mari buka klien surelmu!'"
+    },
+
+    // EPISODE 4
+    {
+      id: 4,
+      number: 4,
+      title: "Menulis Email Bisnis Pertama",
+      titleEn: "Drafting the Formal Introduction Email",
+      estimatedMinutes: 10,
+      recap: "Menulis surel resmi dengan struktur pembuka, isi, lampiran, dan salam penutup profesional adalah keterampilan inti korespondensi bisnis internasional.",
+      dialogue: [
+        {
+          id: "s6e4_d1",
+          speaker: "Sarah",
+          en: "Draft a concise introduction email to the product team. Remember to maintain a formal and courteous tone.",
+          idText: "Susunlah draf surel perkenalan yang ringkas kepada tim produk. Ingat untuk menjaga nada bicara yang formal dan sopan."
+        },
+        {
+          id: "s6e4_d2",
+          speaker: "Kanci",
+          en: "Gunakan baris subjek yang jelas dan informatif: 'Introduction: Alex - New Project Intern'!",
+          idText: "Gunakan baris subjek yang jelas dan informatif: 'Introduction: Alex - New Project Intern'!"
+        },
+        {
+          id: "s6e4_d3",
+          speaker: "You",
+          en: "I am writing: 'Dear Team, I am delighted to join Global Innovation Hub as a project intern starting today.'",
+          idText: "Saya sedang menulis: 'Dear Team, Saya sangat senang dapat bergabung di Global Innovation Hub sebagai pemagang proyek mulai hari ini.'"
+        },
+        {
+          id: "s6e4_choice_1",
+          type: "interactive_choice",
+          prompt: "Bagaimana kamu menyusun paragraf penutup dan melampirkan berkas ringkasan profilmu?",
+          options: [
+            {
+              id: "s6e4_opt_1a",
+              text: "I have attached my introductory profile and look forward to collaborating with each of you. Sincerely, Alex.",
+              speakerReply: "Sarah",
+              reactionEn: "Excellent email etiquette! Clear, warm, and highly professional. Go ahead and click send.",
+              reactionId: "Etika surel yang luar biasa! Jelas, hangat, dan sangat profesional. Silakan klik kirim."
+            },
+            {
+              id: "s6e4_opt_1b",
+              text: "Please let me know if anyone would like to grab a quick coffee during lunch break. Kind regards, Alex.",
+              speakerReply: "Sarah",
+              reactionEn: "A friendly closing touch that encourages informal networking! That works wonderfully.",
+              reactionId: "Sentuhan penutup yang ramah yang mendorong networking santai! Itu bekerja sangat baik."
+            }
+          ]
+        },
+        {
+          id: "s6e4_d4",
+          speaker: "Sarah",
+          en: "Well done! Your email informs the team with clarity and respect. That is the gold standard of business writing.",
+          idText: "Kerja bagus! Surelmu mengabarkan tim dengan kejelasan dan rasa hormat. Itu adalah standar emas penulisan bisnis."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-email",
+          word: "email",
+          partOfSpeech: "noun",
+          enDefinition: "Messages distributed by electronic means from one computer user to one or more recipients via a network.",
+          idMeaning: "surel / surat elektronik resmi",
+          contextSentence: "Send a confirmation email before the close of business today."
+        },
+        {
+          wordId: "oxford-colleague",
+          word: "colleague",
+          partOfSpeech: "noun",
+          enDefinition: "A person with whom one works in a profession or business.",
+          idMeaning: "rekan kerja sekantor",
+          contextSentence: "Introduce yourself politely to your new engineering colleagues."
+        },
+        {
+          wordId: "oxford-attach",
+          word: "attach",
+          partOfSpeech: "verb",
+          enDefinition: "To join or fasten something to something else; include a file with an email.",
+          idMeaning: "melampirkan dokumen berkas",
+          contextSentence: "Please attach your monthly project timeline to the email."
+        },
+        {
+          wordId: "oxford-regard",
+          word: "regard",
+          partOfSpeech: "noun",
+          enDefinition: "Best wishes or greetings, typically expressed at the end of a written message (e.g. 'Kind regards').",
+          idMeaning: "salam hormat penutup surat",
+          contextSentence: "Close formal business correspondence with 'Kind regards'."
+        },
+        {
+          wordId: "oxford-inform",
+          word: "inform",
+          partOfSpeech: "verb",
+          enDefinition: "To give someone facts or information about something; tell.",
+          idMeaning: "mengabarkan / memberitahukan",
+          contextSentence: "We are pleased to inform the team about our upcoming sprint."
+        },
+        {
+          wordId: "oxford-introduction",
+          word: "introduction",
+          partOfSpeech: "noun",
+          enDefinition: "The action of introducing someone or something; a preliminary explanation.",
+          idMeaning: "perkenalan diri resmi",
+          contextSentence: "The introduction email created a positive first impression."
+        }
+      ],
+      grammarFocus: {
+        title: "Struktur Formal Korespondensi Bisnis ('Dear [Name],', 'I look forward to...', 'Kind regards')",
+        topicId: "formal-email-writing",
+        explanation: "Dalam korespondensi bisnis resmi, gunakan kata pembuka terhormat ('Dear Team / Dear Ms. Jenkins'), frasa penutup harapan ('I look forward to collaborating with you'), dan salam takzim ('Sincerely / Kind regards').",
+        formula: "Salutation + Purpose of Writing + Call to Action/Closing + Sign-off"
+      },
+      culturalTip: {
+        title: "Etika Baris Subjek (*Subject Line*) Surel Profesional",
+        content: "Baris subjek surel bisnis harus dapat dipahami dalam 3 detik tanpa perlu membuka isi pesan, misalnya: *'Introduction: [Nama] - New Project Intern'* atau *'Action Required: Review Mobile UI Specs'*."
+      },
+      quiz: [
+        {
+          id: "s6_ep4_q1",
+          question: "What is the primary purpose of Alex's first email to the product department?",
+          options: [
+            "To ask for a vacation trip",
+            "To formally introduce themselves as the new project intern",
+            "To order twenty boxes of pizza",
+            "To cancel all company meetings"
+          ],
+          correctIndex: 1,
+          explanation: "Tujuan surel pertama adalah memperkenalkan diri secara resmi sebagai peserta magang baru."
+        },
+        {
+          id: "s6_ep4_q2",
+          question: "Which closing phrase is standard for formal international business correspondence?",
+          options: [
+            "See ya later buddy",
+            "Kind regards",
+            "Whatever happens happens",
+            "Bye for now lol"
+          ],
+          correctIndex: 1,
+          explanation: "'Kind regards' adalah salam penutup baku dalam korespondensi bisnis formal."
+        },
+        {
+          id: "s6_ep4_q3",
+          question: "Which verb means 'to include an electronic file or document along with an email'?",
+          options: [
+            "Attach",
+            "Throw",
+            "Sweep",
+            "Break"
+          ],
+          correctIndex: 0,
+          explanation: "'Attach' berarti menyertakan atau melampirkan berkas ke dalam surel."
+        },
+        {
+          id: "s6_ep4_q4",
+          question: "Which word refers to an individual with whom one works in a professional company?",
+          options: [
+            "Colleague",
+            "Carpet",
+            "Bottle",
+            "Machine"
+          ],
+          correctIndex: 0,
+          explanation: "'Colleague' adalah rekan kerja sekantor dalam dunia profesional."
+        },
+        {
+          id: "s6_ep4_q5",
+          question: "Complete the sentence: 'We write to ______ you that the quarterly report is ready for review.'",
+          options: [
+            "inform",
+            "lock",
+            "wash",
+            "cook"
+          ],
+          correctIndex: 0,
+          explanation: "'Inform' (mengabarkan/memberitahukan) adalah kata kerja yang tepat dalam konteks surel bisnis."
+        }
+      ],
+      takeaways: [
+        "Menguasai kosakata surel profesional: email, colleague, attach, regard, inform, introduction.",
+        "Menerapkan struktur pembuka, isi, dan penutup surel bisnis berstandar internasional.",
+        "Menghindari singkatan kasual dalam korespondensi resmi kantor."
+      ],
+      cliffhanger: "Sesaat setelah tombol send ditekan, telepon meja di samping komputermu berdering berulang kali dengan kode panggilan internasional dari London..."
+    },
+
+    // EPISODE 5
+    {
+      id: 5,
+      number: 5,
+      title: "Panggilan Telepon dari Klien London",
+      titleEn: "Handling an International Client Call",
+      estimatedMinutes: 10,
+      recap: "Menerima panggilan telepon bisnis berbahasa Inggris dari mitra luar negeri menuntut etika berbicara yang percaya diri, artikulasi jelas, dan pencatatan pesan yang akurat.",
+      dialogue: [
+        {
+          id: "s6e5_d1",
+          speaker: "Narator",
+          en: "The sleek VoIP telephone on the desk flashes with an incoming line from London headquarters.",
+          idText: "Telepon VoIP hitam ramping di meja berkedip menerima panggilan masuk dari kantor pusat London."
+        },
+        {
+          id: "s6e5_d2",
+          speaker: "Sarah",
+          en: "That is Arthur Vance, our lead client from British Fintech Solutions. Answer politely and see how we can assist him.",
+          idText: "Itu Arthur Vance, klien utama kita dari British Fintech Solutions. Angkatlah dengan sopan dan tanyakan apa yang bisa kita bantu."
+        },
+        {
+          id: "s6e5_d3",
+          speaker: "You",
+          en: "Good morning, Global Innovation Hub, Alex speaking. How may I direct your call today?",
+          idText: "Selamat pagi, Global Innovation Hub, dengan Alex di sini. Ada yang bisa saya bantu sambungkan hari ini?"
+        },
+        {
+          id: "s6e5_choice_1",
+          type: "interactive_choice",
+          prompt: "Mr. Vance meminta berbicara dengan Sarah Jenkins terkait dokumen kontrak penting. Apa yang kamu katakan?",
+          options: [
+            {
+              id: "s6e5_opt_1a",
+              text: "Could you please hold the line for a moment, Mr. Vance? I will transfer your call to Ms. Jenkins right away.",
+              speakerReply: "Client Vance",
+              reactionEn: "Thank you very much Alex, I appreciate your swift assistance.",
+              reactionId: "Terima kasih banyak Alex, saya sangat menghargai bantuan cepatmu."
+            },
+            {
+              id: "s6e5_opt_1b",
+              text: "Ms. Jenkins is right beside me. May I take a brief message or connect you directly to her extension?",
+              speakerReply: "Client Vance",
+              reactionEn: "Connecting directly would be marvelous. Please transfer me through.",
+              reactionId: "Menyambungkan langsung akan sangat luar biasa. Tolong sambungkan saya."
+            }
+          ]
+        },
+        {
+          id: "s6e5_d4",
+          speaker: "Sarah",
+          en: "Splendid telephone manners! You handled an important international client with calm confidence.",
+          idText: "Etika bertelepon yang sangat hebat! Kamu menangani klien internasional penting dengan ketenangan dan rasa percaya diri."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-call",
+          word: "call",
+          partOfSpeech: "noun",
+          enDefinition: "An instance of speaking to someone on the phone or making a phone connection.",
+          idMeaning: "panggilan telepon kantor",
+          contextSentence: "Answer every telephone call before the third ring."
+        },
+        {
+          wordId: "oxford-message",
+          word: "message",
+          partOfSpeech: "noun",
+          enDefinition: "A verbal, written, or recorded communication sent to or left for a recipient who cannot be contacted directly.",
+          idMeaning: "pesan catatan telepon",
+          contextSentence: "I took a detailed message from the client for our director."
+        },
+        {
+          wordId: "oxford-transfer",
+          word: "transfer",
+          partOfSpeech: "verb",
+          enDefinition: "To redirect an incoming telephone call to another phone or extension.",
+          idMeaning: "menyambungkan panggilan telepon",
+          contextSentence: "I will transfer your call to the project manager immediately."
+        },
+        {
+          wordId: "oxford-hold",
+          word: "hold",
+          partOfSpeech: "verb",
+          enDefinition: "To remain on a telephone line without disconnecting while waiting.",
+          idMeaning: "menahan sambungan telepon (*hold*)",
+          contextSentence: "Please hold for just a moment while I check her availability."
+        },
+        {
+          wordId: "oxford-client",
+          word: "client",
+          partOfSpeech: "noun",
+          enDefinition: "A person or organization using the services of a professional person or company.",
+          idMeaning: "klien / pelanggan perusahaan",
+          contextSentence: "Our enterprise client requested a live demonstration of the software."
+        },
+        {
+          wordId: "oxford-important",
+          word: "important",
+          partOfSpeech: "adjective",
+          enDefinition: "Of great significance or value; likely to have a profound effect on success.",
+          idMeaning: "penting dan berpengaruh",
+          contextSentence: "Contract discussions with the client are extremely important."
+        }
+      ],
+      grammarFocus: {
+        title: "Ungkapan Etika Telepon Bisnis ('How may I help you?', 'Could you please hold...', 'I will transfer...')",
+        topicId: "telephone-etiquette",
+        explanation: "Gunakan modal verbs kesopanan ('may', 'could', 'would') saat berinteraksi di telepon kantor untuk menciptakan kesan pelayanan kelas satu.",
+        formula: "How may I + [base verb]? / Could you please hold while I transfer your call?"
+      },
+      culturalTip: {
+        title: "Standar Penerimaan Panggilan Kantor Internasional",
+        content: "Saat mengangkat telepon kantor, sebutkan nama perusahaan, nama divisi, serta nama diri dengan ramah: *'Good morning, Global Innovation Hub, Alex speaking. How may I direct your call?'* Ini mengonfirmasi kepada penelepon bahwa mereka terhubung ke nomor yang benar."
+      },
+      quiz: [
+        {
+          id: "s6_ep5_q1",
+          question: "Who called the office from the London headquarters?",
+          options: [
+            "A food delivery driver",
+            "Arthur Vance, a lead client from British Fintech Solutions",
+            "A university dormitory roommate",
+            "A railway station announcer"
+          ],
+          correctIndex: 1,
+          explanation: "Penelepon adalah Arthur Vance, klien utama dari British Fintech Solutions."
+        },
+        {
+          id: "s6_ep5_q2",
+          question: "Which telephone phrase is used to ask a caller to wait briefly on the line?",
+          options: [
+            "Hang up now please",
+            "Could you please hold for a moment?",
+            "Throw the phone away",
+            "Speak louder because I'm busy"
+          ],
+          correctIndex: 1,
+          explanation: "'Could you please hold for a moment?' adalah frasa baku untuk memohon penelepon menunggu sebentar."
+        },
+        {
+          id: "s6_ep5_q3",
+          question: "Which verb means 'to redirect an incoming phone call to another person's extension'?",
+          options: [
+            "Transfer",
+            "Sweep",
+            "Cook",
+            "Lock"
+          ],
+          correctIndex: 0,
+          explanation: "'Transfer' berarti menyambungkan panggilan ke nomor sambungan lain."
+        },
+        {
+          id: "s6_ep5_q4",
+          question: "Which word means 'a customer or person using the professional services of a company'?",
+          options: [
+            "Client",
+            "Garbage",
+            "Machine",
+            "Carpet"
+          ],
+          correctIndex: 0,
+          explanation: "'Client' adalah klien atau pelanggan jasa profesional perusahaan."
+        },
+        {
+          id: "s6_ep5_q5",
+          question: "Complete the sentence: 'May I take a ______ for Ms. Jenkins while she is in the meeting?'",
+          options: [
+            "message",
+            "garbage",
+            "bottle",
+            "floor"
+          ],
+          correctIndex: 0,
+          explanation: "'Message' (pesan) adalah kata benda yang tepat dalam penawaran mencatat pesan telepon."
+        }
+      ],
+      takeaways: [
+        "Mempelajari kosakata etika bertelepon kantor: call, message, transfer, hold, client, important.",
+        "Menggunakan salam dan ungkapan santun dalam menerima panggilan internasional.",
+        "Mampu mencatat pesan telepon secara ringkas dan menyambungkan panggilan dengan sigap."
+      ],
+      cliffhanger: "Pukul 12.00 siang menandai jam istirahat. Sarah menepuk pundakmu: 'Kerja keras pagi ini luar biasa! Ayo kita ke pantry kopi lantai 12 untuk makan siang dan berkenalan dengan rekan magang lainnya'..."
+    },
+
+    // EPISODE 6
+    {
+      id: 6,
+      number: 6,
+      title: "Obrolan Santai di Pantry Kopi",
+      titleEn: "Coffee Pantry Small Talk with Kenji",
+      estimatedMinutes: 10,
+      recap: "Pantry kantor menjadi area istirahat santai untuk bercakap-cakap ringan (*small talk*), menjalin keakraban rekan kerja, dan membicarakan hobi serta perjalanan ke kantor.",
+      dialogue: [
+        {
+          id: "s6e6_d1",
+          speaker: "Narator",
+          en: "The office pantry is filled with the warm aroma of roasted coffee beans and chilled sparkling water machines.",
+          idText: "Pantry kantor dipenuhi aroma hangat seduhan biji kopi panggang dan mesin air soda dingin."
+        },
+        {
+          id: "s6e6_d2",
+          speaker: "Kenji",
+          en: "Hi! I am Kenji from Kyoto, an engineering intern working on backend APIs. Great to meet you on our break!",
+          idText: "Hai! Aku Kenji dari Kyoto, mahasiswa magang teknik yang menggarap backend API. Senang bertemu denganmu saat waktu istirahat!"
+        },
+        {
+          id: "s6e6_d3",
+          speaker: "Kanci",
+          en: "Obrolan santai di pantry kopi adalah cara terbaik membangun persahabatan antarrekan kerja lintas divisi!",
+          idText: "Obrolan santai di pantry kopi adalah cara terbaik membangun persahabatan antarrekan kerja lintas divisi!"
+        },
+        {
+          id: "s6e6_choice_1",
+          type: "interactive_choice",
+          prompt: "Kenji sedang menyeduh secangkir kopi hitam dan bertanya mengenai perjalananmu ke kantor. Apa responmu?",
+          options: [
+            {
+              id: "s6e6_opt_1a",
+              text: "Nice to meet you Kenji! I travel by the city tram from the university district. How do you commute to work?",
+              speakerReply: "Kenji",
+              reactionEn: "I take the rapid subway line! It takes only fifteen minutes, giving me time to relax and read tech articles.",
+              reactionId: "Aku naik jalur kereta bawah tanah cepat! Hanya butuh lima belas menit, memberiku waktu bersantai membaca artikel teknologi."
+            },
+            {
+              id: "s6e6_opt_1b",
+              text: "I love the espresso machine here! Do you enjoy any particular hobbies during the weekends in this city?",
+              speakerReply: "Kenji",
+              reactionEn: "I love exploring old art galleries and cycling along the riverbank path!",
+              reactionId: "Aku suka menjelajahi galeri seni tua dan bersepeda di sepanjang jalur tepi sungai!"
+            }
+          ]
+        },
+        {
+          id: "s6e6_d4",
+          speaker: "You",
+          en: "Having a friendly conversation over coffee makes the workday feel balanced, refreshing, and inspiring.",
+          idText: "Bercakap-cakap akrab ditemani kopi membuat hari kerja terasa seimbang, segar, dan menginspirasi."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-break",
+          word: "break",
+          partOfSpeech: "noun",
+          enDefinition: "A pause in work or during an activity or event.",
+          idMeaning: "istirahat sejenak dari pekerjaan",
+          contextSentence: "Take a ten-minute break to stretch and drink water."
+        },
+        {
+          wordId: "oxford-coffee",
+          word: "coffee",
+          partOfSpeech: "noun",
+          enDefinition: "A hot drink made from the roasted and ground seeds of a tropical shrub.",
+          idMeaning: "kopi seduhan hangat",
+          contextSentence: "The office pantry provides fresh artisan coffee every morning."
+        },
+        {
+          wordId: "oxford-travel",
+          word: "travel",
+          partOfSpeech: "verb",
+          enDefinition: "To go from one place to another, typically over a distance of some length.",
+          idMeaning: "bepergian / berangkat ke kantor",
+          contextSentence: "Many employees travel to the city center by tram."
+        },
+        {
+          wordId: "oxford-relax",
+          word: "relax",
+          partOfSpeech: "verb",
+          enDefinition: "To rest from work or engage in an enjoyable activity so as to become less tired or anxious.",
+          idMeaning: "bersantai melepas penat",
+          contextSentence: "The comfortable pantry sofas help team members relax."
+        },
+        {
+          wordId: "oxford-conversation",
+          word: "conversation",
+          partOfSpeech: "noun",
+          enDefinition: "A talk, especially an informal one, between two or more people, in which news and ideas are exchanged.",
+          idMeaning: "percakapan santai / obrolan",
+          contextSentence: "A pleasant conversation with colleagues builds team camaraderie."
+        },
+        {
+          wordId: "oxford-hobby",
+          word: "hobby",
+          partOfSpeech: "noun",
+          enDefinition: "An activity done regularly in one's leisure time for pleasure.",
+          idMeaning: "hobi waktu luang",
+          contextSentence: "Landscape photography is my favorite weekend hobby."
+        }
+      ],
+      grammarFocus: {
+        title: "Tag Questions untuk Menghidupkan Obrolan Santai ('The office is modern, isn't it?')",
+        topicId: "tag-questions-smalltalk",
+        explanation: "Gunakan tag questions di akhir kalimat pernyataan untuk mengundang rekan kerja berpendapat dan menjaga percakapan santai tetap mengalir alami.",
+        formula: "[Positive statement], [negative tag]? / You commute by subway, don't you? / The coffee smells great, doesn't it?"
+      },
+      culturalTip: {
+        title: "Seni 'Watercooler / Pantry Small Talk' di Korporat Multinasional",
+        content: "Di budaya kerja barat, obrolan santai di pantry (*watercooler chat*) seputar cuaca, hobi, dan komuter adalah cara tercepat mencairkan kebekuan (*break the ice*) dan membangun jejaring lintas departemen tanpa membicarakan beban kerja berat."
+      },
+      quiz: [
+        {
+          id: "s6_ep6_q1",
+          question: "What department does Kenji work in as an intern?",
+          options: [
+            "Software engineering backend APIs",
+            "Catering and kitchen cooking",
+            "Building window cleaning",
+            "Commercial aviation pilot"
+          ],
+          correctIndex: 0,
+          explanation: "Kenji magang di divisi rekayasa perangkat lunak (software engineering backend APIs)."
+        },
+        {
+          id: "s6_ep6_q2",
+          question: "Where is Kenji originally from?",
+          options: [
+            "Kyoto, Japan",
+            "Sydney, Australia",
+            "Rome, Italy",
+            "Toronto, Canada"
+          ],
+          correctIndex: 0,
+          explanation: "Kenji berasal dari Kyoto, Jepang."
+        },
+        {
+          id: "s6_ep6_q3",
+          question: "Which question uses a correct tag question for friendly pantry small talk?",
+          options: [
+            "The coffee machine is new, isn't it?",
+            "You drink coffee why scream?",
+            "The office is big where run?",
+            "Is tram fast yes or no?"
+          ],
+          correctIndex: 0,
+          explanation: "'The coffee machine is new, isn't it?' adalah kalimat tag question yang benar dan alami."
+        },
+        {
+          id: "s6_ep6_q4",
+          question: "Which noun refers to an enjoyable activity done regularly during leisure time?",
+          options: [
+            "Hobby",
+            "Garbage",
+            "Machine",
+            "Duty"
+          ],
+          correctIndex: 0,
+          explanation: "'Hobby' adalah kegiatan kegemaran yang dilakukan di waktu luang untuk kesenangan."
+        },
+        {
+          id: "s6_ep6_q5",
+          question: "Complete the sentence: 'It is important to ______ during lunch break so your mind stays sharp.'",
+          options: [
+            "relax",
+            "throw",
+            "lock",
+            "sweep"
+          ],
+          correctIndex: 0,
+          explanation: "'Relax' (bersantai) adalah kata kerja yang tepat untuk melepas kepenatan saat istirahat."
+        }
+      ],
+      takeaways: [
+        "Mendalami kosakata obrolan santai kantor: break, coffee, travel, relax, conversation, hobby.",
+        "Menggunakan tag questions untuk memancing dialog santai yang bersahabat.",
+        "Memahami fungsi pantry sebagai sarana membangun relasi kerja yang menyenangkan."
+      ],
+      cliffhanger: "Tepat pukul 13.45 saat hendak mencetak berkas ringkasan proyek untuk rapat tim pukul dua, lampu merah di mesin fotokopi multi-fungsi berkedip cepat disertai pesan peringatan: 'ERROR 402: PAPER JAM IN TRAY 2'..."
+    },
+
+    // EPISODE 7
+    {
+      id: 7,
+      number: 7,
+      title: "Gangguan Printer Menjelang Rapat",
+      titleEn: "Troubleshooting the Document Printer",
+      estimatedMinutes: 10,
+      recap: "Menghadapi kendala teknis kantor dengan kepala dingin dan mengikuti instruksi penanganan langkah demi langkah menunjukkan kedewasaan profesional.",
+      dialogue: [
+        {
+          id: "s6e7_d1",
+          speaker: "Narator",
+          en: "The high-capacity office printer beeps urgently as a stack of presentation handouts halts halfway through the roller.",
+          idText: "Printer kantor berkapasitas tinggi berbunyi nyaring saat tumpukan kertas presentasi tersangkut di tengah rol pemutar."
+        },
+        {
+          id: "s6e7_d2",
+          speaker: "Kanci",
+          en: "Jangan cemas! Rapat baru mulai lima belas menit lagi. Mari ikuti diagram pemecahan masalah di layar printer!",
+          idText: "Jangan cemas! Rapat baru mulai lima belas menit lagi. Mari ikuti diagram pemecahan masalah di layar printer!"
+        },
+        {
+          id: "s6e7_d3",
+          speaker: "Kenji",
+          en: "Need a hand? If we pull open the blue side lever gently, the jammed paper will slide right out.",
+          idText: "Butuh bantuan? Jika kita menarik tuas samping biru dengan lembut, kertas yang tersangkut akan langsung terlepas."
+        },
+        {
+          id: "s6e7_choice_1",
+          type: "interactive_choice",
+          prompt: "Kamu dan Kenji memeriksa baki kertas di balik penutup samping. Apa tindakanmu?",
+          options: [
+            {
+              id: "s6e7_opt_1a",
+              text: "I will assist you by holding the side panel open while you gently release the crumpled sheet from the roller.",
+              speakerReply: "Kenji",
+              reactionEn: "Got it! The sheet is removed intact without tearing. Now press the green reset button.",
+              reactionId: "Dapat! Lembarannya terangkat utuh tanpa sobek. Sekarang tekan tombol reset hijau."
+            },
+            {
+              id: "s6e7_opt_1b",
+              text: "Let's check if the paper tray has too many sheets loaded before we restart the printing process.",
+              speakerReply: "Kenji",
+              reactionEn: "Smart catch! The tray was overfilled past the max line. Aligning the sheets will prevent another jam.",
+              reactionId: "Pengamatan yang cerdas! Bakinya terlalu penuh melewati batas maksimal. Merapikan kertas akan mencegah macet terulang."
+            }
+          ]
+        },
+        {
+          id: "s6e7_d4",
+          speaker: "You",
+          en: "The green light is on and all twenty copies are printing smoothly. Teamwork saves the day before our meeting!",
+          idText: "Lampu hijau menyala dan kedua puluh salinan mencetak lancar. Kerja sama tim menyelamatkan situasi sebelum rapat kita!"
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-print",
+          word: "print",
+          partOfSpeech: "verb",
+          enDefinition: "To produce books, newspapers, or documents by a mechanical or digital process.",
+          idMeaning: "mencetak dokumen berkas",
+          contextSentence: "Please print twenty copies of the project handout for the meeting."
+        },
+        {
+          wordId: "oxford-document",
+          word: "document",
+          partOfSpeech: "noun",
+          enDefinition: "A piece of written, printed, or electronic matter that provides information or evidence.",
+          idMeaning: "dokumen berkas kerja",
+          contextSentence: "The design document explains all technical specifications."
+        },
+        {
+          wordId: "oxford-jam",
+          word: "jam",
+          partOfSpeech: "noun",
+          enDefinition: "An instance of a machine or its moving parts becoming stuck or wedged.",
+          idMeaning: "macet / kertas tersangkut (*paper jam*)",
+          contextSentence: "Clear the paper jam before restarting the printer."
+        },
+        {
+          wordId: "oxford-paper",
+          word: "paper",
+          partOfSpeech: "noun",
+          enDefinition: "Material manufactured in thin sheets from the pulp of wood, used for writing, printing, or drawing.",
+          idMeaning: "kertas cetak",
+          contextSentence: "Load a fresh ream of white paper into tray two."
+        },
+        {
+          wordId: "oxford-button",
+          word: "button",
+          partOfSpeech: "noun",
+          enDefinition: "A small knob or disc on a piece of electronic equipment that is pressed to operate a function.",
+          idMeaning: "tombol operasional mesin",
+          contextSentence: "Press the green button to resume the copy job."
+        },
+        {
+          wordId: "oxford-assist",
+          word: "assist",
+          partOfSpeech: "verb",
+          enDefinition: "To help someone, typically by doing a share of the work.",
+          idMeaning: "membantu menolong",
+          contextSentence: "Colleagues readily assist each other during tight deadlines."
+        }
+      ],
+      grammarFocus: {
+        title: "First Conditional untuk Penyelesaian Masalah Kerja ('If we press the button, the machine will restart')",
+        topicId: "first-conditional-troubleshooting",
+        explanation: "Gunakan First Conditional (If + Present Simple, will + base verb) untuk menyatakan aksi realistis dan hasil langsungnya dalam mengatasi kendala teknis.",
+        formula: "If + Subject + [Present Simple], Subject + will + [base verb] / If we pull the blue lever, the paper will slide out."
+      },
+      culturalTip: {
+        title: "Ketenangan Menghadapi Kendala Kantor (*Remaining Composed*)",
+        content: "Kendala teknis seperti printer macet atau proyektor tidak terhubung menjelang rapat adalah hal lumrah. Karyawan yang tetap tenang, bekerja sama mencari solusi (*solution-oriented*), dan tidak panik sangat dikagumi oleh pimpinan."
+      },
+      quiz: [
+        {
+          id: "s6_ep7_q1",
+          question: "What technical problem occurred with the office printer before the meeting?",
+          options: [
+            "A paper jam in tray 2",
+            "The electrical cord melted",
+            "The ink turned into orange juice",
+            "The printer was stolen by aliens"
+          ],
+          correctIndex: 0,
+          explanation: "Kendala yang terjadi adalah kertas tersangkut di baki nomor 2 (paper jam in tray 2)."
+        },
+        {
+          id: "s6_ep7_q2",
+          question: "How did Alex and Kenji resolve the paper jam safely?",
+          options: [
+            "By kicking the machine repeatedly",
+            "By pulling the blue side lever gently and removing the sheet intact",
+            "By throwing water into the printer",
+            "By leaving the office for the day"
+          ],
+          correctIndex: 1,
+          explanation: "Mereka menarik tuas samping biru dengan lembut dan mengeluarkan kertas secara utuh."
+        },
+        {
+          id: "s6_ep7_q3",
+          question: "Which sentence uses the First Conditional correctly for problem-solving?",
+          options: [
+            "If we press the green button, the printer will resume.",
+            "If we pressed the button, the printer would fly.",
+            "If we will press, the printer is working.",
+            "If we pressing, the printer will was good."
+          ],
+          correctIndex: 0,
+          explanation: "'If we press the green button, the printer will resume' adalah First Conditional yang tepat (If + present, will + verb)."
+        },
+        {
+          id: "s6_ep7_q4",
+          question: "Which verb means 'to help someone by taking part in their task'?",
+          options: [
+            "Assist",
+            "Throw",
+            "Lock",
+            "Sweep"
+          ],
+          correctIndex: 0,
+          explanation: "'Assist' berarti membantu atau menolong seseorang dalam menyelesaikan pekerjaan."
+        },
+        {
+          id: "s6_ep7_q5",
+          question: "Complete the sentence: 'Please make sure all twenty ______ are printed clearly before entering Conference Room A.'",
+          options: [
+            "documents",
+            "garbages",
+            "bottles",
+            "carpets"
+          ],
+          correctIndex: 0,
+          explanation: "'Documents' (dokumen-dokumen) adalah kata benda yang tepat."
+        }
+      ],
+      takeaways: [
+        "Memahami kosakata pemecahan masalah teknis kantor: print, document, jam, paper, button, assist.",
+        "Menggunakan First Conditional untuk menjelaskan langkah perbaikan peralatan.",
+        "Menunjukkan sikap tenang dan kolaboratif saat menghadapi tenggat waktu kerja."
+      ],
+      cliffhanger: "Pukul 14.00 tepat, pintu kaca Conference Room A bergeser terbuka. David Miller, Kepala Divisi Produk, duduk di ujung meja konferensi dikelilingi belasan insinyur: 'Selamat datang semuanya, mari kita mulai daily standup meeting kita!'..."
+    },
+
+    // EPISODE 8
+    {
+      id: 8,
+      number: 8,
+      title: "Rapat Singkat Tim Agile",
+      titleEn: "The Daily Standup Meeting",
+      estimatedMinutes: 10,
+      recap: "Dalam rapat harian singkat (*agile standup*), setiap anggota tim melaporkan pencapaian kemarin, rencana tugas hari ini, serta kendala yang dihadapi secara padat dan terukur.",
+      dialogue: [
+        {
+          id: "s6e8_d1",
+          speaker: "David Miller",
+          en: "Welcome team! In our agile standup, everyone has ninety seconds to share progress, today's tasks, and any blockers.",
+          idText: "Selamat datang tim! Di rapat harian agile kita, setiap orang memiliki sembilan puluh detik untuk berbagi progres, tugas hari ini, dan kendala bila ada."
+        },
+        {
+          id: "s6e8_d2",
+          speaker: "Sarah",
+          en: "Yesterday, we finalized the user wireframes. Today, Alex and Kenji are joining our sprint to review onboarding metrics.",
+          idText: "Kemarin, kita menuntaskan kerangka wireframe pengguna. Hari ini, Alex dan Kenji bergabung di sprint kita untuk meninjau metrik onboarding."
+        },
+        {
+          id: "s6e8_d3",
+          speaker: "Kanci",
+          en: "Kini giliranmu berbicara! Tegakkan bahumu, tatap rekan tim, dan sampaikan pembaruan tugasmu dengan ringkas!",
+          idText: "Kini giliranmu berbicara! Tegakkan bahumu, tatap rekan tim, dan sampaikan pembaruan tugasmu dengan ringkas!"
+        },
+        {
+          id: "s6e8_choice_1",
+          type: "interactive_choice",
+          prompt: "David Miller tersenyum dan mempersilakanmu memberikan pembaruan status. Apa yang kamu sampaikan?",
+          options: [
+            {
+              id: "s6e8_opt_1a",
+              text: "Hello everyone! This morning I completed my onboarding orientation and system access setup. Today, I am analyzing user feedback data.",
+              speakerReply: "David Miller",
+              reactionEn: "Crisp and clear update, Alex! That user data analysis will directly guide our Friday feature decisions.",
+              reactionId: "Pembaruan yang padat dan jelas, Alex! Analisis data pengguna itu akan memandu langsung keputusan fitur hari Jumat kita."
+            },
+            {
+              id: "s6e8_opt_1b",
+              text: "I am ready to assist the frontend team with data visualization tasks to help meet our weekly sprint target.",
+              speakerReply: "David Miller",
+              reactionEn: "Wonderful initiative! We appreciate your proactive team spirit.",
+              reactionId: "Inisiatif yang luar biasa! Kami sangat mengapresiasi semangat timmu yang proaktif."
+            }
+          ]
+        },
+        {
+          id: "s6e8_d4",
+          speaker: "David Miller",
+          en: "Great sprint update team. Let's keep our communication clear, support one another, and crush our weekly targets!",
+          idText: "Pembaruan sprint yang hebat semuanya. Mari jaga komunikasi tetap jelas, saling mendukung, dan capai target mingguan kita!"
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-meeting",
+          word: "meeting",
+          partOfSpeech: "noun",
+          enDefinition: "An assembly of people for discussion, especially in a formal or business context.",
+          idMeaning: "pertemuan rapat kerja tim",
+          contextSentence: "The morning standup meeting lasts only fifteen minutes."
+        },
+        {
+          wordId: "oxford-progress",
+          word: "progress",
+          partOfSpeech: "noun",
+          enDefinition: "Forward or onward movement towards a destination or the completion of a project.",
+          idMeaning: "kemajuan / progres tugas",
+          contextSentence: "We track project progress on the digital sprint board."
+        },
+        {
+          wordId: "oxford-task",
+          word: "task",
+          partOfSpeech: "noun",
+          enDefinition: "A piece of work to be done or undertaken.",
+          idMeaning: "tugas pekerjaan",
+          contextSentence: "My main task today is reviewing user interface analytics."
+        },
+        {
+          wordId: "oxford-update",
+          word: "update",
+          partOfSpeech: "noun",
+          enDefinition: "An act of bringing something up to date or an act of giving current information.",
+          idMeaning: "pembaruan info terkini",
+          contextSentence: "Give a brief status update during the daily standup."
+        },
+        {
+          wordId: "oxford-team",
+          word: "team",
+          partOfSpeech: "noun",
+          enDefinition: "A group of people working together in a shared activity or enterprise.",
+          idMeaning: "tim kerja",
+          contextSentence: "Our multidisciplinary product team communicates seamlessly."
+        },
+        {
+          wordId: "oxford-target",
+          word: "target",
+          partOfSpeech: "noun",
+          enDefinition: "An objective or result towards which efforts are directed.",
+          idMeaning: "target capaian kerja",
+          contextSentence: "We reached our weekly user acquisition target ahead of time."
+        }
+      ],
+      grammarFocus: {
+        title: "Kontras Tenses Status Kerja ('Yesterday I completed..., today I am working on...')",
+        topicId: "standup-tenses",
+        explanation: "Dalam rapat standup, gunakan Simple Past untuk apa yang tuntas kemarin ('Yesterday I set up...'), Present Continuous untuk apa yang sedang dikerjakan hari ini ('Today I am analyzing...'), dan Future/Modals untuk komitmen berikutnya.",
+        formula: "Yesterday, I [Past Simple V2]... Today, I am [Verb-ing]... My goal is to [Base Verb]..."
+      },
+      culturalTip: {
+        title: "Format 'Agile Daily Standup' (Scrum)",
+        content: "Rapat standup harian sengaja dirancang berdiri (*standing*) agar peserta terdorong berbicara to-the-point tanpa bertele-tele. Tiga pertanyaan inti: 1) Apa yang kukerjakan kemarin? 2) Apa yang kukerjakan hari ini? 3) Apa hambatan yang kuhadapi?"
+      },
+      quiz: [
+        {
+          id: "s6_ep8_q1",
+          question: "How much time does each person typically have to share their update in the standup meeting?",
+          options: [
+            "Ninety seconds",
+            "Three hours",
+            "Forty-five minutes",
+            "The entire afternoon"
+          ],
+          correctIndex: 0,
+          explanation: "Setiap orang memiliki sekitar sembilan puluh detik untuk menyampaikan pembaruan ringkas."
+        },
+        {
+          id: "s6_ep8_q2",
+          question: "Who leads the product agile standup meeting in Conference Room A?",
+          options: [
+            "David Miller, Head of Product",
+            "A passing security guard",
+            "A subway train conductor",
+            "The restaurant dishwasher"
+          ],
+          correctIndex: 0,
+          explanation: "Rapat dipimpin oleh David Miller, Head of Product."
+        },
+        {
+          id: "s6_ep8_q3",
+          question: "Which sentence correctly contrasts yesterday's completed work with today's activity?",
+          options: [
+            "Yesterday I completed the wireframes, and today I am analyzing the user data.",
+            "Yesterday I will sleep, today I was eating lunch.",
+            "Yesterday I am run, today I will yesterday.",
+            "Yesterday I completes, today I working was."
+          ],
+          correctIndex: 0,
+          explanation: "Kalimat pertama secara akurat mengombinasikan Simple Past untuk kemarin dan Present Continuous untuk hari ini."
+        },
+        {
+          id: "s6_ep8_q4",
+          question: "Which word means 'an objective or result towards which efforts are directed'?",
+          options: [
+            "Target",
+            "Garbage",
+            "Pocket",
+            "Relief"
+          ],
+          correctIndex: 0,
+          explanation: "'Target' adalah sasaran atau hasil yang dituju oleh upaya bersama."
+        },
+        {
+          id: "s6_ep8_q5",
+          question: "Complete the sentence: 'We track our sprint ______ on the digital project board every afternoon.'",
+          options: [
+            "progress",
+            "trash",
+            "noise",
+            "throw"
+          ],
+          correctIndex: 0,
+          explanation: "'Progress' (kemajuan tugas) adalah kata benda yang tepat."
+        }
+      ],
+      takeaways: [
+        "Mempelajari kosakata rapat agile: meeting, progress, task, update, team, target.",
+        "Menguasai formula 3-bagian rapat standup (kemarin, hari ini, rencana).",
+        "Menyampaikan pembaruan status kerja secara ringkas, percaya diri, dan tepat sasaran."
+      ],
+      cliffhanger: "Seusai rapat standup, Sarah meletakkan map tebal berisi berkas analitik di mejamu: 'Data pengguna dari 10.000 pelanggan pertama sudah tersedia. Mari kita telaah dan susun laporannya untuk dipresentasikan sore nanti!'..."
+    },
+
+    // EPISODE 9
+    {
+      id: 9,
+      number: 9,
+      title: "Meninjau Laporan Mingguan",
+      titleEn: "Reviewing the Weekly Project Brief",
+      estimatedMinutes: 10,
+      recap: "Menganalisis lembar data analitik, memverifikasi keakuratan angka, dan menyusun ringkasan eksekutif yang bernas adalah kunci pengambilan keputusan manajerial yang tajam.",
+      dialogue: [
+        {
+          id: "s6e9_d1",
+          speaker: "Sarah",
+          en: "Take a close look at this weekly user report. We need accurate data insights to improve our app navigation.",
+          idText: "Perhatikan baik-baik laporan pengguna mingguan ini. Kita butuh wawasan data yang akurat untuk meningkatkan navigasi aplikasi kita."
+        },
+        {
+          id: "s6e9_d2",
+          speaker: "You",
+          en: "I noticed that eighty-five percent of users complete the initial registration, but drop off at the payment screen.",
+          idText: "Saya melihat bahwa delapan puluh lima persen pengguna menuntaskan pendaftaran awal, tetapi berhenti di layar pembayaran."
+        },
+        {
+          id: "s6e9_d3",
+          speaker: "Kanci",
+          en: "Ketajaman analisismu sungguh memukau! Itu adalah temuan emas yang sangat berharga bagi tim manajemen produk!",
+          idText: "Ketajaman analisismu sungguh memukau! Itu adalah temuan emas yang sangat berharga bagi tim manajemen produk!"
+        },
+        {
+          id: "s6e9_choice_1",
+          type: "interactive_choice",
+          prompt: "Sarah memintamu menyusun solusi perbaikan berdasarkan ringkasan data tersebut. Apa rekomendasimu?",
+          options: [
+            {
+              id: "s6e9_opt_1a",
+              text: "Based on the summary data, we should simplify the checkout screen to three clicks to improve conversion.",
+              speakerReply: "Sarah",
+              reactionEn: "That is brilliant deduction! Simplifying the flow will directly boost user satisfaction.",
+              reactionId: "Itu deduksi yang sangat brilian! Menyederhanakan alur akan langsung mendongkrak kepuasan pengguna."
+            },
+            {
+              id: "s6e9_opt_1b",
+              text: "I will review the competitor benchmarks and write a two-page executive summary for the leadership team.",
+              speakerReply: "Sarah",
+              reactionEn: "Excellent initiative! An executive summary will make your presentation powerful and persuasive.",
+              reactionId: "Inisiatif yang luar biasa! Ringkasan eksekutif akan membuat presentasimu berbobot dan meyakinkan."
+            }
+          ]
+        },
+        {
+          id: "s6e9_d4",
+          speaker: "Sarah",
+          en: "When your data is accurate and your summary is clear, you can influence key decisions across the entire organization.",
+          idText: "Ketika datamu akurat dan ringkasanmu jelas, kamu dapat memengaruhi keputusan penting di seluruh organisasi."
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-report",
+          word: "report",
+          partOfSpeech: "noun",
+          enDefinition: "An account given of a particular matter, especially in the form of an official document.",
+          idMeaning: "laporan kerja resmi",
+          contextSentence: "The weekly performance report highlights key user metrics."
+        },
+        {
+          wordId: "oxford-data",
+          word: "data",
+          partOfSpeech: "noun",
+          enDefinition: "Facts and statistics collected together for reference or analysis.",
+          idMeaning: "data analisis statistik",
+          contextSentence: "Analyze user onboarding data to detect friction points."
+        },
+        {
+          wordId: "oxford-review",
+          word: "review",
+          partOfSpeech: "verb",
+          enDefinition: "To examine or assess something critically with the possibility of instituting change.",
+          idMeaning: "meninjau ulang secara kritis",
+          contextSentence: "We review customer feedback every Tuesday morning."
+        },
+        {
+          wordId: "oxford-accurate",
+          word: "accurate",
+          partOfSpeech: "adjective",
+          enDefinition: "Correct in all details; exact.",
+          idMeaning: "akurat dan teliti",
+          contextSentence: "Ensure all revenue figures are accurate before submitting the report."
+        },
+        {
+          wordId: "oxford-summary",
+          word: "summary",
+          partOfSpeech: "noun",
+          enDefinition: "A brief statement or account of the main points of something.",
+          idMeaning: "ringkasan eksekutif",
+          contextSentence: "Read the executive summary at the beginning of the project brief."
+        },
+        {
+          wordId: "a1-improve",
+          word: "improve",
+          partOfSpeech: "verb",
+          enDefinition: "To make or become better.",
+          idMeaning: "meningkatkan kualitas",
+          contextSentence: "Streamlining the checkout steps will improve user conversion."
+        }
+      ],
+      grammarFocus: {
+        title: "Modal Verbs untuk Inferensi & Saran Berbasis Data ('must indicate', 'could improve', 'should simplify')",
+        topicId: "modals-data-inference",
+        explanation: "Gunakan modal verbs saat menyajikan kesimpulan dari data statistik: 'must indicate' (pasti mengindikasikan), 'could improve' (dapat meningkatkan), dan 'should simplify' (sebaiknya menyederhanakan).",
+        formula: "The data shows that... therefore we should + [base verb] / This metric could indicate a navigation bottleneck."
+      },
+      culturalTip: {
+        title: "Budaya 'Data-Driven Decision Making' di Dunia Korporat",
+        content: "Di perusahaan teknologi global, setiap opini harus didukung data kuantitatif (*'In God we trust, all others must bring data'*). Kemampuan menyajikan angka yang valid dan mengusulkan solusi konkret adalah kompetensi paling bernilai tinggi."
+      },
+      quiz: [
+        {
+          id: "s6_ep9_q1",
+          question: "What critical finding did Alex discover in the weekly user data report?",
+          options: [
+            "Users love eating cake during work",
+            "Users complete registration but drop off at the payment screen",
+            "The office air conditioning is too warm",
+            "The tram arrives three minutes early"
+          ],
+          correctIndex: 1,
+          explanation: "Temuan kritis adalah pengguna menuntaskan pendaftaran namun berhenti di layar pembayaran."
+        },
+        {
+          id: "s6_ep9_q2",
+          question: "Which adjective means 'correct in all details and free from error'?",
+          options: [
+            "Accurate",
+            "Noisy",
+            "Broken",
+            "Careless"
+          ],
+          correctIndex: 0,
+          explanation: "'Accurate' berarti akurat, teliti, dan benar dalam setiap detail."
+        },
+        {
+          id: "s6_ep9_q3",
+          question: "What is an 'executive summary' in a professional business report?",
+          options: [
+            "A brief concise overview of the main findings and recommendations",
+            "A secret password for the elevator",
+            "A receipt for office pens",
+            "A picture of the company cafeteria"
+          ],
+          correctIndex: 0,
+          explanation: "Ringkasan eksekutif adalah ikhtisar ringkas yang menyajikan temuan utama dan rekomendasi tindakan."
+        },
+        {
+          id: "s6_ep9_q4",
+          question: "Which modal sentence expresses a strong data-backed recommendation?",
+          options: [
+            "We should simplify the checkout flow to boost conversion.",
+            "We might probably maybe look at flowers.",
+            "We must sleeping all afternoon long.",
+            "We can broke the computer screen."
+          ],
+          correctIndex: 0,
+          explanation: "'We should simplify the checkout flow to boost conversion' menyajikan rekomendasi kuat berbasis data."
+        },
+        {
+          id: "s6_ep9_q5",
+          question: "Complete the sentence: 'Our main objective this quarter is to ______ product user retention.'",
+          options: [
+            "improve",
+            "throw",
+            "sweep",
+            "lock"
+          ],
+          correctIndex: 0,
+          explanation: "'Improve' (meningkatkan) adalah kata kerja yang tepat untuk peningkatan retensi pengguna."
+        }
+      ],
+      takeaways: [
+        "Mendalami kosakata analisis bisnis: report, data, review, accurate, summary, improve.",
+        "Menggunakan modal verbs inferensi untuk menyampaikan simpulan dari grafik dan angka.",
+        "Menyusun rekomendasi perbaikan berbasis data yang meyakinkan para pemangku kepentingan."
+      ],
+      cliffhanger: "Pukul 16.30, lampu di aula auditorium mini lantai 12 meredup dan proyektor menyala. Sarah, Kenji, David Miller, dan seluruh divisi produk telah duduk di hadapan podium. Waktunya menyampaikan presentasi perkenalan 3 menitmu!"
+    },
+
+    // EPISODE 10
+    {
+      id: 10,
+      number: 10,
+      title: "Presentasi Tiga Menit yang Memukau",
+      titleEn: "The 3-Minute Team Presentation",
+      estimatedMinutes: 10,
+      recap: "Di depan seluruh divisi produk, kamu berdiri di atas podium mempresentasikan diri, temuan analitik data pengguna, dan visimu dengan penuh percaya diri dan bahasa Inggris profesional.",
+      dialogue: [
+        {
+          id: "s6e10_d1",
+          speaker: "David Miller",
+          en: "Welcome everyone to our end-of-day showcase. Please welcome our new project intern, Alex, for a 3-minute lightning talk!",
+          idText: "Selamat datang semuanya di sesi penutup hari kita. Sambutlah pemagang proyek baru kita, Alex, untuk presentasi kilat 3 menit!"
+        },
+        {
+          id: "s6e10_d2",
+          speaker: "Kanci",
+          en: "Tarik napas dalam-dalam, pandang seluruh ruangan dengan senyuman hangat, dan gunakan bahasa transisi presentasi yang memikat!",
+          idText: "Tarik napas dalam-dalam, pandang seluruh ruangan dengan senyuman hangat, dan gunakan bahasa transisi presentasi yang memikat!"
+        },
+        {
+          id: "s6e10_d3",
+          speaker: "You",
+          en: "To begin with, I would like to thank the product team for such a warm welcome on my first day.",
+          idText: "Pertama-tama, saya ingin mengucapkan terima kasih kepada seluruh tim produk atas sambutan yang sangat hangat di hari pertama saya."
+        },
+        {
+          id: "s6e10_choice_1",
+          type: "interactive_choice",
+          prompt: "Slide analisismu tampil di layar besar. Bagaimana kamu memandu perhatian audiens ke temuan utamamu?",
+          options: [
+            {
+              id: "s6e10_opt_1a",
+              text: "Moving on to our user analytics, the data demonstrates that a simplified 3-step checkout can increase conversion by twenty percent.",
+              speakerReply: "David Miller",
+              reactionEn: "Compelling presentation! Your data slides and confident delivery convinced the entire leadership team.",
+              reactionId: "Presentasi yang memukau! Salindia datamu dan penyampaianmu yang percaya diri meyakinkan seluruh jajaran pimpinan."
+            },
+            {
+              id: "s6e10_opt_1b",
+              text: "In conclusion, I look forward to contributing my analytical skills and collaborating closely with engineering and design.",
+              speakerReply: "Sarah",
+              reactionEn: "Outstanding conclusion! You spoke with remarkable poise and professional clarity.",
+              reactionId: "Penutup yang luar biasa! Kamu berbicara dengan ketenangan dan kejelasan profesional yang mengagumkan."
+            }
+          ]
+        },
+        {
+          id: "s6e10_d4",
+          speaker: "David Miller",
+          en: "Magnificent presentation, Alex! You have demonstrated exceptional talent and confidence. You are destined for a brilliant career here!",
+          idText: "Presentasi yang luar biasa megah, Alex! Kamu telah menunjukkan bakat dan rasa percaya diri yang luar biasa. Kamu ditakdirkan meraih karier cemerlang di sini!"
+        }
+      ],
+      highlightedVocab: [
+        {
+          wordId: "oxford-present",
+          word: "present",
+          partOfSpeech: "verb",
+          enDefinition: "To formally introduce, explain, or showcase ideas to an audience.",
+          idMeaning: "mempresentasikan gagasan",
+          contextSentence: "Alex will present the user research findings to the division."
+        },
+        {
+          wordId: "oxford-audience",
+          word: "audience",
+          partOfSpeech: "noun",
+          enDefinition: "The assembled spectators or listeners at a public event such as a meeting, play, or presentation.",
+          idMeaning: "audiens peserta rapat",
+          contextSentence: "Maintain engaging eye contact with your audience during the talk."
+        },
+        {
+          wordId: "oxford-confidence",
+          word: "confidence",
+          partOfSpeech: "noun",
+          enDefinition: "A feeling of self-assurance arising from one's appreciation of one's own abilities or qualities.",
+          idMeaning: "rasa percaya diri yang teguh",
+          contextSentence: "Public speaking practice builds unshakeable professional confidence."
+        },
+        {
+          wordId: "oxford-success",
+          word: "success",
+          partOfSpeech: "noun",
+          enDefinition: "The accomplishment of an aim or purpose; favorable outcome.",
+          idMeaning: "kesuksesan / keberhasilan",
+          contextSentence: "Clear team communication is vital for product launch success."
+        },
+        {
+          wordId: "oxford-feedback",
+          word: "feedback",
+          partOfSpeech: "noun",
+          enDefinition: "Information about reactions to a person's performance of a task, used as a basis for improvement.",
+          idMeaning: "umpan balik masukan konstruktif",
+          contextSentence: "The senior managers gave encouraging feedback after the presentation."
+        },
+        {
+          wordId: "oxford-career",
+          word: "career",
+          partOfSpeech: "noun",
+          enDefinition: "An occupation undertaken for a significant period of a person's life and with opportunities for progress.",
+          idMeaning: "jenjang karier profesional",
+          contextSentence: "A successful internship opens doors to an exciting international career."
+        }
+      ],
+      grammarFocus: {
+        title: "Signposting Language untuk Presentasi Profesional ('To begin with...', 'Moving on to...', 'In conclusion...')",
+        topicId: "signposting-presentations",
+        explanation: "Gunakan bahasa penunjuk arah presentasi (*signposting language*) untuk memandu audiens berpindah antar bagian secara mulus: pembuka ('To begin with...'), transisi slide ('Moving on to...'), dan simpulan ('In conclusion...').",
+        formula: "To begin with, [point 1]... Moving on to, [point 2]... In conclusion, [takeaway]."
+      },
+      culturalTip: {
+        title: "Seni 'Lightning Talk' dalam Budaya Teknologi",
+        content: "Di industri teknologi dunia, *lightning talk* (presentasi kilat 3–5 menit) menuntut pembicara memangkas basa-basi dan langsung menyajikan esensi masalah, data kunci, serta dampak solusi (*impact-driven*)."
+      },
+      quiz: [
+        {
+          id: "s6_ep10_q1",
+          question: "What type of talk did Alex deliver to the product department at the end of the day?",
+          options: [
+            "A 3-minute lightning talk presentation",
+            "A three-hour history lecture",
+            "A stand-up comedy performance",
+            "A silent mime show"
+          ],
+          correctIndex: 0,
+          explanation: "Alex membawakan presentasi kilat 3 menit (3-minute lightning talk)."
+        },
+        {
+          id: "s6_ep10_q2",
+          question: "Which signposting phrase is used to signal the transition to a new presentation slide or topic?",
+          options: [
+            "Moving on to...",
+            "Stop talking now...",
+            "Run away fast...",
+            "Forget everything..."
+          ],
+          correctIndex: 0,
+          explanation: "'Moving on to...' adalah frasa penunjuk transisi resmi antar topik dalam presentasi."
+        },
+        {
+          id: "s6_ep10_q3",
+          question: "Which word means 'a feeling of self-assurance arising from appreciation of one's abilities'?",
+          options: [
+            "Confidence",
+            "Garbage",
+            "Noise",
+            "Pocket"
+          ],
+          correctIndex: 0,
+          explanation: "'Confidence' adalah rasa percaya diri atas kemampuan yang dimiliki."
+        },
+        {
+          id: "s6_ep10_q4",
+          question: "What signposting phrase is ideal for summarizing the final takeaway of a talk?",
+          options: [
+            "In conclusion...",
+            "First of all...",
+            "Initially speaking...",
+            "Before we begin..."
+          ],
+          correctIndex: 0,
+          explanation: "'In conclusion...' digunakan untuk menandai bagian kesimpulan akhir presentasi."
+        },
+        {
+          id: "s6_ep10_q5",
+          question: "Complete the sentence: 'The director provided constructive ______ that will help us improve our designs.'",
+          options: [
+            "feedback",
+            "garbage",
+            "trash",
+            "noise"
+          ],
+          correctIndex: 0,
+          explanation: "'Feedback' (umpan balik) adalah kata benda yang tepat."
+        }
+      ],
+      takeaways: [
+        "Mendalami kosakata presentasi profesional: present, audience, confidence, success, feedback, career.",
+        "Menguasai teknik signposting language untuk struktur presentasi kelas dunia.",
+        "Membangun rasa percaya diri berbicara di hadapan pimpinan dan audiens internasional."
+      ],
+      cliffhanger: "Tepuk tangan meriah membahana di aula auditorium. Saat merayakan kesuksesan hari pertamamu, Sarah tersenyum sambil memegang dua tiket undangan: 'Kerja pertamamu sungguh luar biasa, Alex! Akhir pekan ini, perusahaan kita mensponsori pameran fotografi bergengsi di Galeri Seni Kota Tua. Ayo kita datang bersama!' Namun di galeri megah itu, sebuah kamera analog antik bernilai sejarah tinggi tiba-tiba menghilang secara misterius... Petualangan Cerita 7: Kamera yang Hilang siap dimulai!"
+    }
+  ]
+};
+
+// Validate consistency
+if (story06.episodes.length !== 10) {
+  throw new Error("Story 6 must have exactly 10 episodes!");
+}
+
+story06.episodes.forEach((ep) => {
+  if (!ep.dialogue || ep.dialogue.length < 3) {
+    throw new Error(`Episode ${ep.id} dialogue is too short!`);
+  }
+  if (!ep.highlightedVocab || ep.highlightedVocab.length !== 6) {
+    throw new Error(`Episode ${ep.id} must have exactly 6 highlightedVocab! Got: ${ep.highlightedVocab ? ep.highlightedVocab.length : 0}`);
+  }
+  if (!ep.quiz || ep.quiz.length !== 5) {
+    throw new Error(`Episode ${ep.id} must have exactly 5 quiz questions! Got: ${ep.quiz ? ep.quiz.length : 0}`);
+  }
+  ep.quiz.forEach((q, idx) => {
+    if (!q.options || q.options.length !== 4) {
+      throw new Error(`Episode ${ep.id} quiz Q${idx + 1} must have 4 options!`);
+    }
+    if (q.correctIndex < 0 || q.correctIndex > 3) {
+      throw new Error(`Episode ${ep.id} quiz Q${idx + 1} correctIndex out of range: ${q.correctIndex}`);
+    }
+  });
+});
+
+fs.writeFileSync("src/data/stories/story-06.json", JSON.stringify(story06, null, 2), "utf8");
+console.log("✓ SUCCESS: Story 6 (story-06.json) successfully created with all 10 full-length episodes!");
+console.log("Total Episodes:", story06.episodes.length);
+console.log("Total Quiz Questions:", story06.episodes.length * 5);
+console.log("Total Oxford 3000 Vocabularies:", story06.episodes.length * 6);

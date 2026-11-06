@@ -1,0 +1,1844 @@
+{
+  "id": "story-08",
+  "number": 8,
+  "title": "Festival Kota Tua",
+  "titleEn": "The Old Town Festival",
+  "level": "B1-B2",
+  "levelReq": 8,
+  "totalEpisodes": 10,
+  "themeColor": "#975A16",
+  "description": "Menjelajahi perayaan festival musim gugur tahunan di jalanan batu kota tua, mencicipi kuliner pasar artisan, bertanya arah dengan kalimat tidak langsung, menolong dalang teater boneka tua, merangkai lampion emas raksasa, dan menyampaikan pidato sambutan di dermaga sungai.",
+  "learningFocus": "Cultural Festival English, Indirect Questions for Public Politeness, Present Participle Clauses, Festive Idioms & Metaphors, Future Time Clauses, Formal Rhetorical Speech.",
+  "episodes": [
+    {
+      "id": 1,
+      "number": 1,
+      "title": "Gerbang Lentera Kota Tua",
+      "titleEn": "Arrival at the Festival Archway",
+      "estimatedMinutes": 10,
+      "recap": "Memasuki kawasan bersejarah kota tua di senja hari festival tahunan, ribuan lampion sutra emas bergantungan di antara gerbang batu kuno dan jalanan beraspal bata.",
+      "dialogue": [
+        {
+          "id": "s8e1_d1",
+          "speaker": "Narator",
+          "en": "Golden silk lanterns sway gently in the autumn evening breeze, casting a magical amber glow across the cobbled avenue.",
+          "idText": "Lampion-lampion sutra emas berayun lembut ditiup semilir angin senja musim gugur, memancarkan pendar kuning tembaga magis di sepanjang jalanan berbatu."
+        },
+        {
+          "id": "s8e1_d2",
+          "speaker": "Elena Vance",
+          "en": "Welcome to our grandest annual celebration, Alex! This historic district has held this festival for over three centuries.",
+          "idText": "Selamat datang di perayaan tahunan termegah kita, Alex! Kawasan bersejarah ini telah menyelenggarakan festival ini selama lebih dari tiga abad."
+        },
+        {
+          "id": "s8e1_d3",
+          "speaker": "Kanci",
+          "en": "Lihat ornamen ukiran naga dan burung phoenix di lengkungan gerbang utama! Seluruh warga kota berkumpul mengenakan pakaian adat yang indah!",
+          "idText": "Lihat ornamen ukiran naga dan burung phoenix di lengkungan gerbang utama! Seluruh warga kota berkumpul mengenakan pakaian adat yang indah!"
+        },
+        {
+          "id": "s8e1_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Mei Lin, koordinator festival berselempang sutra merah, menyambut rombongan Elena Vance. Apa responmu?",
+          "options": [
+            {
+              "id": "s8e1_opt_1a",
+              "text": "Good evening Mei Lin! The way you decorate these ancient archways makes this the most vibrant festival I have ever seen.",
+              "speakerReply": "Mei Lin",
+              "reactionEn": "Thank you so much! Our community worked for three weeks weaving bamboo frames and paper flowers for this celebration.",
+              "reactionId": "Terima kasih banyak! Komunitas kami bekerja selama tiga minggu menganyam kerangka bambu dan bunga kertas untuk perayaan ini."
+            },
+            {
+              "id": "s8e1_opt_1b",
+              "text": "Could you tell us where the main procession will gather before marching toward the waterfront?",
+              "speakerReply": "Mei Lin",
+              "reactionEn": "Everyone will gather at Central Bell Tower Square at eight o'clock sharp before the parade commences.",
+              "reactionId": "Semua orang akan berkumpul di Alun-Alun Menara Lonceng tepat pukul delapan sebelum pawai dimulai."
+            }
+          ]
+        },
+        {
+          "id": "s8e1_d4",
+          "speaker": "You",
+          "en": "The joyful energy here is contagious. I am thrilled to experience this rich living heritage firsthand.",
+          "idText": "Energi sukacita di sini sungguh menular. Saya sangat bersemangat menyelami warisan budaya hidup yang kaya ini secara langsung."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-festival",
+          "word": "festival",
+          "partOfSpeech": "noun",
+          "enDefinition": "A day or period of celebration, typically a religious or cultural commemoration.",
+          "idMeaning": "festival perayaan budaya",
+          "contextSentence": "The autumn lantern festival attracts visitors from across the world."
+        },
+        {
+          "wordId": "oxford-celebration",
+          "word": "celebration",
+          "partOfSpeech": "noun",
+          "enDefinition": "The action of celebrating an important day or event; a social gathering.",
+          "idMeaning": "perayaan meriah bersama",
+          "contextSentence": "Music and laughter filled the street throughout the celebration."
+        },
+        {
+          "wordId": "oxford-ancient",
+          "word": "ancient",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Belonging to the very distant past and no longer in existence, or having lived or existed for a very long time.",
+          "idMeaning": "kuno / bersejarah ratusan tahun",
+          "contextSentence": "The ancient stone archways were illuminated by hundreds of candles."
+        },
+        {
+          "wordId": "oxford-decorate",
+          "word": "decorate",
+          "partOfSpeech": "verb",
+          "enDefinition": "To make something look more attractive by adding extra items or images to it.",
+          "idMeaning": "menghias / mendekorasi",
+          "contextSentence": "Volunteers decorate the river bridge with golden ribbons."
+        },
+        {
+          "wordId": "oxford-traditional",
+          "word": "traditional",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Existing in or as part of a tradition; long-established.",
+          "idMeaning": "tradisional turun-temurun",
+          "contextSentence": "Performers wore exquisite traditional silk garments."
+        },
+        {
+          "wordId": "oxford-gather",
+          "word": "gather",
+          "partOfSpeech": "verb",
+          "enDefinition": "To come together; assemble or accumulate in one place.",
+          "idMeaning": "berkumpul bersama-sama",
+          "contextSentence": "Townsfolk gather at the central square to watch the opening ceremony."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Kata Sifat Superlatif & Nuansa Komparatif (*the grandest, far more vibrant, exceptionally lively*)",
+        "topicId": "superlatives-festival",
+        "explanation": "Gunakan kata sifat tingkat paling (superlative: the + -est / the most + adjective) dan penguat komparatif ('far more vibrant', 'considerably livelier') saat mendeskripsikan kemegahan perayaan skala besar.",
+        "formula": "[Subject] + is + the most + [Adjective] / This is the grandest and most memorable celebration in the province."
+      },
+      "culturalTip": {
+        "title": "Tradisi Festival Lampion Musim Gugur (*Autumn Lantern Festivals*)",
+        "content": "Di berbagai kebudayaan Asia dan Eropa kuno, festival lampion musim gugur diadakan bertepatan dengan panen raya (*Harvest Moon*). Lampion melambangkan pencerahan budi pekerti, kehangatan keluarga, dan harapan kemakmuran musim dingin."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep1_q1",
+          "question": "How long has the historic district been holding the annual autumn festival?",
+          "options": [
+            "For three weeks",
+            "For over three centuries",
+            "Since yesterday afternoon",
+            "For five years only"
+          ],
+          "correctIndex": 1,
+          "explanation": "Kawasan bersejarah kota tua telah menyelenggarakan festival ini selama lebih dari tiga abad ('over three centuries')."
+        },
+        {
+          "id": "s8_ep1_q2",
+          "question": "Where will the grand evening parade gather before marching toward the waterfront?",
+          "options": [
+            "Inside the train station cafeteria",
+            "At Central Bell Tower Square",
+            "Behind the airport runway gate",
+            "In an underground parking lot"
+          ],
+          "correctIndex": 1,
+          "explanation": "Pawai berkumpul di Alun-Alun Menara Lonceng (Central Bell Tower Square) sebelum menuju dermaga sungai."
+        },
+        {
+          "id": "s8_ep1_q3",
+          "question": "Which phrase represents a superlative form highlighting cultural grandeur?",
+          "options": [
+            "The grandest celebration in the city",
+            "A small dark room",
+            "Slightly slower walking",
+            "Less interesting book"
+          ],
+          "correctIndex": 0,
+          "explanation": "'The grandest celebration' adalah bentuk superlatif yang menegaskan kemegahan tertinggi perayaan."
+        },
+        {
+          "id": "s8_ep1_q4",
+          "question": "Which verb means 'to come together or assemble in one location'?",
+          "options": [
+            "Gather",
+            "Throw",
+            "Lock",
+            "Sweep"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Gather' berarti berkumpul atau berhimpun di suatu tempat."
+        },
+        {
+          "id": "s8_ep1_q5",
+          "question": "Complete the sentence: 'Town artisans use fresh flowers to ______ the festival stages.'",
+          "options": [
+            "decorate",
+            "trash",
+            "garbage",
+            "break"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Decorate' (menghias) adalah kata kerja yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata festival warisan budaya: festival, celebration, ancient, decorate, traditional, gather.",
+        "Menggunakan bentuk superlatif dan pembanding nuansa untuk mendeskripsikan kemegahan acara.",
+        "Memahami makna historis festival musim gugur dalam merekatkan persatuan warga."
+      ],
+      "cliffhanger": "Aroma harum rempah kayu manis, gula karamel bakar, dan panggangan roti jahe hangat semerbak tercium dari deretan tenda kanvas di sepanjang lorong pasar pengrajin..."
+    },
+    {
+      "id": 2,
+      "number": 2,
+      "title": "Menjelajahi Stan Makanan Tradisional",
+      "titleEn": "Exploring Artisanal Food Stalls",
+      "estimatedMinutes": 10,
+      "recap": "Deretan stan kuliner pasar malam menyajikan aneka makanan penutup khas, kue lampion tradisional, dan sari buah apel berempah yang memanjakan lidah.",
+      "dialogue": [
+        {
+          "id": "s8e2_d1",
+          "speaker": "Narator",
+          "en": "Steam rises appetizingly from giant bronze pans as vendors grill honey-glazed pastries and roast chestnuts over open coals.",
+          "idText": "Uap panas mengepul menggugah selera dari wajan perunggu raksasa saat pedagang memanggang kue madu dan kastanye di atas arang."
+        },
+        {
+          "id": "s8e2_d2",
+          "speaker": "Vendor",
+          "en": "Step right up! Fresh autumn mooncakes stuffed with lotus seed paste and sweet spiced red beans, baked fresh this hour!",
+          "idText": "Silakan mendekat! Kue bulan musim gugur segar berisi pasta biji teratai dan kacang merah manis berempah, dipanggang hangat jam ini!"
+        },
+        {
+          "id": "s8e2_d3",
+          "speaker": "Kanci",
+          "en": "Kue bulan berbentuk bunga serunai itu terlihat sangat renyah dan lezat! Mari cicipi hidangan tradisional istimewa ini!",
+          "idText": "Kue bulan berbentuk bunga serunai itu terlihat sangat renyah dan lezat! Mari cicipi hidangan tradisional istimewa ini!"
+        },
+        {
+          "id": "s8e2_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Penjual kue menawarkan sepiring kue hangat yang baru matang. Bagaimana caramu memesan?",
+          "options": [
+            {
+              "id": "s8e2_opt_1a",
+              "text": "May I taste a piece of the sweet lotus pastry? It smells intensely fragrant and delightful.",
+              "speakerReply": "Vendor",
+              "reactionEn": "Here you go, young traveler! We serve our pastries with warm spiced cinnamon cider. Enjoy!",
+              "reactionId": "Ini untukmu, pengelana muda! Kami menyajikan kue kami dengan sari buah apel kayu manis hangat. Selamat menikmati!"
+            },
+            {
+              "id": "s8e2_opt_1b",
+              "text": "I would love to purchase two boxes of your special fresh mooncakes to share with our festival team.",
+              "speakerReply": "Vendor",
+              "reactionEn": "A generous choice! I will wrap them in traditional mulberry paper with golden festive twine.",
+              "reactionId": "Pilihan yang sangat dermawan! Saya akan membungkusnya dengan kertas murbei tradisional dan tali emas perayaan."
+            }
+          ]
+        },
+        {
+          "id": "s8e2_d4",
+          "speaker": "You",
+          "en": "The sweet pastry melts on the tongue with balanced warmth. Traditional festival food connects people across generations.",
+          "idText": "Kue manis itu meleleh di lidah dengan kehangatan rasa yang seimbang. Makanan festival tradisional menyatukan orang lintas generasi."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-taste",
+          "word": "taste",
+          "partOfSpeech": "verb",
+          "enDefinition": "To perceive or experience the flavor of a food or drink; sample food.",
+          "idMeaning": "mencicipi rasa makanan",
+          "contextSentence": "Travelers eagerly taste local pastries at the food market."
+        },
+        {
+          "wordId": "oxford-fresh",
+          "word": "fresh",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Recently made, produced, or harvested; not canned, frozen, or stale.",
+          "idMeaning": "segar baru dibuat",
+          "contextSentence": "The bakery serves fresh mooncakes straight from the oven."
+        },
+        {
+          "wordId": "oxford-market",
+          "word": "market",
+          "partOfSpeech": "noun",
+          "enDefinition": "A regular gathering of people for the purchase and sale of provisions, livestock, and other commodities.",
+          "idMeaning": "pasar stan kuliner",
+          "contextSentence": "The festival street market was packed with cheerful shoppers."
+        },
+        {
+          "wordId": "oxford-special",
+          "word": "special",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Better, greater, or otherwise different from what is usual; designed for a particular purpose.",
+          "idMeaning": "istimewa / khas festival",
+          "contextSentence": "Vendors prepare special spiced desserts exclusively for autumn."
+        },
+        {
+          "wordId": "oxford-serve",
+          "word": "serve",
+          "partOfSpeech": "verb",
+          "enDefinition": "To present food or drink to someone in a restaurant, stall, or dining table.",
+          "idMeaning": "menyajikan hidangan",
+          "contextSentence": "Stall owners serve hot tea in ceramic cups."
+        },
+        {
+          "wordId": "oxford-sweet",
+          "word": "sweet",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Having the pleasant taste characteristic of sugar or honey; not salty or bitter.",
+          "idMeaning": "manis legit",
+          "contextSentence": "The sweet lotus seed filling was rich and satisfying."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Modifiers untuk Deskripsi Rasa & Aroma Kuliner (*intensely fragrant, lightly seasoned, baked fresh*)",
+        "topicId": "taste-modifiers",
+        "explanation": "Gunakan kata keterangan (adverbs) berpasangan dengan kata sifat kuliner untuk memperkaya deskripsi sensorik makanan: 'intensely fragrant' (sangat harum), 'pleasantly sweet' (manis pas), 'baked fresh' (dipanggang hangat).",
+        "formula": "[Adverb] + [Culinary Adjective] + [Noun] / An intensely fragrant sweet pastry."
+      },
+      "culturalTip": {
+        "title": "Filosofi Makanan Berbagi dalam Perayaan Rakyat",
+        "content": "Di pasar festival tradisional, makanan berbentuk bulat (seperti kue bulan atau roti labu) melambangkan keutuhan (*completeness*) dan harmoni kebersamaan seluruh anggota keluarga serta para sahabat."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep2_q1",
+          "question": "What traditional delicacy is being baked fresh and sold at the festival food stalls?",
+          "options": [
+            "Sweet autumn mooncakes stuffed with lotus seed paste",
+            "Cold salted fish slices",
+            "Instant frozen cheese burgers",
+            "Canned vegetable soup"
+          ],
+          "correctIndex": 0,
+          "explanation": "Stan kuliner menyajikan kue bulan musim gugur manis berisi pasta biji teratai segar."
+        },
+        {
+          "id": "s8_ep2_q2",
+          "question": "With what beverage does the pastry vendor recommend enjoying the warm pastries?",
+          "options": [
+            "Icy carbonated soda",
+            "Warm spiced cinnamon apple cider",
+            "Salty tap water",
+            "Black vinegar"
+          ],
+          "correctIndex": 1,
+          "explanation": "Penjual menyajikan kue bersama sari apel kayu manis hangat berempah."
+        },
+        {
+          "id": "s8_ep2_q3",
+          "question": "Which adverb-adjective pair best describes a delightful aromatic food experience?",
+          "options": [
+            "Intensely fragrant",
+            "Noisily broken",
+            "Silently cold",
+            "Angrily sour"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Intensely fragrant' mendeskripsikan aroma makanan yang sangat semerbak harum."
+        },
+        {
+          "id": "s8_ep2_q4",
+          "question": "Which adjective means 'having the pleasant flavor characteristic of honey or sugar'?",
+          "options": [
+            "Sweet",
+            "Salty",
+            "Bitter",
+            "Garbage"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Sweet' bermakna manis seperti rasa gula atau madu."
+        },
+        {
+          "id": "s8_ep2_q5",
+          "question": "Complete the sentence: 'Friendly volunteers ______ hot herbal tea to visitors at every corner.'",
+          "options": [
+            "serve",
+            "throw",
+            "lock",
+            "sweep"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Serve' (menyajikan) adalah kata kerja yang tepat dalam penyajian hidangan."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata pasar kuliner festival: taste, fresh, market, special, serve, sweet.",
+        "Menggunakan adverbial modifiers untuk melukiskan kelezatan aroma dan cita rasa makanan.",
+        "Menghargai tradisi berbagi makanan manis sebagai lambang keharmonisan sosial."
+      ],
+      "cliffhanger": "Setelah melewati kerumunan pasar makanan, lorong gang batu bercabang tiga. Elena Vance mencari panggung boneka wayang Master Raymond Cole di Alun-Alun Teater Tua namun papan petunjuknya tertutup spanduk..."
+    },
+    {
+      "id": 3,
+      "number": 3,
+      "title": "Bertanya Arah dengan Pertanyaan Tak Langsung",
+      "titleEn": "Polite Indirect Inquiries",
+      "estimatedMinutes": 10,
+      "recap": "Di tengah keramaian pengunjung festival, menanyakan petunjuk arah menggunakan *Indirect Questions* mencerminkan kesopanan berbahasa Inggris tingkat menengah.",
+      "dialogue": [
+        {
+          "id": "s8e3_d1",
+          "speaker": "Elena Vance",
+          "en": "The crowd is growing thicker around the crossroads. We need to find the Historic Puppet Stage before the show starts.",
+          "idText": "Kerumunan semakin padat di persimpangan jalan. Kita perlu menemukan Panggung Boneka Bersejarah sebelum pertunjukan dimulai."
+        },
+        {
+          "id": "s8e3_d2",
+          "speaker": "Kanci",
+          "en": "Ada seorang pemandu festival berseragam lampion di dekat pos informasi! Mari tanyakan petunjuk arah dengan santun!",
+          "idText": "Ada seorang pemandu festival berseragam lampion di dekat pos informasi! Mari tanyakan petunjuk arah dengan santun!"
+        },
+        {
+          "id": "s8e3_d3",
+          "speaker": "You",
+          "en": "Excuse me, sir. Could you please tell me where the Old Puppet Theater stage is located?",
+          "idText": "Permisi, Pak. Bisakah Anda memberi tahu saya di mana lokasi panggung Teater Boneka Tua berada?"
+        },
+        {
+          "id": "s8e3_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Petugas informasi tersenyum ramah dan membentangkan peta rute festival. Pertanyaan tak langsung apa lagi yang ingin kamu ajukan?",
+          "options": [
+            {
+              "id": "s8e3_opt_1a",
+              "text": "Do you happen to know if the puppet rehearsal has already begun on the north lawn?",
+              "speakerReply": "Guide Officer",
+              "reactionEn": "Master Raymond Cole is doing his vocal warmup right now! If you walk through Rose Archway on your right, you will arrive in three minutes.",
+              "reactionId": "Master Raymond Cole sedang melakukan pemanasan vokal sekarang! Jika Anda melewati Lengkungan Mawar di sebelah kanan, Anda akan tiba dalam tiga menit."
+            },
+            {
+              "id": "s8e3_opt_1b",
+              "text": "Would you mind showing us which walking path is less crowded for visiting guests?",
+              "speakerReply": "Guide Officer",
+              "reactionEn": "Take the cobblestone alley behind the guildhall. It is peaceful and adorned with glowing paper cranes.",
+              "reactionId": "Lewatlah gang berbatu di belakang balai kota. Jalurnya tenang dan dihiasi burung bangau kertas yang menyala."
+            }
+          ]
+        },
+        {
+          "id": "s8e3_d4",
+          "speaker": "You",
+          "en": "Thank you for being so polite and helpful. Your festival map makes navigating these historic alleys effortless.",
+          "idText": "Terima kasih sudah begitu ramah dan membantu. Peta festival Anda membuat perjalanan di lorong bersejarah ini sangat mudah."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-ask",
+          "word": "ask",
+          "partOfSpeech": "verb",
+          "enDefinition": "To say something in order to obtain an answer or some information.",
+          "idMeaning": "bertanya meminta informasi",
+          "contextSentence": "Polite tourists always ask for directions respectfully."
+        },
+        {
+          "wordId": "oxford-direction",
+          "word": "direction",
+          "partOfSpeech": "noun",
+          "enDefinition": "A course along which someone or something moves; instructions on how to reach a place.",
+          "idMeaning": "petunjuk arah rute",
+          "contextSentence": "The festival information desk provides clear directions to every stage."
+        },
+        {
+          "wordId": "oxford-polite",
+          "word": "polite",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Having or showing behavior that is respectful and considerate of other people.",
+          "idMeaning": "sopan dan beradab",
+          "contextSentence": "Indirect questions sound polite and considerate in public spaces."
+        },
+        {
+          "wordId": "oxford-map",
+          "word": "map",
+          "partOfSpeech": "noun",
+          "enDefinition": "A diagrammatic representation of an area of land showing physical features, cities, or streets.",
+          "idMeaning": "peta panduan festival",
+          "contextSentence": "Consult the illustrated festival map to locate hidden stages."
+        },
+        {
+          "wordId": "oxford-guide",
+          "word": "guide",
+          "partOfSpeech": "noun",
+          "enDefinition": "A person who shows the way to others; an information pamphlet or sign.",
+          "idMeaning": "petugas pemandu rute",
+          "contextSentence": "The helpful festival guide pointed us toward Rose Archway."
+        },
+        {
+          "wordId": "oxford-locate",
+          "word": "locate",
+          "partOfSpeech": "verb",
+          "enDefinition": "To discover the exact place or position of something.",
+          "idMeaning": "menemukan posisi / letak",
+          "contextSentence": "We used the digital app to locate the puppet theater."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Indirect Questions untuk Kesopanan Publik (*Could you tell me where... is?, Do you happen to know if...?*)",
+        "topicId": "indirect-questions",
+        "explanation": "Dalam bahasa Inggris tingkat menengah, pertanyaan tak langsung diawali frasa pengantar santun ('Could you tell me...', 'Do you happen to know...'). Perhatikan bahwa urutan kata di klausa isi kembali menjadi susunan pernyataan (Subject + Verb), bukan pembalikan tanya (Inversion).",
+        "formula": "Could you tell me where [Subject] + [Verb]? / Do you happen to know when the show starts?"
+      },
+      "culturalTip": {
+        "title": "Tingkat Kesopanan Berbahasa di Ruang Publik (*Social Etiquette*)",
+        "content": "Bertanya secara langsung seperti *'Where is the stage?'* dapat terdengar menuntut (*blunt*). Mengawali dengan *'Excuse me, could you tell me...'* menunjukkan penghargaan tinggi terhadap waktu dan kesediaan lawan bicara."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep3_q1",
+          "question": "Which of the following is an example of a polite Indirect Question?",
+          "options": [
+            "Where is the puppet stage right now?",
+            "Could you please tell me where the puppet stage is located?",
+            "Tell me the direction immediately!",
+            "Show stage now!"
+          ],
+          "correctIndex": 1,
+          "explanation": "'Could you please tell me where the puppet stage is located?' adalah kalimat Indirect Question yang santun dan tata bahasanya tepat."
+        },
+        {
+          "id": "s8_ep3_q2",
+          "question": "What happens to the word order of the subject and verb in an Indirect Question clause?",
+          "options": [
+            "It switches back to standard statement order (Subject + Verb)",
+            "The verb is completely deleted",
+            "The subject is put at the beginning of the sentence twice",
+            "The verb must always be in past continuous"
+          ],
+          "correctIndex": 0,
+          "explanation": "Pada klausa pertanyaan tak langsung, susunan kata kembali ke urutan pernyataan baku (Subject + Verb)."
+        },
+        {
+          "id": "s8_ep3_q3",
+          "question": "Which landmark did the festival guide suggest passing through to reach the puppet theater in 3 minutes?",
+          "options": [
+            "Rose Archway on the right",
+            "The underwater tunnel",
+            "The highway toll bridge",
+            "The factory smokestack"
+          ],
+          "correctIndex": 0,
+          "explanation": "Petugas menyarankan melewati Lengkungan Mawar (Rose Archway) di sebelah kanan."
+        },
+        {
+          "id": "s8_ep3_q4",
+          "question": "Which verb means 'to discover or establish the exact position of a place'?",
+          "options": [
+            "Locate",
+            "Throw",
+            "Sweep",
+            "Cook"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Locate' berarti melacak atau menemukan letak posisi suatu tempat."
+        },
+        {
+          "id": "s8_ep3_q5",
+          "question": "Complete the sentence: 'The illustrated festival ______ highlights all performance stages and restrooms.'",
+          "options": [
+            "map",
+            "garbage",
+            "carpet",
+            "pocket"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Map' (peta panduan) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata navigasi publik: ask, direction, polite, map, guide, locate.",
+        "Menguasai pembentukan Indirect Questions untuk interaksi sosial berstandar tinggi.",
+        "Menghindari pembalikan kata kerja tanya yang keliru saat menyusun klausa tidak langsung."
+      ],
+      "cliffhanger": "Saat melangkah melewati Rose Archway, dentuman ritmis drum kulit dan petikan merdu alat musik senar kecapi tradisional menggetarkan udara alun-alun..."
+    },
+    {
+      "id": 4,
+      "number": 4,
+      "title": "Panggung Musik Rakyat di Alun-Alun",
+      "titleEn": "The Folk Music & Dance Square",
+      "estimatedMinutes": 10,
+      "recap": "Alun-alun terbuka dipenuhi ratusan penonton yang menari dan bertepuk tangan serempak mengikuti alunan musik rakyat bertempo dinamis.",
+      "dialogue": [
+        {
+          "id": "s8e4_d1",
+          "speaker": "Narator",
+          "en": "Musicians pluck resonant string instruments on the elevated timber stage, filling the cool night with enchanting melodies.",
+          "idText": "Para musisi memetik alat musik berdawai di atas panggung kayu bertingkat, memenuhi malam sejuk dengan melodi yang memikat."
+        },
+        {
+          "id": "s8e4_d2",
+          "speaker": "Elena Vance",
+          "en": "Listen to that galloping rhythm! Dancers are performing the ancient Harvest Waltz with swirling crimson shawls.",
+          "idText": "Dengarkan ritme rancak itu! Para penari sedang membawakan Tari Panen Kuno dengan selendang merah menyala yang berputar indah."
+        },
+        {
+          "id": "s8e4_d3",
+          "speaker": "Kanci",
+          "en": "Suasana alun-alun sangat semarak dan meriah! Penonton bertepuk tangan berirama mengikuti hentakan kaki para penari!",
+          "idText": "Suasana alun-alun sangat semarak dan meriah! Penonton bertepuk tangan berirama mengikuti hentakan kaki para penari!"
+        },
+        {
+          "id": "s8e4_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Dua penari tersenyum mengulurkan selendang sutra mengajakmu ikut dalam lingkaran tarian rakyat. Apa tindakanmu?",
+          "options": [
+            {
+              "id": "s8e4_opt_1a",
+              "text": "Stepping into the circle with enthusiasm, I clap my hands and match the joyful footwork of the lively folk dance.",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "Splendid footwork, Alex! Immersing yourself in the local dance is the true spirit of cultural exploration!",
+              "reactionId": "Langkah kaki yang hebat, Alex! Terjun langsung dalam tarian lokal adalah esensi sejati penjelajahan budaya!"
+            },
+            {
+              "id": "s8e4_opt_1b",
+              "text": "I want to capture this breathtaking performance on camera while Elena records documentary soundscapes.",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "A photographer's instinct! The vibrant motion blur of the shawls will look incredible in our album.",
+              "reactionId": "Naluri seorang juru foto! Efek gerak berputar selendang yang semarak akan terlihat luar biasa di album kita."
+            }
+          ]
+        },
+        {
+          "id": "s8e4_d4",
+          "speaker": "You",
+          "en": "The thunderous applause shakes the square. Traditional music preserves the heart and soul of a community.",
+          "idText": "Tepuk tangan bergemuruh mengguncang alun-alun. Musik tradisional melestarikan jiwa dan jati diri suatu masyarakat."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-performance",
+          "word": "performance",
+          "partOfSpeech": "noun",
+          "enDefinition": "An act of staging or presenting a play, concert, or other form of entertainment.",
+          "idMeaning": "pertunjukan seni panggung",
+          "contextSentence": "The folk dance performance received a standing ovation."
+        },
+        {
+          "wordId": "oxford-rhythm",
+          "word": "rhythm",
+          "partOfSpeech": "noun",
+          "enDefinition": "A strong, regular, repeated pattern of movement or sound.",
+          "idMeaning": "ritme irama ketukan",
+          "contextSentence": "Dancers stomped their boots in time with the drum rhythm."
+        },
+        {
+          "wordId": "oxford-instrument",
+          "word": "instrument",
+          "partOfSpeech": "noun",
+          "enDefinition": "An object or device for producing musical sounds, such as a violin, flute, or drum.",
+          "idMeaning": "alat musik petik / tabuh",
+          "contextSentence": "The master musician played an ancient string instrument."
+        },
+        {
+          "wordId": "oxford-stage",
+          "word": "stage",
+          "partOfSpeech": "noun",
+          "enDefinition": "A raised floor or platform on which actors, entertainers, or musicians perform.",
+          "idMeaning": "panggung pertunjukan seni",
+          "contextSentence": "The wooden festival stage was draped in woven tapestry."
+        },
+        {
+          "wordId": "oxford-lively",
+          "word": "lively",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Full of life and energy; active and outgoing.",
+          "idMeaning": "semarak / meriah penuh semangat",
+          "contextSentence": "The square was alive with lively conversation and folk melodies."
+        },
+        {
+          "wordId": "oxford-dance",
+          "word": "dance",
+          "partOfSpeech": "noun",
+          "enDefinition": "A series of movements that match the speed and rhythm of a piece of music.",
+          "idMeaning": "tarian rakyat tradisional",
+          "contextSentence": "Spectators formed a wide circle to join the celebratory dance."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Present Participle Clauses untuk Aksi Bersamaan (*Clapping their hands, the audience cheered*)",
+        "topicId": "participle-clauses-action",
+        "explanation": "Gunakan klausa berawalan Participle (Verb-ing) untuk mendeskripsikan dua aksi yang terjadi secara bersamaan atau aksi yang menjadi latar suasana aksi utama.",
+        "formula": "[Verb-ing Phrase], [Subject] + [Verb] / Swirling their crimson shawls, the dancers leaped across the timber stage."
+      },
+      "culturalTip": {
+        "title": "Karakteristik Tarian Rakyat Komunal (*Folk Dancing Circles*)",
+        "content": "Berbeda dengan dansa formal pasangan, tarian rakyat tradisional biasanya dilakukan dalam lingkaran terbuka (*open circle*). Siapa pun, terlepas dari latar belakang sosial atau kemampuan menari, disambut hangat untuk bergabung."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep4_q1",
+          "question": "What traditional art performance is captivating the audience in the central square?",
+          "options": [
+            "An ancient folk dance performed to live acoustic rhythm and string instruments",
+            "A modern car race competition",
+            "A cooking television reality show",
+            "A martial arts wrestling duel"
+          ],
+          "correctIndex": 0,
+          "explanation": "Penonton terpikat oleh pertunjukan tari rakyat kuno yang diiringi ketukan alat musik senar dan ritme kendang."
+        },
+        {
+          "id": "s8_ep4_q2",
+          "question": "Which sentence correctly demonstrates a Present Participle clause showing simultaneous action?",
+          "options": [
+            "Clapping their hands joyfully, the crowd matched the dancers' rhythm.",
+            "Crowd clapped hands while they will dance tomorrow.",
+            "Clap hands crowd danced rhythm.",
+            "Crowd were clap when danced."
+          ],
+          "correctIndex": 0,
+          "explanation": "'Clapping their hands joyfully, the crowd matched the dancers' rhythm' adalah Present Participle clause yang tepat."
+        },
+        {
+          "id": "s8_ep4_q3",
+          "question": "Which noun refers to an object or device used to produce musical sounds?",
+          "options": [
+            "Instrument",
+            "Garbage",
+            "Pocket",
+            "Lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Instrument' (musical instrument) adalah instrumen atau alat pembuat suara musik."
+        },
+        {
+          "id": "s8_ep4_q4",
+          "question": "Which adjective means 'full of life, energetic, and exhilarating'?",
+          "options": [
+            "Lively",
+            "Dark",
+            "Silent",
+            "Broken"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Lively' bermakna semarak, penuh gairah hidup, dan berenergi tinggi."
+        },
+        {
+          "id": "s8_ep4_q5",
+          "question": "Complete the sentence: 'The musicians stepped onto the elevated wooden ______ to begin the concert.'",
+          "options": [
+            "stage",
+            "trash",
+            "carpet",
+            "pot"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Stage' (panggung pertunjukan) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata pertunjukan musik rakyat: performance, rhythm, instrument, stage, lively, dance.",
+        "Menggunakan Present Participle Clauses untuk menggambarkan aksi serempak yang dinamis.",
+        "Menghargai inklusivitas tarian rakyat tradisional yang terbuka bagi semua orang."
+      ],
+      "cliffhanger": "Di balik tirai beludru Panggung Teater Boneka di sudut utara alun-alun, terdengar suara helaan napas cemas dari Master Raymond Cole. Salah satu boneka kayu tokoh utama lakon malam ini tersangkut tali pengendali..."
+    },
+    {
+      "id": 5,
+      "number": 5,
+      "title": "Menolong Dalang Boneka Tua",
+      "titleEn": "Helping Master Raymond Backstage",
+      "estimatedMinutes": 10,
+      "recap": "Di belakang panggung teater boneka, kamu membantu Master Raymond Cole mengurai tali boneka kayu yang kusut menjelang pementasan dongeng rakyat.",
+      "dialogue": [
+        {
+          "id": "s8e5_d1",
+          "speaker": "Master Raymond",
+          "en": "Welcome, friends! I have told this ancient folktale for fifty years, but the control strings of my legendary hero puppet are badly knotted!",
+          "idText": "Selamat datang, sahabatku! Saya telah membawakan dongeng kuno ini selama lima puluh tahun, tetapi tali pengendali boneka ksatria legendaris saya terbelit kusut!"
+        },
+        {
+          "id": "s8e5_d2",
+          "speaker": "Kanci",
+          "en": "Lihat boneka kayu berukir itu! Wajah karakternya dipahat sangat halus dari kayu cedar wangi! Jangan dipotong, mari kita urai perlahan!",
+          "idText": "Lihat boneka kayu berukir itu! Wajah karakternya dipahat sangat halus dari kayu cedar wangi! Jangan dipotong, mari kita urai perlahan!"
+        },
+        {
+          "id": "s8e5_d3",
+          "speaker": "You",
+          "en": "Let me assist you, Master Raymond. If you hold the wooden control cross steady, I can gently untangle each silk thread.",
+          "idText": "Biar saya bantu, Master Raymond. Jika Anda memegang palang kayu pengendali dengan stabil, saya bisa mengurai setiap benang sutra dengan hati-hati."
+        },
+        {
+          "id": "s8e5_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Dengan jemari terampil, kamu memisahkan benang lengan dan benang kepala boneka. Apa yang kamu tanyakan kepada sang dalang?",
+          "options": [
+            {
+              "id": "s8e5_opt_1a",
+              "text": "If you were to introduce this character to the young festival audience, what moral lesson would you highlight?",
+              "speakerReply": "Master Raymond",
+              "reactionEn": "This hero teaches courage and selflessness! A true hero uses their strength to light the way for others.",
+              "reactionId": "Ksatria ini mengajarkan keberanian dan ketidakegoisan! Pahlawan sejati menggunakan kekuatannya untuk menerangi jalan bagi sesama."
+            },
+            {
+              "id": "s8e5_opt_1b",
+              "text": "The wooden mechanism works smoothly now! Shall we test the puppet's bowing gesture before curtain call?",
+              "speakerReply": "Master Raymond",
+              "reactionEn": "Splendid dexterity! Look at him bow with regal grace. The theater tradition is saved for tonight!",
+              "reactionId": "Keterampilan jari yang luar biasa! Lihat dia membungkuk dengan keanggunan seorang raja. Tradisi teater terselamatkan malam ini!"
+            }
+          ]
+        },
+        {
+          "id": "s8e5_d4",
+          "speaker": "Master Raymond",
+          "en": "Your patient assistance honors our heritage. A story shared with love never fades from human memory.",
+          "idText": "Bantuan sabarmu menghormati warisan budaya kita. Sebuah kisah yang dibagikan dengan cinta tidak akan pernah pudar dari ingatan manusia."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-artist",
+          "word": "artist",
+          "partOfSpeech": "noun",
+          "enDefinition": "A person who creates paintings, sculptures, or performs plays or musical entertainment.",
+          "idMeaning": "seniman pertunjukan / perajin",
+          "contextSentence": "Master Raymond is a master puppetry artist."
+        },
+        {
+          "wordId": "oxford-theater",
+          "word": "theater",
+          "partOfSpeech": "noun",
+          "enDefinition": "A building or outdoor area in which plays and other dramatic performances are given.",
+          "idMeaning": "teater panggung sandiwara",
+          "contextSentence": "Children gathered in front of the open-air puppet theater."
+        },
+        {
+          "wordId": "oxford-assist",
+          "word": "assist",
+          "partOfSpeech": "verb",
+          "enDefinition": "To help someone, typically by doing a share of the work.",
+          "idMeaning": "membantu menolong sukarela",
+          "contextSentence": "Volunteers assist veteran performers behind the stage curtain."
+        },
+        {
+          "wordId": "oxford-tradition",
+          "word": "tradition",
+          "partOfSpeech": "noun",
+          "enDefinition": "The transmission of customs or beliefs from generation to generation.",
+          "idMeaning": "tradisi budaya luhur",
+          "contextSentence": "Handcrafted marionettes are an honored civic tradition."
+        },
+        {
+          "wordId": "oxford-story",
+          "word": "story",
+          "partOfSpeech": "noun",
+          "enDefinition": "An account of imaginary or real people and events told for entertainment.",
+          "idMeaning": "kisah dongeng rakyat",
+          "contextSentence": "Every puppet play narrates an ancient moral story."
+        },
+        {
+          "wordId": "oxford-character",
+          "word": "character",
+          "partOfSpeech": "noun",
+          "enDefinition": "A person or animal in a novel, play, or movie.",
+          "idMeaning": "tokoh watak pewayangan",
+          "contextSentence": "The lead character represents loyalty and kindness."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Conditional Type 2 untuk Saran Hipotesis (*If you were in my position..., If I had more time...*)",
+        "topicId": "conditional-type-2-advice",
+        "explanation": "Gunakan Conditional Type 2 (If + Simple Past, would + base verb) saat mengajukan pertanyaan reflektif atau saran hipotesis yang bersahabat kepada seorang seniman senior.",
+        "formula": "If + Subject + [Past Simple], Subject + would + [Base Verb] / If you held the wooden cross, I would untie the silk thread."
+      },
+      "culturalTip": {
+        "title": "Seni Teater Boneka Kayu Tradisional (*Puppetry & Marionettes*)",
+        "content": "Di kota-kota tua Eropa dan Nusantara, seni wayang/boneka kayu merupakan sarana pendidikan moral rakyat sebelum era bioskop dan televisi. Setiap karakter membawa filosofi kebajikan (*virtue*) yang dipelajari anak-anak secara menyenangkan."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep5_q1",
+          "question": "What technical problem was Master Raymond Cole facing backstage before the puppet show?",
+          "options": [
+            "The marionette control silk strings were severely knotted and tangled",
+            "The wooden stage collapsed into the river",
+            "The puppet caught on fire",
+            "The theater tent was blown away by wind"
+          ],
+          "correctIndex": 0,
+          "explanation": "Tali sutra pengendali boneka pahlawan legendaris terbelit kusut (severely knotted)."
+        },
+        {
+          "id": "s8_ep5_q2",
+          "question": "What moral lesson does the puppet character embody in the ancient folktale?",
+          "options": [
+            "Courage and selflessness in lighting the way for others",
+            "How to hoard gold coins under a bed",
+            "Eating candies without sharing",
+            "Sleeping all day long"
+          ],
+          "correctIndex": 0,
+          "explanation": "Karakter pahlawan mengajarkan keberanian dan ketidakegoisan dalam menerangi jalan bagi orang lain."
+        },
+        {
+          "id": "s8_ep5_q3",
+          "question": "Which sentence correctly demonstrates Conditional Type 2 for a hypothetical idea?",
+          "options": [
+            "If you held the wooden cross, I would untangle the threads easily.",
+            "If you will hold the cross, I am untie threads.",
+            "If you holds the cross, I would have untie.",
+            "If you holding cross, I will untangled."
+          ],
+          "correctIndex": 0,
+          "explanation": "'If you held the wooden cross, I would untangle the threads easily' adalah Conditional Type 2 yang tepat (If + V2, would + V1)."
+        },
+        {
+          "id": "s8_ep5_q4",
+          "question": "Which noun refers to a fictional or historical person represented in a play or story?",
+          "options": [
+            "Character",
+            "Garbage",
+            "Pocket",
+            "Lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Character' adalah tokoh atau karakter dalam pementasan sandiwara atau cerita."
+        },
+        {
+          "id": "s8_ep5_q5",
+          "question": "Complete the sentence: 'Passing down cultural wisdom through puppet theater is a treasured ______.'",
+          "options": [
+            "tradition",
+            "trash",
+            "noise",
+            "carpet"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Tradition' (tradisi) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata teater rakyat: artist, theater, assist, tradition, story, character.",
+        "Menggunakan Conditional Type 2 untuk mengajukan pandangan hipotesis secara sopan.",
+        "Menghargai pesan moral dan dedikasi seniman dalam merawat seni pewayangan tradisional."
+      ],
+      "cliffhanger": "Sambil menyeruput teh melati bersama Master Raymond dan Elena, mereka mulai mengajari kalian ungkapan-ungkapan kiasan khas festival yang sering diucapkan penduduk lokal..."
+    },
+    {
+      "id": 6,
+      "number": 6,
+      "title": "Ungkapan Kiasan dan Idiom Festival",
+      "titleEn": "Festive Idioms & Colorful Sayings",
+      "estimatedMinutes": 10,
+      "recap": "Mempelajari idiom bertema perayaan dan kegembiraan (*idiomatic expressions*) memperkaya kemampuan komunikasi bahasa Inggris agar terdengar fasih dan alami.",
+      "dialogue": [
+        {
+          "id": "s8e6_d1",
+          "speaker": "Elena Vance",
+          "en": "Festivals have their own lively vocabulary! When we say 'the festival is in full swing', what do you think it means?",
+          "idText": "Festival memiliki kosakata khasnya sendiri! Saat kita mengucapkan 'the festival is in full swing', menurutmu apa artinya?"
+        },
+        {
+          "id": "s8e6_d2",
+          "speaker": "Kanci",
+          "en": "'In full swing' artinya perayaan sudah mencapai puncak kemeriahan dan kegembiraan tertingginya!",
+          "idText": "'In full swing' artinya perayaan sudah mencapai puncak kemeriahan dan kegembiraan tertingginya!"
+        },
+        {
+          "id": "s8e6_d3",
+          "speaker": "You",
+          "en": "That makes perfect sense! And what about 'having a whale of a time'?",
+          "idText": "Itu sangat masuk akal! Lalu bagaimana dengan ungkapan 'having a whale of a time'?"
+        },
+        {
+          "id": "s8e6_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Master Raymond terkekeh sambil memamerkan boneka jenaka. Apa penjelasanmu tentang makna idiom tersebut?",
+          "options": [
+            {
+              "id": "s8e6_opt_1a",
+              "text": "It means having an exceptionally delightful and joyful time, as big and grand as a whale!",
+              "speakerReply": "Master Raymond",
+              "reactionEn": "Spot on! And when you 'paint the town red', it means going out and celebrating vigorously with music and friends.",
+              "reactionId": "Tepat sekali! Dan saat kamu 'paint the town red', artinya pergi keluar merayakan pesta dengan meriah bersama musik dan sahabat."
+            },
+            {
+              "id": "s8e6_opt_1b",
+              "text": "Does 'spark of joy' describe the warm inspiration we feel watching the lanterns glow?",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "Beautiful poetic deduction! A 'spark of joy' is that sudden flash of happiness that illuminates your spirit.",
+              "reactionId": "Deduksi puitis yang indah! 'Spark of joy' adalah kilasan kebahagiaan mendadak yang menerangi jiwamu."
+            }
+          ]
+        },
+        {
+          "id": "s8e6_d4",
+          "speaker": "Master Raymond",
+          "en": "Idioms are the color and humor of a language. When you understand them, you share the heartbeat of the people.",
+          "idText": "Idiom adalah warna dan humor suatu bahasa. Ketika kamu memahaminya, kamu berbagi detak jantung masyarakatnya."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-expression",
+          "word": "expression",
+          "partOfSpeech": "noun",
+          "enDefinition": "A word or phrase, especially an idiomatic one, used to convey an idea.",
+          "idMeaning": "ungkapan kiasan / frasa idiom",
+          "contextSentence": "The English language is enriched with colorful festive expressions."
+        },
+        {
+          "wordId": "oxford-meaning",
+          "word": "meaning",
+          "partOfSpeech": "noun",
+          "enDefinition": "What is meant by a word, text, concept, or action.",
+          "idMeaning": "makna tersembunyi / arti",
+          "contextSentence": "Discovering the cultural meaning behind idioms makes learning fun."
+        },
+        {
+          "wordId": "oxford-joy",
+          "word": "joy",
+          "partOfSpeech": "noun",
+          "enDefinition": "A feeling of great pleasure and happiness.",
+          "idMeaning": "kegembiraan / sukacita",
+          "contextSentence": "The children squealed with pure joy at the fireworks display."
+        },
+        {
+          "wordId": "oxford-spirit",
+          "word": "spirit",
+          "partOfSpeech": "noun",
+          "enDefinition": "The prevailing tone or tendency of a period, event, or group; attitude.",
+          "idMeaning": "semangat perayaan",
+          "contextSentence": "Generosity and warmth embody the true festival spirit."
+        },
+        {
+          "wordId": "oxford-humor",
+          "word": "humor",
+          "partOfSpeech": "noun",
+          "enDefinition": "The quality of being amusing or comic, especially as expressed in literature or speech.",
+          "idMeaning": "kejenakaan / rasa humor",
+          "contextSentence": "Folktale characters use witty humor to outsmart greedy villains."
+        },
+        {
+          "wordId": "oxford-share",
+          "word": "share",
+          "partOfSpeech": "verb",
+          "enDefinition": "To tell someone about something, or participate together in an experience.",
+          "idMeaning": "berbagi cerita dan tawa",
+          "contextSentence": "Friends gather around the table to share festive jokes."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Idiom & Metafora Festival (*'in full swing', 'have a whale of a time', 'spark of joy'*)",
+        "topicId": "festive-idioms",
+        "explanation": "Pelajari makna kiasan non-literal: 'in full swing' (berada di puncak kesibukan/kemeriahan), 'have a whale of a time' (sangat bersenang-senang), dan 'bright as a button' (sangat cerdas dan bersemangat).",
+        "formula": "Subject + be + in full swing / Subject + have a whale of a time / That event brought a spark of joy."
+      },
+      "culturalTip": {
+        "title": "Kekuatan Idiom dalam Komunikasi Budaya",
+        "content": "Menggunakan idiom secara kontekstual di saat yang tepat menunjukkan apresiasi budaya mendalam. Penutur asli (*native speakers*) akan langsung merasa dekat karena idiom merefleksikan cara berpikir emosional suatu bangsa."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep6_q1",
+          "question": "What does the English idiom 'the festival is in full swing' mean?",
+          "options": [
+            "The festival is canceled due to bad weather",
+            "The festival is at the peak of its highest activity and excitement",
+            "Everyone is swinging on trees",
+            "The festival is sleeping"
+          ],
+          "correctIndex": 1,
+          "explanation": "'In full swing' bermakna kegiatan atau festival sedang berada di puncak kesibukan dan kemeriahan tertinggi."
+        },
+        {
+          "id": "s8_ep6_q2",
+          "question": "What does the phrase 'having a whale of a time' express?",
+          "options": [
+            "Swimming with ocean creatures in the sea",
+            "Having an exceptionally fun, delightful, and memorable time",
+            "Being extremely heavy and slow",
+            "Getting lost in deep water"
+          ],
+          "correctIndex": 1,
+          "explanation": "'Having a whale of a time' berarti bersenang-senang secara luar biasa."
+        },
+        {
+          "id": "s8_ep6_q3",
+          "question": "Which noun refers to what is intended to be understood by a word or phrase?",
+          "options": [
+            "Meaning",
+            "Garbage",
+            "Pocket",
+            "Lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Meaning' adalah makna atau arti yang terkandung dalam sebuah kata atau ungkapan."
+        },
+        {
+          "id": "s8_ep6_q4",
+          "question": "Which word means 'a feeling of deep happiness and delight'?",
+          "options": [
+            "Joy",
+            "Dark",
+            "Jam",
+            "Trash"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Joy' adalah perasaan sukacita dan kebahagiaan yang mendalam."
+        },
+        {
+          "id": "s8_ep6_q5",
+          "question": "Complete the sentence: 'Good friends always ______ cheerful stories and laughs over tea.'",
+          "options": [
+            "share",
+            "throw",
+            "lock",
+            "sweep"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Share' (berbagi) adalah kata kerja yang tepat dalam membagikan cerita dan tawa."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata idiom dan ekspresi: expression, meaning, joy, spirit, humor, share.",
+        "Menguasai idiom bertema perayaan untuk berkomunikasi secara lebih luwes dan alami.",
+        "Memahami bahwa bahasa mencerminkan humor dan kehangatan budaya setempat."
+      ],
+      "cliffhanger": "Tiba-tiba Mei Lin berlari terengah-engah mendekati meja: 'Gawat! Jadwal pawai lampion berbenturan waktu dengan atraksi kapal kembang api di dermaga! Kita butuh kesepakatan ulang antar panitia sebelum jam 8 malam!'..."
+    },
+    {
+      "id": 7,
+      "number": 7,
+      "title": "Memperbaiki Jadwal Pawai Budaya",
+      "titleEn": "Resolving the Parade Schedule Clash",
+      "estimatedMinutes": 10,
+      "recap": "Koordinasi waktu (*time management*) yang cerdas dan negosiasi diplomatik berhasil menyelaraskan jadwal pawai lampion dan pertunjukan panggung tanpa mengorbankan kepuasan penonton.",
+      "dialogue": [
+        {
+          "id": "s8e7_d1",
+          "speaker": "Mei Lin",
+          "en": "The river barge pyrotechnics team wants to fire their fireworks at 20:30, exactly when our lantern parade enters the dock!",
+          "idText": "Tim kembang api tongkang sungai ingin menyalakan kembang api pukul 20.30, tepat saat pawai lampion kita memasuki dermaga!"
+        },
+        {
+          "id": "s8e7_d2",
+          "speaker": "Sarah",
+          "en": "If both events start simultaneously, the smoke and loud bangs will overshadow the delicate lanterns. We need a coordinated plan.",
+          "idText": "Jika kedua agenda dimulai bersamaan, asap dan dentuman kencang akan menenggelamkan keindahan lampion. Kita butuh rencana terkoordinasi."
+        },
+        {
+          "id": "s8e7_d3",
+          "speaker": "Kanci",
+          "en": "Gunakan kemampuan manajemen proyekmu dari kantor kemarin! Buat jadwal bersambung yang saling melengkapi!",
+          "idText": "Gunakan kemampuan manajemen proyekmu dari kantor kemarin! Buat jadwal bersambung yang saling melengkapi!"
+        },
+        {
+          "id": "s8e7_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Mei Lin dan pimpinan tim tongkang sedang menatap papan jadwal. Solusi penjadwalan apa yang kamu usulkan?",
+          "options": [
+            {
+              "id": "s8e7_opt_1a",
+              "text": "As soon as the lantern parade arrives at the water at 20:45, the fireworks can launch as a grand triumphant finale!",
+              "speakerReply": "Mei Lin",
+              "reactionEn": "That is pure logistical genius! A fifteen-minute delay turns a clash into the most spectacular synchronized climax!",
+              "reactionId": "Itu kecerdasan logistik murni! Penundaan lima belas menit mengubah benturan menjadi puncak acara yang tersinkronisasi paling spektakuler!"
+            },
+            {
+              "id": "s8e7_opt_1b",
+              "text": "Let us organize a brief five-minute musical drum fanfare between the parade arrival and the first fireworks burst.",
+              "speakerReply": "Mei Lin",
+              "reactionEn": "Fantastic bridge! The drum fanfare will build anticipation while guests find viewing spots along the railing.",
+              "reactionId": "Jembatan peralihan yang fantastis! Gemuruh drum akan membangun antusiasme saat para tamu mencari tempat menonton di sepanjang pagar dermaga."
+            }
+          ]
+        },
+        {
+          "id": "s8e7_d4",
+          "speaker": "You",
+          "en": "We reached a unanimous agreement. Both teams are aligned and our festival schedule runs seamlessly.",
+          "idText": "Kita mencapai kesepakatan bulat. Kedua tim telah selaras dan jadwal festival kita berjalan mulus."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-schedule",
+          "word": "schedule",
+          "partOfSpeech": "noun",
+          "enDefinition": "A plan for carrying out a process or procedure, giving lists of intended events and times.",
+          "idMeaning": "jadwal susunan acara",
+          "contextSentence": "Adjusting the festival schedule prevented a major logistical clash."
+        },
+        {
+          "wordId": "oxford-event",
+          "word": "event",
+          "partOfSpeech": "noun",
+          "enDefinition": "A thing that happens, especially one of importance; a planned public or social occasion.",
+          "idMeaning": "acara / agenda kegiatan",
+          "contextSentence": "The floating lantern launch is the highlight event of the night."
+        },
+        {
+          "wordId": "oxford-delay",
+          "word": "delay",
+          "partOfSpeech": "noun",
+          "enDefinition": "A period of time by which something is late or postponed.",
+          "idMeaning": "penundaan waktu",
+          "contextSentence": "A short fifteen-minute delay allowed the parade to arrive safely."
+        },
+        {
+          "wordId": "oxford-plan",
+          "word": "plan",
+          "partOfSpeech": "noun",
+          "enDefinition": "A detailed proposal for doing or achieving something.",
+          "idMeaning": "rencana kerja matang",
+          "contextSentence": "Our synchronized plan satisfied both performance teams."
+        },
+        {
+          "wordId": "oxford-organize",
+          "word": "organize",
+          "partOfSpeech": "verb",
+          "enDefinition": "To make arrangements or preparations for an event or activity.",
+          "idMeaning": "mengorganisasi / menata alur",
+          "contextSentence": "Volunteers organize viewing zones along the riverbank."
+        },
+        {
+          "wordId": "oxford-agreement",
+          "word": "agreement",
+          "partOfSpeech": "noun",
+          "enDefinition": "Harmony or accordance in opinion or feeling; a negotiated arrangement.",
+          "idMeaning": "kesepakatan mufakat",
+          "contextSentence": "Both directors signed the updated timetable agreement."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Future Time Clauses (*As soon as the parade arrives, the fireworks will launch*)",
+        "topicId": "future-time-clauses",
+        "explanation": "Dalam klausa penunjuk waktu masa depan berawalan 'as soon as', 'when', 'before', 'after', gunakan Present Simple pada klausa waktu (time clause) dan Future modal (will + verb) pada klausa utama.",
+        "formula": "As soon as + Subject + [Present Simple], Subject + will + [Base Verb] / As soon as the lanterns reach the water, fireworks will ignite."
+      },
+      "culturalTip": {
+        "title": "Keahlian Mediasi Acara Publik (*Event Mediation*)",
+        "content": "Dalam menyelenggarakan festival rakyat yang melibatkan puluhan kelompok seni, benturan jadwal sering terjadi. Pendekatan *win-win solution* yang mengemas dua atraksi menjadi mata rantai beruntun adalah standar emas manajemen acara profesional."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep7_q1",
+          "question": "What potential conflict was successfully resolved by adjusting the timetable?",
+          "options": [
+            "A timing clash between the lantern parade arrival and the river fireworks display",
+            "A cooking competition arguing over salt",
+            "A fight over parking bicycles in the alley",
+            "A thunderstorm raining on the library"
+          ],
+          "correctIndex": 0,
+          "explanation": "Benturan waktu antara tibanya pawai lampion dan peluncuran kembang api di dermaga berhasil diselesaikan."
+        },
+        {
+          "id": "s8_ep7_q2",
+          "question": "Which tense is used in the time clause after 'as soon as' when referring to future events?",
+          "options": [
+            "Present Simple",
+            "Future Continuous with will be",
+            "Past Perfect with had",
+            "Conditional Type 3"
+          ],
+          "correctIndex": 0,
+          "explanation": "Klausa waktu setelah 'as soon as' untuk peristiwa masa depan wajib menggunakan Present Simple."
+        },
+        {
+          "id": "s8_ep7_q3",
+          "question": "Which sentence correctly follows the Future Time Clause rule?",
+          "options": [
+            "As soon as the lanterns arrive, the fireworks will begin.",
+            "As soon as lanterns will arrive, fireworks begin.",
+            "As soon as lanterns arrived, fireworks will was start.",
+            "As soon as lanterns arriving, fireworks starts."
+          ],
+          "correctIndex": 0,
+          "explanation": "'As soon as the lanterns arrive, the fireworks will begin' mengikuti kaidah Future Time Clause (Present Simple di time clause, will + verb di main clause)."
+        },
+        {
+          "id": "s8_ep7_q4",
+          "question": "Which noun means 'harmony in opinion or feeling, or a negotiated arrangement'?",
+          "options": [
+            "Agreement",
+            "Garbage",
+            "Pocket",
+            "Noise"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Agreement' adalah kesepakatan atau mufakat yang dicapai bersama."
+        },
+        {
+          "id": "s8_ep7_q5",
+          "question": "Complete the sentence: 'Coordinators work together to ______ the grand cultural parade.'",
+          "options": [
+            "organize",
+            "throw",
+            "sweep",
+            "lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Organize' (mengorganisasi/menata) adalah kata kerja yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata manajemen jadwal acara: schedule, event, delay, plan, organize, agreement.",
+        "Menguasai struktur Future Time Clauses dengan kata penghubung 'as soon as'.",
+        "Menemukan solusi kompromi yang menyelaraskan berbagai kepentingan komunitas."
+      ],
+      "cliffhanger": "Di tenda perajin utama, Master Raymond dan para sesepuh kota memanggilmu: 'Sebagai tanda persahabatan, kami ingin kamu menuliskan pesan harapan di atas Lampion Emas Utama festival!'..."
+    },
+    {
+      "id": 8,
+      "number": 8,
+      "title": "Merangkai Lampion Harapan Emas",
+      "titleEn": "Crafting the Grand Golden Lantern",
+      "estimatedMinutes": 10,
+      "recap": "Belajar merangkai lampion kertas sutra emas raksasa menggunakan bahan alami bambu, benang rami, dan lilin lebah memperkenalkan seni kriya tradisional bernilai tinggi.",
+      "dialogue": [
+        {
+          "id": "s8e8_d1",
+          "speaker": "Master Raymond",
+          "en": "This centerpiece lantern is crafted from resilient river bamboo and golden handmade paper, shaped like a lotus blossom.",
+          "idText": "Lampion mahakarya utama ini dirangkai dari bambu sungai yang lentur dan kertas emas buatan tangan, dibentuk menyerupai kuncup teratai."
+        },
+        {
+          "id": "s8e8_d2",
+          "speaker": "Kanci",
+          "en": "Sentuh permukaan kertas berasnya! Sangat halus namun kuat menahan angin malam! Mari kita bantu merakit rangkanya!",
+          "idText": "Sentuh permukaan kertas berasnya! Sangat halus namun kuat menahan angin malam! Mari kita bantu merakit rangkanya!"
+        },
+        {
+          "id": "s8e8_d3",
+          "speaker": "You",
+          "en": "What material do we use to seal the candle base inside so it floats safely across the river water?",
+          "idText": "Bahan apa yang kita gunakan untuk menyegel dudukan lilin di dalam agar dapat mengapung aman di atas air sungai?"
+        },
+        {
+          "id": "s8e8_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Master Raymond menyerahkan kuas kaligrafi dan tinta hitam harum. Pesan apa yang kamu torehkan di badan lampion emas?",
+          "options": [
+            {
+              "id": "s8e8_opt_1a",
+              "text": "I write: 'May our shared knowledge, friendship, and cultural harmony shine bright across all generations.'",
+              "speakerReply": "Master Raymond",
+              "reactionEn": "Profound words! That inscription turns this craft into a beacon of unity and timeless hope.",
+              "reactionId": "Kata-kata yang sangat mendalam! Tulisan itu mengubah kerajinan ini menjadi suar persatuan dan harapan abadi."
+            },
+            {
+              "id": "s8e8_opt_1b",
+              "text": "I write: 'To the courageous pioneers who built this city, and the dreamers shaping our future.'",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "Inspiring poetry! Honoring the past while embracing tomorrow captures the heart of this celebration.",
+              "reactionId": "Puisi yang sangat menginspirasi! Menghormati masa lalu sambil menyongsong hari esok memikat esensi perayaan ini."
+            }
+          ]
+        },
+        {
+          "id": "s8e8_d4",
+          "speaker": "You",
+          "en": "When the candle inside is lit, the golden paper radiates warmth. Our creation is ready to lead the river parade.",
+          "idText": "Saat lilin di dalam dinyalakan, kertas emas memancarkan kehangatan. Karya ciptaan kita siap memimpin pawai sungai."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-create",
+          "word": "create",
+          "partOfSpeech": "verb",
+          "enDefinition": "To bring something into existence; make or craft by combining materials.",
+          "idMeaning": "menciptakan / merangkai kerajinan",
+          "contextSentence": "Master artisans create intricate lanterns out of natural river bamboo."
+        },
+        {
+          "wordId": "oxford-light",
+          "word": "light",
+          "partOfSpeech": "noun",
+          "enDefinition": "The natural agent that stimulates sight and makes things visible; a source of illumination.",
+          "idMeaning": "cahaya lentera penerang",
+          "contextSentence": "The gentle candle light illuminated the handwritten message."
+        },
+        {
+          "wordId": "oxford-shape",
+          "word": "shape",
+          "partOfSpeech": "noun",
+          "enDefinition": "The external form, contours, or outline of someone or something.",
+          "idMeaning": "bentuk kerangka lampion",
+          "contextSentence": "The lantern frame was sculpted into the shape of a blooming flower."
+        },
+        {
+          "wordId": "oxford-material",
+          "word": "material",
+          "partOfSpeech": "noun",
+          "enDefinition": "The matter from which a thing is or can be made.",
+          "idMeaning": "bahan kerajinan alami",
+          "contextSentence": "Only biodegradable natural material is used to construct river floats."
+        },
+        {
+          "wordId": "oxford-symbol",
+          "word": "symbol",
+          "partOfSpeech": "noun",
+          "enDefinition": "A thing that represents or stands for something else, especially a material object representing something abstract.",
+          "idMeaning": "lambang simbol bermakna",
+          "contextSentence": "The floating lotus lantern is an enduring symbol of peace."
+        },
+        {
+          "wordId": "oxford-hope",
+          "word": "hope",
+          "partOfSpeech": "noun",
+          "enDefinition": "A feeling of expectation and desire for a certain thing to happen.",
+          "idMeaning": "harapan dan cita-cita",
+          "contextSentence": "Every citizen inscribes their sincere hope upon the lantern."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Passive Voice untuk Deskripsi Proses Kriya Tradisional (*is crafted from, is illuminated by*)",
+        "topicId": "passive-crafting-process",
+        "explanation": "Gunakan Present Passive Voice (is/are + Past Participle V3) saat mendeskripsikan proses pembuatan barang kerajinan tangan tradisional di mana objek lebih diutamakan daripada pembuatnya.",
+        "formula": "Subject + is/are + [Past Participle V3] + of/from [Material] / The grand lantern is assembled from bamboo and painted by hand."
+      },
+      "culturalTip": {
+        "title": "Lampion Air Ramah Lingkungan (*Biodegradable River Lanterns*)",
+        "content": "Di kota-kota warisan dunia modern, lampion air dibuat 100% dari bahan organik terurai alami (kertas beras, rangka bambu, lilin kedelai) tanpa kawat atau plastik, dan dipasang jaring pengaman hilir untuk menjaga kelestarian ekosistem sungai."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep8_q1",
+          "question": "From what sustainable natural materials was the centerpiece golden lantern constructed?",
+          "options": [
+            "Resilient river bamboo, handmade paper, and beeswax",
+            "Heavy lead metal sheets",
+            "Recycled plastic car bumpers",
+            "Concrete building blocks"
+          ],
+          "correctIndex": 0,
+          "explanation": "Lampion utama dirangkai dari bambu sungai yang lentur, kertas buatan tangan, dan lilin lebah alami."
+        },
+        {
+          "id": "s8_ep8_q2",
+          "question": "What does the blooming lotus shape of the floating lantern symbolize?",
+          "options": [
+            "Peace, harmony, and renewal of hope",
+            "A fast sports motorcycle",
+            "An angry sea storm",
+            "A dangerous military fortress"
+          ],
+          "correctIndex": 0,
+          "explanation": "Bentuk kuncup teratai melambangkan perdamaian, keharmonisan, dan pembaruan harapan."
+        },
+        {
+          "id": "s8_ep8_q3",
+          "question": "Which sentence uses the correct passive voice for a traditional crafting process?",
+          "options": [
+            "The lantern frame is crafted from flexible bamboo strips.",
+            "The bamboo is craft the lantern.",
+            "The lantern crafts by bamboo strips.",
+            "Crafting lantern will was bamboo."
+          ],
+          "correctIndex": 0,
+          "explanation": "'The lantern frame is crafted from flexible bamboo strips' adalah konstruksi Passive Voice yang tepat (is + crafted)."
+        },
+        {
+          "id": "s8_ep8_q4",
+          "question": "Which noun refers to a material object representing an abstract idea or quality?",
+          "options": [
+            "Symbol",
+            "Garbage",
+            "Pocket",
+            "Lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Symbol' adalah lambang atau simbol yang mewakili gagasan abstrak."
+        },
+        {
+          "id": "s8_ep8_q5",
+          "question": "Complete the sentence: 'Citizens write heartfelt messages of peace and ______ on the floating lanterns.'",
+          "options": [
+            "hope",
+            "trash",
+            "noise",
+            "carpet"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Hope' (harapan) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata kriya dan simbolisme: create, light, shape, material, symbol, hope.",
+        "Menggunakan Passive Voice untuk mendeskripsikan bahan dan teknik pembuatan kriya.",
+        "Menghargai keselarasan antara tradisi kebudayaan dan pelestarian lingkungan hidup."
+      ],
+      "cliffhanger": "Lonceng menara berdentang delapan kali. Ribuan warga berbaris rapi memegang lentera menyala di tangan masing-masing. Pawai lampion akbar menuju sungai kota tua resmi dimulai..."
+    },
+    {
+      "id": 9,
+      "number": 9,
+      "title": "Pawai Cahaya Sepanjang Sungai Tua",
+      "titleEn": "The Riverfront Lantern Procession",
+      "estimatedMinutes": 10,
+      "recap": "Pawai ribuan lentera menyusuri tepian sungai bersejarah menghadirkan pemandangan malam yang menakjubkan dengan ribuan pantulan cahaya emas di atas permukaan air.",
+      "dialogue": [
+        {
+          "id": "s8e9_d1",
+          "speaker": "Narator",
+          "en": "A river of golden light glides gracefully along the riverbanks as thousands of candlelit lanterns reflect upon the tranquil water.",
+          "idText": "Sungai cahaya emas mengalir anggun di sepanjang tepian sungai saat ribuan lampion berlilin memantul di atas air yang tenang."
+        },
+        {
+          "id": "s8e9_d2",
+          "speaker": "Mei Lin",
+          "en": "Look at the water surface! The night is completely bright with thousands of glowing lotus reflections.",
+          "idText": "Lihat permukaan airnya! Malam ini benar-benar terang benderang dengan ribuan pantulan lampion teratai yang bersinar."
+        },
+        {
+          "id": "s8e9_d3",
+          "speaker": "Kanci",
+          "en": "Suasananya sangat damai dan menenteramkan hati! Bagaikan langit bertabur bintang yang turun ke permukaan sungai!",
+          "idText": "Suasananya sangat damai dan menenteramkan hati! Bagaikan langit bertabur bintang yang turun ke permukaan sungai!"
+        },
+        {
+          "id": "s8e9_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Lampion emas buatanmu siap dihanyutkan ke sungai di dermaga utama. Apa tindakanmu?",
+          "options": [
+            {
+              "id": "s8e9_opt_1a",
+              "text": "I kneel gently by the wooden pier and release our golden lotus lantern to float downstream amid the cheers of the crowd.",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "A picture-perfect moment! The centerpiece lantern leads the fleet like a radiant queen upon the water.",
+              "reactionId": "Momen yang sempurna untuk diabadikan! Lampion utama memimpin iring-iringan seperti seorang ratu bercahaya di atas air."
+            },
+            {
+              "id": "s8e9_opt_1b",
+              "text": "Let us pause together in silent gratitude, watching our collective hopes drift peacefully into the night horizon.",
+              "speakerReply": "Master Raymond",
+              "reactionEn": "That stillness speaks to the soul. Peace shared among thousands of people is the greatest gift of our festival.",
+              "reactionId": "Keheningan itu menyentuh jiwa. Kedamaian yang dirasakan bersama ribuan orang adalah anugerah terbesar festival kita."
+            }
+          ]
+        },
+        {
+          "id": "s8e9_d4",
+          "speaker": "You",
+          "en": "The river has become a pathway of light. Seeing our community united in wonder is a memory I will treasure forever.",
+          "idText": "Sungai ini telah menjelma menjadi titian cahaya. Menyaksikan komunitas kita bersatu dalam kekaguman adalah kenangan yang akan kusimpan selamanya."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-river",
+          "word": "river",
+          "partOfSpeech": "noun",
+          "enDefinition": "A large natural stream of water flowing in a channel to the sea, a lake, or another such stream.",
+          "idMeaning": "sungai bersejarah kota",
+          "contextSentence": "The ancient river runs through the heart of the festival district."
+        },
+        {
+          "wordId": "oxford-float",
+          "word": "float",
+          "partOfSpeech": "verb",
+          "enDefinition": "To rest or move on or near the surface of a liquid without sinking.",
+          "idMeaning": "mengapung di permukaan air",
+          "contextSentence": "Hundreds of golden lanterns float serenely across the water."
+        },
+        {
+          "wordId": "oxford-water",
+          "word": "water",
+          "partOfSpeech": "noun",
+          "enDefinition": "A colorless, transparent, odorless liquid that forms the seas, lakes, rivers, and rain.",
+          "idMeaning": "air permukaan sungai",
+          "contextSentence": "Candle flames mirrored vividly on the dark river water."
+        },
+        {
+          "wordId": "oxford-night",
+          "word": "night",
+          "partOfSpeech": "noun",
+          "enDefinition": "The period of darkness in each twenty-four hours; the time from sunset to sunrise.",
+          "idMeaning": "malam perayaan festival",
+          "contextSentence": "The cool autumn night was warm with community fellowship."
+        },
+        {
+          "wordId": "oxford-bright",
+          "word": "bright",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Giving out or reflecting a lot of light; shining.",
+          "idMeaning": "terang benderang bersinar",
+          "contextSentence": "The waterfront was bright with thousands of amber lanterns."
+        },
+        {
+          "wordId": "oxford-peaceful",
+          "word": "peaceful",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Untroubled by conflict, agitation, or commotion; quiet and tranquil.",
+          "idMeaning": "damai menenteramkan hati",
+          "contextSentence": "A peaceful silence enveloped the crowd as the lanterns drifted away."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Kata Keterangan Cara & Suasana Puitis (*gracefully, serenely, vividly, brilliantly*)",
+        "topicId": "poetic-manner-adverbs",
+        "explanation": "Gunakan adverbs of manner berakhiran '-ly' untuk memperkaya narasi pemandangan malam yang indah dan mengalir: 'glides gracefully' (meluncur anggun), 'floats serenely' (mengapung tenang), 'shines brilliantly' (bersinar cemerlang).",
+        "formula": "Subject + [Verb] + [Adverb of Manner] / The lanterns drifted serenely down the river."
+      },
+      "culturalTip": {
+        "title": "Pelepasan Lampion Air (*Water Lantern Ceremony*)",
+        "content": "Upacara menghanyutkan lentera air dilakukan dengan sikap hormat. Dalam tradisi kuno, air dipandang sebagai penyerap beban dan kekhawatiran masa lampau, membawa harapan baru mengalir menuju samudra luas."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep9_q1",
+          "question": "What transformed the old town river into a pathway of light during the procession?",
+          "options": [
+            "Thousands of glowing floating lanterns reflecting upon the tranquil water",
+            "An oil spill from a cargo tanker",
+            "Street light poles falling into the river",
+            "Plastic yellow toys thrown by children"
+          ],
+          "correctIndex": 0,
+          "explanation": "Ribuan lampion apung bercahaya yang memantul di atas air tenang mengubah sungai menjadi titian cahaya."
+        },
+        {
+          "id": "s8_ep9_q2",
+          "question": "Which adverb best describes lanterns moving smoothly and beautifully across the river surface?",
+          "options": [
+            "Gracefully",
+            "Angrily",
+            "Noisily",
+            "Carelessly"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Gracefully' (dengan anggun) melukiskan pergerakan lampion yang indah di atas air."
+        },
+        {
+          "id": "s8_ep9_q3",
+          "question": "Which adjective means 'giving out or reflecting a lot of light; radiant'?",
+          "options": [
+            "Bright",
+            "Dark",
+            "Broken",
+            "Quiet"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Bright' berarti terang benderang atau memancarkan banyak cahaya."
+        },
+        {
+          "id": "s8_ep9_q4",
+          "question": "Which verb means 'to rest or move on the surface of a liquid without sinking'?",
+          "options": [
+            "Float",
+            "Throw",
+            "Sweep",
+            "Lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Float' berarti mengapung atau melayang di atas permukaan air tanpa tenggelam."
+        },
+        {
+          "id": "s8_ep9_q5",
+          "question": "Complete the sentence: 'A ______ feeling of harmony united all citizens along the waterfront.'",
+          "options": [
+            "peaceful",
+            "garbage",
+            "carpet",
+            "noise"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Peaceful' (damai) adalah kata sifat yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata malam prosesi lampion: river, float, water, night, bright, peaceful.",
+        "Menggunakan adverbs of manner untuk memperindah deskripsi visual dan suasana puitis.",
+        "Menghargai tradisi pelepasan lampion sebagai simbol pelepasan beban dan penyambutan harapan."
+      ],
+      "cliffhanger": "Tepat pukul 20.45 saat lampion teratai emas mencapai tengah dermaga, dentuman megah kembang api perak menerangi langit malam, dan Walikota bersama Mei Lin mengundangmu ke podium dermaga untuk memimpin pidato kehormatan penutup festival..."
+    },
+    {
+      "id": 10,
+      "number": 10,
+      "title": "Pidato Kehormatan di Dermaga Air",
+      "titleEn": "The Grand Toast & The Radio Signal Invitation",
+      "estimatedMinutes": 10,
+      "recap": "Di atas podium dermaga tepi sungai yang berlatar kembang api emas, kamu menyampaikan pidato kehormatan festival, merayakan persatuan antar bangsa dan menyongsong petualangan riset kelautan berikutnya.",
+      "dialogue": [
+        {
+          "id": "s8e10_d1",
+          "speaker": "Mei Lin",
+          "en": "Citizens and guests, please welcome our guest of honor Alex to deliver the closing toast of the Old Town Autumn Festival!",
+          "idText": "Warga kota dan para tamu, sambutlah tamu kehormatan kita Alex untuk menyampaikan pidato bersulang penutup Festival Musim Gugur Kota Tua!"
+        },
+        {
+          "id": "s8e10_d2",
+          "speaker": "Kanci",
+          "en": "Ratusan ribu tatapan mata menatapmu dengan rasa bangga! Sampaikan pidato yang menginspirasi dari lubuk hatimu yang terdalam!",
+          "idText": "Ratusan ribu tatapan mata menatapmu dengan rasa bangga! Sampaikan pidato yang menginspirasi dari lubuk hatimu yang terdalam!"
+        },
+        {
+          "id": "s8e10_d3",
+          "speaker": "You",
+          "en": "Distinguished guests, artists, and friends of this great city: may this festival remind us that community and culture transcend all borders.",
+          "idText": "Para tamu terhormat, seniman, dan sahabat kota agung ini: semoga festival ini mengingatkan kita bahwa persaudaraan dan kebudayaan melampaui segala batas wilayah."
+        },
+        {
+          "id": "s8e10_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Sorak-sorai penonton menggema di sepanjang dermaga. Bagaimana kamu menutup pidato kehormatanmu?",
+          "options": [
+            {
+              "id": "s8e10_opt_1a",
+              "text": "To our shared memories, the beauty of art, and a future illuminated by hope and mutual respect. Cheers!",
+              "speakerReply": "Elena Vance",
+              "reactionEn": "Hear, hear! A toast worthy of a true ambassador of global understanding! The crowd is cheering ecstatically!",
+              "reactionId": "Setuju sekali! Pidato bersulang yang layak bagi duta sejati pemahaman dunia! Kerumunan bersorak gembira luar biasa!"
+            },
+            {
+              "id": "s8e10_opt_1b",
+              "text": "May the light from these river lanterns continue to inspire kindness and courage in every heart tonight.",
+              "speakerReply": "Master Raymond",
+              "reactionEn": "A magnificent blessing for our city! You have become an indelible part of our heritage and memory.",
+              "reactionId": "Doa berkah yang megah bagi kota kami! Kamu telah menjadi bagian tak terpisahkan dari warisan dan kenangan kami."
+            }
+          ]
+        },
+        {
+          "id": "s8e10_d4",
+          "speaker": "You",
+          "en": "I am proud to stand with this community tonight. The memories forged here will inspire me throughout all my journeys.",
+          "idText": "Saya bangga berdiri bersama komunitas ini malam ini. Kenangan yang terpatri di sini akan menginspirasi saya di sepanjang perjalanan saya."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-speech",
+          "word": "speech",
+          "partOfSpeech": "noun",
+          "enDefinition": "A formal address or discourse delivered to an audience.",
+          "idMeaning": "pidato sambutan resmi",
+          "contextSentence": "Alex delivered a memorable speech that captivated thousands of listeners."
+        },
+        {
+          "wordId": "oxford-community",
+          "word": "community",
+          "partOfSpeech": "noun",
+          "enDefinition": "A group of people living in the same place or having a particular characteristic in common.",
+          "idMeaning": "komunitas masyarakat warga",
+          "contextSentence": "The festival celebrated the unity and resilience of the community."
+        },
+        {
+          "wordId": "oxford-inspire",
+          "word": "inspire",
+          "partOfSpeech": "verb",
+          "enDefinition": "To fill someone with the urge or ability to do or feel something, especially something creative.",
+          "idMeaning": "menginspirasi / membangkitkan tekad",
+          "contextSentence": "True stories of kindness inspire people across nations."
+        },
+        {
+          "wordId": "oxford-future",
+          "word": "future",
+          "partOfSpeech": "noun",
+          "enDefinition": "The time or a period of time following the moment of speaking or writing; time regarded as still to come.",
+          "idMeaning": "masa depan yang cerah",
+          "contextSentence": "Our actions today build a brighter future for generations to come."
+        },
+        {
+          "wordId": "oxford-proud",
+          "word": "proud",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Feeling deep pleasure or satisfaction as a result of one's own achievements or qualities.",
+          "idMeaning": "bangga dan berbesar hati",
+          "contextSentence": "We are immensely proud of our shared cultural achievements."
+        },
+        {
+          "wordId": "oxford-memory",
+          "word": "memory",
+          "partOfSpeech": "noun",
+          "enDefinition": "Something remembered from the past; a recollection.",
+          "idMeaning": "kenangan indah tak terlupakan",
+          "contextSentence": "The glowing lantern ceremony will remain an everlasting memory."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Bahasa Retorika Formal Pidato (*'May this festival remind us that...', 'To our shared memories...'*)",
+        "topicId": "formal-rhetoric-speech",
+        "explanation": "Gunakan kalimat retoris formal berawalan modal harapan ('May + Subject + base verb') dan formula bersulang formal ('To + Noun Phrase') untuk menyampaikan pesan inspiratif tingkat tinggi.",
+        "formula": "May [Subject] + [Base Verb]... / To [Values/People], we raise our glasses!"
+      },
+      "culturalTip": {
+        "title": "Etika Berpidato di Depan Forum Publik Multikultural",
+        "content": "Dalam pidato publik internasional, pembicara yang efektif selalu menyoroti nilai-nilai kemanusiaan universal (*universal values*) seperti gotong royong, penghormatan sejarah, dan keberanian menyongsong masa depan, daripada topik yang memecah belah."
+      },
+      "quiz": [
+        {
+          "id": "s8_ep10_q1",
+          "question": "What core message did Alex emphasize during the closing festival toast on the waterfront podium?",
+          "options": [
+            "That community and culture transcend all geographic borders",
+            "That people should buy more plastic souvenirs",
+            "That the festival was too loud and should end immediately",
+            "That everyone should run away from the river"
+          ],
+          "correctIndex": 0,
+          "explanation": "Pesan utama pidato adalah bahwa persaudaraan dan kebudayaan melampaui segala batas wilayah geografis."
+        },
+        {
+          "id": "s8_ep10_q2",
+          "question": "Which modal structure is characteristic of formal ceremonial wishes and blessings?",
+          "options": [
+            "May this festival remind us of unity...",
+            "Can this festival reminding us...",
+            "Will this festival must remind...",
+            "Could festival is remind..."
+          ],
+          "correctIndex": 0,
+          "explanation": "'May this festival remind us...' adalah struktur baku doa dan harapan formal dalam pidato."
+        },
+        {
+          "id": "s8_ep10_q3",
+          "question": "Which noun refers to a formal address or discourse delivered to an assembled audience?",
+          "options": [
+            "Speech",
+            "Garbage",
+            "Noise",
+            "Lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Speech' adalah pidato atau sambutan resmi di hadapan publik."
+        },
+        {
+          "id": "s8_ep10_q4",
+          "question": "Which verb means 'to fill someone with the creative urge or desire to accomplish great deeds'?",
+          "options": [
+            "Inspire",
+            "Throw",
+            "Sweep",
+            "Lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Inspire' berarti menginspirasi atau membangkitkan inspirasi kreatif."
+        },
+        {
+          "id": "s8_ep10_q5",
+          "question": "Complete the sentence: 'The unforgettable night by the river will remain a treasured ______.'",
+          "options": [
+            "memory",
+            "trash",
+            "carpet",
+            "jam"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Memory' (kenangan) adalah kata benda yang tepat."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata pidato dan inspirasi: speech, community, inspire, future, proud, memory.",
+        "Menguasai bahasa retorika formal dan struktur pidato bersulang (ceremonial toast).",
+        "Menghargai kekuatan kata-kata positif dalam mempersatukan masyarakat dari berbagai latar belakang."
+      ],
+      "cliffhanger": "Di dermaga kayu saat kembang api terakhir memudar, Dr. Naomi Chen, seorang peneliti oseanografi terkemuka berjaket penjelajah kutub, mendekatimu sambil memegang peta maritim: 'Analisis deduksimu dan kepemimpinan pidatomu sungguh luar biasa, Alex! Tim ekspedisi kami sedang bersiap berlayar menuju suaka terumbu karang di Kepulauan Pelindung Pasifik. Sebuah pulau terpencil tanpa sinyal telekomunikasi modern, di mana penelitian lingkungan murni dan survival bergantung penuh pada kerja sama tim. Bersediakah kamu bergabung dalam ekspedisi ini?' Petualangan Cerita 9: Pulau Tanpa Sinyal siap dimulai!"
+    }
+  ]
+}

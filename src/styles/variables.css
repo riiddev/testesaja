@@ -1,0 +1,113 @@
+/* ==========================================================================
+   SINAUENGLISH V2 — DESIGN SYSTEM TOKENS (CSS VARIABLES)
+   Warm Editorial Neobrutalism Design System
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@700;800&family=Plus+Jakarta+Sans:wght@700;800&family=Quicksand:wght@500;600;700&family=Space+Grotesk:wght@600;700&display=swap");
+
+:root {
+  color-scheme: light;
+
+  /* Logo & Wordmark Brand System */
+  --logo-box-bg: #1E1E1E;
+  --logo-box-border: transparent;
+  --wordmark-primary: #1E1E1E;
+  --wordmark-accent: #C89D3C;
+
+  /* Typography System */
+  --font-heading: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-editorial: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Font Scales */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-md: 1.125rem;   /* 18px */
+  --text-lg: 1.25rem;    /* 20px */
+  --text-xl: 1.4375rem;  /* 23px */
+  --text-2xl: 1.75rem;   /* 28px */
+  --text-3xl: 2.25rem;   /* 36px */
+  --text-4xl: 2.75rem;   /* 44px */
+  --text-5xl: 3.625rem;  /* 58px */
+
+  /* Color Palette - Light Mode (Warm Parchment Aesthetic) */
+  --color-bg-base: #F4F0E8;
+  --color-bg-nav: #F9F7F2;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-footer: #ECE4CF;
+  --color-bg-subtle: #F1ECE1;
+
+  /* Card Tint Surfaces */
+  --color-tint-sand: #F6EFE0;
+  --color-tint-sage: #E5EAE2;
+  --color-tint-slate: #E2E5E9;
+  --color-tint-rose: #EFE3DE;
+
+  /* Ink & Typography */
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #736B61;
+  --color-text-muted: #8F867A;
+  --color-text-inverse: #FFFFFF;
+
+  /* Accent & Functional Colors */
+  --color-accent-gold: #C99A3B;
+  --color-accent-gold-hover: #B8892D;
+  --color-accent-navy: #4B5E73;
+  --color-accent-navy-hover: #3E4E60;
+  --color-success: #5F7A4B;
+  --color-success-hover: #50673F;
+  --color-danger: #8C4A4E;
+  --color-danger-hover: #783F42;
+  --color-warning: #D4973B;
+  --color-info: #4A7A8C;
+
+  /* Borders & Radii */
+  --color-border: #1A1A1A;
+  --border-width-sm: 1px;
+  --border-width-lg: 2px;
+  --border-sm: var(--border-width-sm) solid var(--color-border);
+  --border-lg: var(--border-width-lg) solid var(--color-border);
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 9999px;
+
+  /* Hard Offset Neobrutalist Shadows */
+  --shadow-color: rgba(86, 52, 0, 0.25);
+  --shadow-sm: 2px 2px 0px 0px var(--shadow-color);
+  --shadow-btn: 4px 4px 0px 0px var(--shadow-color);
+  --shadow-btn-pressed: 1px 1px 0px 0px var(--shadow-color);
+  --shadow-card: 6px 6px 0px 0px var(--shadow-color);
+  --shadow-card-hover: 8px 8px 0px 0px var(--shadow-color);
+  
+  --shadow-card-gold: 6px 6px 0px 0px var(--color-accent-gold);
+  --shadow-card-sage: 6px 6px 0px 0px var(--color-success);
+  --shadow-card-navy: 6px 6px 0px 0px var(--color-accent-navy);
+  --shadow-card-rose: 6px 6px 0px 0px var(--color-danger);
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Layout */
+  --container-max: 1200px;
+  --container-padding: 20px;
+  --header-height: 72px;
+
+  /* Micro-transitions */
+  --transition-fast: 120ms cubic-bezier(0.2, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.2, 0, 0.2, 1);
+}

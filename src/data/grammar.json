@@ -1,0 +1,1672 @@
+{
+  "schemaVersion": 1,
+  "note": "Expanded A1–B2 grammar lessons with Indonesian explanations, patterns, translated examples, common-error guidance, checkpoints, and topic-specific practice. Automated checks validate structure and answer keys; linguistic nuance still benefits from independent review.",
+  "topics": [
+    {
+      "id": "present-simple",
+      "title": "Present simple",
+      "level": "A1",
+      "category": "Verb tenses",
+      "estimatedMinutes": 6,
+      "prerequisites": [],
+      "summary": "Untuk kebiasaan, fakta, jadwal, dan keadaan yang relatif tetap.",
+      "explanation": "Present simple dipakai ketika kita membicarakan hal yang biasa terjadi, fakta umum, atau keadaan yang tidak sedang berlangsung hanya saat ini.",
+      "patterns": [
+        {
+          "label": "Positive",
+          "pattern": "I / You / We / They + base verb\nHe / She / It + verb-s/-es"
+        },
+        {
+          "label": "Negative",
+          "pattern": "Subject + do/does not + base verb"
+        },
+        {
+          "label": "Question",
+          "pattern": "Do/Does + subject + base verb?"
+        }
+      ],
+      "examples": [
+        {
+          "en": "Rina studies English every evening.",
+          "id": "Rina belajar bahasa Inggris setiap sore."
+        },
+        {
+          "en": "They do not live near the station.",
+          "id": "Mereka tidak tinggal dekat stasiun."
+        },
+        {
+          "en": "Does your brother work on Sundays?",
+          "id": "Apakah kakak atau adik laki-lakimu bekerja pada hari Minggu?"
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "She go to school by bus.",
+          "right": "She goes to school by bus.",
+          "why": "Subjek he/she/it membutuhkan akhiran -s/-es pada kalimat positif."
+        },
+        {
+          "wrong": "He doesn't likes coffee.",
+          "right": "He doesn't like coffee.",
+          "why": "Setelah does/doesn't, gunakan base verb tanpa -s."
+        }
+      ],
+      "checkpoint": "Lengkapi: My sister ___ (read) before bed.",
+      "questions": [
+        {
+          "id": "ps-1",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct sentence.",
+          "options": [
+            "He walk to class every day.",
+            "He walks to class every day.",
+            "He walking to class every day."
+          ],
+          "answer": 1,
+          "explanation": "He adalah subjek orang ketiga tunggal, jadi kata kerja positif memakai -s: walks."
+        },
+        {
+          "id": "ps-2",
+          "type": "typed",
+          "prompt": "Complete the sentence: “They ___ (not / eat) meat.”",
+          "accepted": [
+            "do not eat",
+            "don't eat"
+          ],
+          "explanation": "Untuk negative present simple dengan they, gunakan do not/don't + base verb."
+        },
+        {
+          "id": "ps-3",
+          "type": "multiple-choice",
+          "prompt": "Which question is grammatically correct?",
+          "options": [
+            "Does she likes tea?",
+            "Do she like tea?",
+            "Does she like tea?"
+          ],
+          "answer": 2,
+          "explanation": "Does digunakan untuk she. Kata kerja utama kembali ke bentuk dasar: like."
+        }
+      ]
+    },
+    {
+      "id": "present-continuous",
+      "title": "Present continuous",
+      "level": "A1",
+      "category": "Verb tenses",
+      "estimatedMinutes": 6,
+      "prerequisites": [
+        "present-simple"
+      ],
+      "summary": "Untuk kegiatan yang sedang berlangsung atau situasi sementara.",
+      "explanation": "Present continuous menyoroti kegiatan yang sedang terjadi sekarang atau keadaan sementara di sekitar periode ini. Bentuknya memakai be + verb-ing.",
+      "patterns": [
+        {
+          "label": "Positive",
+          "pattern": "Subject + am/is/are + verb-ing"
+        },
+        {
+          "label": "Negative",
+          "pattern": "Subject + am/is/are not + verb-ing"
+        },
+        {
+          "label": "Question",
+          "pattern": "Am/Is/Are + subject + verb-ing?"
+        }
+      ],
+      "examples": [
+        {
+          "en": "I am reading an article right now.",
+          "id": "Saya sedang membaca sebuah artikel sekarang."
+        },
+        {
+          "en": "They are staying with their aunt this week.",
+          "id": "Mereka sedang tinggal bersama bibi mereka minggu ini."
+        },
+        {
+          "en": "Is it raining outside?",
+          "id": "Apakah di luar sedang hujan?"
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "She is study now.",
+          "right": "She is studying now.",
+          "why": "Present continuous membutuhkan bentuk verb-ing."
+        },
+        {
+          "wrong": "They studying in the library.",
+          "right": "They are studying in the library.",
+          "why": "Jangan hilangkan auxiliary be."
+        }
+      ],
+      "checkpoint": "Lengkapi: We ___ (wait) for the bus at the moment.",
+      "questions": [
+        {
+          "id": "pc-1",
+          "type": "multiple-choice",
+          "prompt": "It is happening now. Choose the correct sentence.",
+          "options": [
+            "I write an email now.",
+            "I am writing an email now.",
+            "I writing an email now."
+          ],
+          "answer": 1,
+          "explanation": "Present continuous memakai subject + am/is/are + verb-ing."
+        },
+        {
+          "id": "pc-2",
+          "type": "typed",
+          "prompt": "Complete: “The children ___ playing outside.”",
+          "accepted": [
+            "are"
+          ],
+          "explanation": "Children adalah subjek jamak, jadi auxiliary yang tepat adalah are."
+        },
+        {
+          "id": "pc-3",
+          "type": "multiple-choice",
+          "prompt": "Which sentence describes a temporary arrangement?",
+          "options": [
+            "Nadia works in Jakarta every year.",
+            "Nadia is working in Jakarta this month.",
+            "Nadia work in Jakarta now."
+          ],
+          "answer": 1,
+          "explanation": "“This month” menunjukkan situasi sementara, cocok dengan present continuous."
+        }
+      ]
+    },
+    {
+      "id": "articles",
+      "title": "Articles: a, an, the",
+      "level": "A1",
+      "category": "Nouns & determiners",
+      "estimatedMinutes": 7,
+      "prerequisites": [],
+      "summary": "Mengenali kapan noun disebut secara umum dan kapan sudah spesifik.",
+      "explanation": "A/an digunakan untuk singular countable noun yang belum spesifik atau diperkenalkan pertama kali. Pilih a atau an berdasarkan bunyi awal kata berikutnya, bukan hanya hurufnya. The digunakan saat pendengar dapat mengenali hal yang dimaksud.",
+      "patterns": [
+        {
+          "label": "A / An",
+          "pattern": "a + consonant sound\nan + vowel sound"
+        },
+        {
+          "label": "The",
+          "pattern": "the + specific / already-known noun"
+        },
+        {
+          "label": "No article",
+          "pattern": "Plural or uncountable nouns when speaking generally"
+        }
+      ],
+      "examples": [
+        {
+          "en": "I saw a bird. The bird was blue.",
+          "id": "Saya melihat seekor burung. Burung itu berwarna biru."
+        },
+        {
+          "en": "She is an honest person.",
+          "id": "Dia orang yang jujur."
+        },
+        {
+          "en": "Books can open new perspectives.",
+          "id": "Buku dapat membuka sudut pandang baru."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "She is an university student.",
+          "right": "She is a university student.",
+          "why": "University diawali bunyi /juː/, yaitu bunyi konsonan."
+        },
+        {
+          "wrong": "The life is complicated. (general meaning)",
+          "right": "Life is complicated.",
+          "why": "Noun abstrak yang dibahas secara umum sering tidak memakai the."
+        }
+      ],
+      "checkpoint": "Pilih: “I need ___ umbrella because it is raining.”",
+      "questions": [
+        {
+          "id": "art-1",
+          "type": "multiple-choice",
+          "prompt": "She bought ___ orange at the market.",
+          "options": [
+            "a",
+            "an",
+            "the"
+          ],
+          "answer": 1,
+          "explanation": "Orange diawali bunyi vokal, jadi gunakan an."
+        },
+        {
+          "id": "art-2",
+          "type": "typed",
+          "prompt": "Complete: “I saw a dog. ___ dog was sleeping.”",
+          "accepted": [
+            "the"
+          ],
+          "explanation": "Pada kalimat kedua, dog sudah diperkenalkan sehingga gunakan the."
+        },
+        {
+          "id": "art-3",
+          "type": "multiple-choice",
+          "prompt": "Which sentence talks about books in general?",
+          "options": [
+            "The books are useful for everyone.",
+            "A books are useful for everyone.",
+            "Books are useful for everyone."
+          ],
+          "answer": 2,
+          "explanation": "Plural countable noun yang dibahas secara umum biasanya tidak membutuhkan artikel."
+        }
+      ]
+    },
+    {
+      "id": "past-simple",
+      "title": "Past simple",
+      "level": "A2",
+      "category": "Verb tenses",
+      "estimatedMinutes": 7,
+      "prerequisites": [
+        "present-simple"
+      ],
+      "summary": "Untuk peristiwa yang selesai pada waktu lampau.",
+      "explanation": "Past simple digunakan untuk tindakan atau keadaan yang telah selesai pada masa lalu. Kata keterangan seperti yesterday, last week, dan in 2024 sering muncul, tetapi bukan syarat mutlak.",
+      "patterns": [
+        {
+          "label": "Positive",
+          "pattern": "Subject + past form (V2)"
+        },
+        {
+          "label": "Negative",
+          "pattern": "Subject + did not + base verb"
+        },
+        {
+          "label": "Question",
+          "pattern": "Did + subject + base verb?"
+        }
+      ],
+      "examples": [
+        {
+          "en": "We visited our grandparents last Sunday.",
+          "id": "Kami mengunjungi kakek-nenek kami Minggu lalu."
+        },
+        {
+          "en": "I did not see the message yesterday.",
+          "id": "Saya tidak melihat pesan itu kemarin."
+        },
+        {
+          "en": "Did you enjoy the film?",
+          "id": "Apakah kamu menikmati film itu?"
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "Did you went home early?",
+          "right": "Did you go home early?",
+          "why": "Setelah did, gunakan base verb."
+        },
+        {
+          "wrong": "She didn't came to class.",
+          "right": "She didn't come to class.",
+          "why": "Didn't sudah menandai bentuk lampau; verb setelahnya tetap bentuk dasar."
+        }
+      ],
+      "checkpoint": "Lengkapi: We ___ (choose) the blue one yesterday.",
+      "questions": [
+        {
+          "id": "past-1",
+          "type": "multiple-choice",
+          "prompt": "Last night, I ___ a documentary.",
+          "options": [
+            "watch",
+            "watched",
+            "have watch"
+          ],
+          "answer": 1,
+          "explanation": "Peristiwa selesai pada waktu lampau memakai past simple: watched."
+        },
+        {
+          "id": "past-2",
+          "type": "typed",
+          "prompt": "Complete: “She didn't ___ (bring) her notebook.”",
+          "accepted": [
+            "bring"
+          ],
+          "explanation": "Setelah didn't gunakan base verb, yaitu bring."
+        },
+        {
+          "id": "past-3",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct question.",
+          "options": [
+            "Did they arrive on time?",
+            "Did they arrived on time?",
+            "Were they arrive on time?"
+          ],
+          "answer": 0,
+          "explanation": "Pertanyaan past simple memakai Did + subject + base verb."
+        }
+      ]
+    },
+    {
+      "id": "countable-uncountable",
+      "title": "Countable & uncountable nouns",
+      "level": "A2",
+      "category": "Nouns & determiners",
+      "estimatedMinutes": 7,
+      "prerequisites": [
+        "articles"
+      ],
+      "summary": "Memilih quantifier dan bentuk noun yang sesuai.",
+      "explanation": "Countable nouns dapat dihitung sebagai item terpisah (one book, two books). Uncountable nouns dipandang sebagai massa atau konsep (water, advice, information) dan biasanya tidak memiliki plural biasa.",
+      "patterns": [
+        {
+          "label": "Countable",
+          "pattern": "many / a few / several + plural noun"
+        },
+        {
+          "label": "Uncountable",
+          "pattern": "much / a little / some + uncountable noun"
+        },
+        {
+          "label": "Both",
+          "pattern": "some / a lot of + countable plural or uncountable noun"
+        }
+      ],
+      "examples": [
+        {
+          "en": "We have a few questions.",
+          "id": "Kami memiliki beberapa pertanyaan."
+        },
+        {
+          "en": "Could you give me some advice?",
+          "id": "Bisakah kamu memberi saya sedikit saran?"
+        },
+        {
+          "en": "There isn't much water left.",
+          "id": "Air yang tersisa tidak banyak."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "She gave me an advice.",
+          "right": "She gave me some advice.",
+          "why": "Advice adalah uncountable noun dalam penggunaan standar."
+        },
+        {
+          "wrong": "There are much cars outside.",
+          "right": "There are many cars outside.",
+          "why": "Many digunakan untuk plural countable noun seperti cars."
+        }
+      ],
+      "checkpoint": "Lengkapi: “How ___ information do we need?”",
+      "questions": [
+        {
+          "id": "cu-1",
+          "type": "multiple-choice",
+          "prompt": "Choose the natural phrase.",
+          "options": [
+            "three informations",
+            "three pieces of information",
+            "an information"
+          ],
+          "answer": 1,
+          "explanation": "Information adalah uncountable. Untuk menghitungnya, gunakan pieces of information."
+        },
+        {
+          "id": "cu-2",
+          "type": "typed",
+          "prompt": "Complete: “How ___ information do we need?”",
+          "accepted": [
+            "much"
+          ],
+          "explanation": "Information adalah uncountable noun, sehingga pertanyaan jumlahnya memakai how much information."
+        },
+        {
+          "id": "cu-3",
+          "type": "multiple-choice",
+          "prompt": "Which noun is normally uncountable in English?",
+          "options": [
+            "chair",
+            "advice",
+            "student"
+          ],
+          "answer": 1,
+          "explanation": "Advice biasanya uncountable: “some advice” atau “a piece of advice”."
+        }
+      ]
+    },
+    {
+      "id": "present-perfect",
+      "title": "Present perfect",
+      "level": "B1",
+      "category": "Verb tenses",
+      "estimatedMinutes": 8,
+      "prerequisites": [
+        "past-simple"
+      ],
+      "summary": "Menghubungkan pengalaman atau peristiwa lampau dengan keadaan sekarang.",
+      "explanation": "Present perfect dibentuk dengan have/has + past participle. Gunakan untuk pengalaman tanpa waktu lampau yang spesifik, perubahan hingga sekarang, atau peristiwa lampau yang hasilnya relevan sekarang. Untuk waktu lampau yang selesai dan disebut spesifik, past simple biasanya lebih tepat.",
+      "patterns": [
+        {
+          "label": "Positive",
+          "pattern": "Subject + have/has + past participle"
+        },
+        {
+          "label": "Negative",
+          "pattern": "Subject + have/has not + past participle"
+        },
+        {
+          "label": "Question",
+          "pattern": "Have/Has + subject + past participle?"
+        }
+      ],
+      "examples": [
+        {
+          "en": "I have visited Bali twice.",
+          "id": "Saya sudah mengunjungi Bali dua kali."
+        },
+        {
+          "en": "She has lost her keys, so she cannot open the door.",
+          "id": "Dia kehilangan kuncinya, jadi dia tidak bisa membuka pintu."
+        },
+        {
+          "en": "Have you finished your assignment yet?",
+          "id": "Apakah kamu sudah menyelesaikan tugasmu?"
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "I have seen him yesterday.",
+          "right": "I saw him yesterday.",
+          "why": "Yesterday adalah waktu lampau yang spesifik dan selesai; gunakan past simple."
+        },
+        {
+          "wrong": "She have finished.",
+          "right": "She has finished.",
+          "why": "Gunakan has dengan he/she/it."
+        }
+      ],
+      "checkpoint": "Pilih: “I ___ never ___ sushi.”",
+      "questions": [
+        {
+          "id": "pp-1",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct sentence.",
+          "options": [
+            "I have never tried sushi.",
+            "I have never try sushi.",
+            "I never have tried sushi yesterday."
+          ],
+          "answer": 0,
+          "explanation": "Present perfect memakai have + past participle: have tried."
+        },
+        {
+          "id": "pp-2",
+          "type": "typed",
+          "prompt": "Complete: “He ___ already finished his work.”",
+          "accepted": [
+            "has"
+          ],
+          "explanation": "He memakai has dalam present perfect."
+        },
+        {
+          "id": "pp-3",
+          "type": "multiple-choice",
+          "prompt": "Which sentence fits a finished, specific past time?",
+          "options": [
+            "We have moved here in 2022.",
+            "We moved here in 2022.",
+            "We have move here in 2022."
+          ],
+          "answer": 1,
+          "explanation": "In 2022 menunjukkan waktu lampau yang spesifik dan selesai, sehingga past simple paling sesuai."
+        }
+      ]
+    },
+    {
+      "id": "prepositions-place-time",
+      "title": "Prepositions of place and time",
+      "level": "A1",
+      "category": "Prepositions",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Gunakan in, on, at, between, dan next to untuk menjelaskan lokasi serta waktu.",
+      "explanation": "Preposisi menunjukkan hubungan tempat dan waktu. In lazim dipakai untuk ruang atau periode lebih luas, on untuk permukaan dan hari/tanggal, sedangkan at untuk titik atau waktu spesifik. Between berarti di antara dua hal; next to berarti tepat di samping.",
+      "patterns": [
+        {
+          "label": "Time",
+          "pattern": "in + month / year / part of day\non + day / date\nat + exact time"
+        },
+        {
+          "label": "Place",
+          "pattern": "in + enclosed area\non + surface\nat + specific point\nbetween + two things"
+        }
+      ],
+      "examples": [
+        {
+          "en": "The keys are on the desk.",
+          "id": "Kunci-kuncinya ada di atas meja."
+        },
+        {
+          "en": "Our class starts at eight.",
+          "id": "Kelas kami dimulai pukul delapan."
+        },
+        {
+          "en": "The café is between the bank and the library.",
+          "id": "Kafe itu berada di antara bank dan perpustakaan."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "I was born on 2007.",
+          "right": "I was born in 2007.",
+          "why": "Gunakan in untuk tahun."
+        },
+        {
+          "wrong": "The meeting starts in 9 a.m.",
+          "right": "The meeting starts at 9 a.m.",
+          "why": "Jam yang spesifik menggunakan at."
+        }
+      ],
+      "checkpoint": "Lengkapi: “The lesson begins ___ Monday.”",
+      "questions": [
+        {
+          "id": "prepositions-place-time-1",
+          "type": "multiple-choice",
+          "prompt": "The notebook is ___ the table.",
+          "options": [
+            "in",
+            "on",
+            "at"
+          ],
+          "answer": 1,
+          "explanation": "On digunakan untuk sesuatu yang berada di atas permukaan."
+        },
+        {
+          "id": "prepositions-place-time-2",
+          "type": "multiple-choice",
+          "prompt": "The library opens ___ 8.30 a.m.",
+          "options": [
+            "in",
+            "on",
+            "at"
+          ],
+          "answer": 2,
+          "explanation": "At digunakan untuk jam yang spesifik."
+        },
+        {
+          "id": "prepositions-place-time-3",
+          "type": "multiple-choice",
+          "prompt": "The bus stop is ___ the bank and the post office.",
+          "options": [
+            "between",
+            "above",
+            "during"
+          ],
+          "answer": 0,
+          "explanation": "Between menunjukkan posisi di antara dua tempat."
+        }
+      ]
+    },
+    {
+      "id": "can-cant-ability",
+      "title": "Can and can't: ability and permission",
+      "level": "A1",
+      "category": "Modal verbs",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Nyatakan kemampuan dan minta izin menggunakan can serta can't.",
+      "explanation": "Can diikuti base verb untuk menyatakan kemampuan atau meminta izin. Bentuk negatifnya cannot atau can't. Setelah can/can't, jangan menambahkan -s atau to pada kata kerja utama.",
+      "patterns": [
+        {
+          "label": "Ability",
+          "pattern": "Subject + can + base verb"
+        },
+        {
+          "label": "Negative",
+          "pattern": "Subject + cannot / can't + base verb"
+        },
+        {
+          "label": "Permission",
+          "pattern": "Can + subject + base verb?"
+        }
+      ],
+      "examples": [
+        {
+          "en": "My brother can swim.",
+          "id": "Kakak atau adik laki-laki saya bisa berenang."
+        },
+        {
+          "en": "I can't drive a car.",
+          "id": "Saya tidak bisa mengendarai mobil."
+        },
+        {
+          "en": "Can I use your phone?",
+          "id": "Bolehkah saya menggunakan ponselmu?"
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "She can sings well.",
+          "right": "She can sing well.",
+          "why": "Can selalu diikuti base verb."
+        },
+        {
+          "wrong": "Can I to open the window?",
+          "right": "Can I open the window?",
+          "why": "Jangan menambahkan to setelah can."
+        }
+      ],
+      "checkpoint": "Lengkapi: “They ___ speak two languages.”",
+      "questions": [
+        {
+          "id": "can-cant-ability-1",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct sentence.",
+          "options": [
+            "He can plays chess.",
+            "He can play chess.",
+            "He cans play chess."
+          ],
+          "answer": 1,
+          "explanation": "Can diikuti base verb play tanpa -s."
+        },
+        {
+          "id": "can-cant-ability-2",
+          "type": "multiple-choice",
+          "prompt": "You want to use your teacher's dictionary. What is a polite question?",
+          "options": [
+            "Can I borrow your dictionary?",
+            "Do I can borrow your dictionary?",
+            "Can I to borrow your dictionary?"
+          ],
+          "answer": 0,
+          "explanation": "Can I + base verb adalah pola umum untuk meminta izin."
+        },
+        {
+          "id": "can-cant-ability-3",
+          "type": "multiple-choice",
+          "prompt": "Mila does not know how to ride a bicycle. She ___.",
+          "options": [
+            "can't ride a bicycle",
+            "can't rides a bicycle",
+            "doesn't can ride a bicycle"
+          ],
+          "answer": 0,
+          "explanation": "Bentuk negatif can adalah can't, lalu diikuti base verb."
+        }
+      ]
+    },
+    {
+      "id": "wh-questions",
+      "title": "Wh- questions",
+      "level": "A1",
+      "category": "Questions",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Bentuk pertanyaan dengan what, where, when, who, why, dan how.",
+      "explanation": "Kata tanya dipilih berdasarkan informasi yang ingin diketahui: what untuk benda/informasi, where untuk tempat, when untuk waktu, who untuk orang, why untuk alasan, dan how untuk cara atau keadaan. Dalam present simple, gunakan do/does sebelum subject.",
+      "patterns": [
+        {
+          "label": "Meaning",
+          "pattern": "what = information\nwhere = place\nwhen = time\nwho = person\nwhy = reason\nhow = manner"
+        },
+        {
+          "label": "Present simple",
+          "pattern": "Wh-word + do / does + subject + base verb?"
+        }
+      ],
+      "examples": [
+        {
+          "en": "Where does your sister work?",
+          "id": "Di mana saudara perempuanmu bekerja?"
+        },
+        {
+          "en": "Why are they late?",
+          "id": "Mengapa mereka terlambat?"
+        },
+        {
+          "en": "How do you travel to school?",
+          "id": "Bagaimana kamu pergi ke sekolah?"
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "Where she lives?",
+          "right": "Where does she live?",
+          "why": "Gunakan does sebelum subject untuk pertanyaan present simple dengan she."
+        },
+        {
+          "wrong": "What do you are doing?",
+          "right": "What are you doing?",
+          "why": "Jangan memakai do bersama auxiliary be dalam pola ini."
+        }
+      ],
+      "checkpoint": "Pilih kata tanya: “___ do you usually get up?”",
+      "questions": [
+        {
+          "id": "wh-questions-1",
+          "type": "multiple-choice",
+          "prompt": "You want to know a person's location. Which question is correct?",
+          "options": [
+            "When do you live?",
+            "Where do you live?",
+            "Why do you live?"
+          ],
+          "answer": 1,
+          "explanation": "Where menanyakan tempat atau lokasi."
+        },
+        {
+          "id": "wh-questions-2",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct question.",
+          "options": [
+            "What does he want?",
+            "What do he want?",
+            "What he does want?"
+          ],
+          "answer": 0,
+          "explanation": "Does dipakai dengan he; kata kerja utama kembali ke bentuk dasar want."
+        },
+        {
+          "id": "wh-questions-3",
+          "type": "multiple-choice",
+          "prompt": "Which question asks about a reason?",
+          "options": [
+            "Who is your teacher?",
+            "Why are you smiling?",
+            "Where is your bag?"
+          ],
+          "answer": 1,
+          "explanation": "Why digunakan untuk menanyakan alasan."
+        }
+      ]
+    },
+    {
+      "id": "comparatives-superlatives",
+      "title": "Comparatives and superlatives",
+      "level": "A2",
+      "category": "Adjectives",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Bandingkan dua hal dan tunjukkan yang paling tinggi menggunakan comparative dan superlative.",
+      "explanation": "Adjective pendek umumnya memakai -er untuk membandingkan dua hal dan -est untuk menyatakan tingkat tertinggi. Adjective panjang biasanya memakai more dan the most. Bentuk tidak beraturan seperti good–better–the best perlu diingat.",
+      "patterns": [
+        {
+          "label": "Short adjectives",
+          "pattern": "adjective-er + than\nthe + adjective-est"
+        },
+        {
+          "label": "Long adjectives",
+          "pattern": "more + adjective + than\nthe most + adjective"
+        },
+        {
+          "label": "Irregular",
+          "pattern": "good → better → the best\nbad → worse → the worst"
+        }
+      ],
+      "examples": [
+        {
+          "en": "This road is narrower than the main road.",
+          "id": "Jalan ini lebih sempit daripada jalan utama."
+        },
+        {
+          "en": "That was the most interesting lesson today.",
+          "id": "Itu adalah pelajaran paling menarik hari ini."
+        },
+        {
+          "en": "My second result is better than the first.",
+          "id": "Hasil keduaku lebih baik daripada yang pertama."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "This book is more cheaper.",
+          "right": "This book is cheaper.",
+          "why": "Jangan memakai more sekaligus dengan akhiran -er."
+        },
+        {
+          "wrong": "She is the most tall student.",
+          "right": "She is the tallest student.",
+          "why": "Tall adalah adjective pendek; gunakan -est."
+        }
+      ],
+      "checkpoint": "Bandingkan dua kota: “Bandung is ___ than Jakarta.”",
+      "questions": [
+        {
+          "id": "comparatives-superlatives-1",
+          "type": "multiple-choice",
+          "prompt": "This exercise is ___ than the last one.",
+          "options": [
+            "easy",
+            "easier",
+            "easiest"
+          ],
+          "answer": 1,
+          "explanation": "Comparative dari easy adalah easier."
+        },
+        {
+          "id": "comparatives-superlatives-2",
+          "type": "multiple-choice",
+          "prompt": "Which is the correct superlative form?",
+          "options": [
+            "the most small",
+            "the smaller",
+            "the smallest"
+          ],
+          "answer": 2,
+          "explanation": "Small membentuk superlative dengan the smallest."
+        },
+        {
+          "id": "comparatives-superlatives-3",
+          "type": "multiple-choice",
+          "prompt": "The train is ___ comfortable option for this journey.",
+          "options": [
+            "more",
+            "the most",
+            "most than"
+          ],
+          "answer": 1,
+          "explanation": "Comfortable adalah adjective panjang; superlative-nya the most comfortable."
+        }
+      ]
+    },
+    {
+      "id": "future-plans-predictions",
+      "title": "Future plans and predictions",
+      "level": "A2",
+      "category": "Future forms",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Bedakan rencana yang sudah diputuskan, prediksi berdasarkan bukti, dan keputusan spontan.",
+      "explanation": "Be going to umum digunakan untuk rencana atau prediksi berdasarkan bukti saat ini. Will sering dipakai untuk keputusan spontan, tawaran, janji, dan prediksi berupa pendapat. Present continuous juga dapat dipakai untuk pengaturan yang sudah disepakati.",
+      "patterns": [
+        {
+          "label": "Plan or intention",
+          "pattern": "am / is / are + going to + base verb"
+        },
+        {
+          "label": "Spontaneous decision",
+          "pattern": "will + base verb"
+        },
+        {
+          "label": "Arrangement",
+          "pattern": "am / is / are + verb-ing"
+        }
+      ],
+      "examples": [
+        {
+          "en": "We are going to visit our aunt this weekend.",
+          "id": "Kami berencana mengunjungi bibi kami akhir pekan ini."
+        },
+        {
+          "en": "The phone is ringing. I'll answer it.",
+          "id": "Ponselnya berdering. Aku akan menjawabnya."
+        },
+        {
+          "en": "I'm meeting Rafi at six.",
+          "id": "Aku akan bertemu Rafi pukul enam."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "I going to study tonight.",
+          "right": "I am going to study tonight.",
+          "why": "Going to membutuhkan bentuk be."
+        },
+        {
+          "wrong": "She will to call you.",
+          "right": "She will call you.",
+          "why": "Will diikuti base verb tanpa to."
+        }
+      ],
+      "checkpoint": "Kamu melihat langit sangat gelap. “It ___ rain.”",
+      "questions": [
+        {
+          "id": "future-plans-predictions-1",
+          "type": "multiple-choice",
+          "prompt": "Look at those dark clouds! It ___ rain.",
+          "options": [
+            "is going to",
+            "will to",
+            "going"
+          ],
+          "answer": 0,
+          "explanation": "Prediksi berdasarkan bukti yang terlihat cocok dengan be going to."
+        },
+        {
+          "id": "future-plans-predictions-2",
+          "type": "multiple-choice",
+          "prompt": "The doorbell is ringing. 'I ___ open the door.'",
+          "options": [
+            "am going",
+            "will",
+            "will to"
+          ],
+          "answer": 1,
+          "explanation": "Will umum dipakai untuk keputusan spontan saat berbicara."
+        },
+        {
+          "id": "future-plans-predictions-3",
+          "type": "multiple-choice",
+          "prompt": "We have booked the tickets and chosen the dates. We ___ travel on Friday.",
+          "options": [
+            "are going to",
+            "is going to",
+            "going to"
+          ],
+          "answer": 0,
+          "explanation": "Subjek we memakai are going to untuk rencana."
+        }
+      ]
+    },
+    {
+      "id": "past-continuous",
+      "title": "Past continuous",
+      "level": "A2",
+      "category": "Verb tenses",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Ceritakan kegiatan yang sedang berlangsung pada waktu tertentu di masa lalu.",
+      "explanation": "Past continuous dibentuk dengan was/were + verb-ing. Bentuk ini sering menjadi latar ketika kejadian lain terjadi. Past simple dapat menyatakan kejadian singkat yang menyela kegiatan tersebut.",
+      "patterns": [
+        {
+          "label": "Positive",
+          "pattern": "Subject + was / were + verb-ing"
+        },
+        {
+          "label": "Negative",
+          "pattern": "Subject + was / were not + verb-ing"
+        },
+        {
+          "label": "Interrupted action",
+          "pattern": "Past continuous + when + past simple"
+        }
+      ],
+      "examples": [
+        {
+          "en": "I was reading when the lights went out.",
+          "id": "Saya sedang membaca ketika lampu padam."
+        },
+        {
+          "en": "They were waiting for the bus at seven.",
+          "id": "Mereka sedang menunggu bus pukul tujuh."
+        },
+        {
+          "en": "She wasn't sleeping when I called.",
+          "id": "Dia tidak sedang tidur ketika saya menelepon."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "We was studying.",
+          "right": "We were studying.",
+          "why": "We memakai were, bukan was."
+        },
+        {
+          "wrong": "He was cook dinner.",
+          "right": "He was cooking dinner.",
+          "why": "Past continuous membutuhkan bentuk verb-ing."
+        }
+      ],
+      "checkpoint": "Lengkapi: “At 8 p.m. yesterday, I ___ (study).”",
+      "questions": [
+        {
+          "id": "past-continuous-1",
+          "type": "multiple-choice",
+          "prompt": "At nine last night, they ___ a film.",
+          "options": [
+            "watched",
+            "were watching",
+            "are watching"
+          ],
+          "answer": 1,
+          "explanation": "Kegiatan yang sedang berlangsung pada waktu lampau memakai were + verb-ing."
+        },
+        {
+          "id": "past-continuous-2",
+          "type": "multiple-choice",
+          "prompt": "I ___ home when it started to rain.",
+          "options": [
+            "was walking",
+            "walk",
+            "am walking"
+          ],
+          "answer": 0,
+          "explanation": "Kegiatan berjalan sedang berlangsung ketika hujan mulai turun."
+        },
+        {
+          "id": "past-continuous-3",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct sentence.",
+          "options": [
+            "She were reading.",
+            "She was reading.",
+            "She was read."
+          ],
+          "answer": 1,
+          "explanation": "She memakai was + verb-ing."
+        }
+      ]
+    },
+    {
+      "id": "modals-advice-obligation",
+      "title": "Advice, rules, and obligation",
+      "level": "A2",
+      "category": "Modal verbs",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Gunakan should untuk saran serta must dan have to untuk kewajiban.",
+      "explanation": "Should memberi saran. Must menyatakan kewajiban kuat atau aturan. Have to menyatakan kewajiban karena aturan atau keadaan. Don't have to berarti tidak wajib, sedangkan mustn't berarti dilarang.",
+      "patterns": [
+        {
+          "label": "Advice",
+          "pattern": "should / shouldn't + base verb"
+        },
+        {
+          "label": "Obligation",
+          "pattern": "must + base verb\nhave / has to + base verb"
+        },
+        {
+          "label": "No obligation vs prohibition",
+          "pattern": "don't have to = not necessary\nmustn't = prohibited"
+        }
+      ],
+      "examples": [
+        {
+          "en": "You should rest after a long journey.",
+          "id": "Kamu sebaiknya beristirahat setelah perjalanan panjang."
+        },
+        {
+          "en": "Students have to show their ID cards.",
+          "id": "Siswa harus menunjukkan kartu identitas mereka."
+        },
+        {
+          "en": "You mustn't use your phone during the exam.",
+          "id": "Kamu tidak boleh menggunakan ponsel selama ujian."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "You should to drink water.",
+          "right": "You should drink water.",
+          "why": "Should diikuti base verb tanpa to."
+        },
+        {
+          "wrong": "You mustn't bring a notebook. (meaning: not necessary)",
+          "right": "You don't have to bring a notebook.",
+          "why": "Mustn't berarti dilarang, bukan tidak wajib."
+        }
+      ],
+      "checkpoint": "Kamu sedang memberi saran: “You ___ ask the teacher for help.”",
+      "questions": [
+        {
+          "id": "modals-advice-obligation-1",
+          "type": "multiple-choice",
+          "prompt": "You have a headache. You ___ get some rest.",
+          "options": [
+            "should",
+            "mustn't",
+            "have"
+          ],
+          "answer": 0,
+          "explanation": "Should digunakan untuk memberi saran."
+        },
+        {
+          "id": "modals-advice-obligation-2",
+          "type": "multiple-choice",
+          "prompt": "Visitors ___ sign in at the front desk. It is a centre rule.",
+          "options": [
+            "has to",
+            "have to",
+            "should to"
+          ],
+          "answer": 1,
+          "explanation": "Visitors adalah subjek jamak; have to menyatakan kewajiban."
+        },
+        {
+          "id": "modals-advice-obligation-3",
+          "type": "multiple-choice",
+          "prompt": "You ___ park here. The sign says 'NO PARKING'.",
+          "options": [
+            "don't have to",
+            "mustn't",
+            "should"
+          ],
+          "answer": 1,
+          "explanation": "Mustn't menyatakan larangan."
+        }
+      ]
+    },
+    {
+      "id": "passive-voice",
+      "title": "Passive voice",
+      "level": "B1",
+      "category": "Sentence structure",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Gunakan passive voice ketika tindakan atau hasil lebih penting daripada pelakunya.",
+      "explanation": "Passive voice dibentuk dengan be + past participle. Tense ditunjukkan melalui bentuk be. Pelaku dapat ditambahkan dengan by jika penting atau perlu disebutkan; jika tidak, bagian itu bisa dihilangkan.",
+      "patterns": [
+        {
+          "label": "Present simple passive",
+          "pattern": "am / is / are + past participle"
+        },
+        {
+          "label": "Past simple passive",
+          "pattern": "was / were + past participle"
+        },
+        {
+          "label": "Present perfect passive",
+          "pattern": "has / have been + past participle"
+        }
+      ],
+      "examples": [
+        {
+          "en": "The library is cleaned every morning.",
+          "id": "Perpustakaan dibersihkan setiap pagi."
+        },
+        {
+          "en": "The bridge was built in 1998.",
+          "id": "Jembatan itu dibangun pada 1998."
+        },
+        {
+          "en": "The final report has been approved.",
+          "id": "Laporan akhir telah disetujui."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "The room cleaned every day.",
+          "right": "The room is cleaned every day.",
+          "why": "Passive membutuhkan bentuk be sebelum past participle."
+        },
+        {
+          "wrong": "The email was send yesterday.",
+          "right": "The email was sent yesterday.",
+          "why": "Gunakan past participle sent, bukan send."
+        }
+      ],
+      "checkpoint": "Ubah ke passive: “They publish the results every month.”",
+      "questions": [
+        {
+          "id": "passive-voice-1",
+          "type": "multiple-choice",
+          "prompt": "The invitations ___ yesterday.",
+          "options": [
+            "sent",
+            "were sent",
+            "are send"
+          ],
+          "answer": 1,
+          "explanation": "Past simple passive memakai was/were + past participle."
+        },
+        {
+          "id": "passive-voice-2",
+          "type": "multiple-choice",
+          "prompt": "Which sentence is passive?",
+          "options": [
+            "The team reviewed the plan.",
+            "The plan was reviewed by the team.",
+            "The team is reviewing the plan."
+          ],
+          "answer": 1,
+          "explanation": "Subjek menerima tindakan dan menggunakan was + reviewed."
+        },
+        {
+          "id": "passive-voice-3",
+          "type": "multiple-choice",
+          "prompt": "The results ___ already been published.",
+          "options": [
+            "have",
+            "has",
+            "are"
+          ],
+          "answer": 0,
+          "explanation": "Results adalah jamak sehingga memakai have been + past participle."
+        }
+      ]
+    },
+    {
+      "id": "relative-clauses",
+      "title": "Defining relative clauses",
+      "level": "B1",
+      "category": "Clauses",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Tambahkan informasi penting tentang orang, benda, atau tempat dengan who, which, that, dan where.",
+      "explanation": "Relative clause menjelaskan noun sebelumnya. Who lazim untuk orang, which untuk benda atau hewan, that dapat digunakan untuk orang atau benda dalam defining clause, dan where untuk tempat. Informasi defining diperlukan untuk mengenali noun yang dimaksud, sehingga tidak dipisahkan dengan koma.",
+      "patterns": [
+        {
+          "label": "People",
+          "pattern": "person + who / that + clause"
+        },
+        {
+          "label": "Things",
+          "pattern": "thing + which / that + clause"
+        },
+        {
+          "label": "Places",
+          "pattern": "place + where + clause"
+        }
+      ],
+      "examples": [
+        {
+          "en": "The student who won the prize is my cousin.",
+          "id": "Siswa yang memenangkan hadiah itu adalah sepupuku."
+        },
+        {
+          "en": "This is the book that I borrowed.",
+          "id": "Ini buku yang saya pinjam."
+        },
+        {
+          "en": "The café where we met has closed.",
+          "id": "Kafe tempat kita bertemu sudah tutup."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "The woman which called me is a doctor.",
+          "right": "The woman who called me is a doctor.",
+          "why": "Who dipakai untuk orang."
+        },
+        {
+          "wrong": "The place which we met was noisy.",
+          "right": "The place where we met was noisy.",
+          "why": "Where dipakai untuk menjelaskan tempat terjadinya sesuatu."
+        }
+      ],
+      "checkpoint": "Lengkapi: “The teacher ___ helped me was very patient.”",
+      "questions": [
+        {
+          "id": "relative-clauses-1",
+          "type": "multiple-choice",
+          "prompt": "The man ___ lives next door is a doctor.",
+          "options": [
+            "who",
+            "where",
+            "which"
+          ],
+          "answer": 0,
+          "explanation": "Who menjelaskan orang."
+        },
+        {
+          "id": "relative-clauses-2",
+          "type": "multiple-choice",
+          "prompt": "This is the laptop ___ I bought last year.",
+          "options": [
+            "who",
+            "which",
+            "where"
+          ],
+          "answer": 1,
+          "explanation": "Which dapat digunakan untuk merujuk pada benda."
+        },
+        {
+          "id": "relative-clauses-3",
+          "type": "multiple-choice",
+          "prompt": "That is the room ___ we held the meeting.",
+          "options": [
+            "who",
+            "which",
+            "where"
+          ],
+          "answer": 2,
+          "explanation": "Where merujuk pada tempat suatu kegiatan berlangsung."
+        }
+      ]
+    },
+    {
+      "id": "gerunds-infinitives",
+      "title": "Gerunds and infinitives",
+      "level": "B1",
+      "category": "Verb patterns",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Kenali kata kerja yang diikuti gerund atau infinitive.",
+      "explanation": "Gerund adalah bentuk verb-ing yang berfungsi seperti noun. Beberapa kata kerja umum diikuti gerund, misalnya enjoy, avoid, dan finish. Kata kerja lain diikuti to-infinitive, misalnya decide, hope, dan plan. Makna dapat berubah pada pasangan tertentu seperti stop doing dan stop to do.",
+      "patterns": [
+        {
+          "label": "Gerund",
+          "pattern": "enjoy / avoid / finish + verb-ing"
+        },
+        {
+          "label": "Infinitive",
+          "pattern": "decide / hope / plan + to + base verb"
+        },
+        {
+          "label": "After prepositions",
+          "pattern": "preposition + verb-ing"
+        }
+      ],
+      "examples": [
+        {
+          "en": "She enjoys reading before bed.",
+          "id": "Dia senang membaca sebelum tidur."
+        },
+        {
+          "en": "We decided to leave early.",
+          "id": "Kami memutuskan untuk berangkat lebih awal."
+        },
+        {
+          "en": "He is interested in learning Japanese.",
+          "id": "Dia tertarik mempelajari bahasa Jepang."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "I enjoy to cook.",
+          "right": "I enjoy cooking.",
+          "why": "Enjoy diikuti gerund."
+        },
+        {
+          "wrong": "They decided going home.",
+          "right": "They decided to go home.",
+          "why": "Decide diikuti to-infinitive."
+        }
+      ],
+      "checkpoint": "Pilih bentuk yang tepat: “We hope ___ the project soon.”",
+      "questions": [
+        {
+          "id": "gerunds-infinitives-1",
+          "type": "multiple-choice",
+          "prompt": "I avoid ___ my phone during class.",
+          "options": [
+            "use",
+            "to use",
+            "using"
+          ],
+          "answer": 2,
+          "explanation": "Avoid diikuti gerund (verb-ing)."
+        },
+        {
+          "id": "gerunds-infinitives-2",
+          "type": "multiple-choice",
+          "prompt": "They decided ___ a smaller room.",
+          "options": [
+            "to book",
+            "booking",
+            "book"
+          ],
+          "answer": 0,
+          "explanation": "Decide diikuti to-infinitive."
+        },
+        {
+          "id": "gerunds-infinitives-3",
+          "type": "multiple-choice",
+          "prompt": "She is interested in ___ abroad.",
+          "options": [
+            "study",
+            "studying",
+            "to study"
+          ],
+          "answer": 1,
+          "explanation": "Setelah preposition in, gunakan gerund."
+        }
+      ]
+    },
+    {
+      "id": "reported-speech",
+      "title": "Reported speech",
+      "level": "B2",
+      "category": "Reporting",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Laporkan ucapan orang lain dengan perubahan tense, pronoun, dan keterangan waktu jika diperlukan.",
+      "explanation": "Dalam reported speech, tense sering bergeser ke bentuk lampau ketika reporting verb berada di masa lalu dan informasi dilaporkan dari sudut waktu tersebut. Present simple dapat bergeser menjadi past simple, sedangkan will dapat bergeser menjadi would. Pergeseran tidak wajib jika informasi masih benar atau konteks waktunya tidak berubah.",
+      "patterns": [
+        {
+          "label": "Statements",
+          "pattern": "said (that) + reported clause"
+        },
+        {
+          "label": "Common backshift",
+          "pattern": "present simple → past simple\nwill → would\ncan → could"
+        },
+        {
+          "label": "Questions",
+          "pattern": "asked + if / whether / wh-word + subject + verb"
+        }
+      ],
+      "examples": [
+        {
+          "en": "Nina said that she was tired.",
+          "id": "Nina mengatakan bahwa dia lelah."
+        },
+        {
+          "en": "He told me that he would call later.",
+          "id": "Dia mengatakan kepada saya bahwa dia akan menelepon nanti."
+        },
+        {
+          "en": "The teacher asked where we had parked.",
+          "id": "Guru bertanya di mana kami memarkir kendaraan."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "She said me she was busy.",
+          "right": "She told me she was busy. / She said that she was busy.",
+          "why": "Say tidak langsung diikuti objek orang; gunakan tell + object."
+        },
+        {
+          "wrong": "He asked where did I live.",
+          "right": "He asked where I lived.",
+          "why": "Reported question menggunakan susunan statement, bukan inversion."
+        }
+      ],
+      "checkpoint": "Ubah: “I am busy,” Rina said. → Rina said that she ___ busy.",
+      "questions": [
+        {
+          "id": "reported-speech-1",
+          "type": "multiple-choice",
+          "prompt": "Direct: “I am tired,” Ali said. Reported: Ali said that he ___.",
+          "options": [
+            "is tired",
+            "was tired",
+            "has tired"
+          ],
+          "answer": 1,
+          "explanation": "Am berubah menjadi was dalam backshift setelah said."
+        },
+        {
+          "id": "reported-speech-2",
+          "type": "multiple-choice",
+          "prompt": "Direct: “We will arrive at six.” Reported: They said they ___ at six.",
+          "options": [
+            "would arrive",
+            "will arriving",
+            "arrive"
+          ],
+          "answer": 0,
+          "explanation": "Will umumnya bergeser menjadi would dalam reported speech."
+        },
+        {
+          "id": "reported-speech-3",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct reported question.",
+          "options": [
+            "She asked where was the station.",
+            "She asked where the station was.",
+            "She asked where did the station be."
+          ],
+          "answer": 1,
+          "explanation": "Reported question memakai urutan subject + verb seperti kalimat pernyataan."
+        }
+      ]
+    },
+    {
+      "id": "mixed-conditionals",
+      "title": "Mixed conditionals",
+      "level": "B2",
+      "category": "Conditionals",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Hubungkan kondisi di masa lalu dengan hasil sekarang, atau kondisi sekarang dengan akibat lampau.",
+      "explanation": "Mixed conditional menggabungkan waktu yang berbeda pada if-clause dan main clause. Pola past condition → present result memakai if + past perfect, would + base verb. Pola present condition → past result dapat memakai if + past simple, would have + past participle.",
+      "patterns": [
+        {
+          "label": "Past condition → present result",
+          "pattern": "If + past perfect, would + base verb"
+        },
+        {
+          "label": "Present condition → past result",
+          "pattern": "If + past simple, would have + past participle"
+        }
+      ],
+      "examples": [
+        {
+          "en": "If I had studied medicine, I would be a doctor now.",
+          "id": "Jika dahulu saya belajar kedokteran, sekarang saya akan menjadi dokter."
+        },
+        {
+          "en": "If she were more careful, she wouldn't have made that mistake.",
+          "id": "Jika dia lebih berhati-hati, dia tidak akan membuat kesalahan itu."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "If I had saved more, I would have more money now yesterday.",
+          "right": "If I had saved more, I would have more money now.",
+          "why": "Past condition yang memengaruhi keadaan sekarang memakai would + base verb."
+        },
+        {
+          "wrong": "If he is more patient, he would have listened.",
+          "right": "If he were more patient, he would have listened.",
+          "why": "Kondisi sekarang yang menjelaskan hasil lampau memakai if + past simple."
+        }
+      ],
+      "checkpoint": "Lengkapi: “If I had gone to bed earlier, I ___ less tired now.”",
+      "questions": [
+        {
+          "id": "mixed-conditionals-1",
+          "type": "multiple-choice",
+          "prompt": "If I had taken that course, I ___ more confident now.",
+          "options": [
+            "would be",
+            "would have been",
+            "will be"
+          ],
+          "answer": 0,
+          "explanation": "Kondisi lampau memengaruhi keadaan sekarang: would + base verb."
+        },
+        {
+          "id": "mixed-conditionals-2",
+          "type": "multiple-choice",
+          "prompt": "If he were more organized, he ___ the deadline yesterday.",
+          "options": [
+            "wouldn't miss",
+            "wouldn't have missed",
+            "won't miss"
+          ],
+          "answer": 1,
+          "explanation": "Kondisi sekarang menjelaskan hasil lampau: would have + past participle."
+        },
+        {
+          "id": "mixed-conditionals-3",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct mixed conditional.",
+          "options": [
+            "If she had accepted the offer, she works here now.",
+            "If she had accepted the offer, she would work here now.",
+            "If she accepts the offer, she would work here yesterday."
+          ],
+          "answer": 1,
+          "explanation": "Past perfect pada if-clause diikuti would + base verb untuk hasil sekarang."
+        }
+      ]
+    },
+    {
+      "id": "inversion-emphasis",
+      "title": "Inversion for emphasis",
+      "level": "B2",
+      "category": "Advanced sentence structure",
+      "estimatedMinutes": 9,
+      "prerequisites": [],
+      "summary": "Gunakan inversion setelah ekspresi negatif atau pembatas untuk memberi penekanan formal.",
+      "explanation": "Dalam gaya formal, ekspresi negatif seperti never, rarely, dan not only yang diletakkan di awal kalimat memicu inversion: auxiliary diletakkan sebelum subject. Jika tidak ada auxiliary, gunakan do/does/did sesuai tense.",
+      "patterns": [
+        {
+          "label": "Negative adverbial",
+          "pattern": "Never / Rarely + auxiliary + subject + verb"
+        },
+        {
+          "label": "Not only",
+          "pattern": "Not only + auxiliary + subject + verb, but ..."
+        },
+        {
+          "label": "No sooner",
+          "pattern": "No sooner + had + subject + past participle + than ..."
+        }
+      ],
+      "examples": [
+        {
+          "en": "Rarely do we see such careful planning.",
+          "id": "Jarang sekali kita melihat perencanaan seteliti ini."
+        },
+        {
+          "en": "Not only did she explain the problem, but she also suggested a solution.",
+          "id": "Dia tidak hanya menjelaskan masalahnya, tetapi juga menyarankan solusi."
+        },
+        {
+          "en": "No sooner had the train left than it began to rain.",
+          "id": "Begitu kereta berangkat, hujan pun mulai turun."
+        }
+      ],
+      "mistakes": [
+        {
+          "wrong": "Never I have seen this.",
+          "right": "Never have I seen this.",
+          "why": "Ekspresi negatif di awal kalimat memicu inversion auxiliary dan subject."
+        },
+        {
+          "wrong": "Rarely we do meet.",
+          "right": "Rarely do we meet.",
+          "why": "Do diletakkan sebelum subject pada inversion present simple."
+        }
+      ],
+      "checkpoint": "Lengkapi: “Rarely ___ we encounter such a challenge.”",
+      "questions": [
+        {
+          "id": "inversion-emphasis-1",
+          "type": "multiple-choice",
+          "prompt": "___ had I arrived when the meeting began.",
+          "options": [
+            "Rarely",
+            "Hardly",
+            "Only"
+          ],
+          "answer": 1,
+          "explanation": "Hardly had I arrived when... menggunakan inversion dan past perfect."
+        },
+        {
+          "id": "inversion-emphasis-2",
+          "type": "multiple-choice",
+          "prompt": "Choose the correct sentence.",
+          "options": [
+            "Never I have heard such a story.",
+            "Never have I heard such a story.",
+            "Never I heard have such a story."
+          ],
+          "answer": 1,
+          "explanation": "Never di awal kalimat formal diikuti auxiliary sebelum subject."
+        },
+        {
+          "id": "inversion-emphasis-3",
+          "type": "multiple-choice",
+          "prompt": "Not only ___ the report, but he also presented the findings.",
+          "options": [
+            "he wrote",
+            "did he write",
+            "he did wrote"
+          ],
+          "answer": 1,
+          "explanation": "Not only di awal klausa memerlukan inversion: did + subject + base verb."
+        }
+      ]
+    }
+  ]
+}

@@ -1,149 +1,213 @@
-# SinauuEnglish
+# SINAUENGLISH V2 — React Motion & Google Sheets Edition
 
-SinauuEnglish is a frontend-only English-learning workspace for Indonesian learners. It teaches vocabulary and grammar through contextual practice and spaced review, with study records stored on the learner's device.
+Website belajar bahasa Inggris modern bergaya **Warm Editorial Neobrutalism** (terinspirasi dari bahasa visual [themainideas.com](https://themainideas.com/home)), dirancang khusus untuk pelajar Indonesia dari level pemula hingga menengah atas (CEFR A1–B2).
 
-## Current build
+100% bebas biaya langganan, dibangun menggunakan **React JS + Vite**, CSS bertingkat (`@layer`), animasi performan (GSAP, Lenis, Framer Motion), dan backend serverless **Google Apps Script + Google Spreadsheet** untuk penyimpanan akun dan progres belajar secara terpusat tanpa database berbayar.
 
-### Landing page
-- Soft editorial visual direction with warm paper, sage, and lilac accents.
-- Responsive layout, light/dark theme, and reduced-motion support.
-- Landing-page calls to action open the learning workspace.
+---
 
-### Learning workspace
-- Vocabulary search by headword, Indonesian meaning, English example, definition, CEFR level, topic, and favorites.
-- The vocabulary index includes the supplied simplified American English Oxford 3000 headword list. Search results are rendered incrementally (100 words per batch) rather than mounting thousands of rows at once.
-- Entries are marked as practice-ready only when they include a usable meaning and example. Incomplete source entries remain searchable, with practice disabled rather than invented content.
-- Vocabulary details include Indonesian meaning, pronunciation when available, word forms, examples, collocations, additional contexts, and usage notes.
-- Vocabulary practice records typed meaning recall, context recognition, typed sentence production/self-check, confidence, answer history, and study dates.
-- Mastery is not awarded from exposure or a single correct answer. It requires recall, context, active-usage self-check, and three successful spaced reviews across separate dates spanning at least 12 days.
-- Topic-specific grammar lessons include Indonesian explanations, patterns, translated examples, common mistakes, checkpoints, and individual exercises.
-- Progress summaries are calculated from the loaded content and saved study events.
-- IndexedDB is used when available, with localStorage fallback. JSON backup export/import is included.
-- Browser-native speech synthesis is used only where supported; pronunciation quality is not automatically graded.
+## 🚀 Arsitektur Teknologi
 
-## Vocabulary corpus and its limitations
+- **Frontend:** React 19 + React Router (JavaScript ESM + JSX)
+- **Styling:** CSS Murni dengan CSS Modules + `@layer reset, tokens, base, components, utilities;` (fluid `clamp()`, container queries, `:has()`, `@property`, `color-mix()`)
+- **Motion Engine:** GSAP + ScrollTrigger, Lenis Smooth Scroll, Framer Motion (lengkap dengan kepatuhan `prefers-reduced-motion`)
+- **Backend:** Google Apps Script Web App (`backend/Code.gs`)
+- **Database:** Private Google Spreadsheet (5 tab: `Users`, `Sessions`, `Progress`, `QuizAttempts`, `Settings`)
+- **Keamanan:** Password hashing (salt acak + 5.000 iterasi SHA-256), session token di `sessionStorage` (tanpa data sensitif di `localStorage`/`IndexedDB`)
+- **Mitigasi Kuota:** Client-side batch debouncing (`useProgressSync`) untuk menghemat batas eksekusi Google Cloud
 
-The supplied simplified list contains **2,971 unique Oxford 3000 headwords**. Its available CEFR metadata is:
+---
 
-| Level | Headwords |
-|---|---:|
-| A1 | 892 |
-| A2 | 792 |
-| B1 | 689 |
-| B2 | 597 |
-| Not classified | 1 |
-| **Total** | **2,971** |
+## 📸 Tampilan Visual
 
-The simple headword list does not preserve the per-sense part-of-speech and CEFR information present in Oxford's PDF. The CEFR/POS labels were matched against a third-party text transcription because the simplified Markdown omits them. One headword, “o”, remains unclassified instead of being assigned a guessed level. The workspace also retains three independent SinauuEnglish starter words that are not in the supplied Oxford list, so it contains 2,974 unique display entries in total.
+| Resolusi Desktop (1280px) | Resolusi Mobile (360px) |
+|---|---|
+| ![Desktop Landing](docs/screenshots/qa-desktop-1280-home.png) | ![Mobile Landing](docs/screenshots/qa-mobile-360-home.png) |
 
-English–Indonesian meanings, definitions, IPA where available, and example material are enriched from the [KOReader English–Indonesian dictionary](https://github.com/DanielGregorini/koreader-dicts), a CC-BY-SA-4.0 compilation that includes WordNet Bahasa, Princeton WordNet 3.0, and English Wiktionary. See [data/oxford3000/ATTRIBUTION.md](data/oxford3000/ATTRIBUTION.md) for license/source details.
+---
 
-The unmodified compressed Oxford corpus has **2,970 records with an Indonesian meaning**, **2,293 with an English example**, and **1,934 with an Indonesian example translation**. The previously reported live-app estimate of **2,303 entries** for practice is a pre–A–E-import baseline, not a current count; the runtime combines the Oxford corpus, editorial overlays, and the imported A–E rows now in `data/vocabulary.json`, so that estimate must not be treated as current. The editorial pass covers **261 A1/A2 headwords**, **75 in the first B1/B2 review**, **523 additional B1/B2 entries** filled because their main examples or meanings were missing (including all 32 formerly missing meanings), and **285 B1/B2 entries** whose existing English examples now have Indonesian translations (148 B1 and 137 B2): **1,144 unique editorial overlay records** overall. After the overlays are applied, B1 and B2 have no missing meanings, main examples, or Indonesian example translations. Some entries elsewhere in the corpus still have incomplete translations, and the newly authored meanings, definitions, examples, and translations are **drafts, not independently human-verified**. Other records continue to include dictionary-derived or machine-translated material that needs careful review. The app does not claim all 2,971 headwords are pedagogically complete or ready to study. See [data/oxford3000/audit.json](data/oxford3000/audit.json) for the detailed data-quality summary.
+## 🌟 Fitur & Paritas 100% dari Versi 1
 
-The Oxford source list is available at [Oxford Learner's Dictionaries — American Oxford 3000 PDF](https://www.oxfordlearnersdictionaries.com/external/pdf/wordlists/oxford-3000-5000/American_Oxford_3000.pdf). SinauuEnglish is an independent project and is not affiliated with or endorsed by Oxford University Press.
+1. **Corpus Kosakata Oxford 3000 Lengkap:**
+   - **2.971 headwords unik** (A1: 892, A2: 792, B1: 689, B2: 597, UNCLASSIFIED: 1) tanpa ada kata yang hilang.
+   - 1.144 record kurasi editorial dengan makna bahasa Indonesia, fonetik IPA, dan contoh kalimat bilingual.
+2. **Kurikulum Grammar Komprehensif:**
+   - 19 topik materi terstruktur dari level A1 hingga B2.
+   - Penjelasan konsep, rumus/pattern, contoh kalimat, dan panduan kesalahan umum (*common mistakes*).
+   - Bank 57 soal kuis tervalidasi dengan pencatatan hasil ke Google Spreadsheet.
+3. **Metode Belajar 3 Tahap (Fokus & Latihan):**
+   - *Tahap 1: Recall Makna* (tebak arti kata sebelum membuka jawaban).
+   - *Tahap 2: Pahami Konteks* (soal pilihan ganda kalimat rumpang).
+   - *Tahap 3: Konfirmasi Ingatan* (kalkulasi interval SRS otomatis & batch sync).
+4. **Sistem Spaced Repetition (SRS) & Mistake Review:**
+   - Pengulangan otomatis pada interval adaptif: `[1, 3, 8, 16, 30]` hari.
+   - Jurnal kesalahan (*Mistake Journal*) untuk meninjau kembali kata-kata yang pernah keliru.
+5. **HABIT Reading Library:**
+   - 156 artikel bacaan berbobot (total 63.309 kata) dengan estimasi waktu baca untuk melatih kelancaran membaca.
+   - 12 materi keterampilan membaca (*reading skills*) lengkap dengan pertanyaan pemahaman.
+6. **Everyday Adventure Series:**
+   - 8 cerita tematik (*Everyday Stories*), 4 dialog interaktif (*Everyday English*), 8 latihan mendengarkan (*Listening Lab*), dan 16 panduan pengucapan (*Pronunciation Studio*).
+7. **Penyimpanan Cloud Bebas Biaya:**
+   - Seluruh akun dan progres tersimpan di Google Spreadsheet privat melalui Apps Script Web App.
+   - Alat sekali jalan untuk migrasi cadangan JSON lama (*Backup Importer*) ke Spreadsheet.
+8. **Dukungan Dark Mode:**
+   - Pilihan tema ramah mata: *Warm Parchment* (terang) dan *Warm Espresso Night* (gelap) yang sinkron otomatis antar halaman.
 
-The grammar curriculum currently contains **19 lessons and 57 checked topic-specific questions** across A1–B2. Independent human review of the vocabulary corpus remains ongoing work.
+---
 
-## Accounts and cross-device progress
+## 🎨 Panduan Kustomisasi Tema (Design System)
 
-- The landing page stays public; opening the learning workspace requires a saved SinauuEnglish session.
-- Email/password signup and login call `/api/account`. Learning snapshots synchronize through `/api/progress` after sign-in.
-- The main site's Vercel rewrites route those API paths to the existing SinauuEnglish API deployment, which uses the existing Google Apps Script Web App and spreadsheet. This does not create a new spreadsheet or database.
-- The Apps Script URL and API key remain server-side. Keep the existing API deployment and its environment variables available; do not copy secrets into browser code or GitHub.
-- Learning remains local-first. When signed in and online, the app synchronizes the user's progress with their account. If synchronization is unavailable, local study state is retained.
-- Password-reset email is not implemented yet. Back up local progress before clearing browser storage or switching devices.
+Seluruh token visual dipusatkan di file [`src/styles/variables.css`](src/styles/variables.css). Kamu dapat dengan mudah mengubah nuansa warna, tipografi, dan bentuk komponen:
 
-## Files
+### 1. Mengubah Palet Warna
+Buka `src/styles/variables.css` dan sesuaikan variabel CSS berikut:
+```css
+:root {
+  /* Warna Latar Belakang (Mode Terang) */
+  --color-bg-base: #F4F0E8;       /* Latar kertas perkamen krem */
+  --color-bg-nav: #F9F7F2;        /* Latar header & floating navbar */
+  --color-bg-surface: #FFFFFF;    /* Latar permukaan kartu putih */
+  --color-bg-footer: #ECE4CF;     /* Latar footer kraft paper */
 
-- `index.html`, `styles.css`, `app.js` — landing page.
-- `belajar.html`, `belajar.css`, `belajar.js` — local-first learning workspace.
-- `data/vocabulary.json` — retained curated starter entries plus 965 unique A–E batch rows imported from `riiddev/SinauuEnglish`; imported rows override the Oxford-derived entry for matching headwords and are marked draft pending human review.
-- `data/grammar.json` — starter grammar curriculum and question bank.
-- `data/oxford3000/*.json.gz.b64` — gzip-compressed, Base64-encoded corpus split by CEFR level for static hosting.
-- `data/oxford3000/editorial-overrides.json.gz.b64` — original bundle for 204 editorial drafts (197 new headwords plus 7 updates to existing curated entries).
-- `data/oxford3000/editorial-overrides-batch2-a.json.gz.b64` and `editorial-overrides-batch2-b.json.gz.b64` — 57 additional high-frequency A1/A2 draft entries.
-- `data/oxford3000/editorial-overrides-context-fixes.json.gz.b64` — corrected context-choice options and word forms for five earlier entries.
-- `data/oxford3000/editorial-overrides-b1b2-a.json.gz`, `editorial-overrides-b1b2-b.json.gz.b64`, and `editorial-overrides-b1b2-c.json.gz` — first editorial review batch of 75 B1/B2 headwords.
-- `data/oxford3000/editorial-overrides-gap-01.json.gz.b64` through `editorial-overrides-gap-22.json.gz.b64` — 523 B1/B2 entries with newly completed meanings and/or main examples, Indonesian translations, context examples, and answer-key checks.
-- `data/oxford3000/editorial-overrides-b1b2-translations.json.gz.b64` — 285 existing B1/B2 entries with their previously blank Indonesian example translations filled; translations remain draft content pending human review.
-- `data/oxford3000/editorial-overrides-loader.js` — combines gzip and gzip/Base64 overlays in the browser before the learning workspace loads.
-- `data/oxford3000/ATTRIBUTION.md`, `data/oxford3000/audit.json` — source attribution and content-quality audit.
+  /* Warna Teks (Ink) */
+  --color-text-primary: #1A1A1A;  /* Hitam arang kontras tinggi */
+  --color-text-secondary: #736B61;/* Abu-abu hangat teks sekunder */
 
-## Curriculum expansion status
+  /* Warna Aksen Khas Neobrutalisme */
+  --color-accent-gold: #C99A3B;   /* Warna tombol aksi primer (CTA) */
+  --color-accent-navy: #4B5E73;   /* Warna tombol & tab sekunder */
+  --color-success: #5F7A4B;       /* Hijau sage kata 'Mastered' */
+  --color-danger: #8C4A4E;        /* Merah bata kata 'Needs Review' */
+}
+```
 
-- Grammar now contains **19 lessons and 57 checked questions** across A1–B2, with Indonesian explanations, examples, common-error notes, and focused practice.
-- Everyday Stories now contains **8 graded passages**, two per CEFR band, each with comprehension checks and a shared learning path to a dialogue, listening activity, pronunciation phrase, Speaking Studio prompt, and Writing Studio prompt.
-- Listening Lab now contains **8 staged exercises**, with two per CEFR band. Every exercise includes gist, detail, and inference practice grounded in its transcript.
-- Pronunciation Studio now contains **16 guided phrases**, four per CEFR band, covering word/sentence stress, rhythm, linking, question intonation, contrast, and longer thought groups.
-- The first editorial pass adds contextual practice and concise definitions to **37 high-frequency A1/A2 entries**. Those imported entries remain marked as drafts; the assistant pass is not a substitute for independent human language review.
+### 2. Mengubah Tipografi
+Tema menggunakan font Google Fonts gratis yang diimpor di baris teratas `src/styles/variables.css`:
+```css
+/* Mengganti font family */
+--font-heading: "Space Grotesk", sans-serif; /* Judul & angka statistik */
+--font-editorial: "Fraunces", serif;         /* Kutipan refleksi & aksen */
+--font-body: "Quicksand", sans-serif;        /* Teks isi & tombol */
+```
 
-## Remaining editorial and release work
+### 3. Mengatur Gaya Border & Bayangan (Neobrutalism)
+```css
+--color-border: #1A1A1A;                     /* Garis border tegas */
+--radius-lg: 20px;                           /* Kelengkungan sudut kartu */
+--radius-pill: 9999px;                       /* Bentuk kapsul tombol & badge */
 
-1. Independently review the 965 imported A–E vocabulary drafts, prioritising high-frequency A1/A2 meanings, parts of speech, examples, and Indonesian translations.
-2. Continue replacing weak or overly generic examples and add contextual variants before expanding the mastery-ready pool.
-3. Keep expanding grammar and listening material based on observed learner needs, while reviewing the new answer keys and linguistic nuance.
-4. Complete responsive, accessibility, persistence, backup/restore, and browser regression checks on the unified preview before merging.
+/* Bayangan padat tanpa blur */
+--shadow-btn: 4px 4px 0px 0px rgba(86, 52, 0, 0.25);
+--shadow-card: 6px 6px 0px 0px rgba(86, 52, 0, 0.25);
+```
 
-**Data integrity rule:** report counts that come from the checked-in corpus and mastery only from real saved learning records.
+Untuk melihat seluruh katalog komponen secara langsung, buka halaman [`design-system.html`](design-system.html) di browsermu.
 
+---
 
-## Quality checks
+## 🚀 Menjalankan Proyek di Komputer Lokal
 
-- `npm run test:content` validates vocabulary fields and uniqueness, Everyday Stories, Everyday English, and Listening Lab level coverage, vocabulary links, response keys, transcript/audio alignment, Speaking Studio links, all reading-question answer keys, HABIT passage integrity and word-count metadata, and byte-for-byte synchronization between root and `public/data` JSON copies.
-- `npm run build` runs TypeScript checks and builds all production entry points.
-- `npm run test:browser` runs Playwright smoke tests for the landing page, navigation, vocabulary lookup, HABIT reading questions, Everyday Stories A1/B2 reading, Everyday English listening and role-play, staged Listening Lab playback and transcript review, local Pronunciation Studio microphone analysis and fallback, Speaking Studio handoff, cross-device Adventure progress, and answer persistence. Install Playwright and Chromium before running it locally; the `.github/workflows/quality-gates.yml` workflow does that in CI.
-- Automated checks catch structural and regression problems, not every linguistic nuance. The 965 imported A–E entries remain marked as editorial drafts until an independent human review confirms their meanings, examples, and Indonesian translations.
+### Prasyarat
+- [Node.js](https://nodejs.org/) versi `>= 22.12.0`
+- Git
 
-## Everyday English role-play
+### Langkah Instalasi
+```bash
+# 1. Clone repositori
+git clone https://github.com/riiddev/SINAUENGLISHV2.git
+cd SINAUENGLISHV2
 
-- The Adventure workspace includes four original situational dialogues across A1–B2, from ordering at a café and asking for directions to evaluating a project proposal.
-- Learners can listen with browser speech synthesis before revealing the transcript, review vocabulary linked to the checked-in corpus, and choose natural responses with explanations.
-- Completed attempts are saved in `dialogueProgress` and merge across devices through the existing CloudBundle v2 path. The final screen links each scenario to its matching Speaking Studio prompt.
-- Audio is generated by the browser; no microphone capture, recording, transcript upload, XP award, or vocabulary mastery change is introduced.
+# 2. Pasang dependensi
+npm install
 
-## HABIT reading library
+# 3. Jalankan server lokal untuk development
+npm run dev
+# Buka http://localhost:5173 di browser kamu.
 
-- `public/data/habit-reading-library.json` contains **156 unique reading passages** extracted from the user-provided `HABIT.pdf` (175 physical PDF pages, including a final blank page; 174 numbered content pages. Blank/reference-only pages and exact duplicate text are not treated as separate passages). The extracted collection contains approximately **63,309 words**. Reference lists and raw source-link fragments are excluded from passage bodies.
-- The Reading Comprehension page provides search by title/body, category filtering, progressive loading, a full passage reader, and three evidence-based detail questions per passage. The correct option is an exact sentence from the selected passage; distractors are exact sentences from other passages. Each answer shows the supporting sentence and paragraph number. Distractors are prioritized from other passages in the same broad category, with similar wording, before falling back to other categories.
-- Reading selections and answers are saved in local storage and contribute to the existing local activity history. Nothing is sent to an external backend.
-- `data/reading-lessons.json` / `public/data/reading-lessons.json` retains the original 12 reading-skill lessons, now aligned to “The Learning Myth That Will Not Die” from the PDF.
+# 4. Melakukan audit paritas data (verifikasi 2.971 kata)
+npm run test:content
 
-## Vocabulary batch import (2026-10-28)
+# 5. Menjalankan pengujian logika unit test
+npm run test:logic
 
-- The static curated vocabulary JSON now contains **999 unique entries**: 34 retained original starter entries and 965 new unique entries from batches A, B, C1, C2, D, and E (978 source rows total; overlapping headwords were not duplicated).
-- Each imported row has a headword, part of speech, CEFR level, topic, Indonesian meaning(s), an English example, and Indonesian example translation. The imported 965 entries remain marked as editorial drafts because the source batches flag them for human language review. The import does not invent IPA or extra word forms.
-- The broader compressed Oxford 3000 corpus and existing editorial overlays remain in place; this batch import supplements and overrides matching headwords rather than replacing the corpus.
-- The app's data and script files are mirrored under `public/` where required by Vite's configured `publicDir`. Keep the root data and public static copies synchronized when making future content changes.
+# 6. Kompilasi build untuk produksi
+npm run build
+```
 
+---
 
-## Listening Lab
+## 🌐 Panduan Deployment Gratis
 
-- The Adventure workspace includes four original listening exercises spanning A1–B2. Each exercise follows the same progression: gist, detail, and inference.
-- Audio is generated with browser speech synthesis for each stage, with saved speed preferences (0.75×, 0.9×, and 1×). Learners can reveal the transcript after attempting to listen and review vocabulary linked to the checked-in corpus.
-- Scores, attempts, best results, and first successful completion are saved locally in `listeningProgress` and merged across devices through CloudBundle v2. The activity does not award XP or change vocabulary mastery.
-- The browser voices are synthetic and depend on device/browser support; there are no third-party audio services, microphone recordings, or uploaded voice data.
+### Pilihan 1: GitHub Pages (Otomatis)
+Template file alur kerja GitHub Actions telah disediakan di [`docs/deploy-github-pages-workflow.yml`](docs/deploy-github-pages-workflow.yml):
+1. Salin template tersebut ke folder `.github/workflows/deploy.yml` di repository GitHub kamu.
+2. Di GitHub repository: buka `Settings` → `Pages`.
+3. Pada bagian **Build and deployment** → **Source**, pilih **GitHub Actions**.
+4. Website akan otomatis ter-build dan tayang gratis di:
+   `https://riiddev.github.io/SINAUENGLISHV2/`
 
+### Pilihan 2: Vercel (Zero-Config)
+File [`vercel.json`](vercel.json) sudah tersedia di root:
+1. Masuk ke [vercel.com](https://vercel.com) dan klik **Add New Project**.
+2. Hubungkan repositori `SINAUENGLISHV2`.
+3. Vercel akan otomatis mengenali perintah build (`npm run build`) dan output directory (`dist`). Klik **Deploy**.
 
-## Pronunciation Studio
+### Pilihan 3: Netlify
+File [`netlify.toml`](netlify.toml) sudah tersedia di root:
+1. Masuk ke [netlify.com](https://netlify.com) dan klik **Add new site** → **Import an existing project**.
+2. Pilih repositori `SINAUENGLISHV2` dan klik **Deploy site**.
 
-- The Adventure workspace includes eight guided phrases across A1–B2, covering word stress, thought groups, connected speech, polite requests, contrast, and sentence intonation.
-- Browser speech synthesis provides a reference voice. Learners can record through `getUserMedia` and inspect signal energy, long pauses, speaking duration, and an approximate pitch contour locally with Web Audio.
-- No speech-recognition service is used. Raw audio is not written to storage or uploaded; only compact practice metrics and timestamps are saved in `pronunciationProgress` and merged across devices through CloudBundle v2.
-- The metrics do not identify phonemes or determine whether a word was pronounced correctly. Microphone gain, background noise, device hardware, and voice characteristics affect the measurements. Stress and intonation correctness remain guided self-practice rather than an automated grade.
-- Microphone access requires browser permission and a secure context (HTTPS or localhost). If access is unavailable, the phrase guide and browser-generated reference voice remain available.
+---
 
+## 📁 Struktur Direktori
+```text
+SINAUENGLISHV2/
+├── .github/workflows/
+│   └── deploy.yml            # CI/CD otomatis ke GitHub Pages
+├── data/
+│   ├── oxford3000/           # Dataset Oxford 3000 (A1–B2, 2.971 headwords + overrides)
+│   ├── grammar.json          # 19 topik kurikulum grammar
+│   ├── habit-reading-library.json # 156 bacaan HABIT (63.309 kata)
+│   ├── reading-lessons.json  # 12 materi keterampilan membaca
+│   └── vocabulary.json       # 999 kata indeks awal
+├── docs/
+│   ├── screenshots/          # Tangkapan layar QA (360px, 768px, 1280px, tema gelap/terang)
+│   ├── audit-v1.md           # Laporan inventaris & audit repo V1
+│   ├── decisions.md          # Catatan keputusan arsitektural (ADR 001–005)
+│   ├── design-tokens.md      # Spesifikasi lengkap token desain & CSS variables
+│   ├── parity-checklist.md   # Checklist kelulusan paritas fitur 100%
+│   └── qa-lighthouse-summary.json # Laporan audit performa & aksesibilitas
+├── public/                   # Aset statis publik, icons, manifest
+├── scripts/
+│   ├── verify-v2-data.mjs    # Script audit paritas data (2.971 kata)
+│   ├── qa-audit.mjs          # Script pengujian multi-resolusi & a11y
+│   └── measure-perf-a11y.mjs # Pengukuran Core Web Vitals & aksesibilitas
+├── src/
+│   ├── lib/
+│   │   ├── storage.ts        # Layanan IndexedDB + localStorage fallback
+│   │   ├── mastery.ts        # Algoritma Spaced Repetition (SRS) & status kata
+│   │   ├── backup.ts         # Ekspor/impor cadangan JSON (schema v1)
+│   │   └── speech.ts         # Layanan audio pengucapan Web Speech API
+│   ├── styles/
+│   │   ├── variables.css     # CSS Variables desain token terpusat
+│   │   ├── reset.css         # Modern base reset & container layout
+│   │   ├── components.css    # Komponen tombol, kartu, badge, nav, footer
+│   │   ├── workspace.css     # Tata letak ruang belajar & modul interaktif
+│   │   └── main.css          # Master stylesheet agregator
+│   └── workspace.ts          # Controller interaktif aplikasi ruang belajar
+├── tests/
+│   └── logic.test.mjs        # Unit test logika SRS, mastery, dan backup
+├── index.html                # Landing page beranda publik
+├── belajar.html              # Ruang belajar interaktif (workspace)
+├── design-system.html        # Showcase katalog komponen & tema visual
+├── package.json              # Konfigurasi dependensi & scripts
+├── prd.md                    # Product Requirement Document
+└── vite.config.ts            # Konfigurasi Vite multi-page bundler
+```
 
-## Speaking Studio
+---
 
-- Speaking Studio now includes guided, open-ended roleplay scenarios across A1–B2. Each scenario has three partner turns, a spoken browser-generated partner line, a response goal, and optional phrase hints.
-- Learners answer aloud in their own words and move the conversation forward themselves. A three-part self-review becomes available after the final turn.
-- Conversation turn progress and reflection checkboxes stay in the user-scoped local draft store. CloudBundle v2 receives only a compact completed-session summary; no learner audio, speech transcript, or spoken response text is captured or synced.
-- Browser speech synthesis is optional. If unavailable, the partner's written line remains visible so the activity can still be completed.
-
-
-## Writing Studio
-
-- Writing Studio uses a four-part learning loop: plan ideas, draft freely, revise for clarity, and complete a three-part self-review.
-- Five original tasks span A1–B2: a short introduction, weekend story, study invitation, learning reflection, and balanced proposal.
-- The outline can be moved into the first draft as editable text. Lightweight structure signals count sentences, common connectors, and words; they are not a grammar checker or an AI writing score.
-- Planning notes, first drafts, and revisions stay in the existing user-scoped local browser store. CloudBundle v2 receives only the compact completed-session summary and revised word count; raw writing is never synced or included in progress backup.
+## 📜 Lisensi & Atribusi
+- **Oxford 3000:** Daftar headwords diadaptasi dari Oxford 3000 American English list. Diperkaya dengan makna bahasa Indonesia dari kamus KOReader en-id di bawah lisensi [Creative Commons Attribution-ShareAlike 4.0 (CC-BY-SA-4.0)](https://creativecommons.org/licenses/by-sa/4.0/).
+- **Desain Visual:** Terinspirasi dari pola tata letak publik [themainideas.com](https://themainideas.com/) tanpa menyalin logo, gambar, atau materi berhak cipta.
+- Proyek ini sepenuhnya bebas biaya untuk kepentingan edukasi pelajar Indonesia.

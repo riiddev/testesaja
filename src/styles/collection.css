@@ -1,0 +1,310 @@
+/* ==========================================================================
+   COLLECTION & ECONOMY STYLING — Warm Editorial Neobrutalism
+   ========================================================================== */
+
+.collection-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-bottom: var(--space-12);
+}
+
+/* Header Economy Banner */
+.collection-header-card {
+  background: var(--color-bg-surface);
+  border: var(--border-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .collection-header-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-8);
+  }
+}
+
+.economy-stats-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.coin-balance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: #FFF9E6;
+  border: 2px solid #D69E2E;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: var(--text-base);
+  color: #744210;
+  box-shadow: 0 2px 0 #D69E2E;
+}
+
+.coin-icon-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.level-progress-box {
+  flex: 1;
+  min-width: 240px;
+  max-width: 380px;
+}
+
+.level-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--color-text-secondary);
+}
+
+.level-track {
+  height: 12px;
+  background: var(--color-bg-subtle);
+  border: var(--border-sm);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  position: relative;
+}
+
+.level-fill {
+  height: 100%;
+  background: var(--color-accent-gold);
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
+/* Interactive Preview Stage */
+.preview-stage-card {
+  background: #F8F5EE;
+  border: var(--border-md);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+@media (min-width: 900px) {
+  .preview-stage-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+  }
+}
+
+.preview-avatar-box,
+.preview-kanci-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.preview-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+/* Catalog Filter Tabs */
+.collection-tabs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.collection-tab-btn {
+  padding: 8px 18px;
+  min-height: 44px;
+  border-radius: var(--radius-pill);
+  border: var(--border-sm);
+  background: var(--color-bg-surface);
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.collection-tab-btn:hover {
+  background: var(--color-bg-subtle);
+}
+
+.collection-tab-btn.is-active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-base);
+  border-color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Catalog Items Grid */
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-5);
+}
+
+@media (max-width: 480px) {
+  .collection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.catalog-card {
+  background: var(--color-bg-surface);
+  border: var(--border-md);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-4);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+}
+
+.catalog-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.catalog-card.is-locked {
+  opacity: 0.78;
+  background: #FDFBF7;
+}
+
+.catalog-card.is-equipped {
+  border-color: var(--color-accent-gold);
+  border-width: 2.5px;
+  background: #FFFAF0;
+}
+
+.catalog-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.catalog-card-icon-wrap {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto;
+  display: grid;
+  placeItems: center;
+}
+
+.catalog-card-body {
+  text-align: center;
+}
+
+.catalog-item-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.catalog-item-desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.catalog-badge-level {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+}
+
+.catalog-badge-equipped {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-gold);
+  color: #121212;
+  border: 1.5px solid #121212;
+}
+
+.catalog-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Floating animation for Kanci */
+@keyframes kanciFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.kanci-animate-float {
+  animation: kanciFloat 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kanci-animate-float {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .collection-header-card {
+    padding: var(--space-4);
+  }
+  .preview-stage-card {
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+  .economy-stats-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .level-progress-box {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  .catalog-card {
+    padding: var(--space-4);
+  }
+}
+

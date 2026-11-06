@@ -1,0 +1,1844 @@
+{
+  "id": "story-05",
+  "number": 5,
+  "title": "Kos Nomor 7",
+  "titleEn": "Boarding House Number 7",
+  "level": "A2-B1",
+  "levelReq": 5,
+  "totalEpisodes": 10,
+  "themeColor": "#4C51BF",
+  "description": "Kehidupan sehari-hari tinggal bersama teman sekamar dari berbagai latar belakang di rumah kos dekat kampus, menegosiasikan aturan rumah tangga, membagi tugas kebersihan, dan etika ruang bersama.",
+  "learningFocus": "House Rules, Chore Rotations, Modal Verbs of Obligation & Permission ('must', 'have to', 'should', 'allowed to'), Polite Requests ('Would you mind...'), Shared Living Ethics.",
+  "episodes": [
+    {
+      "id": 1,
+      "number": 1,
+      "title": "Koper di Depan Pintu Nomor 7",
+      "titleEn": "Luggage in Front of Door Number 7",
+      "estimatedMinutes": 10,
+      "recap": "Setelah berpamitan dari hotel dan menaiki trem kota, kamu tiba di University District membawa tas ransel dan koper di depan gerbang kayu bercat biru: Boarding House Number 7.",
+      "dialogue": [
+        {
+          "id": "s5e1_d1",
+          "speaker": "Narator",
+          "en": "The morning sun illuminates the brass number '7' polished neatly on the weathered oak door.",
+          "idText": "Matahari pagi menyinari angka kuningan '7' yang terpasang rapi di daun pintu kayu oak yang kokoh."
+        },
+        {
+          "id": "s5e1_d2",
+          "speaker": "Kanci",
+          "en": "Napasmu tersengal-sengal setelah mengangkat koper menaiki anak tangga teras. Mari ketuk pintunya!",
+          "idText": "Napasmu tersengal-sengal setelah mengangkat koper menaiki anak tangga teras. Mari ketuk pintunya!"
+        },
+        {
+          "id": "s5e1_d3",
+          "speaker": "Mrs. Wardhani",
+          "en": "Welcome to Boarding House Number 7! You must be the new student. Here is your front door key.",
+          "idText": "Selamat datang di Kos Nomor 7! Kamu pasti mahasiswa baru itu. Ini kunci pintu depanmu."
+        },
+        {
+          "id": "s5e1_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Ibu Wardhani tersenyum ramah sambil menyerahkan anak kunci berlabel kuningan. Apa responmu?",
+          "options": [
+            {
+              "id": "s5e1_opt_1a",
+              "text": "Thank you very much, Mrs. Wardhani. Is my bedroom located upstairs or on the ground floor?",
+              "speakerReply": "Mrs. Wardhani",
+              "reactionEn": "Your room is upstairs at the end of the hall on the left. Liam is already inside unpacking.",
+              "reactionId": "Kamarmu ada di lantai atas di ujung lorong sebelah kiri. Liam sudah ada di dalam merapikan barang."
+            },
+            {
+              "id": "s5e1_opt_1b",
+              "text": "Good morning! I am very glad to be here. Where should I put my heavy travel bag first?",
+              "speakerReply": "Mrs. Wardhani",
+              "reactionEn": "Bring it directly upstairs to your room. Take your time settling in before lunch.",
+              "reactionId": "Bawa langsung ke atas ke kamarmu. Luangkan waktu untuk beres-beres sebelum jam makan siang."
+            }
+          ]
+        },
+        {
+          "id": "s5e1_d4",
+          "speaker": "You",
+          "en": "I will carry my bag upstairs now. Thank you for welcoming me to the boarding house.",
+          "idText": "Saya akan membawa tas saya ke lantai atas sekarang. Terima kasih sudah menyambut saya di rumah kos ini."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-room",
+          "word": "room",
+          "partOfSpeech": "noun",
+          "enDefinition": "A part of the inside of a building that is divided off by walls, floor, and ceiling.",
+          "idMeaning": "kamar / ruangan",
+          "contextSentence": "My new study room has a wide window facing the garden."
+        },
+        {
+          "wordId": "oxford-bag",
+          "word": "bag",
+          "partOfSpeech": "noun",
+          "enDefinition": "A flexible container with an opening at the top, used for carrying things.",
+          "idMeaning": "tas barang / koper pakaian",
+          "contextSentence": "I carried my heavy travel bag up the wooden stairs."
+        },
+        {
+          "wordId": "oxford-door",
+          "word": "door",
+          "partOfSpeech": "noun",
+          "enDefinition": "A hinged, sliding, or revolving barrier at the entrance to a building, room, or vehicle.",
+          "idMeaning": "pintu",
+          "contextSentence": "The front door is locked every night at ten o'clock."
+        },
+        {
+          "wordId": "oxford-key",
+          "word": "key",
+          "partOfSpeech": "noun",
+          "enDefinition": "A small piece of shaped metal used for opening or closing a lock.",
+          "idMeaning": "kunci",
+          "contextSentence": "Keep your room key safe in your backpack."
+        },
+        {
+          "wordId": "oxford-upstairs",
+          "word": "upstairs",
+          "partOfSpeech": "adverb",
+          "enDefinition": "On or to an upper floor of a building.",
+          "idMeaning": "di / ke lantai atas",
+          "contextSentence": "The student bedrooms are located upstairs."
+        },
+        {
+          "wordId": "oxford-hall",
+          "word": "hall",
+          "partOfSpeech": "noun",
+          "enDefinition": "A hallway, corridor, or passage in a building.",
+          "idMeaning": "lorong gedung / aula",
+          "contextSentence": "Room number seven is at the quiet end of the hall."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Preposisi Lokasi Bangunan ('upstairs', 'at the end of', 'on the floor')",
+        "topicId": "prepositions-place",
+        "explanation": "Gunakan preposisi tempat spesifik untuk mendeskripsikan tata letak ruangan rumah kos: 'upstairs' (ke lantai atas), 'downstairs' (ke lantai bawah), 'at the end of the hall' (di ujung lorong), dan 'next to' (di sebelah).",
+        "formula": "Subject + verb + [prepositional phrase] / My room is located upstairs at the end of the hall."
+      },
+      "culturalTip": {
+        "title": "Etika Kedatangan Pertama di Rumah Kos Mahasiswa",
+        "content": "Di lingkungan asrama dan kos internasional, saat pertama kali tiba di hari orientasi, mengetuk pintu dengan sopan dan menyapa pengelola serta teman sekamar dengan senyuman santai merupakan langkah krusial membangun hubungan bertetangga yang harmonis."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep1_q1",
+          "question": "What number is polished on the front oak door of the boarding house?",
+          "options": [
+            "Number 3",
+            "Number 7",
+            "Number 12",
+            "Number 99"
+          ],
+          "correctIndex": 1,
+          "explanation": "Angka kuningan yang terpasang di pintu depan adalah angka 7 ('Boarding House Number 7')."
+        },
+        {
+          "id": "s5_ep1_q2",
+          "question": "Where is your new bedroom located according to Mrs. Wardhani?",
+          "options": [
+            "In the dark basement garage",
+            "Upstairs at the end of the hall",
+            "Inside the outdoor kitchen shed",
+            "On top of the roof chimney"
+          ],
+          "correctIndex": 1,
+          "explanation": "Kamar tidur terletak di lantai atas di ujung lorong ('upstairs at the end of the hall')."
+        },
+        {
+          "id": "s5_ep1_q3",
+          "question": "What item does Mrs. Wardhani hand over when welcoming you?",
+          "options": [
+            "A train ticket to the airport",
+            "The front door key",
+            "A box of heavy tools",
+            "A plate of cold noodles"
+          ],
+          "correctIndex": 1,
+          "explanation": "Ibu Wardhani menyerahkan kunci pintu depan ('front door key')."
+        },
+        {
+          "id": "s5_ep1_q4",
+          "question": "Which word means 'on or to an upper floor of a building'?",
+          "options": [
+            "Downstairs",
+            "Outside",
+            "Upstairs",
+            "Underground"
+          ],
+          "correctIndex": 2,
+          "explanation": "'Upstairs' berarti berada atau menuju ke lantai atas suatu bangunan."
+        },
+        {
+          "id": "s5_ep1_q5",
+          "question": "Complete the sentence: 'Please lock the front ______ before going to sleep.'",
+          "options": [
+            "door",
+            "hall",
+            "bag",
+            "cloud"
+          ],
+          "correctIndex": 0,
+          "explanation": "Kata benda yang tepat untuk melengkapi kalimat adalah 'door' (pintu depan)."
+        }
+      ],
+      "takeaways": [
+        "Mengenal kosakata orientasi tata letak gedung: room, bag, door, key, upstairs, hall.",
+        "Menggunakan preposisi lokasi untuk menanyakan posisi kamar tidur.",
+        "Memahami etika sopan menyapa pengelola kos pada hari kedatangan pertama."
+      ],
+      "cliffhanger": "Kamu mendorong pintu kamar nomor 7 yang terbuka sedikit. Di dalam kamar, seorang pemuda berambut pirang dengan kacamata bulat sedang menata gulungan kertas denah arsitektur di meja belajar..."
+    },
+    {
+      "id": 2,
+      "number": 2,
+      "title": "Berkenalan dengan Teman Sekamar",
+      "titleEn": "Meeting the Roommate",
+      "estimatedMinutes": 10,
+      "recap": "Kamu melangkah masuk ke kamar 7 dan bertemu langsung dengan Liam, mahasiswa arsitektur asal Skotlandia yang akan menjadi teman sekamarmu selama satu tahun ke depan.",
+      "dialogue": [
+        {
+          "id": "s5e2_d1",
+          "speaker": "Liam",
+          "en": "Hi there! You must be my new roommate. I am Liam, an architecture student from Edinburgh.",
+          "idText": "Hai! Kamu pasti teman sekamar baruku. Aku Liam, mahasiswa arsitektur dari Edinburgh."
+        },
+        {
+          "id": "s5e2_d2",
+          "speaker": "You",
+          "en": "Nice to meet you, Liam! I am looking forward to studying together in this city.",
+          "idText": "Senang bertemu denganmu, Liam! Aku sangat menantikan belajar bersama di kota ini."
+        },
+        {
+          "id": "s5e2_d3",
+          "speaker": "Kanci",
+          "en": "Kamar ini memiliki dua meja belajar dan dua ranjang yang luas. Liam terlihat sangat tertib dan rapi!",
+          "idText": "Kamar ini memiliki dua meja belajar dan dua ranjang yang luas. Liam terlihat sangat tertib dan rapi!"
+        },
+        {
+          "id": "s5e2_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Liam menawarkan pilihan sisi meja dan tempat tidur. Bagaimana caramu merespon secara sopan?",
+          "options": [
+            {
+              "id": "s5e2_opt_1a",
+              "text": "I would prefer the desk near the window, if that fits your daily study schedule.",
+              "speakerReply": "Liam",
+              "reactionEn": "That is perfect! I actually prefer the corner desk because my drafting lamp clamps better there.",
+              "reactionId": "Cocok sekali! Aku malah lebih suka meja sudut karena lampu gambar arsitekturku lebih pas dipasang di sana."
+            },
+            {
+              "id": "s5e2_opt_1b",
+              "text": "Any desk is fine with me! Which study area do you usually use in the evening?",
+              "speakerReply": "Liam",
+              "reactionEn": "I usually sketch until 10 PM, then read quietly. We will have great study habits here!",
+              "reactionId": "Aku biasanya menggambar sampai jam 10 malam, lalu membaca buku dengan tenang. Kita akan punya kebiasaan belajar yang bagus!"
+            }
+          ]
+        },
+        {
+          "id": "s5e2_d4",
+          "speaker": "Liam",
+          "en": "Being polite and communicating our daily habits early will make us great friends.",
+          "idText": "Bersikap sopan dan mengomunikasikan kebiasaan harian sejak awal akan menjadikan kita teman akrab."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-friend",
+          "word": "friend",
+          "partOfSpeech": "noun",
+          "enDefinition": "A person whom one knows and with whom one has a bond of mutual affection.",
+          "idMeaning": "teman / sahabat",
+          "contextSentence": "Liam quickly became a helpful friend in our boarding house."
+        },
+        {
+          "wordId": "oxford-study",
+          "word": "study",
+          "partOfSpeech": "verb",
+          "enDefinition": "To apply oneself to the acquisition of knowledge by reading and investigation.",
+          "idMeaning": "belajar / kuliah",
+          "contextSentence": "We study quietly at our desks every weekday evening."
+        },
+        {
+          "wordId": "oxford-habit",
+          "word": "habit",
+          "partOfSpeech": "noun",
+          "enDefinition": "A settled or regular tendency or practice, especially one that is hard to give up.",
+          "idMeaning": "kebiasaan harian",
+          "contextSentence": "Waking up early is a productive study habit."
+        },
+        {
+          "wordId": "oxford-major",
+          "word": "major",
+          "partOfSpeech": "noun",
+          "enDefinition": "The principal subject studied by a student at a college or university.",
+          "idMeaning": "jurusan utama kuliah",
+          "contextSentence": "Architecture is Liam's university major."
+        },
+        {
+          "wordId": "oxford-schedule",
+          "word": "schedule",
+          "partOfSpeech": "noun",
+          "enDefinition": "A plan for carrying out a process or procedure, giving lists of intended events and times.",
+          "idMeaning": "jadwal kegiatan",
+          "contextSentence": "Our class schedule starts at eight in the morning."
+        },
+        {
+          "wordId": "oxford-polite",
+          "word": "polite",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Having or showing behavior that is respectful and considerate of other people.",
+          "idMeaning": "sopan santun",
+          "contextSentence": "It is always polite to ask before borrowing your roommate's book."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Present Simple untuk Mengungkapkan Kebiasaan Harian ('I usually study...')",
+        "topicId": "present-simple-routines",
+        "explanation": "Gunakan Present Simple disertai adverbs of frequency ('usually', 'always', 'rarely') saat memperkenalkan kebiasaan harian kepada teman sekamar.",
+        "formula": "Subject + [adverb of frequency] + verb1 + [complement] / I usually study until 10 PM."
+      },
+      "culturalTip": {
+        "title": "Kultur Menghargai Ruang Pribadi Teman Sekamar",
+        "content": "Di budaya barat dan asrama internasional, keterbukaan membicarakan jam tidur, kebiasaan belajar, dan preferensi penerangan sejak hari pertama (*setting expectations*) sangat dihargai untuk mencegah konflik di kemudian hari."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep2_q1",
+          "question": "What is Liam's university major?",
+          "options": [
+            "Medicine",
+            "Architecture",
+            "Culinary arts",
+            "Aviation flight"
+          ],
+          "correctIndex": 1,
+          "explanation": "Liam berkuliah di jurusan arsitektur ('an architecture student from Edinburgh')."
+        },
+        {
+          "id": "s5_ep2_q2",
+          "question": "Where does Liam come from originally?",
+          "options": [
+            "Tokyo, Japan",
+            "Edinburgh, Scotland",
+            "Sydney, Australia",
+            "Rio de Janeiro, Brazil"
+          ],
+          "correctIndex": 1,
+          "explanation": "Liam berasal dari Edinburgh, Skotlandia."
+        },
+        {
+          "id": "s5_ep2_q3",
+          "question": "Which adjective means 'showing respect and good manners towards others'?",
+          "options": [
+            "Noisy",
+            "Careless",
+            "Polite",
+            "Angry"
+          ],
+          "correctIndex": 2,
+          "explanation": "'Polite' berarti menunjukkan sopan santun dan rasa hormat kepada orang lain."
+        },
+        {
+          "id": "s5_ep2_q4",
+          "question": "What is the meaning of the word 'schedule' in daily campus life?",
+          "options": [
+            "A plan of times and activities",
+            "A type of warm soup",
+            "A large wooden wardrobe",
+            "A ticket to the cinema"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Schedule' adalah jadwal atau rencana daftar kegiatan berdasarkan waktu."
+        },
+        {
+          "id": "s5_ep2_q5",
+          "question": "Choose the correct verb form: 'We ______ quietly at our desks every evening.'",
+          "options": [
+            "studies",
+            "study",
+            "studying",
+            "studied"
+          ],
+          "correctIndex": 1,
+          "explanation": "Untuk subjek jamak 'We' dalam Present Simple habit, gunakan bentuk kata kerja dasar 'study'."
+        }
+      ],
+      "takeaways": [
+        "Menguasai kosakata perkenalan teman sekamar: friend, study, habit, major, schedule, polite.",
+        "Mendiskusikan pembagian meja belajar dan jam belajar dengan Present Simple.",
+        "Menghargai batasan ruang pribadi dalam kehidupan kos bersama."
+      ],
+      "cliffhanger": "Saat hendak menaruh botol minum ke dapur di lantai bawah, kamu melihat papan gabus besar di samping kompor yang ditempeli selebaran berjudul mencolok: 'HOUSE RULES OF ROOM 7 & 8'..."
+    },
+    {
+      "id": 3,
+      "number": 3,
+      "title": "Peraturan Tertulis di Dinding Dapur",
+      "titleEn": "The House Rules Board",
+      "estimatedMinutes": 10,
+      "recap": "Di dapur bersama lantai satu, kamu membaca papan peraturan rumah kos yang memuat panduan keselamatan, kebersihan, dan ketertiban umum.",
+      "dialogue": [
+        {
+          "id": "s5e3_d1",
+          "speaker": "Narator",
+          "en": "A colorful corkboard hangs beside the kitchen sink, pinned with official guidelines signed by Mrs. Wardhani.",
+          "idText": "Sebuah papan gabus warna-warni tergantung di samping wastafel dapur, ditempeli panduan resmi yang ditandatangani Ibu Wardhani."
+        },
+        {
+          "id": "s5e3_d2",
+          "speaker": "Kanci",
+          "en": "Baca peraturan nomor satu: 'You must clean your own plates immediately after eating!' Sangat jelas dan tegas!",
+          "idText": "Baca peraturan nomor satu: 'You must clean your own plates immediately after eating!' Sangat jelas dan tegas!"
+        },
+        {
+          "id": "s5e3_d3",
+          "speaker": "Maya",
+          "en": "Hello new neighbors! I live in Room 8. We take the kitchen rules very seriously to keep pests away.",
+          "idText": "Halo tetangga baru! Aku tinggal di Kamar 8. Kami sangat mematuhi aturan dapur agar tidak ada hama semut atau kecoa."
+        },
+        {
+          "id": "s5e3_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Maya menyapamu sambil membawa lap bersih. Apa responmu mengenai aturan dapur bersama?",
+          "options": [
+            {
+              "id": "s5e3_opt_1a",
+              "text": "I completely agree. Everyone must wash their frying pan and throw away food waste into the garbage bin.",
+              "speakerReply": "Maya",
+              "reactionEn": "Exactly! And we also separate plastic recyclables into the green container beside the door.",
+              "reactionId": "Tepat sekali! Dan kita juga memisahkan sampah plastik daur ulang ke wadah hijau di samping pintu."
+            },
+            {
+              "id": "s5e3_opt_1b",
+              "text": "Could you tell me what the notice says about late-night cooking in the shared kitchen?",
+              "speakerReply": "Maya",
+              "reactionEn": "No loud blender or frying after 10 PM. Light tea and microwaving are always allowed.",
+              "reactionId": "Tidak boleh memakai blender bising atau menggoreng setelah jam 10 malam. Bikin teh hangat atau microwave selalu diperbolehkan."
+            }
+          ]
+        },
+        {
+          "id": "s5e3_d4",
+          "speaker": "You",
+          "en": "Thank you for explaining the notice, Maya. A clean kitchen makes cooking pleasant for everyone.",
+          "idText": "Terima kasih sudah menjelaskan pengumuman ini, Maya. Dapur yang bersih membuat masak jadi menyenangkan bagi semua orang."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-rule",
+          "word": "rule",
+          "partOfSpeech": "noun",
+          "enDefinition": "One of a set of explicit or understood regulations or principles governing conduct.",
+          "idMeaning": "peraturan / kaidah tertulis",
+          "contextSentence": "Following every boarding house rule keeps our home peaceful."
+        },
+        {
+          "wordId": "oxford-kitchen",
+          "word": "kitchen",
+          "partOfSpeech": "noun",
+          "enDefinition": "A room or area where food is prepared and cooked.",
+          "idMeaning": "dapur bersama",
+          "contextSentence": "The shared kitchen has two stoves and a large dining counter."
+        },
+        {
+          "wordId": "a2-notice",
+          "word": "notice",
+          "partOfSpeech": "noun",
+          "enDefinition": "A displayed sheet or placard giving news, information, or a warning.",
+          "idMeaning": "selebaran pengumuman / maklumat",
+          "contextSentence": "The notice on the wall lists quiet hours and cleaning times."
+        },
+        {
+          "wordId": "oxford-clean",
+          "word": "clean",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Free from dirt, marks, or unwanted matter.",
+          "idMeaning": "bersih",
+          "contextSentence": "Keep the dining table clean after eating lunch."
+        },
+        {
+          "wordId": "oxford-throw",
+          "word": "throw",
+          "partOfSpeech": "verb",
+          "enDefinition": "To propel with force through the air by a movement of the arm and hand; discard.",
+          "idMeaning": "membuang sampah",
+          "contextSentence": "Please throw vegetable scraps into the compost bin."
+        },
+        {
+          "wordId": "oxford-garbage",
+          "word": "garbage",
+          "partOfSpeech": "noun",
+          "enDefinition": "Wasted or spoiled food and other refuse, as from a kitchen or household.",
+          "idMeaning": "sampah dapur",
+          "contextSentence": "Take the garbage bag out to the curbside bin every evening."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Modal Verbs Kewajiban & Larangan ('must', 'have to', 'must not')",
+        "topicId": "modal-obligation",
+        "explanation": "Gunakan modal verb 'must' atau 'have to' untuk menyatakan kewajiban mutlak peraturan kos, serta 'must not' untuk larangan keras.",
+        "formula": "Subject + must/have to + [base verb] / You must clean your dishes immediately."
+      },
+      "culturalTip": {
+        "title": "Pentingnya Kebersihan Fasilitas Bersama (*Shared Amenities*)",
+        "content": "Di kos bersama lintas negara, meninggalkan piring kotor di wastafel dianggap sebagai pelanggaran etika serius (*major pet peeve*). Mencuci peralatan segera setelah dipakai adalah tanda kedewasaan tertinggi."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep3_q1",
+          "question": "Where is the boarding house notice board pinned?",
+          "options": [
+            "Inside the bathroom shower",
+            "Beside the kitchen sink",
+            "Under Liam's mattress",
+            "On the outdoor roof tile"
+          ],
+          "correctIndex": 1,
+          "explanation": "Papan pengumuman tertempel di samping wastafel dapur ('beside the kitchen sink')."
+        },
+        {
+          "id": "s5_ep3_q2",
+          "question": "What must every resident do immediately after finishing their meal?",
+          "options": [
+            "Leave dirty dishes on the table",
+            "Clean and wash their own plates",
+            "Turn off the city electricity",
+            "Paint the kitchen walls blue"
+          ],
+          "correctIndex": 1,
+          "explanation": "Setiap penghuni wajib mencuci dan membersihkan piringnya sendiri segera setelah makan."
+        },
+        {
+          "id": "s5_ep3_q3",
+          "question": "Which modal verb expresses strong obligation in official rules?",
+          "options": [
+            "Might",
+            "Could",
+            "Must",
+            "May"
+          ],
+          "correctIndex": 2,
+          "explanation": "'Must' digunakan untuk menyatakan kewajiban mutlak pada peraturan resmi."
+        },
+        {
+          "id": "s5_ep3_q4",
+          "question": "What is the meaning of the word 'notice' on the wall?",
+          "options": [
+            "A displayed printed announcement or guideline",
+            "A broken kitchen knife",
+            "A bottle of cold lemonade",
+            "A wooden chair leg"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Notice' adalah selebaran pengumuman atau maklumat resmi yang dipajang."
+        },
+        {
+          "id": "s5_ep3_q5",
+          "question": "Complete the sentence: 'Please ______ your food waste into the covered garbage bin.'",
+          "options": [
+            "throw",
+            "study",
+            "major",
+            "sleep"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Throw' (membuang) adalah kata kerja yang tepat untuk membuang sisa makanan ke tong sampah."
+        }
+      ],
+      "takeaways": [
+        "Memahami kosakata tata tertib kos: rule, kitchen, notice, clean, throw, garbage.",
+        "Menggunakan modal verbs kewajiban (must, have to) pada konteks peraturan resmi.",
+        "Menyadari pentingnya menjaga kebersihan dapur bersama demi kenyamanan seluruh penghuni."
+      ],
+      "cliffhanger": "Maya kemudian menunjuk diagram bundar berputar di samping papan aturan: 'Sekarang lihat roda piket ini. Hari Rabu besok adalah giliran piket kamar kita!'"
+    },
+    {
+      "id": 4,
+      "number": 4,
+      "title": "Membagi Jadwal Piket Bersama",
+      "titleEn": "The Chore Wheel & Cleaning Roster",
+      "estimatedMinutes": 10,
+      "recap": "Untuk menjaga kebersihan area komunal, para penghuni Kos Nomor 7 menggunakan sistem giliran piket mingguan yang adil dan transparan.",
+      "dialogue": [
+        {
+          "id": "s5e4_d1",
+          "speaker": "Liam",
+          "en": "Every Wednesday afternoon, Room 7 and Room 8 take turns cleaning the shared living room and corridor.",
+          "idText": "Setiap Rabu sore, Kamar 7 dan Kamar 8 bergiliran membersihkan ruang tamu bersama dan lorong koridor."
+        },
+        {
+          "id": "s5e4_d2",
+          "speaker": "Kanci",
+          "en": "Mari bagi tugasnya secara adil agar pekerjaan cepat selesai sebelum waktu belajar sore tiba!",
+          "idText": "Mari bagi tugasnya secara adil agar pekerjaan cepat selesai sebelum waktu belajar sore tiba!"
+        },
+        {
+          "id": "s5e4_d3",
+          "speaker": "You",
+          "en": "I can sweep the front corridor and take out the trash. Who will mop the wooden floor?",
+          "idText": "Aku bisa menyapu koridor depan dan membuang sampah. Siapa yang akan mengepel lantai kayu?"
+        },
+        {
+          "id": "s5e4_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Liam dan Maya sedang mendiskusikan pembagian alat pembersih. Apa usulanmu?",
+          "options": [
+            {
+              "id": "s5e4_opt_1a",
+              "text": "Liam, since you have class at five, you can wipe the tables, and I will do the heavy sweeping.",
+              "speakerReply": "Liam",
+              "reactionEn": "That is very considerate of you! I agree with that duty division. Let's start right now.",
+              "reactionId": "Kamu sangat pengertian! Aku setuju dengan pembagian tugas itu. Mari kita mulai sekarang."
+            },
+            {
+              "id": "s5e4_opt_1b",
+              "text": "Let's put on some upbeat instrumental music and finish the whole floor together in twenty minutes!",
+              "speakerReply": "Maya",
+              "reactionEn": "Awesome idea! Teamwork makes chore duties feel like a fun game instead of hard work.",
+              "reactionId": "Ide yang keren! Kerja sama tim membuat tugas piket terasa seperti permainan menyenangkan."
+            }
+          ]
+        },
+        {
+          "id": "s5e4_d4",
+          "speaker": "Liam",
+          "en": "Being responsible for our shared duties keeps the house fresh and welcoming for everyone.",
+          "idText": "Bertanggung jawab atas tugas piket bersama menjaga suasana rumah tetap segar dan nyaman bagi semua orang."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-duty",
+          "word": "duty",
+          "partOfSpeech": "noun",
+          "enDefinition": "A task or action that someone is required to perform as part of one's job or social agreement.",
+          "idMeaning": "tugas piket / kewajiban",
+          "contextSentence": "Taking out the recycling is my cleaning duty today."
+        },
+        {
+          "wordId": "oxford-sweep",
+          "word": "sweep",
+          "partOfSpeech": "verb",
+          "enDefinition": "To clean by brushing away dirt or litter with a broom.",
+          "idMeaning": "menyapu lantai",
+          "contextSentence": "Please sweep the wooden hallway before mopping."
+        },
+        {
+          "wordId": "oxford-trash",
+          "word": "trash",
+          "partOfSpeech": "noun",
+          "enDefinition": "Discarded matter; refuse or waste.",
+          "idMeaning": "sampah",
+          "contextSentence": "Empty the paper trash can under the study desk."
+        },
+        {
+          "wordId": "oxford-turn",
+          "word": "turn",
+          "partOfSpeech": "noun",
+          "enDefinition": "An opportunity or obligation to do something that comes successively to each of a number of people.",
+          "idMeaning": "giliran",
+          "contextSentence": "It is our turn to water the potted veranda plants."
+        },
+        {
+          "wordId": "oxford-agree",
+          "word": "agree",
+          "partOfSpeech": "verb",
+          "enDefinition": "To have the same opinion, or concur in a mutual arrangement.",
+          "idMeaning": "setuju / sepakat",
+          "contextSentence": "We all agree to finish chores before dinner."
+        },
+        {
+          "wordId": "oxford-responsible",
+          "word": "responsible",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Having an obligation to do something, or having control over or care for someone.",
+          "idMeaning": "bertanggung jawab",
+          "contextSentence": "Every student is responsible for keeping their room tidy."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Ungkapan Negosiasi & Kesepakatan Tugas ('Let's...', 'I will take care of...', 'We agree to...')",
+        "topicId": "negotiating-tasks",
+        "explanation": "Gunakan future modal 'will' untuk menawarkan diri mengerjakan tugas spesifik ('I will sweep...') dan verb 'agree' untuk memvalidasi kesepakatan bersama.",
+        "formula": "I will + [base verb] / We agree to + [base verb]"
+      },
+      "culturalTip": {
+        "title": "Sistem Roster Kebersihan di Rumah Kos Mancanegara",
+        "content": "Di asrama mahasiswa Eropa dan Amerika, *cleaning roster* ditempel di tempat yang mudah dilihat. Masing-masing penghuni menandatangani kolom nama setelah menuntaskan giliran piket untuk transparansi."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep4_q1",
+          "question": "On which day of the week do Room 7 and Room 8 have their shared cleaning duty?",
+          "options": [
+            "Monday morning",
+            "Wednesday afternoon",
+            "Sunday midnight",
+            "Friday dawn"
+          ],
+          "correctIndex": 1,
+          "explanation": "Tugas piket bersama dilaksanakan setiap Rabu sore ('Every Wednesday afternoon')."
+        },
+        {
+          "id": "s5_ep4_q2",
+          "question": "What tool or action is used to clean dust off the corridor floor before mopping?",
+          "options": [
+            "Painting with brush",
+            "Sweeping with a broom",
+            "Hammering nails",
+            "Spraying perfume"
+          ],
+          "correctIndex": 1,
+          "explanation": "Menyapu dengan sapu ('sweeping with a broom') digunakan untuk membersihkan debu lantai."
+        },
+        {
+          "id": "s5_ep4_q3",
+          "question": "Which word means 'an obligation to do something that comes successively to each person'?",
+          "options": [
+            "Turn",
+            "Mirror",
+            "Clock",
+            "Cloud"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Turn' berarti giliran yang datang bergantian pada sekelompok orang."
+        },
+        {
+          "id": "s5_ep4_q4",
+          "question": "Which adjective describes a person who can be trusted to do what is required?",
+          "options": [
+            "Lazy",
+            "Forgetful",
+            "Responsible",
+            "Angry"
+          ],
+          "correctIndex": 2,
+          "explanation": "'Responsible' berarti dapat dipercaya dan bertanggung jawab atas tugasnya."
+        },
+        {
+          "id": "s5_ep4_q5",
+          "question": "Complete the sentence: 'We all ______ that team cooperation makes cleaning easier.'",
+          "options": [
+            "agree",
+            "throw",
+            "lock",
+            "wash"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Agree' (setuju/sepakat) adalah kata kerja yang tepat melengkapi kalimat kesepakatan tim."
+        }
+      ],
+      "takeaways": [
+        "Mempelajari kosakata pembagian tugas: duty, sweep, trash, turn, agree, responsible.",
+        "Menggunakan ungkapan menawarkan diri dan menyepakati pembagian tugas (I will sweep, we agree).",
+        "Menjunjung tinggi prinsip keadilan dan transparansi giliran kerja rumah tangga."
+      ],
+      "cliffhanger": "Setelah koridor bersih mengilap, kamu membuka kulkas dua pintu di dapur untuk menaruh sekotak susu segar, namun melihat puluhan wadah makanan yang bertumpuk tanpa nama pemilik..."
+    },
+    {
+      "id": 5,
+      "number": 5,
+      "title": "Label Nama di Dalam Kulkas",
+      "titleEn": "The Shared Refrigerator",
+      "estimatedMinutes": 10,
+      "recap": "Etika penggunaan kulkas bersama memerlukan penandaan jelas agar makanan tidak tertukar atau terbuang sia-sia.",
+      "dialogue": [
+        {
+          "id": "s5e5_d1",
+          "speaker": "Mrs. Wardhani",
+          "en": "Welcome to the communal refrigerator! Remember rule number four: write your name and room number on every container.",
+          "idText": "Selamat datang di kulkas bersama! Ingat peraturan nomor empat: tulis nama dan nomor kamarmu di setiap wadah makanan."
+        },
+        {
+          "id": "s5e5_d2",
+          "speaker": "Kanci",
+          "en": "Ada gulungan selotip kertas dan spidol tahan air di samping kulkas. Sangat praktis untuk membuat label!",
+          "idText": "Ada gulungan selotip kertas dan spidol tahan air di samping kulkas. Sangat praktis untuk membuat label!"
+        },
+        {
+          "id": "s5e5_d3",
+          "speaker": "You",
+          "en": "I am labeling my milk carton: 'Room 7 - You'. Which shelf is designated for our room?",
+          "idText": "Aku sedang menulisi label di kotak susuku: 'Kamar 7 - You'. Rak mana yang dialokasikan untuk kamar kita?"
+        },
+        {
+          "id": "s5e5_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Liam menunjukkan rak kedua dari atas yang masih memiliki ruang luas. Apa tindakanmu?",
+          "options": [
+            {
+              "id": "s5e5_opt_1a",
+              "text": "I will place my fresh milk bottle and cheese neatly on the second shelf beside your yogurt.",
+              "speakerReply": "Liam",
+              "reactionEn": "Great! That keeps our Room 7 food organized together in one spot.",
+              "reactionId": "Bagus! Itu membuat makanan Kamar 7 tertata rapi bersama dalam satu tempat."
+            },
+            {
+              "id": "s5e5_opt_1b",
+              "text": "I bought extra butter and fruit. Would anyone like to share them for breakfast tomorrow?",
+              "speakerReply": "Maya",
+              "reactionEn": "That is so sweet of you! We have a 'Free to Share' basket on the bottom shelf for community snacks.",
+              "reactionId": "Baik sekali dirimu! Kami punya keranjang 'Boleh Dimakan Bersama' di rak bawah untuk camilan bersama."
+            }
+          ]
+        },
+        {
+          "id": "s5e5_d4",
+          "speaker": "Mrs. Wardhani",
+          "en": "Clear labeling prevents misunderstandings. Respecting each other's food builds strong trust.",
+          "idText": "Pelabelan yang jelas mencegah kesalahpahaman. Menghormati makanan satu sama lain membangun rasa saling percaya."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-refrigerator",
+          "word": "refrigerator",
+          "partOfSpeech": "noun",
+          "enDefinition": "An appliance or compartment that is artificially cooled and used to store food and drink.",
+          "idMeaning": "kulkas / lemari es",
+          "contextSentence": "Keep dairy products inside the shared refrigerator."
+        },
+        {
+          "wordId": "oxford-label",
+          "word": "label",
+          "partOfSpeech": "noun",
+          "enDefinition": "A small piece of paper, fabric, or other material attached to an object to give information about it.",
+          "idMeaning": "label penanda nama",
+          "contextSentence": "Stick a waterproof label on your juice bottle."
+        },
+        {
+          "wordId": "oxford-bottle",
+          "word": "bottle",
+          "partOfSpeech": "noun",
+          "enDefinition": "A container, typically made of glass or plastic and with a narrow neck, used for storing drinks.",
+          "idMeaning": "botol minuman",
+          "contextSentence": "I put a cold bottle of mineral water on the middle shelf."
+        },
+        {
+          "wordId": "oxford-share",
+          "word": "share",
+          "partOfSpeech": "verb",
+          "enDefinition": "To have a portion of something with another or others, or give a portion to others.",
+          "idMeaning": "berbagi bersama",
+          "contextSentence": "We often share fresh seasonal fruit with our neighbors."
+        },
+        {
+          "wordId": "oxford-shelf",
+          "word": "shelf",
+          "partOfSpeech": "noun",
+          "enDefinition": "A flat length of wood, glass, or other rigid material attached horizontally to hold objects.",
+          "idMeaning": "rak penyimpanan",
+          "contextSentence": "Room 7 stores their groceries on the second shelf."
+        },
+        {
+          "wordId": "oxford-food",
+          "word": "food",
+          "partOfSpeech": "noun",
+          "enDefinition": "Any nutritious substance that people or animals eat or drink to maintain life and growth.",
+          "idMeaning": "makanan",
+          "contextSentence": "Never take another resident's food without asking first."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Possessive Nouns & Pronouns ('mine', 'yours', 'Room 7's shelf')",
+        "topicId": "possessives",
+        "explanation": "Gunakan kata ganti kepemilikan ('mine', 'yours', 'theirs') dan tanda apostrof kepemilikan ('Room 7's shelf') untuk menegaskan batas kepemilikan barang pribadi di fasilitas umum.",
+        "formula": "[Owner] + 's + noun / This milk carton is mine, but the fruit on the table is for everyone."
+      },
+      "culturalTip": {
+        "title": "Golden Rule Kulkas Bersama di Asrama Luar Negeri",
+        "content": "Pepatah kos internasional mengatakan: *'If it has a name, don't touch it; if it has no name, ask first!'* Makanan tanpa label sering kali dibersihkan setiap hari Minggu oleh pengelola demi menjaga kebersihan higienis."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep5_q1",
+          "question": "What must every resident write on food containers placed in the refrigerator?",
+          "options": [
+            "Their favourite music band",
+            "Their name and room number",
+            "The price of their shoes",
+            "A secret joke"
+          ],
+          "correctIndex": 1,
+          "explanation": "Penghuni wajib menulis nama dan nomor kamar pada wadah makanan ('name and room number')."
+        },
+        {
+          "id": "s5_ep5_q2",
+          "question": "Where is the special 'Free to Share' basket located in the kitchen?",
+          "options": [
+            "Under the bathroom sink",
+            "On the bottom shelf of the refrigerator",
+            "Inside the laundry washing tub",
+            "Behind the outdoor gate"
+          ],
+          "correctIndex": 1,
+          "explanation": "Keranjang makanan yang boleh dinikmati bersama diletakkan di rak paling bawah kulkas."
+        },
+        {
+          "id": "s5_ep5_q3",
+          "question": "Which word means 'a flat horizontal surface used to store or display items'?",
+          "options": [
+            "Shelf",
+            "Bottle",
+            "Notice",
+            "Key"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Shelf' adalah rak datar horizontal untuk menaruh barang atau makanan."
+        },
+        {
+          "id": "s5_ep5_q4",
+          "question": "Which possessive pronoun correctly completes: 'The yogurt on the top shelf is ______.'?",
+          "options": [
+            "mine",
+            "me",
+            "my",
+            "I"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Mine' adalah possessive pronoun mandiri yang berfungsi sebagai predikat kepemilikan."
+        },
+        {
+          "id": "s5_ep5_q5",
+          "question": "Complete the sentence: 'We always ______ fresh bread with our roommates on Sunday morning.'",
+          "options": [
+            "share",
+            "lock",
+            "sweep",
+            "study"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Share' (berbagi) adalah kata kerja yang bermakna menikmati bersama orang lain."
+        }
+      ],
+      "takeaways": [
+        "Menguasai kosakata kulkas dan makanan bersama: refrigerator, label, bottle, share, shelf, food.",
+        "Menggunakan possessive pronouns (mine, yours, hers) untuk memperjelas kepemilikan barang.",
+        "Memahami etika etis penggunaan lemari es bersama di komunitas asrama."
+      ],
+      "cliffhanger": "Malam harinya sekitar pukul 23.30, saat kamu sedang membaca buku teks di meja kamar, terdengar suara getaran kencang berdentum dari ruang utilitas di lantai bawah..."
+    },
+    {
+      "id": 6,
+      "number": 6,
+      "title": "Mesin Cuci dan Jam Tenang",
+      "titleEn": "Laundry Time & Quiet Hours",
+      "estimatedMinutes": 10,
+      "recap": "Suara getaran mesin cuci larut malam mengingatkan pentingnya aturan jam tenang demi menjaga kenyamanan istirahat para penghuni kos.",
+      "dialogue": [
+        {
+          "id": "s5e6_d1",
+          "speaker": "Narator",
+          "en": "The metal spin cycle of the washing machine rattles vigorously against the laundry room floor late at night.",
+          "idText": "Putaran tabung logam mesin cuci bergetar kencang menghantam lantai ruang cuci di larut malam."
+        },
+        {
+          "id": "s5e6_d2",
+          "speaker": "Liam",
+          "en": "Someone started a heavy load of clothes after eleven o'clock. The vibrations shake the floorboards.",
+          "idText": "Ada yang menyalakan cucian baju tebal setelah jam sebelas malam. Getarannya mengguncang papan lantai."
+        },
+        {
+          "id": "s5e6_d3",
+          "speaker": "Kanci",
+          "en": "Mari kita turun dan memeriksa dengan sopan. Barangkali penghuni baru belum hafal jadwal jam tenang!",
+          "idText": "Mari kita turun dan memeriksa dengan sopan. Barangkali penghuni baru belum hafal jadwal jam tenang!"
+        },
+        {
+          "id": "s5e6_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Kamu dan Liam turun ke ruang cuci dan melihat seorang mahasiswa tingkat satu tampak panik menatap mesin cuci yang bergetar. Apa yang kamu katakan?",
+          "options": [
+            {
+              "id": "s5e6_opt_1a",
+              "text": "Hello! Don't worry, let me help you pause the spin cycle. In our house, quiet hours start at 10 PM.",
+              "speakerReply": "Student",
+              "reactionEn": "Thank you so much! I am very sorry, my flight was delayed and I urgently needed clean clothes.",
+              "reactionId": "Terima kasih banyak! Saya minta maaf sekali, penerbangan saya tadi tertunda dan saya sangat butuh pakaian bersih."
+            },
+            {
+              "id": "s5e6_opt_1b",
+              "text": "The machine makes quite a lot of noise. You can use the quick 15-minute silent rinse instead.",
+              "speakerReply": "Student",
+              "reactionEn": "That is a great solution! I will dry my shirt on the veranda rack until morning.",
+              "reactionId": "Itu solusi yang bagus! Saya akan menjemur kemeja di rak teras sampai besok pagi."
+            }
+          ]
+        },
+        {
+          "id": "s5e6_d4",
+          "speaker": "Liam",
+          "en": "Helping each other with respect and patience makes solving noise problems easy and friendly.",
+          "idText": "Saling membantu dengan rasa hormat dan kesabaran membuat penyelesaian masalah kebisingan jadi mudah dan bersahabat."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-clothes",
+          "word": "clothes",
+          "partOfSpeech": "noun",
+          "enDefinition": "Items worn to cover the body, such as shirts, trousers, and jackets.",
+          "idMeaning": "pakaian / busana cucian",
+          "contextSentence": "Fold your clean clothes neatly after taking them off the drying rack."
+        },
+        {
+          "wordId": "oxford-wash",
+          "word": "wash",
+          "partOfSpeech": "verb",
+          "enDefinition": "To clean with water and typically soap or detergent.",
+          "idMeaning": "mencuci",
+          "contextSentence": "I wash my bedsheets every Saturday morning."
+        },
+        {
+          "wordId": "oxford-machine",
+          "word": "machine",
+          "partOfSpeech": "noun",
+          "enDefinition": "An apparatus using mechanical power and having several parts, each with a definite function.",
+          "idMeaning": "mesin cuci otomatis",
+          "contextSentence": "The washing machine has an energy-saving cycle."
+        },
+        {
+          "wordId": "oxford-noise",
+          "word": "noise",
+          "partOfSpeech": "noun",
+          "enDefinition": "A sound, especially one that is loud or unpleasant or that causes disturbance.",
+          "idMeaning": "kebisingan / suara gaduh",
+          "contextSentence": "Avoid making loud noise during exam preparation week."
+        },
+        {
+          "wordId": "oxford-quiet",
+          "word": "quiet",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Making little or no noise; peaceful and undisturbed.",
+          "idMeaning": "tenang / hening",
+          "contextSentence": "Please maintain a quiet atmosphere after ten in the evening."
+        },
+        {
+          "wordId": "oxford-respect",
+          "word": "respect",
+          "partOfSpeech": "verb",
+          "enDefinition": "To have due regard for the feelings, wishes, rights, or traditions of others.",
+          "idMeaning": "menghormati / mematuhi",
+          "contextSentence": "All tenants must respect the designated sleeping hours."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Modal Verbs Saran & Izin Sopan ('should', 'allowed to', 'ought to')",
+        "topicId": "modals-advice",
+        "explanation": "Gunakan modal verb 'should' untuk memberikan saran yang bersahabat tanpa terkesan memerintah, dan frasa 'be allowed to' untuk menyatakan izin.",
+        "formula": "Subject + should + [base verb] / You should do your laundry in the afternoon. / Residents are not allowed to make noise after 10 PM."
+      },
+      "culturalTip": {
+        "title": "Konsep 'Quiet Hours' (Ruhezeit) di Hunian Mahasiswa",
+        "content": "Di asrama internasional, 'Quiet Hours' (biasanya pukul 22.00–07.00) diberlakukan ketat. Memutar musik kencang, menyedot debu (vacuuming), atau mengoperasikan mesin cuci bervibrasi tinggi dihindari demi menjaga kualitas tidur sesama pembelajar."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep6_q1",
+          "question": "At what time do official quiet hours begin in Boarding House Number 7?",
+          "options": [
+            "At 6 PM",
+            "At 8 PM",
+            "At 10 PM",
+            "At 2 AM"
+          ],
+          "correctIndex": 2,
+          "explanation": "Jam tenang resmi dimulai pukul 10 malam ('quiet hours start at 10 PM')."
+        },
+        {
+          "id": "s5_ep6_q2",
+          "question": "Why was the first-year student washing clothes late at night?",
+          "options": [
+            "His flight was delayed and he urgently needed clean clothes",
+            "He wanted to play with water bubbles",
+            "He lost his bedroom slippers",
+            "He was practicing for a marathon"
+          ],
+          "correctIndex": 0,
+          "explanation": "Penerbangannya tertunda dan ia sangat membutuhkan pakaian bersih untuk esok hari."
+        },
+        {
+          "id": "s5_ep6_q3",
+          "question": "Which word refers to an apparatus using mechanical power to clean garments?",
+          "options": [
+            "Machine",
+            "Carpet",
+            "Notice",
+            "Key"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Machine' (washing machine) adalah peralatan mekanik untuk mencuci pakaian."
+        },
+        {
+          "id": "s5_ep6_q4",
+          "question": "Which sentence correctly gives friendly advice?",
+          "options": [
+            "You should wash heavy clothes in the daytime.",
+            "You must scream loudly at midnight.",
+            "You cannot study in your bedroom.",
+            "You broke all the kitchen plates."
+          ],
+          "correctIndex": 0,
+          "explanation": "'You should wash heavy clothes in the daytime' memberikan saran bersahabat menggunakan modal verb 'should'."
+        },
+        {
+          "id": "s5_ep6_q5",
+          "question": "Complete the sentence: 'We must always ______ our neighbors' right to a good night's sleep.'",
+          "options": [
+            "respect",
+            "throw",
+            "sweep",
+            "cook"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Respect' (menghormati) adalah kata kerja yang tepat untuk menghargai hak istirahat tetangga."
+        }
+      ],
+      "takeaways": [
+        "Memahami kosakata kebisingan dan kebersihan pakaian: clothes, wash, machine, noise, quiet, respect.",
+        "Menggunakan modal verbs saran bersahabat (should, allowed to) untuk menengahi masalah.",
+        "Menghargai jam istirahat malam dan menjaga ketenangan lingkungan kos."
+      ],
+      "cliffhanger": "Sabtu pagi menyapa dengan aroma wangi bawang putih dan rempah segar yang menggoda dari lantai bawah. Maya melambaikan centong kayu dari pintu dapur: 'Ayo masak makan siang bersama!'"
+    },
+    {
+      "id": 7,
+      "number": 7,
+      "title": "Masak Makan Malam Bersama Maya",
+      "titleEn": "Cooking Dinner Together",
+      "estimatedMinutes": 10,
+      "recap": "Memasak bersama di akhir pekan menjadi momen mempererat persaudaraan antar penghuni kos dengan mencampurkan resep tradisional dan modern.",
+      "dialogue": [
+        {
+          "id": "s5e7_d1",
+          "speaker": "Maya",
+          "en": "Welcome to Saturday brunch! Today we are making vegetable fried rice and mushroom stir-fry.",
+          "idText": "Selamat datang di makan bersama hari Sabtu! Hari ini kita membuat nasi goreng sayur dan tumis jamur."
+        },
+        {
+          "id": "s5e7_d2",
+          "speaker": "Liam",
+          "en": "I brought fresh carrots, spring onions, and eggs from the local farmers market.",
+          "idText": "Aku membawa wortel segar, daun bawang, dan telur dari pasar petani lokal."
+        },
+        {
+          "id": "s5e7_d3",
+          "speaker": "Kanci",
+          "en": "Perhatikan cara Maya memanaskan wajan! Aroma bumbunya membuat seluruh rumah kos semerbak harum!",
+          "idText": "Perhatikan cara Maya memanaskan wajan! Aroma bumbunya membuat seluruh rumah kos semerbak harum!"
+        },
+        {
+          "id": "s5e7_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Maya memintamu membantu mengolah bahan masakan. Bagian apa yang ingin kamu kerjakan?",
+          "options": [
+            {
+              "id": "s5e7_opt_1a",
+              "text": "I will chop the vegetables and stir the sauce inside the hot cooking pan.",
+              "speakerReply": "Maya",
+              "reactionEn": "Wonderful chopping skills! The sizzle in the pan smells absolutely delicious.",
+              "reactionId": "Keahlian memotongmu hebat! Desisan di dalam wajan aromanya sungguh lezat."
+            },
+            {
+              "id": "s5e7_opt_1b",
+              "text": "I can set the dining table with clean plates, forks, and glasses for all four of us.",
+              "speakerReply": "Liam",
+              "reactionEn": "Thank you! I will pour freshly brewed iced tea for our communal meal.",
+              "reactionId": "Terima kasih! Aku akan menuangkan es teh segar untuk makan bersama kita."
+            }
+          ]
+        },
+        {
+          "id": "s5e7_d4",
+          "speaker": "You",
+          "en": "Eating delicious homemade dinner together makes this boarding house feel just like family.",
+          "idText": "Menyantap makan malam buatan sendiri bersama-sama membuat rumah kos ini terasa seperti keluarga sendiri."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-cook",
+          "word": "cook",
+          "partOfSpeech": "verb",
+          "enDefinition": "To prepare food, a dish, or a meal by combining and heating the ingredients in various ways.",
+          "idMeaning": "memasak",
+          "contextSentence": "We love to cook healthy meals together on weekends."
+        },
+        {
+          "wordId": "oxford-pan",
+          "word": "pan",
+          "partOfSpeech": "noun",
+          "enDefinition": "A metal container, typically round and with a handle, used for cooking food in.",
+          "idMeaning": "wajan / panci masak",
+          "contextSentence": "Heat a spoonful of olive oil in the frying pan."
+        },
+        {
+          "wordId": "oxford-ingredient",
+          "word": "ingredient",
+          "partOfSpeech": "noun",
+          "enDefinition": "Any of the foods or substances that are combined to make a particular dish.",
+          "idMeaning": "bahan masakan",
+          "contextSentence": "Fresh garlic is a key ingredient in this fragrant sauce."
+        },
+        {
+          "wordId": "oxford-delicious",
+          "word": "delicious",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Highly pleasant to the taste or smell.",
+          "idMeaning": "lezat / sedap sekali",
+          "contextSentence": "The vegetable noodle soup tasted truly delicious."
+        },
+        {
+          "wordId": "oxford-dinner",
+          "word": "dinner",
+          "partOfSpeech": "noun",
+          "enDefinition": "The main meal of the day, taken either around midday or in the evening.",
+          "idMeaning": "makan malam",
+          "contextSentence": "We gathered around the dining table for a shared dinner."
+        },
+        {
+          "wordId": "oxford-together",
+          "word": "together",
+          "partOfSpeech": "adverb",
+          "enDefinition": "With or in proximity to another person or people; at the same time.",
+          "idMeaning": "bersama-sama",
+          "contextSentence": "Everything is more enjoyable when we cook together."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Imperatives & Sequence Markers untuk Instruksi Memasak ('first', 'next', 'then', 'finally')",
+        "topicId": "imperatives-cooking",
+        "explanation": "Gunakan kata kerja bentuk perintah (imperative) diawali kata penanda urutan kronologis saat menjelaskan resep atau langkah memasak.",
+        "formula": "First, [verb]... Next, [verb]... Then, [verb]... Finally, serve hot."
+      },
+      "culturalTip": {
+        "title": "Tradisi 'Potluck' dan Makan Bersama di Komunitas Kos",
+        "content": "Makan malam bersama (*communal dinner*) di akhir pekan merupakan cara paling efektif mencairkan suasana (*ice-breaking*) dan memperkenalkan kuliner khas daerah masing-masing di lingkungan mahasiswa perantau."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep7_q1",
+          "question": "What dishes are Maya and the housemates cooking on Saturday?",
+          "options": [
+            "Vegetable fried rice and mushroom stir-fry",
+            "Chocolate cake and ice cream sundae",
+            "Grilled salmon with caviar",
+            "Instant frozen pizza slices"
+          ],
+          "correctIndex": 0,
+          "explanation": "Maya dan teman kos memasak nasi goreng sayur dan tumis jamur."
+        },
+        {
+          "id": "s5_ep7_q2",
+          "question": "Where did Liam purchase the fresh ingredients?",
+          "options": [
+            "At the airport duty-free store",
+            "At the local farmers market",
+            "Inside the library basement",
+            "From a passing delivery truck"
+          ],
+          "correctIndex": 1,
+          "explanation": "Liam membeli bahan segar dari pasar petani lokal ('local farmers market')."
+        },
+        {
+          "id": "s5_ep7_q3",
+          "question": "Which noun refers to any food substance used to prepare a dish?",
+          "options": [
+            "Ingredient",
+            "Carpet",
+            "Machine",
+            "Schedule"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Ingredient' adalah bahan atau komponen yang dicampur untuk membuat hidangan."
+        },
+        {
+          "id": "s5_ep7_q4",
+          "question": "Which sequence marker is typically used to introduce the final step of a recipe?",
+          "options": [
+            "First",
+            "Initially",
+            "Finally",
+            "Secondly"
+          ],
+          "correctIndex": 2,
+          "explanation": "'Finally' digunakan untuk menandai langkah terakhir dalam urutan instruksi memasak."
+        },
+        {
+          "id": "s5_ep7_q5",
+          "question": "Complete the sentence: 'The hot homemade soup was very ______ after a long walk.'",
+          "options": [
+            "delicious",
+            "noisy",
+            "upstairs",
+            "broken"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Delicious' (lezat) adalah kata sifat yang tepat untuk menggambarkan sup hangat yang nikmat."
+        }
+      ],
+      "takeaways": [
+        "Mengenal kosakata kuliner dan kebersamaan: cook, pan, ingredient, delicious, dinner, together.",
+        "Menguasai kalimat imperatif dan kata urutan proses (first, then, finally).",
+        "Membangun rasa kekeluargaan melalui kegiatan memasak dan makan bersama."
+      ],
+      "cliffhanger": "Keesokan sorenya saat kembali dari perpustakaan universitas, Liam menepuk saku jaketnya dengan cemas di depan pintu kamar 7: 'Oh no! Kunci kamar saya tidak ada di saku!'"
+    },
+    {
+      "id": 8,
+      "number": 8,
+      "title": "Kunci Cadangan yang Terselip",
+      "titleEn": "The Misplaced Spare Key",
+      "estimatedMinutes": 10,
+      "recap": "Liam mengira kunci kamarnya hilang saat belajar di perpustakaan, memicu pencarian bersama yang penuh kesabaran dan kelegaan.",
+      "dialogue": [
+        {
+          "id": "s5e8_d1",
+          "speaker": "Liam",
+          "en": "I cannot find my bedroom key! I checked my jacket pocket and my pencil case, but it isn't there.",
+          "idText": "Aku tidak bisa menemukan kunci kamarku! Sudah kuperiksa saku jaket dan tempat pensilku, tapi tidak ada di sana."
+        },
+        {
+          "id": "s5e8_d2",
+          "speaker": "Kanci",
+          "en": "Jangan panik dulu! Tenangkan pikiran dan mari telusuri kembali langkahmu dari sofa ruang tamu!",
+          "idText": "Jangan panik dulu! Tenangkan pikiran dan mari telusuri kembali langkahmu dari sofa ruang tamu!"
+        },
+        {
+          "id": "s5e8_d3",
+          "speaker": "You",
+          "en": "Luckily, Mrs. Wardhani keeps an extra spare key in the locked hallway cabinet for emergencies.",
+          "idText": "Untungnya, Ibu Wardhani menyimpan kunci cadangan ekstra di lemari lorong terkunci untuk keadaan darurat."
+        },
+        {
+          "id": "s5e8_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Sebelum meminjam kunci cadangan, kamu memeriksa celah bantalan sofa ruang tamu. Apa yang kamu temukan?",
+          "options": [
+            {
+              "id": "s5e8_opt_1a",
+              "text": "Look right here under the wool carpet corner! The brass key slipped out when you took off your heavy coat.",
+              "speakerReply": "Liam",
+              "reactionEn": "What an incredible relief! Thank goodness you spotted it on the carpet before I troubled the landlady.",
+              "reactionId": "Lega sekali rasanya! Syukurlah kamu melihatnya di karpet sebelum aku merepotkan ibu kost."
+            },
+            {
+              "id": "s5e8_opt_1b",
+              "text": "Let me check the front porch steps while you search inside the study backpack compartments.",
+              "speakerReply": "Liam",
+              "reactionEn": "Found it! It was hiding in the small zipped inner pocket of my drawing folder!",
+              "reactionId": "Ketemu! Kuncinya terselip di saku kecil beritsleting di dalam map gambarku!"
+            }
+          ]
+        },
+        {
+          "id": "s5e8_d4",
+          "speaker": "Liam",
+          "en": "What a big relief! From now on, I will always hang my key on the wall hook right beside our door.",
+          "idText": "Sungguh melegakan! Mulai sekarang, aku akan selalu menggantung kunciku di gantungan dinding tepat di samping pintu."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-lock",
+          "word": "lock",
+          "partOfSpeech": "verb",
+          "enDefinition": "To fasten or secure with a lock.",
+          "idMeaning": "mengunci pintu",
+          "contextSentence": "Always lock the room door when leaving for campus."
+        },
+        {
+          "wordId": "oxford-extra",
+          "word": "extra",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Added to an existing or usual amount or number; additional.",
+          "idMeaning": "ekstra / cadangan",
+          "contextSentence": "Mrs. Wardhani keeps an extra set of keys in the office."
+        },
+        {
+          "wordId": "oxford-pocket",
+          "word": "pocket",
+          "partOfSpeech": "noun",
+          "enDefinition": "A small bag or envelope-like compartment forming part of or sewn on clothing.",
+          "idMeaning": "saku kantong pakaian",
+          "contextSentence": "I felt a cold metal key inside my jacket pocket."
+        },
+        {
+          "wordId": "oxford-search",
+          "word": "search",
+          "partOfSpeech": "verb",
+          "enDefinition": "To try to find something by looking or otherwise seeking carefully and thoroughly.",
+          "idMeaning": "mencari dengan cermat",
+          "contextSentence": "We search the living room couch for the misplaced key."
+        },
+        {
+          "wordId": "oxford-carpet",
+          "word": "carpet",
+          "partOfSpeech": "noun",
+          "enDefinition": "A floor covering made of thick woven fabric.",
+          "idMeaning": "karpet lantai",
+          "contextSentence": "The brass key fell silently onto the wool carpet."
+        },
+        {
+          "wordId": "oxford-relief",
+          "word": "relief",
+          "partOfSpeech": "noun",
+          "enDefinition": "A feeling of reassurance and relaxation following release from anxiety or distress.",
+          "idMeaning": "rasa lega yang mendalam",
+          "contextSentence": "Finding the lost key was a tremendous relief for all of us."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Past Continuous vs Simple Past untuk Kejadian yang Terinterupsi ('While I was searching...')",
+        "topicId": "past-continuous-interrupted",
+        "explanation": "Gunakan Past Continuous untuk latar belakang aksi yang sedang berlangsung ('was searching'), dan Simple Past untuk aksi mendadak yang memotong ('spotted / slipped').",
+        "formula": "While + [Past Continuous], + [Simple Past] / While we were searching the couch, the key appeared under the carpet."
+      },
+      "culturalTip": {
+        "title": "Penanganan Kunci Hilang di Hunian Sewa Mancanegara",
+        "content": "Di asrama dan apartemen luar negeri, menghilangkan anak kunci gedung sering kali dikenai denda penggantian silinder kunci (*re-keying fee*) yang cukup mahal. Membuat kebiasaan menaruh kunci di satu tempat tetap (*key bowl/hook*) adalah solusi terbaik."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep8_q1",
+          "question": "What item did Liam temporarily misplace after coming home?",
+          "options": [
+            "His architectural drafting ruler",
+            "His bedroom door key",
+            "His winter boots",
+            "His university student card"
+          ],
+          "correctIndex": 1,
+          "explanation": "Liam sempat kehilangan anak kunci kamar tidurnya ('bedroom door key')."
+        },
+        {
+          "id": "s5_ep8_q2",
+          "question": "Where does Mrs. Wardhani keep emergency spare keys for the house?",
+          "options": [
+            "In the garden compost soil",
+            "In a locked cabinet in the hallway",
+            "Inside the shared refrigerator ice box",
+            "Behind the street bus stop sign"
+          ],
+          "correctIndex": 1,
+          "explanation": "Ibu Wardhani menyimpan kunci cadangan darurat di lemari lorong yang terkunci."
+        },
+        {
+          "id": "s5_ep8_q3",
+          "question": "Which word means 'a feeling of reassurance and relaxation following anxiety'?",
+          "options": [
+            "Relief",
+            "Garbage",
+            "Duty",
+            "Noise"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Relief' adalah rasa lega yang dirasakan setelah kekhawatiran mereda."
+        },
+        {
+          "id": "s5_ep8_q4",
+          "question": "Choose the correct verb form: 'While we ______ the living room, Liam found his key.'",
+          "options": [
+            "searched",
+            "were searching",
+            "search",
+            "are searching"
+          ],
+          "correctIndex": 1,
+          "explanation": "Setelah konjungsi 'While' untuk aksi yang sedang berlangsung di masa lampau, gunakan Past Continuous 'were searching'."
+        },
+        {
+          "id": "s5_ep8_q5",
+          "question": "Complete the sentence: 'Always ______ your room door before heading out to the library.'",
+          "options": [
+            "lock",
+            "cook",
+            "sweep",
+            "throw"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Lock' (mengunci) adalah kata kerja yang tepat untuk mengamankan pintu kamar."
+        }
+      ],
+      "takeaways": [
+        "Menguasai kosakata barang berharga dan penemuan: lock, extra, pocket, search, carpet, relief.",
+        "Menggunakan kombinasi Past Continuous dan Simple Past untuk mendeskripsikan momen penemuan barang.",
+        "Membiasakan diri meletakkan kunci di tempat khusus demi menghindari kepanikan."
+      ],
+      "cliffhanger": "Di ruang tengah, sebuah memo diletakkan di atas meja makan: 'Pertemuan Bulanan Warga Kos Nomor 7 & 8 malam ini pukul 19.30 untuk membahas persiapan musim dingin dan kenyamanan bersama'..."
+    },
+    {
+      "id": 9,
+      "number": 9,
+      "title": "Musyawarah Warga Kos",
+      "titleEn": "The House Meeting & Compromise",
+      "estimatedMinutes": 10,
+      "recap": "Pertemuan bulanan seluruh penghuni kos menjadi wadah musyawarah santai untuk menyampaikan opini, mendengarkan masukan, dan merumuskan solusi bersama.",
+      "dialogue": [
+        {
+          "id": "s5e9_d1",
+          "speaker": "Mrs. Wardhani",
+          "en": "Thank you everyone for gathering at our monthly house meeting. Let's discuss house comfort and heater settings.",
+          "idText": "Terima kasih semuanya sudah berkumpul di rapat kos bulanan kita. Mari diskusikan kenyamanan rumah dan pengaturan penghangat ruangan."
+        },
+        {
+          "id": "s5e9_d2",
+          "speaker": "Liam",
+          "en": "In my opinion, we should set the central hallway thermostat to 21 degrees so everyone stays comfortable.",
+          "idText": "Menurut pendapatku, kita sebaiknya mengatur termostat lorong utama ke 21 derajat agar semua orang tetap nyaman."
+        },
+        {
+          "id": "s5e9_d3",
+          "speaker": "Maya",
+          "en": "I agree with Liam! And could we also discuss adding a shoe rack near the front entrance?",
+          "idText": "Aku setuju dengan Liam! Dan bisakah kita juga membahas penambahan rak sepatu di dekat pintu masuk depan?"
+        },
+        {
+          "id": "s5e9_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Ibu Wardhani meminta pendapatmu mengenai usulan rak sepatu dan kebersihan teras depan. Bagaimana caramu menyampaikan ide?",
+          "options": [
+            {
+              "id": "s5e9_opt_1a",
+              "text": "I think a tiered wooden shoe rack would be a wonderful solution to keep wet autumn shoes off the carpet.",
+              "speakerReply": "Mrs. Wardhani",
+              "reactionEn": "Excellent suggestion! I will purchase a nice three-tier bamboo rack for our entrance this Friday.",
+              "reactionId": "Usulan yang sangat bagus! Saya akan membelikan rak bambu tiga susun yang rapi untuk pintu depan hari Jumat ini."
+            },
+            {
+              "id": "s5e9_opt_1b",
+              "text": "Would you mind if we set up a small umbrella stand next to the shoe rack as well?",
+              "speakerReply": "Mrs. Wardhani",
+              "reactionEn": "That is very thoughtful! Rainy season is approaching and an umbrella stand will prevent slippery tiles.",
+              "reactionId": "Sangat penuh perhatian! Musim hujan segera tiba dan tempat payung akan mencegah lantai ubin licin."
+            }
+          ]
+        },
+        {
+          "id": "s5e9_d4",
+          "speaker": "You",
+          "en": "When we listen to each other with a friendly attitude, every house problem finds a peaceful solution.",
+          "idText": "Ketika kita mendengarkan satu sama lain dengan sikap ramah, setiap masalah rumah tangga selalu menemukan jalan keluar damai."
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-meeting",
+          "word": "meeting",
+          "partOfSpeech": "noun",
+          "enDefinition": "An assembly of people for a particular purpose, especially for formal discussion.",
+          "idMeaning": "pertemuan musyawarah",
+          "contextSentence": "Our monthly house meeting lasts about thirty minutes."
+        },
+        {
+          "wordId": "oxford-opinion",
+          "word": "opinion",
+          "partOfSpeech": "noun",
+          "enDefinition": "A view or judgment formed about something, not necessarily based on fact or knowledge.",
+          "idMeaning": "pendapat / opini pribadi",
+          "contextSentence": "In my opinion, open communication prevents misunderstandings."
+        },
+        {
+          "wordId": "oxford-listen",
+          "word": "listen",
+          "partOfSpeech": "verb",
+          "enDefinition": "To give one's attention to a sound, speech, or person speaking.",
+          "idMeaning": "mendengarkan dengan seksama",
+          "contextSentence": "Good housemates listen carefully to each other's needs."
+        },
+        {
+          "wordId": "oxford-discuss",
+          "word": "discuss",
+          "partOfSpeech": "verb",
+          "enDefinition": "To talk about something with another person or group of people in order to reach a decision.",
+          "idMeaning": "mendiskusikan / membahas",
+          "contextSentence": "We gather in the living room to discuss household schedules."
+        },
+        {
+          "wordId": "oxford-solution",
+          "word": "solution",
+          "partOfSpeech": "noun",
+          "enDefinition": "A means of solving a problem or dealing with a difficult situation.",
+          "idMeaning": "solusi jalan keluar",
+          "contextSentence": "We reached a creative solution that satisfied everyone."
+        },
+        {
+          "wordId": "oxford-friendly",
+          "word": "friendly",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Kind and pleasant; showing or expressing goodwill.",
+          "idMeaning": "ramah dan bersahabat",
+          "contextSentence": "A friendly tone makes house negotiations smooth and cheerful."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Polite Requests & Giving Opinions ('In my opinion...', 'Would you mind if...', 'Could we...')",
+        "topicId": "polite-requests",
+        "explanation": "Gunakan frasa pembuka santun untuk menyampaikan pendapat ('In my opinion', 'From my perspective') serta struktur kondisional sopan 'Would you mind if + subject + past tense / present tense' untuk mengajukan permohonan.",
+        "formula": "In my opinion, we should... / Would you mind if we set up a shoe rack?"
+      },
+      "culturalTip": {
+        "title": "Musyawarah 'House Meeting' dalam Budaya Co-Living",
+        "content": "Di perumahan sewa bersama (*co-living*), pertemuan rutin bukan ajang saling menyalahkan (*blame game*), melainkan forum apresiasi dan resolusi konstruktif yang diselingi hidangan kudapan teh hangat."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep9_q1",
+          "question": "What is the primary purpose of the monthly house meeting?",
+          "options": [
+            "To watch a horror film",
+            "To discuss house comfort, heating, and shared facilities",
+            "To repaint the entire roof",
+            "To prepare for a basketball match"
+          ],
+          "correctIndex": 1,
+          "explanation": "Tujuan pertemuan bulanan adalah mendiskusikan kenyamanan rumah, penghangat ruangan, dan fasilitas bersama."
+        },
+        {
+          "id": "s5_ep9_q2",
+          "question": "What new entrance item did Maya and the tenants propose to Mrs. Wardhani?",
+          "options": [
+            "A tiered shoe rack and umbrella stand",
+            "A large drum set",
+            "A pet dog kennel",
+            "An electric bicycle charger"
+          ],
+          "correctIndex": 0,
+          "explanation": "Penghuni mengusulkan penambahan rak sepatu bertingkat dan tempat payung di dekat pintu masuk."
+        },
+        {
+          "id": "s5_ep9_q3",
+          "question": "Which phrase is used to politely state a personal viewpoint?",
+          "options": [
+            "In my opinion...",
+            "Shut up now...",
+            "You broke it...",
+            "Run away fast..."
+          ],
+          "correctIndex": 0,
+          "explanation": "'In my opinion...' adalah frasa santun untuk mengemukakan sudut pandang pribadi."
+        },
+        {
+          "id": "s5_ep9_q4",
+          "question": "Which word means 'a means of solving a problem or difficult situation'?",
+          "options": [
+            "Solution",
+            "Garbage",
+            "Noise",
+            "Door"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Solution' berarti solusi atau cara menyelesaikan suatu persoalan."
+        },
+        {
+          "id": "s5_ep9_q5",
+          "question": "Complete the sentence: 'Please ______ carefully when your roommate speaks about their study schedule.'",
+          "options": [
+            "listen",
+            "throw",
+            "lock",
+            "wash"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Listen' (mendengarkan) adalah kata kerja yang tepat untuk menyimak penjelasan teman."
+        }
+      ],
+      "takeaways": [
+        "Mempelajari kosakata musyawarah dan resolusi: meeting, opinion, listen, discuss, solution, friendly.",
+        "Menguasai teknik menyampaikan pendapat dan permohonan sopan (In my opinion, Would you mind if).",
+        "Menghargai proses demokrasi musyawarah dalam menjaga harmoni tempat tinggal."
+      ],
+      "cliffhanger": "Musim gugur beralih sejuk, dan ujian tengah semester pertama pun usai dengan nilai memuaskan. Di meja kamarmu, tergeletak amplop berkop resmi dari sebuah perusahaan teknologi ternama di pusat kota..."
+    },
+    {
+      "id": 10,
+      "number": 10,
+      "title": "Rumah Kedua yang Hangat",
+      "titleEn": "A Second Home & Preparing for Internship",
+      "estimatedMinutes": 10,
+      "recap": "Tinggal di Kos Nomor 7 telah melatih kemandirian, kedewasaan, dan persahabatan sejati. Kini sebuah babak baru di dunia profesional telah menantimu.",
+      "dialogue": [
+        {
+          "id": "s5e10_d1",
+          "speaker": "Narator",
+          "en": "Golden autumn leaves drift past the bedroom window as you organize your desk and tidy your textbooks.",
+          "idText": "Daun-daun musim gugur keemasan melayang melewati jendela kamar saat kamu merapikan meja dan buku-buku teksmu."
+        },
+        {
+          "id": "s5e10_d2",
+          "speaker": "Liam",
+          "en": "Looking back at our first day, this boarding house has truly grown into a comfortable second home.",
+          "idText": "Mengingat kembali hari pertama kita, rumah kos ini sungguh telah berkembang menjadi rumah kedua yang nyaman."
+        },
+        {
+          "id": "s5e10_d3",
+          "speaker": "Kanci",
+          "en": "Kamu telah belajar hidup mandiri, menghargai aturan, dan merajut persahabatan lintas bangsa dengan gemilang!",
+          "idText": "Kamu telah belajar hidup mandiri, menghargai aturan, dan merajut persahabatan lintas bangsa dengan gemilang!"
+        },
+        {
+          "id": "s5e10_choice_1",
+          "type": "interactive_choice",
+          "prompt": "Surat panggilan wawancara magang di perusahaan teknologi pusat kota tergeletak di depanmu. Apa tekadmu?",
+          "options": [
+            {
+              "id": "s5e10_opt_1a",
+              "text": "I am ready for the professional world! Living independently here has given me deep confidence and maturity.",
+              "speakerReply": "Liam",
+              "reactionEn": "I am so proud of your progress! Let's practice your interview introduction together tonight.",
+              "reactionId": "Aku sangat bangga dengan kemajuanmu! Mari kita latihan perkenalan wawancaramu bersama malam ini."
+            },
+            {
+              "id": "s5e10_opt_1b",
+              "text": "I want to thank everyone in Kos Nomor 7 for their warmth, support, and wonderful friendship.",
+              "speakerReply": "Maya",
+              "reactionEn": "We are always here cheering for you! Tomorrow marks the beginning of your professional internship journey.",
+              "reactionId": "Kami selalu di sini menyemangatimu! Besok menandai awal perjalanan magang profesionalmu."
+            }
+          ]
+        },
+        {
+          "id": "s5e10_d4",
+          "speaker": "You",
+          "en": "Kos Nomor 7 will always be my warm home in this city. Tomorrow, my first day as an intern begins!",
+          "idText": "Kos Nomor 7 akan selalu menjadi rumah hangatku di kota ini. Besok, hari pertama magangku dimulai!"
+        }
+      ],
+      "highlightedVocab": [
+        {
+          "wordId": "oxford-home",
+          "word": "home",
+          "partOfSpeech": "noun",
+          "enDefinition": "The place where one lives permanently, especially as a member of a family or household.",
+          "idMeaning": "rumah tempat tinggal yang nyaman",
+          "contextSentence": "Boarding House Number 7 became my beloved second home."
+        },
+        {
+          "wordId": "oxford-comfortable",
+          "word": "comfortable",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Providing physical ease and relaxation; free from stress or anxiety.",
+          "idMeaning": "nyaman dan menenteramkan",
+          "contextSentence": "Our study room is very comfortable and quiet."
+        },
+        {
+          "wordId": "oxford-independent",
+          "word": "independent",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Free from outside control; not depending on another's authority or financial livelihood.",
+          "idMeaning": "mandiri / berdiri sendiri",
+          "contextSentence": "Living away from family helped me become truly independent."
+        },
+        {
+          "wordId": "oxford-friendship",
+          "word": "friendship",
+          "partOfSpeech": "noun",
+          "enDefinition": "The emotions or conduct of friends; the state of being friends.",
+          "idMeaning": "persahabatan yang tulus",
+          "contextSentence": "Our friendship with Liam and Maya will last a lifetime."
+        },
+        {
+          "wordId": "oxford-grow",
+          "word": "grow",
+          "partOfSpeech": "verb",
+          "enDefinition": "To develop, expand, or increase in size, maturity, or positive capability over time.",
+          "idMeaning": "tumbuh berkembang menjadi dewasa",
+          "contextSentence": "We grow in confidence by facing new challenges every day."
+        },
+        {
+          "wordId": "oxford-proud",
+          "word": "proud",
+          "partOfSpeech": "adjective",
+          "enDefinition": "Feeling deep pleasure or satisfaction as a result of one's own achievements or qualities.",
+          "idMeaning": "bangga atas pencapaian",
+          "contextSentence": "I am proud of how well we adapted to student life."
+        }
+      ],
+      "grammarFocus": {
+        "title": "Present Perfect untuk Merefleksikan Pengalaman Hidup ('I have learned...', 'has grown into...')",
+        "topicId": "present-perfect-experience",
+        "explanation": "Gunakan Present Perfect Tense (have/has + past participle V3) untuk merefleksikan transformasi dan pembelajaran hidup bermakna yang dampaknya terasa hingga saat ini.",
+        "formula": "Subject + have/has + [past participle V3] / Living here has taught me how to be truly independent."
+      },
+      "culturalTip": {
+        "title": "Transisi dari Dunia Kampus ke Dunia Profesional",
+        "content": "Keterampilan mengelola tempat tinggal, menyelesaikan perselisihan secara dewasa, dan menjaga komitmen waktu di rumah kos adalah soft-skills krusial (*transferable skills*) yang sangat dicari oleh perusahaan saat merekrut mahasiswa magang."
+      },
+      "quiz": [
+        {
+          "id": "s5_ep10_q1",
+          "question": "How do Liam and you describe Boarding House Number 7 by the end of the story?",
+          "options": [
+            "A crowded noisy bus stop",
+            "A comfortable second home",
+            "An abandoned cold railway warehouse",
+            "An empty dark hallway"
+          ],
+          "correctIndex": 1,
+          "explanation": "Rumah Kos Nomor 7 telah berkembang menjadi rumah kedua yang nyaman ('a comfortable second home')."
+        },
+        {
+          "id": "s5_ep10_q2",
+          "question": "What exciting letter has arrived on your desk for the next journey?",
+          "options": [
+            "An internship interview invitation from a top downtown tech firm",
+            "A fine for parking on the grass",
+            "A speeding ticket from the railway",
+            "An advertisement for cheap furniture"
+          ],
+          "correctIndex": 0,
+          "explanation": "Surat panggilan wawancara magang dari perusahaan teknologi di pusat kota ('internship interview invitation')."
+        },
+        {
+          "id": "s5_ep10_q3",
+          "question": "Which adjective means 'free from outside control and able to take care of oneself'?",
+          "options": [
+            "Helpless",
+            "Independent",
+            "Careless",
+            "Noisy"
+          ],
+          "correctIndex": 1,
+          "explanation": "'Independent' berarti mandiri dan mampu mengurus diri sendiri secara bertanggung jawab."
+        },
+        {
+          "id": "s5_ep10_q4",
+          "question": "What is the past participle (V3) form of the verb 'grow'?",
+          "options": [
+            "Grew",
+            "Growing",
+            "Grown",
+            "Grows"
+          ],
+          "correctIndex": 2,
+          "explanation": "Bentuk past participle (V3) dari kata kerja tidak beraturan 'grow' adalah 'grown' (grow - grew - grown)."
+        },
+        {
+          "id": "s5_ep10_q5",
+          "question": "Complete the sentence: 'We are very ______ of your hard work and achievements this semester.'",
+          "options": [
+            "proud",
+            "throw",
+            "sweep",
+            "lock"
+          ],
+          "correctIndex": 0,
+          "explanation": "'Proud' (bangga) adalah kata sifat yang tepat melengkapi kalimat apresiasi."
+        }
+      ],
+      "takeaways": [
+        "Mendalami kosakata kemandirian dan kedewasaan: home, comfortable, independent, friendship, grow, proud.",
+        "Menggunakan Present Perfect untuk merefleksikan pencapaian dan kedewasaan hidup.",
+        "Menghubungkan soft-skills kehidupan kos dengan kesiapan memasuki dunia kerja profesional."
+      ],
+      "cliffhanger": "Keesokan paginya dengan setelan kemeja rapi dan map portofolio di tangan, kamu berdiri di depan gedung kaca bertingkat tiga puluh di pusat bisnis: 'Global Innovation Hub'. Pintu otomatis bergeser terbuka menyambutmu. Petualangan Cerita 6: Magang Hari Pertama siap dimulai!"
+    }
+  ]
+}

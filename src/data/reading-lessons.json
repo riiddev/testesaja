@@ -1,0 +1,364 @@
+{
+  "schemaVersion": 1,
+  "passage": {
+    "title": "The Learning Myth That Will Not Die",
+    "source": "HABIT.pdf — Bibliografi pada dokumen: Pashler, McDaniel, Rohrer, dan Bjork (2008); Association for Psychological Science; Structural Learning.",
+    "paragraphs": [
+      "Many people are sure they have a personal learning style. Some call themselves visual learners who need pictures, others auditory learners who prefer to listen, and others hands-on learners who must do. It feels obviously true. Yet after decades of research, this popular idea turns out to be a myth, and the story of how it was tested is a lesson in careful thinking.",
+      "First, it helps to state the claim clearly. Nobody denies that people have preferences. Plenty of us honestly prefer a diagram to a lecture. The real claim, known as the matching idea, is stronger. It says a student will learn better when the teaching method matches their personal style. That is the part the science does not support.",
+      "In 2008, a team of psychologists led by Harold Pashler reviewed the huge pile of studies on learning styles. They found that almost none of the research had been designed properly. Most studies simply measured people's preferences, or checked that a matched group did well. Neither of those actually tests the claim. Simply showing that people have a preference, or that one group happened to score well, leaves the crucial question untouched. Feeling that a lesson suited you is not the same as remembering more from it.",
+      "To test it fairly, they explained, you need a very specific comparison. You must sort learners by their style, then randomly teach some in their matching style and some in a mismatching style, and finally give everyone the same test. Only one result would prove the theory: visual learners doing best with visual lessons and, at the same time, auditory learners doing best with auditory lessons. When researchers ran this proper comparison, the effect vanished. The rare studies that claimed success were tiny and never repeated, and a few even measured satisfaction rather than actual learning.",
+      "This is why the learning-styles idea is called a myth. It is not that everyone is identical, or that we should teach in dull, uniform ways. Real differences between learners do exist, such as how much they already know and how motivated they are. Ignoring those real differences while chasing an imaginary one wastes a teacher's limited time. But sorting students into visual or auditory boxes does not help them learn.",
+      "What does help is well proven, and it works for everyone. Testing yourself, spacing your practice over time, and matching the format to the subject rather than to the learner all boost real learning. The lesson of the learning-styles myth is not really about styles at all. It is about demanding the right kind of evidence before believing a comfortable story. An idea can feel true to almost everyone and still fail the test of careful evidence."
+    ]
+  },
+  "groups": [
+    {
+      "id": "general",
+      "label": "Informasi umum",
+      "english": "General info",
+      "count": 3,
+      "note": "Menangkap gambaran besar teks."
+    },
+    {
+      "id": "specific",
+      "label": "Informasi spesifik",
+      "english": "Specific info",
+      "count": 5,
+      "note": "Menemukan bukti, makna, dan hubungan kata."
+    },
+    {
+      "id": "implied",
+      "label": "Informasi tersirat",
+      "english": "Implied info / HOTS",
+      "count": 4,
+      "note": "Menyimpulkan sesuatu dari petunjuk, bukan menebak."
+    }
+  ],
+  "skills": [
+    {
+      "id": "main-idea",
+      "group": "general",
+      "title": "Main idea / Primary idea",
+      "indonesian": "Ide pokok",
+      "tag": "GAGASAN UTAMA",
+      "definition": "Cari hal yang dibicarakan di seluruh teks, bukan satu detail yang hanya muncul di satu kalimat.",
+      "strategy": [
+        "Perhatikan kata dan gagasan yang berulang di beberapa paragraf.",
+        "Tanyakan: teks ini terutama membahas apa?",
+        "Singkirkan opsi yang terlalu sempit atau menambahkan klaim yang tidak dibahas."
+      ],
+      "questions": [
+        {
+          "prompt": "What is the passage mainly about?",
+          "options": [
+            "Why every student should be taught only through their favourite method.",
+            "Why the popular idea of matching teaching to learning styles lacks strong scientific support, and what evidence-based practices can help instead.",
+            "Why visual materials are always more effective than listening.",
+            "How schools can identify a single learning style for every child."
+          ],
+          "answer": 1,
+          "explanation": "The text explains that preferences exist, but evidence does not support the stronger claim that matching teaching to a personal learning style improves learning. It ends by naming practices with better support.",
+          "evidence": "The passage distinguishes preferences from the matching claim, reviews how it was tested, and names testing yourself, spaced practice, and matching format to subject."
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "group": "general",
+      "title": "Summary / Restatement",
+      "indonesian": "Ringkasan isi",
+      "tag": "RANGKUMAN",
+      "definition": "Ringkasan memuat gagasan penting dari keseluruhan teks dan menghilangkan rincian yang tidak diperlukan.",
+      "strategy": [
+        "Gabungkan gagasan inti dari setiap paragraf.",
+        "Pastikan ringkasan tidak menambahkan sebab-akibat yang belum terbukti.",
+        "Pilih opsi yang seimbang, bukan sekadar kalimat yang terdengar bagus."
+      ],
+      "questions": [
+        {
+          "prompt": "Which option best summarizes the passage?",
+          "options": [
+            "People have different preferences, but research has not supported the claim that matching instruction to a supposed learning style improves learning; better-supported practices include self-testing and spacing practice over time.",
+            "A 2008 study proved that auditory learners cannot learn from diagrams and visual learners cannot learn from lectures.",
+            "Researchers concluded that all students are identical and should receive exactly the same type of lesson.",
+            "The passage recommends choosing lessons based on what feels most comfortable, because satisfaction guarantees memory."
+          ],
+          "answer": 0,
+          "explanation": "Option A captures the distinction between preference and effectiveness, the weakness of evidence for matching, and the recommended practices without adding a claim the text rejects.",
+          "evidence": "The passage says preferences are real but the matching claim is unsupported, then recommends testing yourself and spacing practice."
+        }
+      ]
+    },
+    {
+      "id": "purpose",
+      "group": "general",
+      "title": "Purpose / Author's purpose",
+      "indonesian": "Tujuan penulis",
+      "tag": "MAKSUD TEKS",
+      "definition": "Tujuan penulis terlihat dari apa yang ingin dilakukan teks: menjelaskan, meyakinkan, menghibur, mengkritik, atau membandingkan.",
+      "strategy": [
+        "Separate the topic from the author's purpose: the topic is learning styles; the purpose is to evaluate whether the matching claim is supported.",
+        "Notice how the author acknowledges preferences while questioning the stronger claim.",
+        "Avoid answer options that add absolute conclusions not supported by the passage."
+      ],
+      "questions": [
+        {
+          "prompt": "Why did the author most likely write this passage?",
+          "options": [
+            "To advertise a test that assigns every student a permanent learning style.",
+            "To argue that teachers should stop using diagrams, discussion, and practical activities.",
+            "To explain why a popular learning claim is not supported by strong evidence and encourage careful thinking about learning.",
+            "To prove that learners' preferences do not exist."
+          ],
+          "answer": 2,
+          "explanation": "The author challenges the evidence for matching instruction to personal styles without denying that preferences exist. The goal is to explain the evidence and encourage careful evaluation of claims.",
+          "evidence": "The text acknowledges genuine preferences, explains problems with earlier research, and ends by asking readers to demand the right kind of evidence."
+        }
+      ]
+    },
+    {
+      "id": "detailed-info",
+      "group": "specific",
+      "title": "Detailed information",
+      "indonesian": "Informasi tersurat",
+      "tag": "BUKTI LANGSUNG",
+      "definition": "Jawaban dapat ditemukan secara eksplisit dalam satu bagian teks; tugasmu adalah mencocokkan pertanyaan dengan bukti yang tepat.",
+      "strategy": [
+        "Temukan kata kunci dari pertanyaan.",
+        "Pindai teks untuk nama, waktu, angka, atau tindakan yang disebut.",
+        "Jangan memilih jawaban hanya karena masuk akal di dunia nyata."
+      ],
+      "questions": [
+        {
+          "prompt": "What did the psychologists led by Harold Pashler do in 2008?",
+          "options": [
+            "They tested every possible teaching method on every child in the world.",
+            "They reviewed studies about learning styles and found that almost none had been designed properly to test the matching claim.",
+            "They showed that students remembered more when lessons felt comfortable.",
+            "They concluded that motivation has no relationship to learning."
+          ],
+          "answer": 1,
+          "explanation": "The passage describes a 2008 review of learning-styles research and says most studies were not properly designed to test the matching claim.",
+          "evidence": "In 2008, a team of psychologists led by Harold Pashler reviewed studies on learning styles."
+        }
+      ]
+    },
+    {
+      "id": "vocab-context",
+      "group": "specific",
+      "title": "Synonym / Antonym / Vocabulary in Context",
+      "indonesian": "Makna kata dalam konteks",
+      "tag": "KOSAKATA KONTEKSTUAL",
+      "definition": "Makna kata harus cocok dengan konteks kalimat. Kata yang tampak mirip belum tentu bisa saling menggantikan pada semua situasi.",
+      "strategy": [
+        "Baca kalimat sebelum dan sesudah kata target.",
+        "Untuk synonym, cari makna yang paling dekat; untuk antonym, cari makna yang berlawanan.",
+        "Masukkan pilihan ke kalimat semula untuk memeriksa apakah maknanya tetap masuk akal."
+      ],
+      "questions": [
+        {
+          "prompt": "In the sentence “When researchers ran this proper comparison, the effect vanished,” what does “vanished” mean?",
+          "options": [
+            "Became stronger.",
+            "Was measured for the first time.",
+            "Disappeared or was no longer observed.",
+            "Was repeated many times."
+          ],
+          "answer": 2,
+          "explanation": "The expected effect did not appear in the proper comparison, so “vanished” means disappeared or was no longer observed.",
+          "evidence": "When researchers ran this proper comparison, the effect vanished."
+        }
+      ]
+    },
+    {
+      "id": "referent",
+      "group": "specific",
+      "title": "Referent",
+      "indonesian": "Rujukan kata ganti",
+      "tag": "REFERENSI",
+      "definition": "Kata seperti it, they, this, atau these biasanya merujuk pada benda, orang, gagasan, atau peristiwa yang telah disebut sebelumnya.",
+      "strategy": [
+        "Lihat kalimat yang memuat kata ganti dan kalimat sebelumnya.",
+        "Cocokkan jumlahnya: it/this biasanya tunggal; they/these jamak.",
+        "Ganti kata ganti dengan kandidat rujukan dan baca ulang kalimatnya."
+      ],
+      "questions": [
+        {
+          "prompt": "In “That is the part the science does not support,” what does “That” refer to?",
+          "options": [
+            "The fact that people may prefer diagrams or lectures.",
+            "The claim that a student learns better when teaching matches their personal style.",
+            "The idea that students should take the same test.",
+            "The observation that motivation differs between learners."
+          ],
+          "answer": 1,
+          "explanation": "“That” points to the immediately preceding claim that students learn better when instruction matches their personal learning style.",
+          "evidence": "The real claim, known as the matching idea, is that a student will learn better when the teaching method matches their personal style."
+        }
+      ]
+    },
+    {
+      "id": "paraphrase",
+      "group": "specific",
+      "title": "Paraphrase",
+      "indonesian": "Pernyataan ulang",
+      "tag": "MAKNA TETAP",
+      "definition": "Paraphrase menyampaikan gagasan yang sama dengan susunan kata berbeda. Detail penting, hubungan sebab-akibat, dan tingkat kepastian harus tetap sama.",
+      "strategy": [
+        "Identifikasi inti kalimat sebelum melihat opsi.",
+        "Cari sinonim dan perubahan struktur, bukan tambahan informasi baru.",
+        "Waspadai kata absolut seperti always, never, atau proves."
+      ],
+      "questions": [
+        {
+          "prompt": "Which sentence best paraphrases “Feeling that a lesson suited you is not the same as remembering more from it”?",
+          "options": [
+            "Enjoying or preferring a lesson does not necessarily mean that you learned or remembered more.",
+            "A lesson is effective only when it is enjoyable.",
+            "Students always remember lessons that match their preferences.",
+            "Memory cannot be measured through tests."
+          ],
+          "answer": 0,
+          "explanation": "Option A preserves the meaning: feeling comfortable with a lesson is different from evidence that learning or memory improved.",
+          "evidence": "The passage contrasts feeling that a lesson suited you with actually remembering more from it."
+        }
+      ]
+    },
+    {
+      "id": "fact-opinion",
+      "group": "specific",
+      "title": "Fact vs. Opinion",
+      "indonesian": "Fakta dan opini",
+      "tag": "KLAIM YANG BISA DIUJI",
+      "definition": "Fakta dapat diperiksa melalui data atau sumber; opini berisi penilaian, keyakinan, atau bahasa evaluatif yang tidak hanya ditentukan lewat verifikasi.",
+      "strategy": [
+        "Cari informasi yang bisa dicek, seperti tanggal, tindakan, atau hasil survei.",
+        "Tandai kata evaluatif seperti magical, best, terrible, atau wonderful.",
+        "Ingat: sebuah opini dapat didukung alasan, tetapi tetap merupakan penilaian."
+      ],
+      "questions": [
+        {
+          "prompt": "Which statement is presented as a research-supported recommendation in the passage?",
+          "options": [
+            "Every learner should be placed permanently in a visual, auditory, or hands-on category.",
+            "A comfortable lesson always produces better long-term memory.",
+            "Testing yourself and spacing practice over time can support real learning.",
+            "All learner preferences should be ignored by teachers."
+          ],
+          "answer": 2,
+          "explanation": "The final paragraph explicitly names self-testing and spaced practice as practices that support learning. The other statements are not supported by the text.",
+          "evidence": "Testing yourself and spacing your practice over time are named as practices that boost real learning."
+        }
+      ]
+    },
+    {
+      "id": "inference",
+      "group": "implied",
+      "title": "Inference",
+      "indonesian": "Kesimpulan tersirat",
+      "tag": "PETUNJUK → KESIMPULAN",
+      "definition": "Inferensi adalah kesimpulan yang tidak ditulis secara langsung tetapi didukung oleh beberapa petunjuk dalam bacaan.",
+      "strategy": [
+        "Kumpulkan dua atau lebih petunjuk dari teks.",
+        "Pilih simpulan yang masuk akal dan tetap dekat dengan bukti.",
+        "Jangan menganggap korelasi atau perasaan sebagai bukti sebab-akibat."
+      ],
+      "questions": [
+        {
+          "prompt": "What can reasonably be inferred about preference and effectiveness?",
+          "options": [
+            "If a learner likes a method, it must produce the best results for them.",
+            "A learner's comfort with a method is not enough to establish that the method improves learning.",
+            "Preferences never affect how students feel during a lesson.",
+            "Teachers can determine effectiveness without comparing learning results."
+          ],
+          "answer": 1,
+          "explanation": "The passage says preference and satisfaction do not answer whether students remember more. Effectiveness therefore needs suitable evidence rather than assumptions based on comfort.",
+          "evidence": "The author says that measuring preferences or satisfaction does not answer whether students remember more from a lesson."
+        }
+      ]
+    },
+    {
+      "id": "assumption",
+      "group": "implied",
+      "title": "Assumption / Hypothesis",
+      "indonesian": "Asumsi atau hipotesis",
+      "tag": "DASAR PENALARAN",
+      "definition": "Asumsi adalah hal yang dianggap benar sebagai dasar tindakan; hipotesis adalah dugaan yang masih perlu diuji dengan data.",
+      "strategy": [
+        "Perhatikan tindakan atau rencana yang dibuat berdasarkan suatu harapan.",
+        "Tentukan apa yang mungkin dianggap akan tetap berlaku.",
+        "Bedakan dugaan yang wajar dari fakta yang benar-benar sudah dibuktikan."
+      ],
+      "questions": [
+        {
+          "prompt": "What must a fair test of the matching idea include, according to the passage?",
+          "options": [
+            "Letting each learner choose the most enjoyable lesson and asking whether they liked it.",
+            "Testing only students who already agree with the learning-styles idea.",
+            "Comparing learners assigned to matching and mismatching methods, then giving everyone the same test.",
+            "Measuring preferences without checking learning outcomes."
+          ],
+          "answer": 2,
+          "explanation": "The passage sets out a specific comparison: assign matching and mismatching methods randomly and give everyone the same test. Preference surveys alone do not test the claim.",
+          "evidence": "Learners should be randomly taught in matching or mismatching styles and then given the same test."
+        }
+      ]
+    },
+    {
+      "id": "tone-attitude",
+      "group": "implied",
+      "title": "Tone / Author's attitude",
+      "indonesian": "Nada dan sikap penulis",
+      "tag": "SIKAP PENULIS",
+      "definition": "Tone terlihat dari pilihan kata dan cara penulis menilai topik: netral, optimistis, kritis, sarkastik, khawatir, atau seimbang.",
+      "strategy": [
+        "Perhatikan kata evaluatif dan kalimat penutup.",
+        "Cari apakah penulis hanya memuji, hanya mengkritik, atau mengakui kelebihan dan batasan.",
+        "Jangan menyimpulkan nada dari satu kata saja."
+      ],
+      "questions": [
+        {
+          "prompt": "Which phrase best describes the author's tone toward the learning-styles claim?",
+          "options": [
+            "Unquestioningly enthusiastic.",
+            "Cautious and evidence-focused.",
+            "Angry at students who have preferences.",
+            "Entirely humorous and unserious."
+          ],
+          "answer": 1,
+          "explanation": "The author questions the evidence for the matching claim while acknowledging that real preferences and learner differences exist.",
+          "evidence": "The author acknowledges preferences and differences while challenging the unsupported matching claim."
+        }
+      ]
+    },
+    {
+      "id": "coherence-analogy",
+      "group": "implied",
+      "title": "Coherence / Analogy",
+      "indonesian": "Keterkaitan dan analogi",
+      "tag": "HUBUNGAN GAGASAN",
+      "definition": "Coherence menilai bagaimana gagasan saling terhubung. Analogi menjelaskan suatu hal lewat perbandingan dengan hal lain yang punya fungsi atau pola serupa.",
+      "strategy": [
+        "Track each paragraph's role: introduce the claim, examine evidence, describe a fair test, and draw a conclusion.",
+        "Notice linking words such as yet, however, and but to understand relationships between ideas.",
+        "Choose the option that explains how the parts connect, not one that repeats a single detail."
+      ],
+      "questions": [
+        {
+          "prompt": "How does the final paragraph develop the passage's argument?",
+          "options": [
+            "It changes the subject to an unrelated theory.",
+            "It repeats the claim that comfort is the best measure of learning.",
+            "It offers better-supported learning practices and draws a broader lesson about requiring sound evidence.",
+            "It argues that researchers should stop studying learning."
+          ],
+          "answer": 2,
+          "explanation": "The final paragraph first provides better-supported practices, then draws a wider lesson: a claim that feels true still needs good evidence.",
+          "evidence": "The final paragraph recommends testing, spaced practice, and matching format to subject, then calls for the right kind of evidence."
+        }
+      ]
+    }
+  ]
+}

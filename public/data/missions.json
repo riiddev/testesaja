@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 1,
+  "world": {
+    "id": "first-steps-island",
+    "title": "First Steps Island",
+    "subtitle": "Bahasa tumbuh dari percakapan kecil.",
+    "level": "A1–A2",
+    "description": "Mulai dari lingkungan yang dekat: kenali orang baru, cari jalan di kota, lalu berinteraksi di café."
+  },
+  "missions": [
+    {
+      "id": "meet-your-new-neighbors",
+      "number": 1,
+      "title": "Meet Your New Neighbors",
+      "location": "Neighbor Lane",
+      "level": "A1",
+      "estimatedMinutes": 12,
+      "xp": 40,
+      "prerequisiteId": null,
+      "summary": "Hari pertama di lingkungan baru. Dua tetangga menyapamu; sekarang giliranmu memperkenalkan diri dan mencari tahu sedikit tentang mereka.",
+      "objective": "Perkenalkan diri, pahami sapaan sederhana, dan sampaikan informasi singkat tentang dirimu.",
+      "wordRefs": [
+        "a1-hello",
+        "a1-neighbor",
+        "batch-afternoon-noun"
+      ],
+      "languageTools": [
+        "Greetings",
+        "Personal introductions",
+        "Articles: a / an"
+      ],
+      "skills": [
+        "vocabulary",
+        "listening",
+        "reading",
+        "grammar",
+        "speaking",
+        "writing"
+      ],
+      "contentOrigin": "adventure-authored",
+      "steps": [
+        {
+          "id": "word-neighbor",
+          "type": "choice",
+          "skill": "vocabulary",
+          "label": "NOTICE · Vocabulary",
+          "prompt": "Which word describes someone who lives next door to you?",
+          "options": [
+            "A neighbor",
+            "A passenger",
+            "A customer"
+          ],
+          "answer": 0,
+          "explanation": "A neighbor is someone who lives near you, often in the house next door."
+        },
+        {
+          "id": "listen-greeting",
+          "type": "listen",
+          "skill": "listening",
+          "label": "LISTEN · A first greeting",
+          "audioText": "Hello! I'm Maya. I live next door. Nice to meet you. Nice to meet you too.",
+          "prompt": "Who is Maya in this conversation?",
+          "options": [
+            "A new neighbor",
+            "A café owner",
+            "A tour guide"
+          ],
+          "answer": 0,
+          "explanation": "Maya says that she lives next door, so she is a neighbor."
+        },
+        {
+          "id": "read-introduction",
+          "type": "read",
+          "skill": "reading",
+          "label": "READ · A short introduction",
+          "passage": "Hello, my name is Rafi. I live in the blue house. I am new here. Nice to meet you!",
+          "prompt": "What does Rafi tell the other person?",
+          "options": [
+            "His name and where he lives",
+            "The price of his house",
+            "The way to the café"
+          ],
+          "answer": 0,
+          "explanation": "Rafi introduces himself and says where he lives."
+        },
+        {
+          "id": "grammar-article",
+          "type": "choice",
+          "skill": "grammar",
+          "label": "NOTICE · Language tool",
+          "prompt": "Complete the sentence: “I live in ___ small house.”",
+          "options": [
+            "a",
+            "an",
+            "the"
+          ],
+          "answer": 0,
+          "explanation": "Use “a” before a singular countable noun that begins with a consonant sound: a small house."
+        },
+        {
+          "id": "speak-introduction",
+          "type": "speak",
+          "skill": "speaking",
+          "label": "SPEAK · Your turn",
+          "prompt": "Say two or three sentences to introduce yourself. Include your name and one detail about where you live or what you like.",
+          "checklist": [
+            "I said my name.",
+            "I added one detail about myself.",
+            "I tried to say the sentences aloud."
+          ],
+          "method": "self-attested"
+        },
+        {
+          "id": "write-introduction",
+          "type": "write",
+          "skill": "writing",
+          "label": "WRITE · Leave a note",
+          "prompt": "Write a short introduction for a new neighbor. Aim for two or three simple sentences.",
+          "placeholder": "Hello, my name is ... I live ...",
+          "minWords": 8,
+          "checklist": [
+            "I included my name.",
+            "My sentences are understandable.",
+            "I checked capital letters and full stops."
+          ],
+          "method": "self-reviewed"
+        }
+      ]
+    },
+    {
+      "id": "a-day-around-town",
+      "number": 2,
+      "title": "A Day Around Town",
+      "location": "Town Square",
+      "level": "A1–A2",
+      "estimatedMinutes": 15,
+      "xp": 55,
+      "prerequisiteId": "meet-your-new-neighbors",
+      "summary": "Kamu punya beberapa urusan di kota kecil ini, tetapi belum mengenal jalannya. Pahami petunjuk arah dan bantu seorang pengunjung menemukan tempat tujuan.",
+      "objective": "Pahami petunjuk arah sederhana dan jelaskan letak tempat menggunakan ungkapan yang tepat.",
+      "wordRefs": [
+        "batch-across-preposition",
+        "batch-corner-noun",
+        "batch-bank-noun"
+      ],
+      "languageTools": [
+        "Places around town",
+        "Prepositions of place",
+        "Imperatives for directions"
+      ],
+      "skills": [
+        "vocabulary",
+        "listening",
+        "reading",
+        "grammar",
+        "speaking",
+        "writing"
+      ],
+      "contentOrigin": "adventure-authored",
+      "steps": [
+        {
+          "id": "word-across",
+          "type": "choice",
+          "skill": "vocabulary",
+          "label": "NOTICE · Vocabulary",
+          "prompt": "The library is across from the bank. Where is the library?",
+          "options": [
+            "On the opposite side of the bank",
+            "Inside the bank",
+            "Behind the bank"
+          ],
+          "answer": 0,
+          "explanation": "“Across from” means on the opposite side."
+        },
+        {
+          "id": "listen-directions",
+          "type": "listen",
+          "skill": "listening",
+          "label": "LISTEN · Follow the directions",
+          "audioText": "Go straight along this street. Turn left at the corner. The town square is next to the bank.",
+          "prompt": "Where should you turn?",
+          "options": [
+            "Left at the corner",
+            "Right at the bank",
+            "Back at the street"
+          ],
+          "answer": 0,
+          "explanation": "The directions say: turn left at the corner."
+        },
+        {
+          "id": "read-route",
+          "type": "read",
+          "skill": "reading",
+          "label": "READ · A route note",
+          "passage": "Start at the bank. Walk straight for one block. Turn left at the corner. The library is across from the park.",
+          "prompt": "Where is the library?",
+          "options": [
+            "Across from the park",
+            "Next to the bank",
+            "Behind the corner"
+          ],
+          "answer": 0,
+          "explanation": "The final sentence places the library across from the park."
+        },
+        {
+          "id": "grammar-directions",
+          "type": "choice",
+          "skill": "grammar",
+          "label": "NOTICE · Language tool",
+          "prompt": "Choose the clearest direction.",
+          "options": [
+            "Turn left at the corner.",
+            "Turns left at the corner.",
+            "Turning left at the corner."
+          ],
+          "answer": 0,
+          "explanation": "Use the base verb in an imperative: “Turn left …”"
+        },
+        {
+          "id": "speak-directions",
+          "type": "speak",
+          "skill": "speaking",
+          "label": "SPEAK · Guide a visitor",
+          "prompt": "Imagine a visitor is standing at the bank. Tell them how to reach the town square. Use at least two direction phrases.",
+          "checklist": [
+            "I used a direction phrase such as “go straight”.",
+            "I included a turn or a nearby landmark.",
+            "I tried to say the directions aloud."
+          ],
+          "method": "self-attested"
+        },
+        {
+          "id": "write-directions",
+          "type": "write",
+          "skill": "writing",
+          "label": "WRITE · A simple route",
+          "prompt": "Write two or three short instructions that help someone find the library from the bank.",
+          "placeholder": "Go straight ... Turn ... The library is ...",
+          "minWords": 10,
+          "checklist": [
+            "My instructions are in a useful order.",
+            "I used a direction or place phrase.",
+            "Another person could follow the route."
+          ],
+          "method": "self-reviewed"
+        }
+      ]
+    },
+    {
+      "id": "a-day-at-the-cafe",
+      "number": 3,
+      "title": "A Day at the Café",
+      "location": "Little Corner Café",
+      "level": "A1–A2",
+      "estimatedMinutes": 15,
+      "xp": 55,
+      "prerequisiteId": "a-day-around-town",
+      "summary": "Setelah berkeliling kota, kamu berhenti di sebuah café kecil. Lihat menu, dengarkan pesanan, lalu sampaikan pesananmu dengan jelas dan sopan.",
+      "objective": "Pahami menu dan percakapan singkat, lalu pesan makanan atau minuman dengan ungkapan yang sopan.",
+      "wordRefs": [
+        "batch-cafe-noun",
+        "batch-coffee-noun",
+        "batch-bread-noun",
+        "batch-drink-verb"
+      ],
+      "languageTools": [
+        "Food and drink vocabulary",
+        "Polite requests",
+        "Articles: a / an"
+      ],
+      "skills": [
+        "vocabulary",
+        "listening",
+        "reading",
+        "grammar",
+        "speaking",
+        "writing"
+      ],
+      "contentOrigin": "adventure-authored",
+      "steps": [
+        {
+          "id": "word-cafe",
+          "type": "choice",
+          "skill": "vocabulary",
+          "label": "NOTICE · Vocabulary",
+          "prompt": "Which place is a café?",
+          "options": [
+            "A place where people buy drinks and light meals",
+            "A place where trains stop",
+            "A place where people borrow books"
+          ],
+          "answer": 0,
+          "explanation": "A café is a place that serves drinks and often light meals."
+        },
+        {
+          "id": "read-menu",
+          "type": "read",
+          "skill": "reading",
+          "label": "READ · Today's menu",
+          "passage": "LITTLE CORNER CAFÉ\\nCoffee — $3\\nTea — $2\\nBread — $2\\nSandwich — $5\\n\\nToday's note: The café is open until 6 p.m.",
+          "prompt": "You have $5. Which choice can you order from this menu?",
+          "options": [
+            "One sandwich",
+            "Two sandwiches",
+            "One coffee and two sandwiches"
+          ],
+          "answer": 0,
+          "explanation": "A sandwich costs $5, so one sandwich fits the budget exactly."
+        },
+        {
+          "id": "listen-order",
+          "type": "listen",
+          "skill": "listening",
+          "label": "LISTEN · At the counter",
+          "audioText": "Good afternoon. What would you like? I'd like a coffee and a sandwich, please. Certainly. Anything else?",
+          "prompt": "What does the customer order?",
+          "options": [
+            "A coffee and a sandwich",
+            "Tea and bread",
+            "Two coffees"
+          ],
+          "answer": 0,
+          "explanation": "The customer asks for a coffee and a sandwich."
+        },
+        {
+          "id": "grammar-request",
+          "type": "choice",
+          "skill": "grammar",
+          "label": "NOTICE · Language tool",
+          "prompt": "Complete the polite request: “Could I have ___ sandwich, please?”",
+          "options": [
+            "a",
+            "an",
+            "some"
+          ],
+          "answer": 0,
+          "explanation": "“Sandwich” is a singular countable noun and begins with a consonant sound, so use “a”."
+        },
+        {
+          "id": "speak-order",
+          "type": "speak",
+          "skill": "speaking",
+          "label": "SPEAK · Place your order",
+          "prompt": "You are at the café counter. Say what you would like to order and finish with a polite word.",
+          "checklist": [
+            "I named a food or drink.",
+            "I used a polite request.",
+            "I tried to say the order aloud."
+          ],
+          "method": "self-attested"
+        },
+        {
+          "id": "write-order",
+          "type": "write",
+          "skill": "writing",
+          "label": "WRITE · An order note",
+          "prompt": "Write a short order note for the café. Include one drink, one food item, and a polite request.",
+          "placeholder": "I'd like ... and ..., please.",
+          "minWords": 7,
+          "checklist": [
+            "I included a drink and a food item.",
+            "My request is easy to understand.",
+            "I used “please” or another polite expression."
+          ],
+          "method": "self-reviewed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 1,
+  "title": "Everyday Stories",
+  "note": "Cerita pendek orisinal untuk latihan membaca, listening opsional, dan pemahaman konteks. Level adalah panduan editorial, bukan hasil sertifikasi.",
+  "stories": [
+    {
+      "id": "a-helpful-neighbor",
+      "level": "A1",
+      "title": "A Helpful Neighbor",
+      "subtitle": "A small favour can start a friendship.",
+      "estimatedMinutes": 5,
+      "paragraphs": [
+        "On Saturday morning, Rina wants to clean her small garden. She usually works alone, but her new neighbor, Maya, comes outside and offers to help.",
+        "Rina needs a small watering can. Maya smiles and says, “You can borrow mine.” They water the plants together and move a few pots into the sunshine.",
+        "When they finish, Rina thanks Maya and invites her for tea. They talk for a while. Rina is happy because she has made a new friend."
+      ],
+      "focusWords": [
+        {
+          "id": "a1-neighbor",
+          "word": "neighbor",
+          "meaning": "tetangga"
+        },
+        {
+          "id": "a1-usually",
+          "word": "usually",
+          "meaning": "biasanya"
+        },
+        {
+          "id": "a1-borrow",
+          "word": "borrow",
+          "meaning": "meminjam"
+        }
+      ],
+      "questions": [
+        {
+          "id": "hn-q1",
+          "prompt": "Why does Rina want to meet Maya?",
+          "options": [
+            "She needs help in her garden.",
+            "She wants to buy a new house.",
+            "She is looking for a bus stop."
+          ],
+          "answer": 0,
+          "explanation": "Rina is cleaning her garden, and Maya offers to help."
+        },
+        {
+          "id": "hn-q2",
+          "prompt": "What does Rina borrow?",
+          "options": [
+            "A pair of shoes",
+            "A watering can",
+            "A cup of tea"
+          ],
+          "answer": 1,
+          "explanation": "Maya lends Rina a small watering can."
+        },
+        {
+          "id": "hn-q3",
+          "prompt": "What does “usually” tell us about Rina?",
+          "options": [
+            "Something she does regularly",
+            "Something she did only once",
+            "Something she will never do"
+          ],
+          "answer": 0,
+          "explanation": "Usually describes a habit or something that happens on most occasions."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "at-the-cafe",
+        "listeningId": "missed-the-bus",
+        "pronunciationId": "polite-help",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction"
+      }
+    },
+    {
+      "id": "the-wrong-turn",
+      "level": "A2",
+      "title": "The Wrong Turn",
+      "subtitle": "Finding a new route through town.",
+      "estimatedMinutes": 6,
+      "paragraphs": [
+        "Arman is walking to a new bookshop near the station. He has never visited it before, so he checks the address on his phone before leaving home.",
+        "At the first corner, he notices a small sign. He decides to follow the road across the park, but the path is closed for repairs. Instead of turning back, he checks the map and chooses another street.",
+        "The second route is a little longer, but it is easy to follow. Arman arrives ten minutes later than planned. He writes down the correct route so he can find the bookshop more quickly next time."
+      ],
+      "focusWords": [
+        {
+          "id": "batch-corner-noun",
+          "word": "corner",
+          "meaning": "sudut atau tikungan"
+        },
+        {
+          "id": "a2-notice",
+          "word": "notice",
+          "meaning": "memperhatikan atau menyadari"
+        },
+        {
+          "id": "batch-decide-verb",
+          "word": "decide",
+          "meaning": "memutuskan"
+        },
+        {
+          "id": "a1-arrive",
+          "word": "arrive",
+          "meaning": "tiba"
+        }
+      ],
+      "questions": [
+        {
+          "id": "wt-q1",
+          "prompt": "Why does Arman check his phone before leaving?",
+          "options": [
+            "He wants to call the bookshop.",
+            "He does not know the address by memory.",
+            "He needs to repair the road."
+          ],
+          "answer": 1,
+          "explanation": "The bookshop is new to Arman, so he checks its address."
+        },
+        {
+          "id": "wt-q2",
+          "prompt": "Why does Arman choose another street?",
+          "options": [
+            "The path through the park is closed.",
+            "The bookshop has moved to another town.",
+            "He wants to visit the station again."
+          ],
+          "answer": 0,
+          "explanation": "The path is closed for repairs, so he uses another route."
+        },
+        {
+          "id": "wt-q3",
+          "prompt": "What does Arman do after arriving?",
+          "options": [
+            "He forgets the route.",
+            "He writes down the route for next time.",
+            "He closes the bookshop."
+          ],
+          "answer": 1,
+          "explanation": "He records the correct route so the next visit will be easier."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "finding-the-bus-station",
+        "listeningId": "booking-a-study-room",
+        "pronunciationId": "book-a-room",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "weekend-story"
+      }
+    },
+    {
+      "id": "a-better-place-to-study",
+      "level": "B1",
+      "title": "A Better Place to Study",
+      "subtitle": "A group of students improves a shared space.",
+      "estimatedMinutes": 7,
+      "paragraphs": [
+        "Students at a community center wanted a quiet place to prepare for their exams. The old room was often noisy, and the books they needed were not always available. Some students thought about studying at home instead, but not everyone had a suitable space.",
+        "Rather than simply complaining, they asked the center manager to explain the schedule for the other rooms. They shared ideas, arranged a weekly timetable, and put a noticeboard near the entrance so everyone could see when a room was free.",
+        "The new system did not solve every problem. Students still needed to book a room in advance and keep it tidy. However, more people could plan their study time, and the shared space became a little more useful for the whole community."
+      ],
+      "focusWords": [
+        {
+          "id": "a2-available",
+          "word": "available",
+          "meaning": "tersedia atau dapat digunakan"
+        },
+        {
+          "id": "a2-prepare",
+          "word": "prepare",
+          "meaning": "mempersiapkan"
+        },
+        {
+          "id": "batch-explain-verb",
+          "word": "explain",
+          "meaning": "menjelaskan"
+        },
+        {
+          "id": "a1-improve",
+          "word": "improve",
+          "meaning": "menjadi lebih baik atau memperbaiki"
+        }
+      ],
+      "questions": [
+        {
+          "id": "bs-q1",
+          "prompt": "What was the main problem with the old study room?",
+          "options": [
+            "It was often noisy and resources were not always available.",
+            "It was too far from the community center.",
+            "Students were not allowed to use books."
+          ],
+          "answer": 0,
+          "explanation": "The passage explains that the room was noisy and needed books were not always available."
+        },
+        {
+          "id": "bs-q2",
+          "prompt": "How did the students respond to the problem?",
+          "options": [
+            "They stopped studying for their exams.",
+            "They organized a timetable and shared room availability.",
+            "They asked the center to close all other rooms."
+          ],
+          "answer": 1,
+          "explanation": "They worked with the manager, created a timetable, and added a noticeboard."
+        },
+        {
+          "id": "bs-q3",
+          "prompt": "What is the main idea of the story?",
+          "options": [
+            "A shared problem can improve when people organize and cooperate.",
+            "A study room should never have any rules.",
+            "Studying at home is always better than studying together."
+          ],
+          "answer": 0,
+          "explanation": "The students improved a shared resource by communicating and organizing their time."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "planning-a-study-session",
+        "listeningId": "changing-an-appointment",
+        "pronunciationId": "reschedule-appointment",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
+    },
+    {
+      "id": "the-library-after-hours",
+      "level": "B2",
+      "title": "The Library After Hours",
+      "subtitle": "A successful change still needs careful evaluation.",
+      "estimatedMinutes": 8,
+      "paragraphs": [
+        "The public library in Westbridge had always closed at six, even though many residents were still traveling home from work. After a local survey revealed substantial demand for later access, the council approved a three-month trial in which the library would remain open until eight on Tuesdays and Thursdays.",
+        "During the first few weeks, attendance rose sharply. However, the figures were more complicated than the headline suggested: the number of visitors increased, whereas the number of books borrowed changed very little. Many people were using the extra time to study, attend short workshops, or ask staff for help with online forms. The library had become more than a place to collect books, although its original purpose remained important.",
+        "Not everyone welcomed the change. A few staff members worried that evening activities might undermine the quiet atmosphere that regular readers valued. The librarian acknowledged that the concern was reasonable. Rather than canceling the program or ignoring the criticism, the team introduced separate zones: silent study areas stayed open, while group activities moved to a meeting room.",
+        "At the end of the trial, the council did not treat higher attendance as proof that every decision had been successful. Staff reviewed visitor feedback, borrowing figures, and the extra cost of evening shifts. They recommended keeping the new hours but adjusting the workshop schedule. The experience showed that a substantial change is not necessarily a complete solution; its value depends on whether an organization learns from the consequences and listens to the people it serves."
+      ],
+      "focusWords": [
+        {
+          "id": "b2-substantial",
+          "word": "substantial",
+          "meaning": "cukup besar atau penting dalam jumlah, nilai, atau pengaruh"
+        },
+        {
+          "id": "b2-whereas",
+          "word": "whereas",
+          "meaning": "sedangkan; menghubungkan dua fakta yang berbeda atau berlawanan"
+        },
+        {
+          "id": "b2-undermine",
+          "word": "undermine",
+          "meaning": "melemahkan secara bertahap, sering kali kepercayaan, otoritas, atau argumen"
+        }
+      ],
+      "questions": [
+        {
+          "id": "la-q1",
+          "prompt": "What did the early attendance figures fail to show on their own?",
+          "options": [
+            "Whether staff members had received training.",
+            "Whether extra visits also meant more books were borrowed.",
+            "Whether residents knew the library existed."
+          ],
+          "answer": 1,
+          "explanation": "Attendance increased, whereas the number of books borrowed changed very little. Visitor numbers alone did not show how people were using the service."
+        },
+        {
+          "id": "la-q2",
+          "prompt": "Why did the librarian introduce separate zones?",
+          "options": [
+            "To respond to concerns without abandoning the trial.",
+            "To prevent visitors from borrowing books.",
+            "To move all readers to evening workshops."
+          ],
+          "answer": 0,
+          "explanation": "The librarian accepted that the concern about noise was reasonable, then separated quiet study from group activities instead of canceling the program."
+        },
+        {
+          "id": "la-q3",
+          "prompt": "Which conclusion best reflects the writer's view?",
+          "options": [
+            "Visitor numbers are the only useful measure of success.",
+            "Libraries should avoid all changes to established services.",
+            "A useful change must be evaluated and adjusted in response to people's needs."
+          ],
+          "answer": 2,
+          "explanation": "The council reviewed several kinds of evidence and adjusted the schedule rather than treating higher attendance as proof that everything was working."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "revising-a-project-proposal",
+        "listeningId": "reviewing-a-study-proposal",
+        "pronunciationId": "proposal-evidence",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
+    },
+    {
+      "id": "a-rainy-morning",
+      "level": "A1",
+      "title": "A Rainy Morning",
+      "subtitle": "A small change makes the journey easier.",
+      "estimatedMinutes": 5,
+      "paragraphs": [
+        "On Monday morning, Sari leaves home earlier than usual. Dark clouds are above the town, and she thinks it may rain before school starts. She puts a small umbrella in her bag and walks to the bus stop.",
+        "At the stop, her neighbor Bima is waiting too. The first bus is full, so they wait for another one. Bima asks Sari about her English homework, and they talk until the bus arrives. The rain begins just as they get on. Sari is glad that she brought her umbrella, but she is even happier to have someone to talk to."
+      ],
+      "focusWords": [
+        {
+          "id": "a1-usually",
+          "word": "usually",
+          "meaning": "biasanya"
+        },
+        {
+          "id": "a1-neighbor",
+          "word": "neighbor",
+          "meaning": "tetangga"
+        },
+        {
+          "id": "a1-improve",
+          "word": "improve",
+          "meaning": "menjadi lebih baik"
+        }
+      ],
+      "questions": [
+        {
+          "id": "rain-q1",
+          "prompt": "Why does Sari leave home earlier than usual?",
+          "options": [
+            "She expects that it may rain.",
+            "She wants to buy a new bag.",
+            "She has forgotten her homework."
+          ],
+          "answer": 0,
+          "explanation": "Dark clouds make Sari think that rain may arrive before school starts."
+        },
+        {
+          "id": "rain-q2",
+          "prompt": "Why do Sari and Bima wait for another bus?",
+          "options": [
+            "The first bus is full.",
+            "The bus stop is closed.",
+            "They want to walk to school."
+          ],
+          "answer": 0,
+          "explanation": "The passage states that the first bus is full."
+        },
+        {
+          "id": "rain-q3",
+          "prompt": "What is Sari pleased about besides bringing her umbrella?",
+          "options": [
+            "She meets someone to talk to.",
+            "She finds a new school.",
+            "She finishes her homework on the bus."
+          ],
+          "answer": 0,
+          "explanation": "Sari enjoys having someone to talk to while they wait."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "at-the-cafe",
+        "listeningId": "missed-the-bus",
+        "pronunciationId": "polite-help",
+        "speakingPromptId": "first-introduction",
+        "writingPromptId": "short-introduction",
+        "storyId": "a-helpful-neighbor"
+      }
+    },
+    {
+      "id": "a-change-of-plan",
+      "level": "A2",
+      "title": "A Change of Plan",
+      "subtitle": "A short delay leads to a better decision.",
+      "estimatedMinutes": 6,
+      "paragraphs": [
+        "Rafi and Nisa plan to study at the public library after lunch. When they arrive, they notice a sign saying that the quiet room is not available until three. Nisa suggests waiting in the garden, but the weather is getting worse.",
+        "Instead, Rafi checks the library website and finds a smaller room on the second floor. It is available now, although they need to book it at the front desk. They decide to use the room for an hour and prepare their presentation there. The change takes only a few minutes, and they avoid wasting the afternoon."
+      ],
+      "focusWords": [
+        {
+          "id": "a2-notice",
+          "word": "notice",
+          "meaning": "menyadari atau memperhatikan"
+        },
+        {
+          "id": "a2-avoid",
+          "word": "avoid",
+          "meaning": "menghindari"
+        },
+        {
+          "id": "a2-available",
+          "word": "available",
+          "meaning": "tersedia"
+        }
+      ],
+      "questions": [
+        {
+          "id": "plan-q1",
+          "prompt": "What problem do Rafi and Nisa discover?",
+          "options": [
+            "The quiet room is not available until three.",
+            "The library has closed for the day.",
+            "They have forgotten their presentation."
+          ],
+          "answer": 0,
+          "explanation": "The sign says the quiet room will only be available from three."
+        },
+        {
+          "id": "plan-q2",
+          "prompt": "How do they find another place to study?",
+          "options": [
+            "Rafi checks the library website.",
+            "Nisa calls a taxi.",
+            "They ask another student to leave."
+          ],
+          "answer": 0,
+          "explanation": "Rafi checks the website and finds a smaller room on the second floor."
+        },
+        {
+          "id": "plan-q3",
+          "prompt": "What does the final sentence suggest?",
+          "options": [
+            "They solve the problem without losing much time.",
+            "They decide not to study that day.",
+            "They must wait until the next morning."
+          ],
+          "answer": 0,
+          "explanation": "The alternative room allows them to continue their plan and avoid wasting the afternoon."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "finding-the-bus-station",
+        "listeningId": "booking-a-study-room",
+        "pronunciationId": "book-a-room",
+        "speakingPromptId": "ask-directions",
+        "writingPromptId": "weekend-story"
+      }
+    },
+    {
+      "id": "a-shared-workspace",
+      "level": "B1",
+      "title": "A Shared Workspace",
+      "subtitle": "A small group uses evidence to improve a common room.",
+      "estimatedMinutes": 7,
+      "paragraphs": [
+        "Students at a community centre often struggled to find a quiet place to work. The centre had a shared room, but it was rarely organised. Some visitors used it for group conversations, whereas others needed a quiet desk to prepare for examinations.",
+        "A group of volunteers collected feedback for two weeks. Their notes showed that most people wanted the room to remain flexible, but they also needed clear quiet hours. The volunteers contributed a simple schedule and suggested that the centre test it for one month.",
+        "The manager agreed to the trial. At the end of the month, the centre compared attendance records with the original feedback. The new routine did not solve every problem, but the evidence helped the team decide what to improve next."
+      ],
+      "focusWords": [
+        {
+          "id": "b1-reliable",
+          "word": "reliable",
+          "meaning": "dapat diandalkan"
+        },
+        {
+          "id": "b1-contribute",
+          "word": "contribute",
+          "meaning": "menyumbangkan atau berkontribusi"
+        },
+        {
+          "id": "b1-evidence",
+          "word": "evidence",
+          "meaning": "bukti"
+        }
+      ],
+      "questions": [
+        {
+          "id": "workspace-q1",
+          "prompt": "What conflict existed in the shared room?",
+          "options": [
+            "Some people wanted conversation while others needed quiet.",
+            "Visitors wanted the centre to close permanently.",
+            "The room had too many computers."
+          ],
+          "answer": 0,
+          "explanation": "The room served visitors with different needs: group conversations and quiet study."
+        },
+        {
+          "id": "workspace-q2",
+          "prompt": "Why did the volunteers collect feedback for two weeks?",
+          "options": [
+            "To understand what visitors needed before suggesting a schedule.",
+            "To prove that the manager was wrong.",
+            "To decide which volunteers should leave."
+          ],
+          "answer": 0,
+          "explanation": "Their feedback provided information about the needs of different visitors."
+        },
+        {
+          "id": "workspace-q3",
+          "prompt": "What is the most reasonable conclusion?",
+          "options": [
+            "A small trial and evidence can guide further improvements.",
+            "A schedule always solves every problem immediately.",
+            "Visitors should never share a workspace."
+          ],
+          "answer": 0,
+          "explanation": "The passage says the trial did not solve everything, but the evidence helped identify the next improvements."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "planning-a-study-session",
+        "listeningId": "changing-an-appointment",
+        "pronunciationId": "reschedule-appointment",
+        "speakingPromptId": "discuss-study-plan",
+        "writingPromptId": "study-reflection"
+      }
+    },
+    {
+      "id": "the-cost-of-convenience",
+      "level": "B2",
+      "title": "The Cost of Convenience",
+      "subtitle": "A faster service is not automatically a better service.",
+      "estimatedMinutes": 8,
+      "paragraphs": [
+        "A university introduced an automated booking system for its study rooms. The system was intended to reduce queues and make room availability more transparent. During the first month, the number of completed bookings increased substantially, and students reported that the process was easier to use.",
+        "However, the headline figures concealed a less convenient experience for some users. Students who had limited internet access found it harder to compete for popular time slots, whereas students who could check the system frequently had an advantage. A few rooms also remained empty because reservations were not cancelled when plans changed.",
+        "The university reviewed the booking data alongside feedback from students and staff. Rather than abandoning the system, it introduced a short check-in window and a simpler cancellation process. The revised policy did not remove every difficulty, but it made the service more responsive to different circumstances."
+      ],
+      "focusWords": [
+        {
+          "id": "b2-substantial",
+          "word": "substantial",
+          "meaning": "cukup besar atau penting"
+        },
+        {
+          "id": "b2-whereas",
+          "word": "whereas",
+          "meaning": "sedangkan"
+        },
+        {
+          "id": "b2-undermine",
+          "word": "undermine",
+          "meaning": "melemahkan"
+        }
+      ],
+      "questions": [
+        {
+          "id": "convenience-q1",
+          "prompt": "What did the increase in completed bookings fail to show by itself?",
+          "options": [
+            "Whether all students had equal access to the booking system.",
+            "Whether the rooms had enough chairs.",
+            "Whether the university owned the buildings."
+          ],
+          "answer": 0,
+          "explanation": "The headline number did not reveal that students with limited internet access faced a disadvantage."
+        },
+        {
+          "id": "convenience-q2",
+          "prompt": "Why did some rooms remain empty?",
+          "options": [
+            "Some users did not cancel reservations when their plans changed.",
+            "The system automatically removed all reservations.",
+            "Students were not allowed to book rooms."
+          ],
+          "answer": 0,
+          "explanation": "Reservations were sometimes left active even when the student no longer needed the room."
+        },
+        {
+          "id": "convenience-q3",
+          "prompt": "Which statement best reflects the university's response?",
+          "options": [
+            "It adjusted the system using usage data and user feedback.",
+            "It removed all digital services immediately.",
+            "It ignored the concerns because booking numbers had increased."
+          ],
+          "answer": 0,
+          "explanation": "The university used evidence to introduce a check-in window and easier cancellation rather than abandoning the system."
+        }
+      ],
+      "learningPath": {
+        "dialogueId": "revising-a-project-proposal",
+        "listeningId": "reviewing-a-study-proposal",
+        "pronunciationId": "proposal-evidence",
+        "speakingPromptId": "present-study-proposal",
+        "writingPromptId": "balanced-proposal"
+      }
+    }
+  ]
+}

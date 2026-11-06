@@ -1,0 +1,197 @@
+/* ==========================================================================
+   SINAUENGLISH V2 — WIDGET SUITE STYLES
+   Warm Editorial Neobrutalism Design System
+   ========================================================================== */
+
+.widgets-deck-container {
+  margin-bottom: var(--space-6);
+  background: var(--color-bg-surface);
+  border: var(--border-sm);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+.widgets-deck-header {
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-bg-subtle);
+  border-bottom: var(--border-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.widgets-deck-title-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.widgets-deck-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.widgets-deck-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Responsive Grid for Widgets */
+.widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-bg-base);
+}
+
+/* Individual Widget Card */
+.sinau-widget-card {
+  background: var(--color-bg-surface);
+  border: var(--border-sm);
+  border-radius: var(--radius-md);
+  box-shadow: 2px 2px 0 var(--border-color);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 160px;
+  position: relative;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.sinau-widget-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 var(--border-color);
+}
+
+.widget-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.widget-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.widget-card-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.widget-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.widget-card-footer {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Mobile swipe scroll container for widgets */
+@media (max-width: 640px) {
+  .widgets-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sinau-widget-card {
+    min-width: 270px;
+    max-width: 85vw;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+}
+
+/* Tablet 2-column or 3-column optimization */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .widgets-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+}
+
+/* Modal styling for widget config */
+.widget-config-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 30, 30, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.widget-config-modal-card {
+  background: var(--color-bg-surface);
+  border: var(--border-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  max-width: 480px;
+  width: 100%;
+  overflow: hidden;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.widget-config-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.widget-config-item:hover {
+  background: var(--color-bg-subtle);
+}
+
+.widget-config-item:last-child {
+  border-bottom: none;
+}
+

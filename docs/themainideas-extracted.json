@@ -1,0 +1,138 @@
+{
+  "title": "Sign In — The Main Ideas",
+  "htmlClasses": "B4YpLq_variable ti0Z8q_variable w64y2q_variable dhyOLG_variable hm2viG_variable -sA3La_variable",
+  "body": {
+    "fontFamily": "Georgia, \"Times New Roman\", serif",
+    "fontSize": "16px",
+    "color": "rgb(28, 28, 46)",
+    "backgroundColor": "rgb(244, 240, 232)"
+  },
+  "h1": null,
+  "h2": {
+    "tag": "H2",
+    "className": "au-title",
+    "color": "rgb(26, 26, 26)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "\"Space Grotesk\", \"Space Grotesk Fallback\", \"Space Grotesk\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+    "fontSize": "34px",
+    "fontWeight": "700",
+    "lineHeight": "37.4px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "padding": "0px",
+    "margin": "0px",
+    "border": "0px solid rgb(26, 26, 26)",
+    "boxShadow": "none"
+  },
+  "h3": null,
+  "p": {
+    "tag": "P",
+    "className": "au-foot",
+    "color": "rgb(115, 107, 97)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "Quicksand, \"Quicksand Fallback\", Quicksand, -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+    "fontSize": "14px",
+    "fontWeight": "500",
+    "lineHeight": "21px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "padding": "0px",
+    "margin": "20px 0px 0px",
+    "border": "0px solid rgb(115, 107, 97)",
+    "boxShadow": "none"
+  },
+  "buttons": [
+    {
+      "tag": "BUTTON",
+      "className": "button button--block au-google",
+      "color": "rgb(26, 26, 26)",
+      "backgroundColor": "rgb(255, 255, 255)",
+      "fontFamily": "Quicksand, \"Quicksand Fallback\", Quicksand, -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+      "fontSize": "15px",
+      "fontWeight": "700",
+      "lineHeight": "15px",
+      "letterSpacing": "normal",
+      "borderRadius": "999px",
+      "padding": "0px 24px",
+      "margin": "0px 4px 4px 0px",
+      "border": "1px solid rgb(26, 26, 26)",
+      "boxShadow": "rgba(86, 52, 0, 0.25) 4px 4px 0px 0px"
+    },
+    {
+      "tag": "BUTTON",
+      "className": "button button--navy button--block au-submit",
+      "color": "rgb(255, 255, 255)",
+      "backgroundColor": "rgb(75, 94, 115)",
+      "fontFamily": "Quicksand, \"Quicksand Fallback\", Quicksand, -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+      "fontSize": "15px",
+      "fontWeight": "700",
+      "lineHeight": "15px",
+      "letterSpacing": "normal",
+      "borderRadius": "999px",
+      "padding": "0px 24px",
+      "margin": "6px 4px 4px 0px",
+      "border": "1px solid rgb(26, 26, 26)",
+      "boxShadow": "rgba(86, 52, 0, 0.25) 4px 4px 0px 0px"
+    }
+  ],
+  "nav": null,
+  "footer": null,
+  "cards": [
+    {
+      "tag": "DIV",
+      "className": "au-card",
+      "color": "rgb(26, 26, 26)",
+      "backgroundColor": "rgb(255, 255, 255)",
+      "fontFamily": "Quicksand, \"Quicksand Fallback\", Quicksand, -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "letterSpacing": "normal",
+      "borderRadius": "20px",
+      "padding": "36px 32px 32px",
+      "margin": "0px",
+      "border": "2px solid rgb(26, 26, 26)",
+      "boxShadow": "rgba(86, 52, 0, 0.25) 6px 6px 0px 0px"
+    }
+  ],
+  "palette": {
+    "textColors": [
+      "rgb(0, 0, 0)",
+      "rgb(28, 28, 46)",
+      "rgb(26, 26, 26)",
+      "rgb(115, 107, 97)",
+      "rgb(255, 255, 255)"
+    ],
+    "bgColors": [
+      "rgb(244, 240, 232)",
+      "rgb(249, 247, 242)",
+      "rgb(255, 255, 255)",
+      "rgb(75, 94, 115)"
+    ]
+  },
+  "fontFamilies": [
+    "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "Georgia, \"Times New Roman\", serif",
+    "Quicksand, \"Quicksand Fallback\", Quicksand, -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+    "\"Space Grotesk\", \"Space Grotesk Fallback\", \"Space Grotesk\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
+  ],
+  "borderRadii": [
+    "20px",
+    "10px",
+    "999px"
+  ],
+  "shadows": [
+    "rgba(86, 52, 0, 0.25) 6px 6px 0px 0px",
+    "rgba(86, 52, 0, 0.25) 4px 4px 0px 0px"
+  ],
+  "links": [
+    {
+      "text": "Lupa password?",
+      "href": "/forgot-password"
+    },
+    {
+      "text": "Daftar di sini",
+      "href": "/register"
+    }
+  ]
+}

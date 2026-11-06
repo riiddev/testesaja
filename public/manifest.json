@@ -1,0 +1,57 @@
+{
+  "name": "SinauEnglish V2 - Metode Belajar Berbeda",
+  "short_name": "SinauEnglish",
+  "id": "/?source=pwa",
+  "description": "Aplikasi belajar kosakata dan grammar bahasa Inggris berbasis konteks kalimat nyata dan Spaced Repetition (SRS).",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F6F2E9",
+  "theme_color": "#1E1E1E",
+  "categories": ["education", "books", "productivity"],
+  "lang": "id-ID",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Misi Harian",
+      "short_name": "Misi",
+      "description": "Buka sasaran misi belajar hari ini",
+      "url": "/belajar/missions",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Review SRS",
+      "short_name": "Review",
+      "description": "Ulangi kata yang jatuh tempo hari ini",
+      "url": "/belajar/review",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Matching Konteks",
+      "short_name": "Matching",
+      "description": "Latihan menjodohkan kalimat dan kata",
+      "url": "/belajar/matching",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

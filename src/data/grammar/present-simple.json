@@ -1,0 +1,494 @@
+{
+  "id": "present-simple",
+  "title": "Present Simple",
+  "level": "A1",
+  "category": "Verb tenses",
+  "estimatedMinutes": 12,
+  "prerequisites": [],
+  "nextTopics": ["present-continuous", "past-simple"],
+  "learningObjectives": {
+    "goal": "Menguasai cara menyatakan kebiasaan rutin, fakta umum, keadaan permanen, dan jadwal resmi dalam bahasa Inggris secara akurat tanpa tertukar dengan Present Continuous.",
+    "whenToUse": [
+      {
+        "situation": "Kebiasaan & Rutinitas Berulang",
+        "description": "Aktivitas yang dilakukan secara berkala (setiap hari, setiap minggu, atau tidak pernah).",
+        "triggerWords": ["every day", "always", "usually", "often", "sometimes", "rarely", "never", "on Sundays"]
+      },
+      {
+        "situation": "Fakta Umum & Kebenaran Ilmiah",
+        "description": "Hukum alam atau fakta objektif yang selalu bernilai benar tanpa terikat momen saat ini.",
+        "triggerWords": ["water boils at 100°C", "the sun rises in the east", "cows eat grass"]
+      },
+      {
+        "situation": "Keadaan Tetap / Jangka Panjang",
+        "description": "Fakta tentang domisili, pekerjaan, atau keyakinan yang relatif tidak berubah dalam waktu dekat.",
+        "triggerWords": ["live in Jakarta", "work at a bank", "speak English", "like coffee"]
+      },
+      {
+        "situation": "Jadwal Resmi & Ketetapan Publik (Timetable)",
+        "description": "Jadwal keberangkatan kereta, jam tayang film, atau kalender resmi yang tidak dipengaruhi keinginan pribadi.",
+        "triggerWords": ["the train leaves at 08.00", "the concert starts at 19.30", "the store opens tomorrow"]
+      }
+    ]
+  },
+  "patternTable": [
+    {
+      "type": "Positif (+)",
+      "subjectGroup": "I / You / We / They / Jamak",
+      "formula": "Subject + Verb 1 (Base Form) + Object/Pelengkap",
+      "example": "They practice English every morning."
+    },
+    {
+      "type": "Positif (+)",
+      "subjectGroup": "He / She / It / Subjek Tunggal",
+      "formula": "Subject + Verb 1 + (-s / -es / -ies) + Object/Pelengkap",
+      "example": "She practices English every morning."
+    },
+    {
+      "type": "Negatif (-)",
+      "subjectGroup": "I / You / We / They / Jamak",
+      "formula": "Subject + do not (don't) + Verb 1 (Bentuk Dasar)",
+      "example": "We do not (don't) drink sweet tea."
+    },
+    {
+      "type": "Negatif (-)",
+      "subjectGroup": "He / She / It / Subjek Tunggal",
+      "formula": "Subject + does not (doesn't) + Verb 1 (Bentuk Dasar — TANPA -s)",
+      "example": "He does not (doesn't) drink sweet tea."
+    },
+    {
+      "type": "Tanya (?)",
+      "subjectGroup": "I / You / We / They / Jamak",
+      "formula": "Do + Subject + Verb 1 (Bentuk Dasar)?",
+      "example": "Do you live in Yogyakarta?"
+    },
+    {
+      "type": "Tanya (?)",
+      "subjectGroup": "He / She / It / Subjek Tunggal",
+      "formula": "Does + Subject + Verb 1 (Bentuk Dasar — TANPA -s)?",
+      "example": "Does he live in Yogyakarta?"
+    }
+  ],
+  "progressiveExplanation": {
+    "step1_intuition": "Bayangkan garis waktu hidup Anda. Present Simple bukan tentang apa yang sedang terjadi tepat detik ini di depan mata Anda, melainkan tentang 'foto panorama' dari realitas hidup Anda: hal-hal yang benar kemarin, benar hari ini, dan kemungkinan besar masih benar besok.",
+    "step2_coreRules": [
+      "Subjek jamak (I, you, we, they) menggunakan kata kerja polos tanpa imbuhan apa pun: eat, work, study.",
+      "Subjek orang ketiga tunggal (he, she, it, Budi, my mother) mewajibkan kata kerja berakhiran -s atau -es pada kalimat positif.",
+      "Auxiliary verb 'do' dan 'does' bertugas sebagai penanda negasi dan tanda tanya. Begitu kata 'does' atau 'doesn't' muncul, kata kerja utama WAJIB kembali ke bentuk dasarnya (infinitive) karena akhiran -s sudah diserap oleh does."
+    ],
+    "step3_spellingRules": [
+      "Mayoritas kata kerja: cukup tambahkan -s (read → reads, walk → walks, make → makes).",
+      "Kata kerja berakhiran -ch, -sh, -s, -x, -z, atau -o: tambahkan -es untuk memudahkan pelafalan (watch → watches, wash → washes, pass → passes, fix → fixes, go → goes).",
+      "Konsonan + y: ubah 'y' menjadi 'i' lalu tambah -es (study → studies, fly → flies, try → tries).",
+      "Vokal + y: cukup tambahkan -s saja (play → plays, buy → buys, enjoy → enjoys)."
+    ],
+    "step4_exceptions": [
+      "Verb 'have' berubah menjadi 'has' untuk he/she/it (Bukan 'haves').",
+      "Verb 'to be' memiliki bentuk khusus yang tidak memakai do/does: I am, you/we/they are, he/she/it is. Contoh negatif: 'She is not tired', BUKAN 'She doesn't be tired'."
+    ]
+  },
+  "useCaseExamples": [
+    {
+      "category": "Rutinitas Harian",
+      "sentences": [
+        { "en": "I wake up at six every morning.", "id": "Saya bangun jam enam setiap pagi." },
+        { "en": "Dian takes the commuter train to work.", "id": "Dian naik kereta komuter ke tempat kerja." },
+        { "en": "They don't eat spicy food on weekdays.", "id": "Mereka tidak memakan makanan pedas pada hari kerja." }
+      ]
+    },
+    {
+      "category": "Kebenaran Umum & Sains",
+      "sentences": [
+        { "en": "The Earth orbits the Sun.", "id": "Bumi mengitari Matahari." },
+        { "en": "Water boils at one hundred degrees Celsius.", "id": "Air mendidih pada suhu seratus derajat Celsius." },
+        { "en": "Trees produce oxygen during the day.", "id": "Pohon menghasilkan oksigen pada siang hari." }
+      ]
+    },
+    {
+      "category": "Jadwal & Agenda Publik",
+      "sentences": [
+        { "en": "The library opens at nine o'clock tomorrow.", "id": "Perpustakaan buka jam sembilan besok." },
+        { "en": "What time does the last flight depart?", "id": "Jam berapa penerbangan terakhir berangkat?" }
+      ]
+    }
+  ],
+  "indonesianContrast": {
+    "fundamentalDifference": "Bahasa Indonesia tidak mengenal perubahan bentuk kata kerja berdasarkan subjek maupun waktu. Dalam bahasa Indonesia, kata 'makan' tetap sama baik untuk 'saya makan', 'dia makan', maupun 'mereka makan'.",
+    "whyIndonesiansStruggle": "Karena terbiasa dengan kata kerja yang tidak berubah, penutur Indonesia secara intuitif lupa menambahkan akhiran '-s/-es' ketika subjeknya tunggal ('She eat'), atau secara tidak sengaja menggabungkan 'is/am/are' dengan kata kerja dasar ('I am agree' atau 'She is work').",
+    "contrastTable": [
+      {
+        "concept": "Orang ketiga tunggal positif",
+        "bahasaIndonesia": "Dia belajar setiap malam. (Kata 'belajar' tetap)",
+        "bahasaInggris": "She studies every night. (Wajib imbuhan -ies)"
+      },
+      {
+        "concept": "Kalimat negatif",
+        "bahasaIndonesia": "Dia tidak suka kopi. (Cukup tambah 'tidak')",
+        "bahasaInggris": "He does not like coffee. (Butuh auxiliary 'does' + 'not' + kata dasar)"
+      },
+      {
+        "concept": "Pertanyaan ya/tidak",
+        "bahasaIndonesia": "Apakah kamu tinggal di sini? (Cukup tambah kata tanya)",
+        "bahasaInggris": "Do you live here? (Auxiliary 'do' wajib mengawali kalimat)"
+      }
+    ]
+  },
+  "commonMistakes": [
+    {
+      "wrong": "She like watching horror movies.",
+      "correct": "She likes watching horror movies.",
+      "trapType": "Subject-Verb Agreement",
+      "explanation": "Subjek 'She' adalah orang ketiga tunggal. Pada kalimat positif Present Simple, kata kerja wajib ditambah -s menjadi 'likes'."
+    },
+    {
+      "wrong": "My father doesn't likes oily food.",
+      "correct": "My father doesn't like oily food.",
+      "trapType": "Double Marking (Kelebihan -s)",
+      "explanation": "Akhiran -s sudah diserap oleh auxiliary 'doesn't'. Kata kerja setelah does/doesn't wajib kembali ke bentuk dasar polos 'like'."
+    },
+    {
+      "wrong": "I am agree with your opinion.",
+      "correct": "I agree with your opinion.",
+      "trapType": "Penambahan to be ilegal",
+      "explanation": "'Agree' adalah kata kerja (verb), bukan kata sifat (adjective). Dalam bahasa Inggris tidak boleh memasang to be (am/is/are) di depan verb dasar."
+    },
+    {
+      "wrong": "Do your sister work in hospital?",
+      "correct": "Does your sister work in a hospital?",
+      "trapType": "Salah memilih auxiliary do/does",
+      "explanation": "'Your sister' merujuk pada satu orang perempuan (she), sehingga kata tanya pembuka yang tepat adalah 'Does', bukan 'Do'."
+    }
+  ],
+  "cheatSheet": {
+    "keyTakeaways": [
+      "Gunakan untuk fakta, rutinitas, dan keadaan permanen.",
+      "I / You / We / They → Verb polos (eat, play, study).",
+      "He / She / It → Verb + s/es/ies (eats, plays, studies).",
+      "Negatif: don't / doesn't + Verb polos.",
+      "Tanya: Do / Does + Subjek + Verb polos?"
+    ],
+    "quickGoldenRule": "Jika kalimat sudah memiliki 'DO', 'DOES', atau 'DID', kata kerja utamanya selalu kembali telanjang (bare infinitive) tanpa -s atau -ed!"
+  },
+  "practiceExercises": [
+    {
+      "id": "ps-ex-1",
+      "type": "multiple-choice",
+      "level": "Dasar",
+      "prompt": "Pilihlah bentuk kata kerja yang benar: 'My uncle ___ in a pharmaceutical company.'",
+      "options": ["work", "works", "is working", "working"],
+      "correctIndex": 1,
+      "explanation": "'My uncle' adalah subjek orang ketiga tunggal (he), sehingga kalimat positif membutuhkan kata kerja berakhiran -s: 'works'."
+    },
+    {
+      "id": "ps-ex-2",
+      "type": "multiple-choice",
+      "level": "Dasar",
+      "prompt": "Bentuk kalimat negatif yang tepat untuk 'We live in Surabaya' adalah:",
+      "options": [
+        "We doesn't live in Surabaya.",
+        "We not live in Surabaya.",
+        "We don't live in Surabaya.",
+        "We aren't live in Surabaya."
+      ],
+      "correctIndex": 2,
+      "explanation": "Subjek 'we' menggunakan kata bantu negatif 'do not' atau 'don't' diikuti kata kerja dasar 'live'."
+    },
+    {
+      "id": "ps-ex-3",
+      "type": "fill-in",
+      "level": "Dasar",
+      "prompt": "Lengkapi kalimat dengan bentuk kata kerja yang benar dalam kurung: 'Farhan ___ (watch) documentary movies every weekend.'",
+      "acceptedAnswers": ["watches"],
+      "explanation": "Karena Farhan adalah subjek tunggal dan kata kerja berakhiran '-ch', kita menambahkan '-es' menjadi 'watches'."
+    },
+    {
+      "id": "ps-ex-4",
+      "type": "fill-in",
+      "level": "Menengah",
+      "prompt": "Lengkapi kalimat negatif: 'They ___ (not / know) the answer to that tricky question.'",
+      "acceptedAnswers": ["do not know", "don't know"],
+      "explanation": "Untuk subjek jamak 'they', bentuk negatif dibentuk dengan 'do not know' atau 'don't know'."
+    },
+    {
+      "id": "ps-ex-5",
+      "type": "error-correction",
+      "level": "Menengah",
+      "prompt": "Perbaiki kata yang salah: 'The doctor don't recommend drinking too much soda.'",
+      "errorWord": "don't",
+      "correctWord": "doesn't",
+      "explanation": "'The doctor' adalah orang ketiga tunggal (he/she), maka bentuk negatif yang benar adalah 'doesn't' (atau does not), bukan 'don't'."
+    },
+    {
+      "id": "ps-ex-6",
+      "type": "error-correction",
+      "level": "Menengah",
+      "prompt": "Perbaiki kata yang salah: 'Does Sarah likes reading historical novels?'",
+      "errorWord": "likes",
+      "correctWord": "like",
+      "explanation": "Karena kalimat tanya sudah diawali kata bantu 'Does', kata kerja utama harus kembali ke bentuk dasar tanpa -s, yaitu 'like'."
+    },
+    {
+      "id": "ps-ex-7",
+      "type": "word-scramble",
+      "level": "Menengah",
+      "prompt": "Susun kata-kata acak berikut menjadi kalimat tanya yang benar: [your / live / parents / where / do / ?]",
+      "words": ["where", "do", "your", "parents", "live", "?"],
+      "targetSentence": "Where do your parents live?",
+      "explanation": "Pola kalimat tanya Wh- pada Present Simple adalah Wh-word + do/does + subject + verb dasar: 'Where do your parents live?'."
+    },
+    {
+      "id": "ps-ex-8",
+      "type": "word-scramble",
+      "level": "Menengah",
+      "prompt": "Susun kata-kata acak berikut menjadi kalimat positif yang tepat: [always / my / brother / breakfast / eats / at 7 AM]",
+      "words": ["my", "brother", "always", "eats", "breakfast", "at 7 AM"],
+      "targetSentence": "My brother always eats breakfast at 7 AM.",
+      "explanation": "Adverb of frequency 'always' diletakkan tepat di antara subjek 'My brother' dan kata kerja 'eats'."
+    },
+    {
+      "id": "ps-ex-9",
+      "type": "transformation",
+      "level": "Lanjutan",
+      "prompt": "Ubahlah kalimat positif ini menjadi kalimat tanya (interogatif): 'She speaks French fluently.'",
+      "acceptedAnswers": ["Does she speak French fluently?", "does she speak french fluently?"],
+      "explanation": "Gunakan auxiliary 'Does' di awal, pertahankan subjek 'she', dan kembalikan 'speaks' menjadi bentuk dasar 'speak'."
+    },
+    {
+      "id": "ps-ex-10",
+      "type": "transformation",
+      "level": "Lanjutan",
+      "prompt": "Ubahlah kalimat positif ini menjadi kalimat negatif menggunakan contraction: 'Budi has a private tutor.'",
+      "acceptedAnswers": ["Budi doesn't have a private tutor.", "budi doesn't have a private tutor."],
+      "explanation": "Pada Present Simple, negatif dari 'has' dibentuk dengan 'doesn't have', bukan 'doesn't has'."
+    },
+    {
+      "id": "ps-ex-11",
+      "type": "multiple-choice",
+      "level": "Lanjutan",
+      "prompt": "Manakah kalimat yang menyatakan jadwal resmi (timetable) yang benar?",
+      "options": [
+        "The museum is opening at 10 AM tomorrow.",
+        "The museum opens at 10 AM tomorrow.",
+        "The museum open at 10 AM tomorrow.",
+        "The museum will to open at 10 AM tomorrow."
+      ],
+      "correctIndex": 1,
+      "explanation": "Present simple sering digunakan untuk jadwal resmi transportasi atau institusi publik di masa depan. Subjek tunggal 'The museum' memakai 'opens'."
+    },
+    {
+      "id": "ps-ex-12",
+      "type": "fill-in",
+      "level": "Lanjutan",
+      "prompt": "Lengkapi dengan kata kerja yang tepat: 'Water ___ (freeze) at zero degrees Celsius.'",
+      "acceptedAnswers": ["freezes"],
+      "explanation": "Ini adalah fakta ilmiah universal. 'Water' adalah uncountable noun (dianggap singular 'it'), jadi tambahkan -s menjadi 'freezes'."
+    }
+  ],
+  "finalQuiz": [
+    {
+      "id": "ps-q1",
+      "question": "Which sentence correctly expresses a daily routine for a third-person singular subject?",
+      "options": [
+        "Andi go to the library every Friday afternoon.",
+        "Andi goes to the library every Friday afternoon.",
+        "Andi is go to the library every Friday afternoon.",
+        "Andi going to the library every Friday afternoon."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Andi adalah orang ketiga tunggal (he). Pada kalimat positif rutinitas, kata kerja berakhiran -o (go) wajib ditambah -es menjadi 'goes'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena 'go' belum disesuaikan dengan subjek tunggal Andi.",
+          "Opsi C salah karena menyisipkan to be 'is' secara ilegal di depan kata kerja dasar.",
+          "Opsi D salah karena verb-ing tidak dapat berdiri sendiri tanpa auxiliary to be."
+        ],
+        "readingStrategy": "Identifikasi subjek kalimat (Andi = he). Pastikan kata kerja memiliki imbuhan -s/-es yang valid.",
+        "keywords": ["Andi", "every Friday", "third-person singular", "goes"]
+      }
+    },
+    {
+      "id": "ps-q2",
+      "question": "Choose the grammatically correct negative sentence:",
+      "options": [
+        "She does not drinks milk before going to bed.",
+        "She does not drink milk before going to bed.",
+        "She is not drink milk before going to bed.",
+        "She not drinks milk before going to bed."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Ketika kata bantu negatif 'does not' digunakan, kata kerja utama harus kembali ke bentuk dasar polos 'drink' tanpa imbuhan -s.",
+        "wrongAnalysis": [
+          "Opsi A salah karena terjadi 'double marking' (-s muncul di does dan juga di drinks).",
+          "Opsi C salah karena 'is not' digunakan untuk adjective/noun atau continuous, bukan verb dasar.",
+          "Opsi D salah karena bahasa Inggris membutuhkan auxiliary 'does' sebelum 'not' untuk verb aksi."
+        ],
+        "readingStrategy": "Ingat rumus 'Golden Rule': setelah does/doesn't, kata kerja selalu kembali ke bare infinitive.",
+        "keywords": ["does not", "base verb", "drink", "negative structure"]
+      }
+    },
+    {
+      "id": "ps-q3",
+      "question": "Complete the question: 'What time ___ the morning train leave?'",
+      "options": ["do", "does", "is", "are"],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Subjek pertanyaan adalah 'the morning train' (tunggal/it), sehingga auxiliary yang tepat untuk pertanyaan Present Simple adalah 'does'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena 'do' hanya untuk subjek jamak (they/we/you/I).",
+          "Opsi C salah karena jika memakai 'is', kata kerjanya harus 'leaving' (continuous).",
+          "Opsi D salah karena 'are' untuk subjek jamak dan membutuhkan verb-ing."
+        ],
+        "readingStrategy": "Cari subjek sebenarnya yang terletak setelah auxiliary (the morning train = singular noun).",
+        "keywords": ["What time", "the morning train", "does", "timetable"]
+      }
+    },
+    {
+      "id": "ps-q4",
+      "question": "Which of the following is a permanent fact or scientific truth correctly stated?",
+      "options": [
+        "Light travels faster than sound in a vacuum.",
+        "Light travel faster than sound in a vacuum.",
+        "Light is travel faster than sound in a vacuum.",
+        "Light traveling faster than sound in a vacuum."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "'Light' adalah uncountable noun (singular). Fakta sains universal wajib menggunakan Present Simple singular: 'travels'.",
+        "wrongAnalysis": [
+          "Opsi B salah karena subjek uncountable membutuhkan verb berakhiran -s.",
+          "Opsi C salah karena memasang to be 'is' secara berlebihan.",
+          "Opsi D salah karena participle 'traveling' tidak memiliki predikat finite verb."
+        ],
+        "readingStrategy": "Kenali kata benda non-hitung (uncountable) sebagai subjek tunggal yang mewajibkan penambahan -s.",
+        "keywords": ["Light", "scientific truth", "uncountable", "travels"]
+      }
+    },
+    {
+      "id": "ps-q5",
+      "question": "Find the sentence with the CORRECT spelling of the third-person verb:",
+      "options": [
+        "He studyes hard every single day.",
+        "He studys hard every single day.",
+        "He studies hard every single day.",
+        "He study hard every single day."
+      ],
+      "correctIndex": 2,
+      "explanation": {
+        "correctReason": "Kata kerja 'study' berakhiran huruf konsonan 'd' + 'y'. Kaidah ejaannya adalah mengubah 'y' menjadi 'i' lalu ditambah '-es' → 'studies'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena ejaan 'studyes' tidak sesuai kaidah ortografi bahasa Inggris.",
+          "Opsi B salah karena 'studys' mengabaikan perubahan y ke i.",
+          "Opsi D salah karena tidak diberi penyesuaian bentuk singular sama sekali."
+        ],
+        "readingStrategy": "Perhatikan huruf sebelum 'y'. Jika berupa konsonan, ubah menjadi -ies. Jika vokal (seperti play), cukup tambah -s (plays).",
+        "keywords": ["study", "consonant + y", "studies", "spelling rule"]
+      }
+    },
+    {
+      "id": "ps-q6",
+      "question": "Identify the sentence that contains a common Indonesian-learner transfer error:",
+      "options": [
+        "I strongly agree with your proposal.",
+        "I am agree with your proposal.",
+        "I don't agree with your proposal.",
+        "Do you agree with my proposal?"
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "'I am agree' adalah kesalahan transfer umum orang Indonesia yang mengira 'setuju' adalah kata sifat. Dalam bahasa Inggris, 'agree' adalah verb murni, sehingga tidak boleh diawali 'am'.",
+        "wrongAnalysis": [
+          "Opsi A benar secara tata bahasa (adverb 'strongly' menerangkan verb 'agree').",
+          "Opsi C benar karena bentuk negatif verb adalah 'don't agree'.",
+          "Opsi D benar karena bentuk pertanyaan adalah 'Do you agree?'."
+        ],
+        "readingStrategy": "Waspadai percampuran to be (am/is/are) dengan kata kerja mental seperti agree, believe, atau need.",
+        "keywords": ["agree", "verb", "Indonesian transfer", "I am agree"]
+      }
+    },
+    {
+      "id": "ps-q7",
+      "question": "Choose the correct question to ask about someone's occupation:",
+      "options": [
+        "What do your sister do for a living?",
+        "What does your sister do for a living?",
+        "What is your sister do for a living?",
+        "What your sister does for a living?"
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "'Your sister' adalah subjek tunggal. Rumus pertanyaan pekerjaan adalah: Wh + does + Subject + do (verb)? → 'What does your sister do...?'",
+        "wrongAnalysis": [
+          "Opsi A salah karena auxiliary 'do' di depan salah untuk subjek tunggal your sister.",
+          "Opsi C salah karena menggabungkan 'is' dengan kata kerja 'do'.",
+          "Opsi D salah karena tidak memiliki kata bantu pembalik (inversion) di depan subjek."
+        ],
+        "readingStrategy": "Perhatikan fungsi ganda 'do': 'does' pertama adalah kata bantu (auxiliary), sedangkan 'do' kedua adalah kata kerja utama (main verb).",
+        "keywords": ["What does", "your sister", "occupation", "main verb do"]
+      }
+    },
+    {
+      "id": "ps-q8",
+      "question": "Which sentence correctly places the adverb of frequency 'rarely'?",
+      "options": [
+        "Rarely he eats fast food for dinner.",
+        "He eats rarely fast food for dinner.",
+        "He rarely eats fast food for dinner.",
+        "He eats fast food for dinner rarely."
+      ],
+      "correctIndex": 2,
+      "explanation": {
+        "correctReason": "Adverb of frequency (always, usually, rarely, never) umumnya diletakkan tepat SEBELUM kata kerja utama: 'He rarely eats...'.",
+        "wrongAnalysis": [
+          "Opsi A kurang alami dalam percakapan standar kecuali untuk penekanan inversi sastra.",
+          "Opsi B salah karena memisahkan kata kerja transitif dari objek langsungnya.",
+          "Opsi D kurang tepat untuk kata 'rarely' yang biasanya berada di posisi tengah kalimat."
+        ],
+        "readingStrategy": "Hafalkan posisi adverb of frequency: Setelah to be, tetapi Sebelum kata kerja utama.",
+        "keywords": ["rarely", "adverb of frequency", "word order", "eats"]
+      }
+    },
+    {
+      "id": "ps-q9",
+      "question": "How should you correctly express possession in the negative with Present Simple?",
+      "options": [
+        "He doesn't has a passport.",
+        "He hasn't a passport.",
+        "He doesn't have a passport.",
+        "He not have a passport."
+      ],
+      "correctIndex": 2,
+      "explanation": {
+        "correctReason": "Bentuk negatif Present Simple dari kata kerja kepemilikan 'have' untuk orang ketiga tunggal adalah 'doesn't have'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena 'has' tidak boleh muncul setelah auxiliary 'doesn't'.",
+          "Opsi B usang dan tidak umum dalam bahasa Inggris modern Amerika/standar.",
+          "Opsi D salah karena kata 'not' memerlukan kata bantu 'does'."
+        ],
+        "readingStrategy": "Ingat bahwa bentuk dasar dari has adalah have. Begitu ada doesn't, gunakan have.",
+        "keywords": ["doesn't have", "possession", "base form", "passport"]
+      }
+    },
+    {
+      "id": "ps-q10",
+      "question": "Which sentence correctly describes a fixed event on a public timetable?",
+      "options": [
+        "The conference ends at five o'clock this evening.",
+        "The conference ending at five o'clock this evening.",
+        "The conference are end at five o'clock this evening.",
+        "The conference is end at five o'clock this evening."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Acara konferensi atau seminar publik yang memiliki agenda waktu tetap diungkapkan dengan Present Simple: 'The conference ends...'.",
+        "wrongAnalysis": [
+          "Opsi B salah karena 'ending' tanpa auxiliary bukan predikat kalimat yang lengkap.",
+          "Opsi C salah karena 'conference' tunggal tidak cocok dengan 'are'.",
+          "Opsi D salah karena menggabungkan 'is' dan 'end' secara keliru."
+        ],
+        "readingStrategy": "Ingat fungsi timetable pada Present Simple: digunakan untuk acara yang terikat jam tayang atau agenda resmi publik.",
+        "keywords": ["timetable", "ends", "The conference", "five o'clock"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+/* ==========================================================================
+   SINAUENGLISH V2 — SENIOR CSS TOKENS (@layer tokens)
+   Warm Editorial Neobrutalism Design System
+   Uses: @property, fluid clamp(), color-mix(), custom properties
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Quicksand:wght@500;600;700&family=Space+Grotesk:wght@600;700&display=swap");
+
+/* Modern CSS @property for animatable properties */
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --button-fill-pct {
+  syntax: "<percentage>";
+  initial-value: 0%;
+  inherits: false;
+}
+
+@layer tokens {
+  :root {
+    color-scheme: light;
+
+    /* ------------------------------------------------------------------------
+       1. TYPOGRAPHY SYSTEM
+       ------------------------------------------------------------------------ */
+    --font-heading: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-editorial: "Fraunces", Georgia, "Times New Roman", serif;
+    --font-body: "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+    /* Fluid Typography Clamps (Mobile-first to Desktop) */
+    --text-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.75rem);
+    --text-sm: clamp(0.8125rem, 0.77rem + 0.2vw, 0.875rem);
+    --text-base: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+    --text-md: clamp(1.0625rem, 1rem + 0.3vw, 1.125rem);
+    --text-lg: clamp(1.1875rem, 1.1rem + 0.4vw, 1.25rem);
+    --text-xl: clamp(1.35rem, 1.2rem + 0.7vw, 1.5rem);
+    --text-2xl: clamp(1.6rem, 1.4rem + 1vw, 1.875rem);
+    --text-3xl: clamp(2rem, 1.7rem + 1.5vw, 2.375rem);
+    --text-4xl: clamp(2.35rem, 1.9rem + 2.25vw, 3rem);
+    --text-5xl: clamp(2.85rem, 2.2rem + 3.25vw, 4.25rem);
+
+    /* Fluid Spacing Clamps */
+    --space-1: clamp(0.2rem, 0.18rem + 0.1vw, 0.25rem);
+    --space-2: clamp(0.45rem, 0.4rem + 0.2vw, 0.5rem);
+    --space-3: clamp(0.65rem, 0.6rem + 0.3vw, 0.75rem);
+    --space-4: clamp(0.85rem, 0.8rem + 0.4vw, 1rem);
+    --space-5: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);
+    --space-6: clamp(1.35rem, 1.2rem + 0.75vw, 1.5rem);
+    --space-8: clamp(1.75rem, 1.5rem + 1.25vw, 2rem);
+    --space-10: clamp(2.15rem, 1.8rem + 1.75vw, 2.5rem);
+    --space-12: clamp(2.6rem, 2.2rem + 2vw, 3rem);
+    --space-16: clamp(3.25rem, 2.75rem + 2.5vw, 4rem);
+
+    /* ------------------------------------------------------------------------
+       2. COLOR PALETTE (Warm Parchment Aesthetic)
+       ------------------------------------------------------------------------ */
+    --color-bg-base: #F4F0E8;
+    --color-bg-nav: #F9F7F2;
+    --color-bg-surface: #FFFFFF;
+    --color-bg-footer: #ECE4CF;
+    --color-bg-subtle: #F1ECE1;
+
+    /* Card Tint Surfaces */
+    --color-tint-sand: #F6EFE0;
+    --color-tint-sage: #E5EAE2;
+    --color-tint-slate: #E2E5E9;
+    --color-tint-rose: #EFE3DE;
+
+    /* Ink & Typography */
+    --color-text-primary: #1A1A1A;
+    --color-text-secondary: #736B61;
+    --color-text-muted: #8F867A;
+    --color-text-inverse: #FFFFFF;
+
+    /* Accent Palette */
+    --color-accent-gold: #C99A3B;
+    --color-accent-gold-hover: #B8892D;
+    --color-accent-navy: #4B5E73;
+    --color-accent-navy-hover: #3E4E60;
+    --color-accent-sage: #5F7A4B;
+    --color-accent-sage-hover: #50683F;
+    --color-accent-berry: #8C4A4E;
+    --color-accent-terracotta: #B85D38;
+
+    /* Functional States */
+    --color-success: #3D6B35;
+    --color-success-bg: #E3EDE0;
+    --color-warning: #946800;
+    --color-warning-bg: #FCF4D9;
+    --color-danger: #9A3030;
+    --color-danger-bg: #F9E2E2;
+
+    /* Borders & Radius */
+    --border-width-sm: 1px;
+    --border-width-md: 1.5px;
+    --border-width-lg: 2px;
+    --border-color: #1A1A1A;
+    --border-color-subtle: rgba(26, 26, 26, 0.15);
+    --border-sm: var(--border-width-sm) solid var(--border-color);
+    --border-md: var(--border-width-md) solid var(--border-color);
+    --border-lg: var(--border-width-lg) solid var(--border-color);
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* Neobrutalist Hard-Drop Shadows */
+    --shadow-color: rgba(86, 52, 0, 0.25);
+    --shadow-flat: 2px 2px 0 var(--border-color);
+    --shadow-card: 4px 4px 0 var(--shadow-color);
+    --shadow-card-hover: 6px 6px 0 var(--shadow-color);
+    --shadow-button: 3px 3px 0 var(--border-color);
+    --shadow-button-active: 1px 1px 0 var(--border-color);
+
+    /* Motion & Transitions */
+    --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --duration-fast: 150ms;
+    --duration-base: 240ms;
+    --duration-slow: 400ms;
+
+    /* Containers */
+    --container-max: 1200px;
+    --container-narrow: 860px;
+    --header-height: 72px;
+    --sidebar-width: 270px;
+  }
+}

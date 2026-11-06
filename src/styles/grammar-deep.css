@@ -1,0 +1,298 @@
+/* ==========================================================================
+   GRAMMAR DEEP CURRICULUM — Warm Editorial Neobrutalism
+   ========================================================================== */
+
+.grammar-deep-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.grammar-header-card {
+  background-color: var(--color-bg-surface);
+  border: var(--border-lg);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-8);
+  margin-bottom: var(--space-6);
+  box-shadow: 3px 3px 0 var(--border-color);
+}
+
+.grammar-tabs-nav {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: var(--border-md);
+  padding-bottom: var(--space-2);
+  overflow-x: auto;
+}
+
+.grammar-tab-btn {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-lg);
+  border: var(--border-sm);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.grammar-tab-btn:hover {
+  background-color: var(--color-bg-subtle);
+  transform: translateY(-1px);
+}
+
+.grammar-tab-btn.is-active {
+  background-color: var(--color-accent-navy);
+  color: var(--color-text-inverse);
+  border-color: var(--color-accent-navy);
+  box-shadow: 2px 2px 0 var(--border-color);
+}
+
+/* Pedagogy Section Styles */
+.pedagogy-block {
+  background-color: var(--color-bg-surface);
+  border: var(--border-md);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  box-shadow: 2px 2px 0 var(--border-color);
+}
+
+.pedagogy-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-primary);
+}
+
+/* Situation Grid */
+.situation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.situation-card {
+  background-color: #FAF8F5;
+  border: var(--border-sm);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.situation-card h4 {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  margin: 0 0 var(--space-2) 0;
+  color: var(--color-accent-navy);
+}
+
+.situation-card p {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0 0 var(--space-2) 0;
+}
+
+/* Pattern Formula Table */
+.formula-table-container {
+  overflow-x: auto;
+  border: var(--border-sm);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-3);
+}
+
+.formula-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+  text-align: left;
+}
+
+.formula-table th {
+  background-color: #F0EDE6;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 800;
+  border-bottom: var(--border-sm);
+  color: var(--color-text-primary);
+}
+
+.formula-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--color-bg-surface);
+}
+
+.formula-mono {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-accent-navy);
+}
+
+/* Progressive Stepper */
+.stepper-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.stepper-item {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.stepper-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-accent-gold);
+  border: 1.5px solid var(--border-color);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: var(--text-xs);
+}
+
+.stepper-content h4 {
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.stepper-content p {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Indonesian Contrast Card */
+.contrast-card {
+  background-color: #FFFDF5;
+  border: 1.5px solid #D69E2E;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.contrast-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px dashed rgba(214, 158, 46, 0.4);
+  font-size: var(--text-xs);
+}
+
+@media (min-width: 640px) {
+  .contrast-row {
+    grid-template-columns: 140px 1fr 1fr;
+  }
+}
+
+/* Common Mistakes Red-Green Box */
+.mistake-box {
+  background-color: var(--color-bg-surface);
+  border: var(--border-sm);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.mistake-wrong {
+  color: var(--color-danger);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  margin-bottom: 4px;
+}
+
+.mistake-correct {
+  color: var(--color-success);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-2);
+}
+
+/* Interactive Practice Component */
+.practice-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.practice-card {
+  background-color: var(--color-bg-surface);
+  border: var(--border-md);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: 2px 2px 0 var(--border-color);
+}
+
+.practice-scramble-dropzone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3);
+  background-color: #FAF8F5;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+
+.scramble-word-chip {
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-bg-surface);
+  border: var(--border-sm);
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scramble-word-chip:hover {
+  background-color: var(--color-bg-subtle);
+  transform: translateY(-1px);
+}
+
+.scramble-word-chip.is-used {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Mastery Gauge */
+.mastery-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mastery-status-pill.mastered {
+  background-color: #F0FFF4;
+  color: #22543D;
+  border: 1.5px solid #38A169;
+}
+
+.mastery-status-pill.learning {
+  background-color: #FEFCBF;
+  color: #744210;
+  border: 1.5px solid #D69E2E;
+}

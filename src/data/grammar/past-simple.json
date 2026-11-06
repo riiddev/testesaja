@@ -1,0 +1,484 @@
+{
+  "id": "past-simple",
+  "title": "Past Simple",
+  "level": "A2",
+  "category": "Verb tenses",
+  "estimatedMinutes": 14,
+  "prerequisites": ["present-simple"],
+  "nextTopics": ["past-continuous", "present-perfect"],
+  "learningObjectives": {
+    "goal": "Menguasai cara menceritakan peristiwa yang telah selesai tuntas di masa lampau pada waktu spesifik, membedakan kata kerja beraturan (regular) dan tidak beraturan (irregular), serta menguasai auxiliary 'did' pada kalimat negatif dan tanya.",
+    "whenToUse": [
+      {
+        "situation": "Aksi yang Tuntas di Masa Lampau (Completed Actions)",
+        "description": "Peristiwa yang dimulai dan diselesaikan sepenuhnya di masa lampau dan tidak lagi berlangsung sekarang.",
+        "triggerWords": ["yesterday", "last night", "last week", "two days ago", "in 2019", "when I was a child"]
+      },
+      {
+        "situation": "Urutan Kejadian dalam Cerita (Chronological Narrative)",
+        "description": "Rangkaian aksi berturut-turut yang terjadi satu per satu dalam sebuah cerita narasi.",
+        "triggerWords": ["first", "then", "after that", "finally"]
+      },
+      {
+        "situation": "Kebiasaan atau Keadaan Masa Lalu yang Sudah Berakhir (Past Habits / States)",
+        "description": "Rutinitas di masa kecil atau masa lampau yang kini sudah tidak dilakukan lagi.",
+        "triggerWords": ["lived there for five years", "always rode a bicycle to school", "used to"]
+      }
+    ]
+  },
+  "patternTable": [
+    {
+      "type": "Positif (+)",
+      "subjectGroup": "Semua Subjek (I / You / We / They / He / She / It)",
+      "formula": "Subject + Verb 2 (Past Form: -ed atau Irregular) + Object/Pelengkap",
+      "example": "We visited the national museum yesterday."
+    },
+    {
+      "type": "Positif (+ Irregular)",
+      "subjectGroup": "Semua Subjek (I / You / We / They / He / She / It)",
+      "formula": "Subject + Irregular Past Verb + Object/Pelengkap",
+      "example": "She bought a new laptop last weekend."
+    },
+    {
+      "type": "Negatif (-)",
+      "subjectGroup": "Semua Subjek (I / You / We / They / He / She / It)",
+      "formula": "Subject + did not (didn't) + Verb 1 (Bentuk Dasar Polos)",
+      "example": "They did not (didn't) attend the seminar."
+    },
+    {
+      "type": "Tanya (?)",
+      "subjectGroup": "Semua Subjek (I / You / We / They / He / She / It)",
+      "formula": "Did + Subject + Verb 1 (Bentuk Dasar Polos)?",
+      "example": "Did you see my message earlier today?"
+    },
+    {
+      "type": "To Be Lampau (was / were)",
+      "subjectGroup": "I / He / She / It → WAS | You / We / They → WERE",
+      "formula": "Subject + was/were (+ not) + Adjective / Noun / Preposition",
+      "example": "He was sick yesterday. / They were in Jakarta last week."
+    }
+  ],
+  "progressiveExplanation": {
+    "step1_intuition": "Bayangkan sebuah buku sejarah yang babnya sudah ditutup. Past Simple meletakkan sebuah peristiwa ke dalam kotak waktu masa lalu yang sudah terkunci dan selesai. Tenses ini tidak peduli apakah dampaknya masih terasa saat ini (itu ranah Present Perfect); fokus Past Simple semata-mata adalah: kejadian itu terjadi dan tuntas di sana.",
+    "step2_coreRules": [
+      "Semua subjek (tunggal maupun jamak) menggunakan bentuk kata kerja Past (Verb 2) yang sama pada kalimat positif (kecuali to be: was/were). Tidak ada penambahan -s untuk he/she/it di masa lampau!",
+      "Auxiliary 'did' adalah pahlawan pembantu. Begitu 'did' atau 'didn't' hadir pada kalimat tanya atau negatif, masa lampau sudah diwakili oleh 'did'. Akibatnya, kata kerja utama WAJIB kembali ke bentuk dasarnya (Verb 1).",
+      "Dilarang keras melakukan 'Double Past' (misalnya: 'I didn't went' adalah salah fatal; yang benar 'I didn't go')."
+    ],
+    "step3_regularSpellingAndSound": [
+      "Kata kerja beraturan berakhiran konsonan: tambah -ed (watch → watched, play → played).",
+      "Berakhiran huruf 'e': cukup tambah -d (decide → decided, live → lived).",
+      "Konsonan + y: ubah 'y' menjadi 'i' lalu tambah -ed (study → studied, carry → carried).",
+      "Satu suku kata pola Konsonan-Vokal-Konsonan (CVC): gandakan konsonan akhir (stop → stopped, plan → planned).",
+      "Pelafalan akhiran -ed: diucapkan /t/ setelah bunyi nirsuara (helped, washed), /d/ setelah bunyi bersuara (played, cleaned), dan /ɪd/ hanya setelah bunyi 't' atau 'd' (wanted, decided)."
+    ],
+    "step4_irregularVerbs": [
+      "Banyak kata kerja paling umum dalam bahasa Inggris memiliki bentuk lampau tak beraturan yang tidak berakhiran -ed: go → went, see → saw, buy → bought, take → took, give → gave, write → wrote, come → came, think → thought.",
+      "Sebagian kata kerja tidak berubah sama sekali: cut → cut, put → put, cost → cost, hit → hit."
+    ]
+  },
+  "useCaseExamples": [
+    {
+      "category": "Titik Waktu Spesifik di Masa Lampau",
+      "sentences": [
+        { "en": "I received the official admission letter two days ago.", "id": "Saya menerima surat penerimaan resmi dua hari yang lalu." },
+        { "en": "The prime minister visited the disaster area last night.", "id": "Perdana menteri mengunjungi area bencana kemarin malam." }
+      ]
+    },
+    {
+      "category": "Urutan Cerita / Kronologi",
+      "sentences": [
+        { "en": "He opened the old wooden chest, took out the bronze key, and unlocked the diary.", "id": "Dia membuka peti kayu tua itu, mengambil kunci perunggu, dan membuka buku harian itu." },
+        { "en": "We arrived at the station, bought our tickets, and boarded the train.", "id": "Kami tiba di stasiun, membeli tiket, dan naik ke dalam kereta." }
+      ]
+    },
+    {
+      "category": "Kalimat dengan To Be (Was / Were)",
+      "sentences": [
+        { "en": "The weather was surprisingly pleasant throughout our trip.", "id": "Cuacanya sangat menyenangkan sepanjang perjalanan kami." },
+        { "en": "Were you nervous before the interview started?", "id": "Apakah kamu gugup sebelum wawancara dimulai?" }
+      ]
+    }
+  ],
+  "indonesianContrast": {
+    "fundamentalDifference": "Bahasa Indonesia tidak mengubah kata kerja untuk menunjukkan waktu lampau; kita hanya menambahkan kata keterangan seperti 'tadi', 'kemarin', 'dulu', atau 'sudah' ('Kemarin saya pergi', 'Tadi dia beli'). Kata 'pergi' dan 'beli' tidak mengalami metamorfosis bentuk.",
+    "whyIndonesiansStruggle": "Karena terbiasa dengan kata kerja yang tetap, penutur Indonesia sering: (1) Lupa mengubah kata kerja ke bentuk kedua ('Yesterday I meet him'), (2) Menggunakan kata kerja kedua setelah didn't karena terdorong ingin menegaskan masa lampau ('I didn't saw you'), atau (3) Memasukkan 'was/were' bersama kata kerja kedua ('I was went to school').",
+    "contrastTable": [
+      {
+        "concept": "Aksi lampau positif",
+        "bahasaIndonesia": "Saya membeli buku kemarin. (Kata 'membeli' tetap)",
+        "bahasaInggris": "I bought a book yesterday. (Wajib metamorfosis buy → bought)"
+      },
+      {
+        "concept": "Negasi lampau",
+        "bahasaIndonesia": "Dia tidak datang tadi malam. (Cukup kata 'tidak')",
+        "bahasaInggris": "He didn't come last night. (Auxiliary 'didn't' + Verb 1 polos 'come')"
+      },
+      {
+        "concept": "Nominal lampau (to be)",
+        "bahasaIndonesia": "Kami lelah kemarin. (Tanpa to be)",
+        "bahasaInggris": "We were tired yesterday. (Wajib to be bentuk lampau 'were')"
+      }
+    ]
+  },
+  "commonMistakes": [
+    {
+      "wrong": "I didn't knew about the schedule change.",
+      "correct": "I didn't know about the schedule change.",
+      "trapType": "Double Past (Kelebihan tanda lampau)",
+      "explanation": "'Didn't' sudah menyerap bentuk lampau dari kalimat. Kata kerja setelah didn't WAJIB kembali ke bentuk dasar polos: 'know'."
+    },
+    {
+      "wrong": "Yesterday I go to the cinema with my friends.",
+      "correct": "Yesterday I went to the cinema with my friends.",
+      "trapType": "Lupa mengubah ke Verb 2",
+      "explanation": "Keterangan waktu 'Yesterday' menuntut bentuk lampau (Past Simple). Kata kerja 'go' adalah irregular verb yang bentuk keduanya adalah 'went'."
+    },
+    {
+      "wrong": "Did you watched the football match last night?",
+      "correct": "Did you watch the football match last night?",
+      "trapType": "Pertanyaan dengan Verb berimbuhan -ed",
+      "explanation": "Kata tanya pembuka 'Did' sudah berfungsi sebagai penanda lampau. Kata kerja utama harus kembali ke bare infinitive 'watch'."
+    },
+    {
+      "wrong": "I was see a shooting star in the sky.",
+      "correct": "I saw a shooting star in the sky.",
+      "trapType": "Penambahan was/were ilegal di depan Verb aksi",
+      "explanation": "Pada kalimat aktif Past Simple, tidak boleh menggabungkan 'was' dengan kata kerja (Verb 2). Cukup gunakan subjek langsung diikuti Verb 2: 'I saw'."
+    }
+  ],
+  "cheatSheet": {
+    "keyTakeaways": [
+      "Semua subjek sama: I/You/They/We/He/She/It + Verb 2 pada kalimat positif.",
+      "Regular verb: akhiran -ed (worked, studied, decided).",
+      "Irregular verb: hafalkan pasangan V1 → V2 (go → went, buy → bought).",
+      "Negatif: didn't + Verb 1 polos (tanpa -ed, tanpa V2)!",
+      "Tanya: Did + Subjek + Verb 1 polos?",
+      "Nominal (tanpa verb aksi): I/he/she/it WAS | you/we/they WERE."
+    ],
+    "quickGoldenRule": "Ingat prinsip 'Satu Lampau Saja': Jika kalimat negatif atau tanya sudah memakai DID/DIDN'T, jangan pernah memakai kata kerja lampau lagi di belakangnya!"
+  },
+  "practiceExercises": [
+    {
+      "id": "past-ex-1",
+      "type": "multiple-choice",
+      "level": "Dasar",
+      "prompt": "Pilihlah bentuk kata kerja lampau yang benar: 'Radit ___ a new pair of running shoes yesterday afternoon.'",
+      "options": ["buy", "bought", "buyed", "buys"],
+      "correctIndex": 1,
+      "explanation": "'Buy' adalah kata kerja tidak beraturan (irregular verb) yang bentuk keduanya adalah 'bought' (bukan buyed)."
+    },
+    {
+      "id": "past-ex-2",
+      "type": "multiple-choice",
+      "level": "Dasar",
+      "prompt": "Kalimat tanya manakah yang benar secara tata bahasa?",
+      "options": [
+        "Did you called the customer support this morning?",
+        "Did you call the customer support this morning?",
+        "Were you call the customer support this morning?",
+        "Do you called the customer support this morning?"
+      ],
+      "correctIndex": 1,
+      "explanation": "Setelah auxiliary 'Did', kata kerja utama harus kembali ke bentuk dasar 'call' tanpa imbuhan -ed."
+    },
+    {
+      "id": "past-ex-3",
+      "type": "fill-in",
+      "level": "Dasar",
+      "prompt": "Lengkapi kalimat dengan bentuk Past Simple dari kata dalam kurung: 'We ___ (visit) the national art gallery last weekend.'",
+      "acceptedAnswers": ["visited"],
+      "explanation": "'Visit' adalah regular verb yang cukup ditambahkan akhiran -ed menjadi 'visited'."
+    },
+    {
+      "id": "past-ex-4",
+      "type": "fill-in",
+      "level": "Menengah",
+      "prompt": "Lengkapi kalimat negatif menggunakan contraction: 'She ___ (not / tell) anyone about her secret plan.'",
+      "acceptedAnswers": ["didn't tell", "did not tell"],
+      "explanation": "Bentuk negatif Past Simple adalah 'didn't tell' atau 'did not tell' (verb utama 'tell' dalam bentuk dasar)."
+    },
+    {
+      "id": "past-ex-5",
+      "type": "error-correction",
+      "level": "Menengah",
+      "prompt": "Perbaiki kata yang salah: 'I didn't saw you at the community hall last night.'",
+      "errorWord": "saw",
+      "correctWord": "see",
+      "explanation": "Setelah kata bantu negatif 'didn't', kata kerja kedua 'saw' harus dikembalikan ke bentuk dasar polos 'see'."
+    },
+    {
+      "id": "past-ex-6",
+      "type": "error-correction",
+      "level": "Menengah",
+      "prompt": "Perbaiki kata kerja to be yang salah: 'They was very excited when they won the science competition.'",
+      "errorWord": "was",
+      "correctWord": "were",
+      "explanation": "Subjek jamak 'They' berpasangan dengan to be lampau 'were', bukan 'was'."
+    },
+    {
+      "id": "past-ex-7",
+      "type": "word-scramble",
+      "level": "Menengah",
+      "prompt": "Susun kata-kata acak berikut menjadi pertanyaan yang benar: [go / where / you / last / did / holiday / ?]",
+      "words": ["where", "did", "you", "go", "last", "holiday", "?"],
+      "targetSentence": "Where did you go last holiday?",
+      "explanation": "Pola kalimat tanya lampau Wh-: Wh-word + did + Subject + Verb 1 + Time expression: 'Where did you go last holiday?'."
+    },
+    {
+      "id": "past-ex-8",
+      "type": "word-scramble",
+      "level": "Menengah",
+      "prompt": "Susun kata-kata acak menjadi kalimat negatif: [finish / he / his / assignment / on / time / not / did]",
+      "words": ["he", "did", "not", "finish", "his", "assignment", "on", "time"],
+      "targetSentence": "He did not finish his assignment on time.",
+      "explanation": "Pola kalimat negatif: Subject (He) + did not + verb 1 (finish) + object + prepositional phrase."
+    },
+    {
+      "id": "past-ex-9",
+      "type": "transformation",
+      "level": "Lanjutan",
+      "prompt": "Ubahlah kalimat positif ini menjadi kalimat tanya (interogatif): 'Maya wrote an insightful article about renewable energy.'",
+      "acceptedAnswers": [
+        "Did Maya write an insightful article about renewable energy?",
+        "did maya write an insightful article about renewable energy?"
+      ],
+      "explanation": "Awali dengan 'Did', kembalikan 'wrote' (V2) menjadi 'write' (V1): 'Did Maya write an insightful article...?'."
+    },
+    {
+      "id": "past-ex-10",
+      "type": "transformation",
+      "level": "Lanjutan",
+      "prompt": "Ubahlah kalimat ini menjadi bentuk negatif menggunakan contraction: 'The train stopped at every small station.'",
+      "acceptedAnswers": [
+        "The train didn't stop at every small station.",
+        "the train didn't stop at every small station."
+      ],
+      "explanation": "Gunakan 'didn't' dan kembalikan 'stopped' ke bentuk dasar 'stop' (dengan satu huruf p)."
+    },
+    {
+      "id": "past-ex-11",
+      "type": "multiple-choice",
+      "level": "Lanjutan",
+      "prompt": "Manakah kelompok kata kerja yang SEMUANYA memiliki bentuk V1 dan V2 yang SAMA persis?",
+      "options": [
+        "cut, put, cost, hit",
+        "buy, bring, think, catch",
+        "go, see, take, make",
+        "write, drive, ride, rise"
+      ],
+      "correctIndex": 0,
+      "explanation": "Kelompok kata kerja 'cut', 'put', 'cost', dan 'hit' adalah irregular verbs yang bentuk past-nya tidak mengalami perubahan sama sekali."
+    },
+    {
+      "id": "past-ex-12",
+      "type": "fill-in",
+      "level": "Lanjutan",
+      "prompt": "Lengkapi narasi lampau dengan kata kerja yang tepat: 'When the bell rang, the students ___ (stand) up and greeted the principal.'",
+      "acceptedAnswers": ["stood"],
+      "explanation": "'Stand' adalah irregular verb. Bentuk lampau (Verb 2) dari stand adalah 'stood'."
+    }
+  ],
+  "finalQuiz": [
+    {
+      "id": "past-q1",
+      "question": "Which sentence correctly uses the past form of an irregular verb in an affirmative statement?",
+      "options": [
+        "She catched the early morning commuter train yesterday.",
+        "She caught the early morning commuter train yesterday.",
+        "She was catch the early morning commuter train yesterday.",
+        "She did catch the early morning commuter train yesterday."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Bentuk lampau (Past Simple) dari kata kerja tidak beraturan 'catch' adalah 'caught'. Kalimat afirmatif standar langsung memasang V2 setelah subjek.",
+        "wrongAnalysis": [
+          "Opsi A salah karena 'catched' bukan bentuk kata yang sah dalam bahasa Inggris.",
+          "Opsi C salah karena menyisipkan to be 'was' sebelum kata kerja dasar secara tidak gramatikal.",
+          "Opsi D secara tata bahasa merupakan penekanan khusus (emphatic did), namun opsi B adalah bentuk standar yang tepat."
+        ],
+        "readingStrategy": "Kuasai tabel irregular verbs untuk menghindari pembentukan kata kerja tiruan dengan imbuhan -ed.",
+        "keywords": ["catch", "caught", "irregular verb", "yesterday"]
+      }
+    },
+    {
+      "id": "past-q2",
+      "question": "Choose the sentence that correctly forms a negative statement in Past Simple:",
+      "options": [
+        "They didn't went to the concert because the tickets were sold out.",
+        "They didn't go to the concert because the tickets were sold out.",
+        "They not went to the concert because the tickets were sold out.",
+        "They weren't go to the concert because the tickets were sold out."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Setelah kata bantu negatif 'didn't', kata kerja utama WAJIB kembali ke bentuk dasar polos: 'go'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena terjadi kesalahan 'double past' (didn't dipadukan dengan went).",
+          "Opsi C salah karena negasi past memerlukan auxiliary 'did' sebelum 'not'.",
+          "Opsi D salah karena 'weren't' tidak boleh dipasangkan dengan kata kerja dasar aksi."
+        ],
+        "readingStrategy": "Terapkan aturan 'Golden Rule': begitu kata 'didn't' muncul, kata kerja berikutnya selalu Verb 1 polos.",
+        "keywords": ["didn't go", "bare infinitive", "double past", "sold out"]
+      }
+    },
+    {
+      "id": "past-q3",
+      "question": "Complete the question: '___ you meet the regional manager when you were in Semarang?'",
+      "options": ["Did", "Do", "Were", "Was"],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Klausa kedua ('when you were in Semarang') menegaskan bahwa peristiwa terjadi di masa lampau, sehingga kata tanya pembuka yang tepat adalah 'Did'.",
+        "wrongAnalysis": [
+          "Opsi B salah karena 'Do' adalah auxiliary untuk waktu sekarang (Present).",
+          "Opsi C salah karena jika memakai 'Were', kata kerjanya harus 'meeting' (continuous).",
+          "Opsi D salah karena subjek 'you' tidak pernah dipasangkan dengan 'was'."
+        ],
+        "readingStrategy": "Perhatikan penanda waktu di bagian akhir kalimat ('when you were in...') untuk memilih auxiliary masa lampau.",
+        "keywords": ["Did you meet", "auxiliary did", "past time frame", "Semarang"]
+      }
+    },
+    {
+      "id": "past-q4",
+      "question": "Which sentence correctly pronounces the '-ed' ending as a separate syllable /ɪd/?",
+      "options": [
+        "He decided to accept the scholarship offer.",
+        "He watched an inspiring documentary.",
+        "He played the violin with deep emotion.",
+        "He lived in an old colonial bungalow."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Akhiran '-ed' hanya dilafalkan sebagai suku kata terpisah /ɪd/ apabila kata dasar berakhiran bunyi huruf /t/ atau /d/. Kata 'decide' berakhiran bunyi /d/, sehingga diucapkan /dɪˈsaɪd.ɪd/.",
+        "wrongAnalysis": [
+          "Opsi B 'watched' berakhiran bunyi nirsuara /tʃ/ sehingga -ed dilafalkan /t/ (/wɒtʃt/).",
+          "Opsi C 'played' berakhiran bunyi vokal bersuara sehingga -ed dilafalkan /d/ (/pleɪd/).",
+          "Opsi D 'lived' berakhiran bunyi konsonan bersuara /v/ sehingga -ed dilafalkan /d/ (/lɪvd/)."
+        ],
+        "readingStrategy": "Hafalkan aturan fonetik: hanya kata berakhiran bunyi T atau D yang membaca -ed sebagai /id/.",
+        "keywords": ["decided", "pronunciation of -ed", "/ɪd/ sound", "phonetics"]
+      }
+    },
+    {
+      "id": "past-q5",
+      "question": "Choose the sentence that correctly employs the past tense of 'to be':",
+      "options": [
+        "The questions on the mathematics exam was surprisingly difficult.",
+        "The questions on the mathematics exam were surprisingly difficult.",
+        "The questions on the mathematics exam did difficult.",
+        "The questions on the mathematics exam been difficult."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Subjek kalimat adalah 'The questions' (jamak/plural), sehingga to be bentuk lampau yang wajib digunakan adalah 'were'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena 'was' hanya digunakan untuk subjek tunggal (I, he, she, it).",
+          "Opsi C salah karena kata sifat 'difficult' memerlukan linking verb (to be), bukan auxiliary 'did'.",
+          "Opsi D salah karena 'been' adalah past participle yang tidak bisa menjadi predikat tanpa auxiliary have/had."
+        ],
+        "readingStrategy": "Abaikan frasa penjelas 'on the mathematics exam' dan temukan kata benda inti dari subjek (questions = plural).",
+        "keywords": ["The questions", "plural subject", "were difficult", "past to be"]
+      }
+    },
+    {
+      "id": "past-q6",
+      "question": "What is the common error committed by Indonesian learners in: 'Last week I was visit my grandmother'?",
+      "options": [
+        "Illegal insertion of the auxiliary 'was' before a base verb in an active past clause.",
+        "Misspelling of the word 'grandmother'.",
+        "Using 'Last week' at the start of the clause.",
+        "Forgetting to add a preposition after 'visit'."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Banyak pembelajar Indonesia memasukkan 'was' sebelum kata kerja ('I was visit') karena menganggap 'was' adalah penanda waktu lampau umum. Kalimat aktif lampau hanya membutuhkan Subjek + Verb 2: 'I visited my grandmother'.",
+        "wrongAnalysis": [
+          "Opsi B tidak tepat karena ejaan 'grandmother' sudah benar.",
+          "Opsi C tidak tepat karena 'Last week' lazim diletakkan di depan sebagai penekanan waktu.",
+          "Opsi D tidak tepat karena 'visit' adalah kata kerja transitif langsung tanpa butuh preposisi to."
+        ],
+        "readingStrategy": "Ingat rumus paten: Was/were tidak pernah mendampingi kata kerja dasar (Verb 1) dalam kalimat aktif.",
+        "keywords": ["was visit error", "unwarranted auxiliary", "active past", "visited"]
+      }
+    },
+    {
+      "id": "past-q7",
+      "question": "Which of the following sentences correctly describes a chronological narrative sequence?",
+      "options": [
+        "She unlocked the door, turned on the lights, and put her bag on the table.",
+        "She unlocked the door, turns on the lights, and puts her bag on the table.",
+        "She unlock the door, turned on the lights, and was put her bag on the table.",
+        "She unlocked the door, turning on the lights, and putted her bag on the table."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Dalam rangkaian narasi lampau, semua kata kerja harus paralel dalam bentuk Past Simple (Verb 2): 'unlocked', 'turned on', dan 'put' (put adalah irregular V2 dari put).",
+        "wrongAnalysis": [
+          "Opsi B salah karena mencampur Past Simple dengan Present Simple (turns, puts).",
+          "Opsi C salah karena kata kerja pertama 'unlock' berbentuk dasar dan menyisipkan 'was put' secara keliru.",
+          "Opsi D salah karena ejaan 'putted' tidak ada (bentuk V2 dari put adalah tetap put)."
+        ],
+        "readingStrategy": "Perhatikan paralelisme tata bahasa pada kalimat yang memiliki daftar aksi berurutan.",
+        "keywords": ["chronological sequence", "parallel verbs", "unlocked", "turned", "put"]
+      }
+    },
+    {
+      "id": "past-q8",
+      "question": "Choose the correct past form of the modal verb 'can':",
+      "options": [
+        "When I was six years old, I can swim across the river.",
+        "When I was six years old, I could swim across the river.",
+        "When I was six years old, I was can swim across the river.",
+        "When I was six years old, I could to swim across the river."
+      ],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Bentuk lampau dari modal 'can' untuk menyatakan kemampuan di masa lalu adalah 'could' yang langsung diikuti bare infinitive tanpa 'to': 'I could swim'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena 'can' adalah bentuk masa sekarang (present ability).",
+          "Opsi C salah karena modal tidak boleh digabung dengan to be 'was'.",
+          "Opsi D salah karena modal tidak boleh diikuti infinitive berpartikel 'to'."
+        ],
+        "readingStrategy": "Hafalkan bentuk lampau modal: can → could, may → might, shall → should.",
+        "keywords": ["can", "could", "past ability", "bare infinitive"]
+      }
+    },
+    {
+      "id": "past-q9",
+      "question": "Complete the sentence with the correct spelling: 'The driver ___ the bus abruptly when a cat crossed the road.'",
+      "options": ["stoped", "stopped", "stopt", "was stop"],
+      "correctIndex": 1,
+      "explanation": {
+        "correctReason": "Verb 'stop' berakhiran Konsonan-Vokal-Konsonan (t-o-p). Sebelum ditambah akhiran -ed, huruf 'p' harus digandakan menjadi 'stopped'.",
+        "wrongAnalysis": [
+          "Opsi A salah karena konsonan 'p' tidak digandakan.",
+          "Opsi C salah karena ejaan 'stopt' adalah bentuk fonetik lama/tidak baku.",
+          "Opsi D salah karena memadukan to be 'was' dengan kata dasar 'stop'."
+        ],
+        "readingStrategy": "Terapkan aturan penggandaan konsonan akhir pada kata kerja pendek satu suku kata.",
+        "keywords": ["stop", "stopped", "consonant doubling", "spelling rule"]
+      }
+    },
+    {
+      "id": "past-q10",
+      "question": "Which sentence correctly expresses a habit in the past that is no longer true today?",
+      "options": [
+        "In elementary school, I always walked to school with my grandfather.",
+        "In elementary school, I am always walking to school with my grandfather.",
+        "In elementary school, I always walk to school with my grandfather.",
+        "In elementary school, I was always walk to school with my grandfather."
+      ],
+      "correctIndex": 0,
+      "explanation": {
+        "correctReason": "Kebiasaan di masa lalu yang sudah selesai ('In elementary school') diungkapkan dengan Past Simple + adverb of frequency: 'I always walked...'.",
+        "wrongAnalysis": [
+          "Opsi B salah karena Present Continuous tidak relevan untuk periode masa lampau di sekolah dasar.",
+          "Opsi C salah karena Present Simple 'walk' menyatakan kebiasaan saat ini.",
+          "Opsi D salah karena memadukan to be 'was' dengan kata dasar 'walk'."
+        ],
+        "readingStrategy": "Pahami bahwa Past Simple tidak hanya untuk aksi sekali terjadi, tetapi juga untuk kebiasaan masa lalu yang sudah tuntas.",
+        "keywords": ["past habit", "In elementary school", "always walked", "completed time"]
+      }
+    }
+  ]
+}
