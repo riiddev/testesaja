@@ -212,7 +212,7 @@ Each phase: (a) status, (b) exact files changed, (c) evidence including tests/sc
 - [ ] Actual Preview database transaction/rows verified.
 - [ ] User approves Fase 0 report.
 
-STOP after Fase0. Fase1 requires explicit approval.
+Fase0 telah diaudit dan Fase1 telah dilanjutkan atas persetujuan pengguna. Fase2 hanya dapat mengaktifkan koneksi database setelah Neon Free project dan branch development tersedia. Part 2 stability gate tetap tertutup hingga seluruh syarat verifikasi dipenuhi dan pengguna mengucapkan tepat: GERBANG DIBUKA.
 
 
 ## Fase 1 — Progress record (6 November 2026)
@@ -223,7 +223,21 @@ STOP after Fase0. Fase1 requires explicit approval.
 - [x] Recommend default auth/driver/avatar/schema/backup/cold-start architecture in docs/architecture-neon.md.
 - [ ] Fase 2 account owner action: create/confirm Neon Free project and development branch in Singapore, then configure Vercel Preview secrets directly in dashboard. Never send secret values in chat.
 - [ ] Verify actual Vercel Hobby function region and Preview latency; do not assume sin1 is available at Rp0.
-- [ ] No app source code/auth migration has been performed yet.
-- [ ] No real users/data migrated; legacy Sheets/Apps Script/Drive remain untouched.
+- [x] Source preflight di branch Preview: perbaikan clock deterministik SRS dan konsolidasi 32 endpoint menjadi satu Vercel catch-all; auth masih menggunakan custom handler dan belum cutover ke Better Auth.
+- [x] No real users/data migrated; legacy Sheets/Apps Script/Drive remain untouched.
 
 User has asked the assistant to take ownership of technical decisions and finish the work. Treat the documented default recommendations as the working direction; only stop for actions that require the account owner's private dashboard, data counts/exports, or an explicit stability-gate requirement. The Part 2 stability gate remains closed until every required condition and the exact user phrase GERBANG DIBUKA are satisfied.
+
+
+## Fase 1.5 — Stabilitas tes dan batas deploy Vercel Hobby (6 November 2026)
+- [x] Perbaiki tes SRS yang bergantung pada tanggal mesin dengan menginjeksikan waktu evaluasi ke getWordStatus; perilaku runtime tetap memakai waktu saat ini secara default.
+- [x] Tambahkan tests/api-router.test.mjs untuk memeriksa dynamic segments, fallback URL, dan seluruh 32 route lama.
+- [x] Pindahkan 32 handler dari api/* ke api/_handlers/* tanpa mengubah logika handler; sesuaikan relative imports.
+- [x] Tambahkan api/[...segments].js sebagai satu pintu API; URL /api/* lama tetap ada dan dipetakan melalui allowlist.
+- [x] Jumlah kandidat Vercel Function yang terdeteksi dari repository tree turun dari 32 menjadi 1.
+- [x] GitHub Actions run 42210443701 (6 Nov 2026): npm ci, npm test, test:logic, dan Vite build berhasil.
+- [ ] Langkah Backend Integration & Security Tests pada workflow masih SKIPPED karena DATABASE_URL belum tersedia di GitHub Actions; ini bukan bukti API database sudah sehat.
+- [x] Vercel Preview deployment dpl_Bx5R1yX1bKNsG7N3BiFg5Lh4nzB2 berstatus READY pada project sinauuenglish yang terhubung ke riiddev/testesaja.
+- [x] Preview Function berjalan pada region iad1; belum ada perubahan Production.
+- [ ] Fase2 masih menunggu Neon Free project + development branch. Pada project Vercel yang benar (sinauuenglish / repo testesaja), DATABASE_URL dan BETTER_AUTH_SECRET belum tersedia.
+- [ ] Belum ada koneksi nyata, migrasi schema, login lintas perangkat, atau pemindahan data yang diverifikasi.

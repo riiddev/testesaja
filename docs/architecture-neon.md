@@ -3,8 +3,8 @@
 **Tanggal riset:** 6 November 2026  
 **Repository:** riiddev/testesaja  
 **Branch:** feat/neon-migration  
-**Baseline:** main e88c70517ff97ddcc1e1bd03cd9cf1965943e393  
-**Status:** rancangan arsitektur siap; belum ada resource Neon/Vercel yang dibuat atau diubah oleh dokumen ini.
+**Baseline:** main 395ce73409b08690b195da0254599294536a1dde  
+**Status:** rancangan arsitektur siap; belum ada resource Neon yang dibuat. Preview compatibility fix berada di branch feat/neon-migration dan tidak mengubah Production.
 
 > Dokumen arsitektur lama pada baseline tidak lagi akurat pada status Neon Auth dan batas paket gratis. Riset ini memakai dokumentasi resmi yang tersedia pada tanggal riset. Kuota, harga, region, dan API vendor dapat berubah; cek kembali saat setup Fase 2.
 
