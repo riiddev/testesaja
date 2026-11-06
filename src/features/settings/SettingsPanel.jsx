@@ -1,7 +1,7 @@
 import {
   IconCheck
 } from "../../components/common/Icons.jsx";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth.jsx";
 import { usePWA } from "../../hooks/usePWA.js";
 import { Button } from "../../components/common/Button.jsx";
@@ -24,6 +24,34 @@ export function SettingsPanel({ onProgressReload }) {
   const [isImporting, setIsImporting] = useState(false);
   const [importStatus, setImportStatus] = useState("");
   const [notifFeedback, setNotifFeedback] = useState("");
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    api.getSettings().then((res) => {
+      if (active && res && res.data && res.data.dailyGoal) {
+        setDailyGoal(Number(res.data.dailyGoal));
+      } else if (active && res && res.dailyGoal) {
+        setDailyGoal(Number(res.dailyGoal));
+      }
+    }).catch((err) => {
+      console.warn("Gagal memuat preferensi belajar dari server:", err.message);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const handleDailyGoalChange = async (newVal) => {
+    const goal = Number(newVal);
+    setDailyGoal(goal);
+    setIsSavingGoal(true);
+    try {
+      await api.updateSettings({ dailyGoal: goal });
+    } catch (err) {
+      console.error("Gagal menyimpan target harian ke server:", err.message);
+    } finally {
+      setIsSavingGoal(false);
+    }
+  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -180,7 +208,7 @@ export function SettingsPanel({ onProgressReload }) {
               Pengingat Misi Harian di HP
             </h3>
             <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", margin: 0 }}>
-              Dapatkan notifikasi otomatis pada jam belajar pilihanmu agar misi harian dan streak tidak terputus.
+              Dapatkan notifikasi pengingat pada jam belajar pilihanmu saat membuka aplikasi atau dalam mode PWA agar streak belajarmu tetap aman.
             </p>
           </div>
 
@@ -201,7 +229,7 @@ export function SettingsPanel({ onProgressReload }) {
           {notificationPermission !== "granted" && (
             <div style={{ padding: "var(--space-3) var(--space-4)", backgroundColor: "var(--color-bg-subtle)", borderRadius: "var(--radius-md)", border: "var(--border-sm)", marginBottom: "var(--space-2)" }}>
               <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)", margin: "0 0 var(--space-2)" }}>
-                Aktifkan izin notifikasi sistem agar pengingat tetap masuk saat browser ditutup:
+                Aktifkan izin notifikasi peramban agar pengingat misi muncul saat aplikasi/tab dibuka atau saat terpasang sebagai PWA:
               </p>
               <button
                 type="button"
@@ -306,7 +334,8 @@ export function SettingsPanel({ onProgressReload }) {
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", flexWrap: "wrap" }}>
           <select
             value={dailyGoal}
-            onChange={(e) => setDailyGoal(Number(e.target.value))}
+            onChange={(e) => handleDailyGoalChange(e.target.value)}
+            disabled={isSavingGoal}
             className="form-input"
             style={{ maxWidth: "200px", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "var(--border-sm)" }}
           >
@@ -316,7 +345,7 @@ export function SettingsPanel({ onProgressReload }) {
             <option value="20">20 Kata / Hari (Intensif)</option>
           </select>
           <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)" }}>
-            Target direkomendasikan: 10 kata per hari.
+            {isSavingGoal ? "Menyimpan ke server..." : "Target direkomendasikan: 10 kata per hari (tersimpan di akun)."}
           </span>
         </div>
       </div>

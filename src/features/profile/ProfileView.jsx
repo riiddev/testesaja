@@ -10,9 +10,19 @@ import { AvatarWithBorder } from "./AvatarWithBorder.jsx";
 import "../../styles/profile.css";
 
 export function ProfileView({ vocabulary = [], progressMap = {}, userProfileHook }) {
-  const { user, isAuthenticated } = useAuth();
+  if (userProfileHook) {
+    return <ProfileViewContent vocabulary={vocabulary} progressMap={progressMap} activeHook={userProfileHook} />;
+  }
+  return <ProfileViewWithInternalHook vocabulary={vocabulary} progressMap={progressMap} />;
+}
+
+function ProfileViewWithInternalHook({ vocabulary, progressMap }) {
   const internalProfileHook = useUserProfile({ vocabulary, progressMap });
-  const activeHook = userProfileHook || internalProfileHook;
+  return <ProfileViewContent vocabulary={vocabulary} progressMap={progressMap} activeHook={internalProfileHook} />;
+}
+
+function ProfileViewContent({ vocabulary = [], progressMap = {}, activeHook }) {
+  const { user, isAuthenticated } = useAuth();
 
   const {
     profile,
@@ -328,7 +338,7 @@ export function ProfileView({ vocabulary = [], progressMap = {}, userProfileHook
               </svg>
             </div>
             <div className="bento-value" id="bento-stat-exp">
-              {Number(profile.xp || 50).toLocaleString("id-ID")}
+              {Number(profile.xp ?? 0).toLocaleString("id-ID")}
             </div>
             <div className="bento-label">EXP Kosakata</div>
           </div>
@@ -344,7 +354,7 @@ export function ProfileView({ vocabulary = [], progressMap = {}, userProfileHook
               </svg>
             </div>
             <div className="bento-value" id="bento-stat-coins">
-              {Number(profile.coins || 50).toLocaleString("id-ID")}
+              {Number(profile.coins ?? 0).toLocaleString("id-ID")}
             </div>
             <div className="bento-label">Koin Sinau</div>
           </div>
@@ -357,7 +367,7 @@ export function ProfileView({ vocabulary = [], progressMap = {}, userProfileHook
               </svg>
             </div>
             <div className="bento-value" id="bento-stat-streak">
-              {profile.streak || 1} Hari
+              {profile.streak ?? 0} Hari
             </div>
             <div className="bento-label">Konsistensi Belajar</div>
           </div>

@@ -47,6 +47,13 @@
       "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     },
     {
+      "name": "Riwayat Latihan",
+      "short_name": "Riwayat",
+      "description": "Lihat hasil sesi belajar dan review kata salah",
+      "url": "/belajar/riwayat",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
       "name": "Matching Konteks",
       "short_name": "Matching",
       "description": "Latihan menjodohkan kalimat dan kata",

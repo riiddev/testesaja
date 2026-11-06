@@ -1,0 +1,44 @@
+name: Neon Database Backup
+
+on:
+  schedule:
+    # Run every Sunday at 02:00 UTC (09:00 WIB)
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Alasan backup manual'
+        required: false
+        default: 'Manual maintenance backup'
+
+jobs:
+  backup:
+    name: Backup Neon PostgreSQL Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Database Backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/backup-db.mjs
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ github.run_id }}
+          path: backups/*.json
+          retention-days: 30
+          if-no-files-found: error
+

@@ -1,0 +1,41 @@
+name: SinauEnglish V2 CI
+
+on:
+  push:
+    branches: [ main, feat/neon-migration ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Build, Audit & Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Verify Content Parity & Core SRS Logic
+        run: npm test
+
+      - name: Verify Adaptive Learning Logic
+        run: npm run test:logic
+
+      - name: Build Vite Client
+        run: npm run build
+
+      - name: Run Backend Integration & Security Tests
+        if: env.DATABASE_URL != ''
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run test:api
+

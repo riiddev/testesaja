@@ -90,6 +90,22 @@
   border: var(--border-sm);
 }
 
+.sidebar-unread-alert {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background-color: #E53E3E;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(229, 62, 62, 0.4);
+}
+
 .sidebar-link.is-active .sidebar-count {
   background-color: var(--color-accent-gold);
 }
@@ -658,7 +674,8 @@
     display: none;
   }
 
-  .app-sidebar.is-collapsed .sidebar-count {
+  .app-sidebar.is-collapsed .sidebar-count,
+  .app-sidebar.is-collapsed .sidebar-unread-alert {
     display: none;
   }
 

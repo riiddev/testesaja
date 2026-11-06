@@ -14,7 +14,8 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     return `${year}-${month}-${day}`;
   }, []);
 
-  const storageKey = `sinau_daily_quests_${todayStr}`;
+  // Namespaced by user ID to prevent cross-account leak
+  const storageKey = `sinau_daily_quests_${user?.id || "guest"}_${todayStr}`;
 
   // Generated template quests for today
   const templateQuests = useMemo(() => {
@@ -49,7 +50,9 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
             prev.forEach((q) => mergedMap.set(q.questId, q));
             remoteQuests.forEach((q) => mergedMap.set(q.questId, q));
             const merged = Array.from(mergedMap.values());
-            localStorage.setItem(storageKey, JSON.stringify(merged));
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(merged));
+            } catch (e) {}
             return merged;
           });
         }
@@ -91,7 +94,9 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
       };
 
       const next = prev.filter((q) => q.questId !== questId).concat(updated);
-      localStorage.setItem(storageKey, JSON.stringify(next));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch (e) {}
 
       if (isAuthenticated) {
         api.updateQuestProgress({
@@ -106,48 +111,53 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     });
   }, [templateQuests, todayStr, storageKey, isAuthenticated]);
 
-  // Claim quest reward
+  // Claim quest reward (Server validates completion & double claim)
   const claimReward = useCallback(async (questId) => {
     const quest = quests.find((q) => q.id === questId);
     if (!quest || !quest.isCompleted || quest.isClaimed) return;
 
-    const now = new Date().toISOString();
-
-    setStoredQuests((prev) => {
-      const existing = prev.find((q) => q.questId === questId);
-      const updated = {
-        questId,
-        dateStr: todayStr,
-        progress: quest.target,
-        target: quest.target,
-        isCompleted: true,
-        claimedAt: now
-      };
-
-      const next = prev.filter((q) => q.questId !== questId).concat(updated);
-      localStorage.setItem(storageKey, JSON.stringify(next));
-      return next;
-    });
-
-    if (isAuthenticated) {
-      try {
-        await api.claimQuestReward({
-          questId,
-          dateStr: todayStr,
-          xpReward: quest.xpReward,
-          coinsReward: quest.coinsReward
-        });
-      } catch (err) {
-        console.warn("[DailyQuests] Gagal mencatat klaim ke server:", err.message);
-      }
+    if (!isAuthenticated) {
+      alert("Silakan masuk akun terlebih dahulu untuk mengklaim hadiah misi.");
+      return;
     }
 
-    if (onRewardClaimed) {
-      onRewardClaimed({
+    try {
+      const res = await api.claimQuestReward({
         questId,
-        xp: quest.xpReward,
-        coins: quest.coinsReward
+        dateStr: todayStr
       });
+
+      if (res.success && res.data) {
+        const now = new Date().toISOString();
+        setStoredQuests((prev) => {
+          const existing = prev.find((q) => q.questId === questId);
+          const updated = {
+            questId,
+            dateStr: todayStr,
+            progress: quest.target,
+            target: quest.target,
+            isCompleted: true,
+            claimedAt: now
+          };
+
+          const next = prev.filter((q) => q.questId !== questId).concat(updated);
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(next));
+          } catch (e) {}
+          return next;
+        });
+
+        if (onRewardClaimed) {
+          onRewardClaimed({
+            questId,
+            xp: res.data.earnedXp,
+            coins: res.data.earnedCoins
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("[DailyQuests] Gagal mengklaim misi:", err.message);
+      alert(err.message || "Gagal mengklaim hadiah misi.");
     }
   }, [quests, todayStr, storageKey, isAuthenticated, onRewardClaimed]);
 
@@ -187,4 +197,3 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     claimReward
   };
 }
-

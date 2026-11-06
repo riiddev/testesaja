@@ -7,7 +7,8 @@ export function AppSidebar({
   isOpen,
   onClose,
   isCollapsed = false,
-  onToggleCollapse
+  onToggleCollapse,
+  hasUnfinishedMissions = false
 }) {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
@@ -20,6 +21,7 @@ export function AppSidebar({
     if (v === "overview") return location.pathname === "/belajar" || location.pathname === "/belajar/";
     if (v === "progress") return location.pathname === "/belajar/progress" || location.pathname === "/belajar/profile";
     if (v === "collection" || v === "koleksi") return location.pathname === "/belajar/collection" || location.pathname === "/belajar/koleksi";
+    if (v === "riwayat" || v === "history") return location.pathname === "/belajar/riwayat" || location.pathname === "/belajar/history";
     return location.pathname === `/belajar/${v}`;
   };
 
@@ -158,7 +160,6 @@ export function AppSidebar({
               <path d="M6 10h10"/>
             </svg>
             <span>Kosakata</span>
-            <span className="sidebar-count" id="sidebar-vocab-count">2.971</span>
           </Link>
 
           <Link
@@ -174,7 +175,16 @@ export function AppSidebar({
               <circle cx="12" cy="12" r="2"/>
             </svg>
             <span>Misi Harian</span>
-            <span className="sidebar-count" id="sidebar-missions-count">3</span>
+            {hasUnfinishedMissions && (
+              <span
+                className="sidebar-unread-alert"
+                id="sidebar-missions-alert"
+                aria-label="Ada misi belum selesai hari ini"
+                title="Ada misi belum selesai hari ini"
+              >
+                !
+              </span>
+            )}
           </Link>
 
           <Link
@@ -203,7 +213,6 @@ export function AppSidebar({
               <path d="m9 15 2 2 4-4"/>
             </svg>
             <span>Grammar</span>
-            <span className="sidebar-count" id="sidebar-grammar-count">19</span>
           </Link>
 
           <Link
@@ -217,7 +226,6 @@ export function AppSidebar({
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
             </svg>
             <span>HABIT Reading</span>
-            <span className="sidebar-count" id="sidebar-reading-count">156</span>
           </Link>
 
           <Link
@@ -246,6 +254,20 @@ export function AppSidebar({
               <path d="M16 21h5v-5"/>
             </svg>
             <span>Review (SRS)</span>
+          </Link>
+
+          <Link
+            to="/belajar/riwayat"
+            onClick={onClose}
+            className={`sidebar-link ${isView("riwayat") ? "is-active" : ""}`}
+            title="Riwayat Latihan"
+            id="sidebar-history-link"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span>Riwayat</span>
           </Link>
 
           <Link

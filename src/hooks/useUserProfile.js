@@ -102,7 +102,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
       completedGrammarCount: grammarCount,
       readingCompletedCount: readingCount,
       adventureCompletedCount: Math.min(started > 10 ? 3 : 0, 12),
-      streak: profile.streak || 1
+      streak: profile.streak || 0
     };
   }, [vocabulary, progressMap, profile.streak]);
 
@@ -130,11 +130,24 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     let isMounted = true;
     setIsLoading(true);
 
-    api.getProfile()
-      .then(async (res) => {
-        if (!isMounted || !res.success || !res.data) return;
-        const remoteP = res.data.profile;
-        let remoteTitles = (res.data.unlockedTitles || []).map((t) => t.titleId);
+    Promise.all([
+      api.getProfile(),
+      api.getInventory().catch(() => ({ success: false, data: { inventory: [] } }))
+    ])
+      .then(async ([profileRes, invRes]) => {
+        if (!isMounted) return;
+
+        // Sync inventory from server
+        if (invRes?.success && invRes.data?.inventory) {
+          setInventory(invRes.data.inventory);
+          try {
+            localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(invRes.data.inventory));
+          } catch (e) {}
+        }
+
+        if (!profileRes?.success || !profileRes.data) return;
+        const remoteP = profileRes.data.profile;
+        let remoteTitles = (profileRes.data.unlockedTitles || []).map((t) => (typeof t === "string" ? t : t.titleId));
 
         // Filter out premature "word_explorer" title if user has not actually reached 50 words started
         if ((userStats.totalStartedWords || 0) < 50) {
@@ -142,19 +155,19 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
         }
 
         setProfile((prev) => {
-          // If user has 0 reviews and 0 words started, ensure streak, coins, and xp start strictly from 0
-          const hasStudyActivity = (userStats.totalStartedWords || 0) > 0 || (userStats.totalReviews || 0) > 0;
           const merged = {
             ...prev,
             displayName: remoteP.displayName || user?.displayName || prev.displayName,
             activeTitle: remoteTitles.includes(remoteP.activeTitle) ? remoteP.activeTitle : "",
             avatarKey: remoteP.avatarKey || prev.avatarKey,
-            xp: hasStudyActivity ? Number(remoteP.xp !== undefined ? remoteP.xp : (prev.xp || 0)) : 0,
-            streak: hasStudyActivity ? Number(remoteP.streak !== undefined ? remoteP.streak : (prev.streak || 0)) : 0,
-            coins: hasStudyActivity ? Number(remoteP.coins !== undefined ? remoteP.coins : (prev.coins || 0)) : 0,
+            xp: Number(remoteP.xp !== undefined ? remoteP.xp : (prev.xp ?? 0)),
+            streak: Number(remoteP.streak !== undefined ? remoteP.streak : (prev.streak ?? 0)),
+            coins: Number(remoteP.coins !== undefined ? remoteP.coins : (prev.coins ?? 0)),
             lastActiveDate: remoteP.lastActiveDate || prev.lastActiveDate
           };
-          localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(merged));
+          try {
+            localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(merged));
+          } catch (e) {}
           return merged;
         });
 
@@ -166,7 +179,6 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
         const cachedUrl = localStorage.getItem(LOCAL_AVATAR_URL_KEY);
 
         if (remoteAvatarTime && (remoteAvatarTime !== localAvatarTime || !cachedUrl)) {
-          // Fetch updated avatar from Google DriveApp
           try {
             const avatarRes = await api.getAvatar();
             if (isMounted && avatarRes.success && avatarRes.data?.hasAvatar) {
@@ -179,7 +191,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
               localStorage.removeItem(LOCAL_AVATAR_URL_KEY);
             }
           } catch (e) {
-            console.warn("[UserProfile] Gagal fetch avatar Drive:", e);
+            console.warn("[UserProfile] Gagal fetch avatar:", e);
           }
         } else if (!remoteAvatarTime && cachedUrl) {
           // Avatar was removed
@@ -207,12 +219,12 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
 
   // Derived Equipped Border & Outfit
   const equippedBorder = useMemo(() => {
-    const item = inventory.find((it) => it.equipped && it.itemId.startsWith("border_"));
+    const item = inventory.find((it) => it.equipped && (it.itemId?.startsWith("border_") || it.type === "border"));
     return item ? item.itemId : "border_daun";
   }, [inventory]);
 
   const equippedOutfit = useMemo(() => {
-    const item = inventory.find((it) => it.equipped && it.itemId.startsWith("outfit_"));
+    const item = inventory.find((it) => it.equipped && (it.itemId?.startsWith("outfit_") || it.type === "outfit"));
     return item ? item.itemId.replace(/^outfit_/, "") : null;
   }, [inventory]);
 
@@ -225,50 +237,69 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     const trimmed = (newName || "").trim();
     if (!trimmed) return;
 
-    setProfile((prev) => {
-      const next = { ...prev, displayName: trimmed };
-      localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next));
-      return next;
-    });
+    if (!isAuthenticated) {
+      setProfile((prev) => {
+        const next = { ...prev, displayName: trimmed };
+        try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+        return next;
+      });
+      return;
+    }
 
-    if (isAuthenticated) {
-      try {
-        await api.updateProfile({ displayName: trimmed });
-      } catch (e) {
-        console.warn("Gagal update nama di server:", e);
+    try {
+      const res = await api.updateProfile({ displayName: trimmed });
+      if (res.success) {
+        setProfile((prev) => {
+          const next = { ...prev, displayName: trimmed };
+          try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
       }
+    } catch (e) {
+      console.warn("Gagal update nama di server:", e);
+      throw e;
     }
   }, [isAuthenticated]);
 
   // Change Active Title
   const setActiveTitle = useCallback(async (titleId) => {
     const exists = TITLES_CATALOG.some((t) => t.id === titleId);
-    if (!exists) return;
+    if (!exists && titleId !== "") return;
 
-    setProfile((prev) => {
-      const next = { ...prev, activeTitle: titleId };
-      localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next));
-      return next;
-    });
+    if (!isAuthenticated) {
+      setProfile((prev) => {
+        const next = { ...prev, activeTitle: titleId };
+        try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+        return next;
+      });
+      return;
+    }
 
-    if (isAuthenticated) {
-      try {
-        await api.updateProfile({ activeTitle: titleId });
-      } catch (e) {
-        console.warn("Gagal update active title di server:", e);
+    try {
+      const res = await api.updateProfile({ activeTitle: titleId });
+      if (res.success) {
+        setProfile((prev) => {
+          const next = { ...prev, activeTitle: titleId };
+          try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
       }
+    } catch (e) {
+      console.warn("Gagal update active title di server:", e);
+      throw e;
     }
   }, [isAuthenticated]);
 
   // Upload Custom Avatar (from gallery/crop)
   const uploadCustomAvatar = useCallback(async ({ imageBase64, mimeType = "image/webp" }) => {
     setIsUploadingAvatar(true);
-    // Optimistic local update
     setAvatarUrl(imageBase64);
     const now = new Date().toISOString();
     setAvatarUpdatedAt(now);
-    localStorage.setItem(LOCAL_AVATAR_URL_KEY, imageBase64);
-    localStorage.setItem(LOCAL_AVATAR_TIME_KEY, now);
+    try {
+      localStorage.setItem(LOCAL_AVATAR_URL_KEY, imageBase64);
+      localStorage.setItem(LOCAL_AVATAR_TIME_KEY, now);
+    } catch (e) {}
 
     if (!isAuthenticated) {
       setIsUploadingAvatar(false);
@@ -280,7 +311,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
       if (res.success && res.data) {
         if (res.data.avatarUpdatedAt) {
           setAvatarUpdatedAt(res.data.avatarUpdatedAt);
-          localStorage.setItem(LOCAL_AVATAR_TIME_KEY, res.data.avatarUpdatedAt);
+          try { localStorage.setItem(LOCAL_AVATAR_TIME_KEY, res.data.avatarUpdatedAt); } catch (e) {}
         }
       }
       return { success: true };
@@ -296,8 +327,10 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
   const deleteCustomAvatar = useCallback(async () => {
     setAvatarUrl(null);
     setAvatarUpdatedAt(null);
-    localStorage.removeItem(LOCAL_AVATAR_URL_KEY);
-    localStorage.removeItem(LOCAL_AVATAR_TIME_KEY);
+    try {
+      localStorage.removeItem(LOCAL_AVATAR_URL_KEY);
+      localStorage.removeItem(LOCAL_AVATAR_TIME_KEY);
+    } catch (e) {}
 
     if (isAuthenticated) {
       try {
@@ -309,112 +342,107 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     return { success: true };
   }, [isAuthenticated]);
 
-  // Buy item from collection catalog
+  // Buy item from collection catalog (Server is authoritative)
   const buyItem = useCallback(async (itemId) => {
     const catItem = getCatalogItemById(itemId);
     if (!catItem) return { success: false, error: "Item tidak ditemukan di katalog." };
 
-    const currentCoins = profile.coins || 0;
-    if (currentCoins < catItem.price) {
-      return { success: false, error: "Sinau Coin tidak mencukupi (Butuh " + catItem.price + " Coin, saldomu " + currentCoins + " Coin)." };
+    if (!isAuthenticated) {
+      return { success: false, error: "Silakan masuk terlebih dahulu untuk membeli koleksi." };
     }
 
-    const currentLvl = calculateLevelFromXp(profile.xp);
-    if (currentLvl < catItem.levelReq) {
-      return { success: false, error: "Level belum mencukupi (Butuh Level " + catItem.levelReq + ", levelmu " + currentLvl + ")." };
-    }
+    try {
+      const res = await api.buyItem({ itemId });
+      if (res.success && res.data) {
+        const remainingCoins = res.data.remainingCoins;
+        setProfile((prev) => {
+          const next = { ...prev, coins: remainingCoins };
+          try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
 
-    const now = new Date().toISOString();
-    const updatedCoins = currentCoins - catItem.price;
+        const boughtItem = {
+          itemId,
+          name: res.data.item?.name || catItem.name,
+          type: res.data.item?.type || catItem.type,
+          unlockedAt: new Date().toISOString(),
+          equipped: false
+        };
 
-    setProfile((prev) => {
-      const next = { ...prev, coins: updatedCoins };
-      localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next));
-      return next;
-    });
+        setInventory((prev) => {
+          const next = [...prev, boughtItem];
+          try { localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
 
-    setInventory((prev) => {
-      const next = [...prev, { itemId, unlockedAt: now, equipped: false }];
-      localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(next));
-      return next;
-    });
-
-    if (isAuthenticated) {
-      try {
-        await api.buyItem({ itemId });
-      } catch (err) {
-        console.warn("Buy item cloud sync warning:", err);
+        return { success: true, item: catItem, remainingCoins };
       }
+      return { success: false, error: res.error || "Gagal membeli item." };
+    } catch (err) {
+      return { success: false, error: err.message || "Gagal membeli item." };
     }
+  }, [isAuthenticated]);
 
-    return { success: true, item: catItem };
-  }, [profile.coins, profile.xp, isAuthenticated]);
-
-  // Equip border or outfit
+  // Equip border or outfit (Server is authoritative)
   const equipItem = useCallback(async (itemId, type = "border") => {
-    setInventory((prev) => {
-      const next = prev.map((it) => {
-        const itType = it.itemId.startsWith("outfit_") ? "outfit" : "border";
-        if (itType === type) {
-          return {
-            ...it,
-            equipped: it.itemId === itemId
-          };
-        }
-        return it;
-      });
-      localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(next));
-      return next;
-    });
+    if (!isAuthenticated) return;
 
-    if (isAuthenticated) {
-      try {
-        await api.equipItem({ itemId, type });
-      } catch (err) {
-        console.warn("Equip item cloud sync warning:", err);
+    try {
+      const res = await api.equipItem({ itemId, type });
+      if (res.success) {
+        setInventory((prev) => {
+          const next = prev.map((it) => {
+            const itType = it.type || (it.itemId?.startsWith("outfit_") ? "outfit" : "border");
+            if (itType === type) {
+              return {
+                ...it,
+                equipped: it.itemId === itemId
+              };
+            }
+            return it;
+          });
+          try { localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
       }
+    } catch (err) {
+      console.warn("Equip item server warning:", err.message);
     }
   }, [isAuthenticated]);
 
   // Server-side idempotent reward grant
   const claimReward = useCallback(async ({ eventId, source, refId = "", meta = {} }) => {
-    let expEarned = 15;
-    let coinsEarned = 10;
-    if (source === "daily_quest") {
-      expEarned = meta.difficulty === 2 ? 40 : 30;
-      coinsEarned = meta.difficulty === 2 ? 20 : 15;
-    } else if (source === "story_episode") {
-      expEarned = 50;
-      coinsEarned = 30;
-    } else if (source === "article_quiz") {
-      expEarned = 30;
-      coinsEarned = meta.scorePct >= 100 ? 20 : 0;
-    } else if (source === "grammar_quiz") {
-      expEarned = 25;
-      coinsEarned = 15;
+    if (!isAuthenticated) {
+      return { success: false, error: "Silakan masuk untuk mendapatkan hadiah." };
     }
 
-    if (isAuthenticated) {
-      try {
-        const res = await api.grantReward({ eventId, source, refId, meta });
-        if (res.success && res.data) {
-          expEarned = res.data.earnedXp;
-          coinsEarned = res.data.earnedCoins;
-        }
-      } catch (err) {
-        console.warn("Grant reward warning:", err);
+    try {
+      const res = await api.grantReward({ eventId, source, refId, meta });
+      if (res.success && res.data) {
+        const { totalXp, totalCoins, earnedXp, earnedCoins, streak } = res.data;
+        setProfile((prev) => {
+          const next = {
+            ...prev,
+            xp: totalXp !== undefined ? totalXp : (prev.xp ?? 0),
+            coins: totalCoins !== undefined ? totalCoins : (prev.coins ?? 0),
+            streak: streak !== undefined ? streak : (prev.streak ?? 0)
+          };
+          try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
+
+        return {
+          success: true,
+          alreadyRewarded: res.data.alreadyRewarded || false,
+          earnedXp: earnedXp || 0,
+          earnedCoins: earnedCoins || 0
+        };
       }
+      return { success: false, error: res.error || "Gagal memproses hadiah." };
+    } catch (err) {
+      console.warn("Grant reward error:", err.message);
+      return { success: false, error: err.message };
     }
-
-    setProfile((prev) => {
-      const nextXp = (prev.xp || 0) + expEarned;
-      const nextCoins = (prev.coins || 0) + coinsEarned;
-      const next = { ...prev, xp: nextXp, coins: nextCoins };
-      localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next));
-      return next;
-    });
-
-    return { success: true, earnedXp: expEarned, earnedCoins: coinsEarned };
   }, [isAuthenticated]);
 
   const activeTitleObj = useMemo(() => {

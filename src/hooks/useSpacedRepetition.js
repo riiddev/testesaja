@@ -1,6 +1,7 @@
 /**
  * SINAUENGLISH V2 — Spaced Repetition Engine
- * Adaptive interval calculation: [1, 3, 8, 16, 30] days.
+ * Standard unified interval sequence: [1, 3, 8, 16, 30] days.
+ * First correct answer schedules review for 1 day (tomorrow).
  */
 
 export const SRS_INTERVALS_DAYS = [1, 3, 8, 16, 30];
@@ -38,8 +39,10 @@ export function getWordStatus(item) {
 
 export function calculateNextReview(isCorrect, currentCorrect = 0) {
   const nextCorrect = isCorrect ? currentCorrect + 1 : Math.max(0, currentCorrect - 1);
-  const intervalIndex = Math.min(nextCorrect, SRS_INTERVALS_DAYS.length - 1);
-  const intervalDays = isCorrect ? SRS_INTERVALS_DAYS[intervalIndex] : 1;
+  const intervalIndex = isCorrect
+    ? Math.min(Math.max(0, nextCorrect - 1), SRS_INTERVALS_DAYS.length - 1)
+    : 0;
+  const intervalDays = SRS_INTERVALS_DAYS[intervalIndex];
 
   const nextReviewDate = new Date();
   nextReviewDate.setDate(nextReviewDate.getDate() + intervalDays);
@@ -51,4 +54,3 @@ export function calculateNextReview(isCorrect, currentCorrect = 0) {
     masteryStage: nextCorrect >= 5 ? "mastered" : (isCorrect ? "learning" : "weak")
   };
 }
-

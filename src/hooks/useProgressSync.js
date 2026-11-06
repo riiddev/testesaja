@@ -1,99 +1,181 @@
+/**
+ * SINAUENGLISH V2 — Offline-First Progress & Spaced Repetition (SRS) Sync Hook
+ * 
+ * Enforces resilient background syncing:
+ * 1. Persistent IndexedDB outbox per user (`sinau_outbox_${userId}`)
+ * 2. Strict server ACK deletion (events removed ONLY after confirmed by server)
+ * 3. 4-State UI Status: "saved", "syncing", "pending", "error"
+ * 4. Automatic retry on network reconnection (online event)
+ * 5. Fetch `keepalive: true` on page visibility change
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "../services/api.js";
 import { calculateNextReview, getWordStatus } from "./useSpacedRepetition.js";
 import { useAuth } from "./useAuth.jsx";
+import {
+  enqueueOutboxEvent,
+  getPendingOutboxEvents,
+  removeConfirmedEvents,
+  getOutboxCount,
+  saveProgressToCache,
+  loadProgressFromCache
+} from "../services/outboxDb.js";
 
 const BATCH_SIZE_THRESHOLD = 5;
-const DEBOUNCE_DELAY_MS = 3000;
+const DEBOUNCE_DELAY_MS = 2500;
 
 export function useProgressSync() {
   const { user, isAuthenticated } = useAuth();
-  const [progressMap, setProgressMap] = useState({});
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncError, setSyncError] = useState(null);
+  const userId = user?.id || "guest";
 
-  const pendingQueueRef = useRef(new Map());
+  const [progressMap, setProgressMap] = useState({});
+  const [outboxCount, setOutboxCount] = useState(0);
+  const [syncStatus, setSyncStatus] = useState("saved"); // "saved" | "syncing" | "pending" | "error"
+  const [syncError, setSyncError] = useState(null);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+
+  const isSyncingRef = useRef(false);
   const debounceTimerRef = useRef(null);
 
-  // Load progress when user authenticates
+  // 1. Initial Load: Load from IndexedDB cache first, then sync with server
   useEffect(() => {
     let isMounted = true;
-    async function fetchProgress() {
-      if (!isAuthenticated) {
+
+    async function initUserProgress() {
+      if (!userId || userId === "guest") {
         setProgressMap({});
+        setOutboxCount(0);
+        setSyncStatus("saved");
         return;
       }
 
-      try {
-        const res = await api.getProgress();
-        if (isMounted && res.success && res.data?.items) {
-          setProgressMap(res.data.items);
+      // Step A: Load instantly from offline cache
+      const cached = await loadProgressFromCache(userId);
+      if (isMounted && cached && Object.keys(cached).length > 0) {
+        setProgressMap(cached);
+      }
+
+      // Step B: Check pending outbox count
+      const count = await getOutboxCount(userId);
+      if (isMounted) {
+        setOutboxCount(count);
+        if (count > 0) {
+          setSyncStatus("pending");
         }
-      } catch (err) {
-        if (isMounted) {
-          console.warn("Gagal mengambil progres:", err.message);
-          setSyncError(err.message);
+      }
+
+      // Step C: If authenticated, fetch fresh cloud state
+      if (isAuthenticated) {
+        try {
+          const res = await api.getProgress();
+          if (isMounted && res.success && res.data?.items) {
+            setProgressMap((prev) => {
+              const merged = { ...prev, ...res.data.items };
+              saveProgressToCache(userId, merged);
+              return merged;
+            });
+          }
+        } catch (err) {
+          console.warn("[ProgressSync] Gagal memuat progres server:", err.message);
+        }
+
+        // Trigger flush if there are pending items
+        if (count > 0 && isOnline) {
+          flushOutbox();
         }
       }
     }
 
-    fetchProgress();
+    initUserProgress();
+
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, user?.id]);
+  }, [userId, isAuthenticated]);
 
-  // Flush pending queue to cloud
-  const flushQueue = useCallback(async () => {
-    if (!isAuthenticated || pendingQueueRef.current.size === 0) return;
+  // 2. Listen to browser Online/Offline transitions
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (outboxCount > 0 && isAuthenticated) {
+        flushOutbox();
+      }
+    };
 
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
+    const handleOffline = () => {
+      setIsOnline(false);
+      if (outboxCount > 0) {
+        setSyncStatus("pending");
+      }
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [outboxCount, isAuthenticated]);
+
+  // 3. Flush Outbox queue to server with strict ACK confirmation
+  const flushOutbox = useCallback(async () => {
+    if (isSyncingRef.current || !isAuthenticated || userId === "guest") return;
+
+    if (!navigator.onLine) {
+      setSyncStatus("pending");
+      return;
     }
 
-    const updates = Array.from(pendingQueueRef.current.values());
-    pendingQueueRef.current.clear();
+    const pending = await getPendingOutboxEvents(userId, 25);
+    if (!pending.length) {
+      setOutboxCount(0);
+      setSyncStatus("saved");
+      setSyncError(null);
+      return;
+    }
 
-    setIsSyncing(true);
+    isSyncingRef.current = true;
+    setSyncStatus("syncing");
     setSyncError(null);
 
     try {
-      await api.syncProgress(updates);
-    } catch (err) {
-      console.warn("Gagal sinkronisasi progres batch:", err.message);
-      setSyncError("Sinkronisasi tertunda: " + err.message);
-      // Re-queue failed updates
-      updates.forEach(item => {
-        if (!pendingQueueRef.current.has(item.wordId)) {
-          pendingQueueRef.current.set(item.wordId, item);
+      const res = await api.syncProgress(pending);
+
+      if (res.success && Array.isArray(res.data?.processedEvents)) {
+        // STRICT ACK: Remove ONLY events confirmed by the server
+        await removeConfirmedEvents(userId, res.data.processedEvents);
+
+        const remainingCount = await getOutboxCount(userId);
+        setOutboxCount(remainingCount);
+
+        if (remainingCount > 0) {
+          setSyncStatus("pending");
+          // Continue flushing remaining batches
+          setTimeout(flushOutbox, 500);
+        } else {
+          setSyncStatus("saved");
+          setSyncError(null);
         }
-      });
+      } else {
+        throw new Error(res.error || "Respons server tidak mengonfirmasi event.");
+      }
+    } catch (err) {
+      console.warn("[ProgressSync] Gagal sinkronisasi batch:", err.message);
+      const remainingCount = await getOutboxCount(userId);
+      setOutboxCount(remainingCount);
+      setSyncStatus("error");
+      setSyncError(err.message || "Gagal terhubung ke server.");
     } finally {
-      setIsSyncing(false);
+      isSyncingRef.current = false;
     }
-  }, [isAuthenticated]);
+  }, [userId, isAuthenticated]);
 
-  // Flush when navigating away or unmounting
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (pendingQueueRef.current.size > 0) {
-        flushQueue();
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      if (pendingQueueRef.current.size > 0) {
-        flushQueue();
-      }
-    };
-  }, [flushQueue]);
-
-  // Record a word study outcome
-  const recordWordReview = useCallback((wordId, level, isCorrect) => {
+  // 4. Record a Word Review (Optimistic memory + Persistent outbox)
+  const recordWordReview = useCallback(async (wordId, level, isCorrect) => {
     const current = progressMap[wordId] || {
-      wordId: wordId,
+      wordId,
       level: level || "A1",
       correctCount: 0,
       wrongCount: 0,
@@ -107,37 +189,83 @@ export function useProgressSync() {
       correctCount: next.correctCount,
       wrongCount: isCorrect ? current.wrongCount : current.wrongCount + 1,
       masteryStage: next.masteryStage,
+      intervalDays: next.intervalDays || 1,
       nextReviewAt: next.nextReviewAt,
-      updatedAt: new Date().toISOString()
+      lastReviewedAt: new Date().toISOString()
     };
 
-    // Optimistic state update in memory
-    setProgressMap(prev => ({
-      ...prev,
+    // A. Optimistic memory update
+    const updatedMap = {
+      ...progressMap,
       [wordId]: updated
-    }));
+    };
+    setProgressMap(updatedMap);
 
-    // Add to batch queue
-    pendingQueueRef.current.set(wordId, updated);
+    // B. Save to local offline cache
+    saveProgressToCache(userId, updatedMap);
 
-    // If queue reaches threshold, flush immediately; otherwise debounce
-    if (pendingQueueRef.current.size >= BATCH_SIZE_THRESHOLD) {
-      flushQueue();
-    } else {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = setTimeout(flushQueue, DEBOUNCE_DELAY_MS);
+    // C. Create unique event for outbox
+    const eventId = `srs_${userId}_${wordId}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const event = {
+      eventId,
+      userId,
+      wordId,
+      level: updated.level,
+      correctCount: updated.correctCount,
+      wrongCount: updated.wrongCount,
+      masteryStage: updated.masteryStage,
+      intervalDays: updated.intervalDays,
+      nextReviewAt: updated.nextReviewAt,
+      createdAt: new Date().toISOString()
+    };
+
+    // D. Persist into IndexedDB Outbox
+    await enqueueOutboxEvent(userId, event);
+    const count = await getOutboxCount(userId);
+    setOutboxCount(count);
+    setSyncStatus("pending");
+
+    // E. Schedule server flush if authenticated and online
+    if (isAuthenticated && navigator.onLine) {
+      if (count >= BATCH_SIZE_THRESHOLD) {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        flushOutbox();
+      } else {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(flushOutbox, DEBOUNCE_DELAY_MS);
+      }
     }
 
     return updated;
-  }, [progressMap, flushQueue]);
+  }, [progressMap, userId, isAuthenticated, flushOutbox]);
+
+  // 5. Visibility change / pagehide resilience (keepalive flush)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && outboxCount > 0 && isAuthenticated) {
+        flushOutbox();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handleVisibilityChange);
+    };
+  }, [outboxCount, isAuthenticated, flushOutbox]);
 
   return {
     progressMap,
-    isSyncing,
+    isSyncing: syncStatus === "syncing",
+    syncStatus, // "saved" | "syncing" | "pending" | "error"
+    outboxCount,
     syncError,
+    isOnline,
     recordWordReview,
-    flushQueue,
+    flushQueue: flushOutbox,
+    retrySync: flushOutbox,
     getWordStatus: (wordId) => getWordStatus(progressMap[wordId])
   };
 }
-

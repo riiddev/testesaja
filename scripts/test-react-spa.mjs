@@ -31,6 +31,54 @@ async function main() {
   });
 
   try {
+    // Intercept API calls for E2E frontend testing across the context
+    await context.route(/.*\/api\/.*/, async (route) => {
+      const url = route.request().url();
+      if (url.includes("/api/auth/me")) {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            success: true,
+            data: { user: { id: "e2e_user", displayName: "E2E Scholar", email: "e2e@sinauenglish.test" } }
+          })
+        });
+      }
+      if (url.includes("/api/profile/get")) {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            success: true,
+            data: {
+              profile: { displayName: "E2E Scholar", xp: 50, coins: 20, streak: 1, avatarKey: "avatar_1" },
+              userStats: { wordsStarted: 10, wordsMastered: 2, totalReviews: 15 }
+            }
+          })
+        });
+      }
+      if (url.includes("/api/progress/get")) {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ success: true, data: { count: 0, items: {} } })
+        });
+      }
+      if (url.includes("/api/settings/get")) {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ success: true, data: { settings: { dailyGoal: 10, theme: "light" } } })
+        });
+      }
+      // Fallback for any other API request
+      return route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ success: true, data: {} })
+      });
+    });
+
     // 1. Landing Page
     console.log("1. Testing Landing Page...");
     await page.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
@@ -49,6 +97,19 @@ async function main() {
     await page.goto(`${baseUrl}/daftar`, { waitUntil: "networkidle" });
     const registerHeader = await page.textContent("h2");
     console.log("Register header:", registerHeader);
+
+    // Add init script to keep authenticated session in sessionStorage across navigations
+    await page.addInitScript(() => {
+      sessionStorage.setItem("sinauu_sess_token", "test_e2e_token_active");
+      sessionStorage.setItem("sinau_auth_token", "test_e2e_token_active");
+      localStorage.setItem("sinau_local_profile", JSON.stringify({
+        displayName: "E2E Scholar",
+        xp: 50,
+        coins: 20,
+        streak: 1,
+        avatarKey: "avatar_1"
+      }));
+    });
 
     // 4. Workspace Overview
     console.log("4. Testing Workspace Overview...");

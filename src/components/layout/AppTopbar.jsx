@@ -2,13 +2,17 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.jsx";
 import { getAssetUrl } from "../../data/assets.js";
+import { SyncStatusIndicator } from "../common/SyncStatusIndicator.jsx";
 
 export function AppTopbar({
   title = "Beranda Belajar",
   isSidebarOpen = false,
   onToggleSidebar,
   isSyncing = false,
+  syncStatus = "saved",
+  outboxCount = 0,
   syncError = null,
+  onRetrySync = null,
   coins = 0,
   level = 1
 }) {
@@ -99,30 +103,14 @@ export function AppTopbar({
           Lvl {level}
         </span>
 
-        {/* Cloud Sync Status */}
-        <div className="storage-pill">
-          <span
-            className="storage-dot"
-            style={{
-              backgroundColor: isSyncing
-                ? "var(--color-accent-gold)"
-                : syncError
-                ? "var(--color-danger)"
-                : isAuthenticated
-                ? "var(--color-success)"
-                : "var(--color-accent-gold)"
-            }}
-          />
-          <span id="storage-status-text">
-            {isSyncing
-              ? "Menyinkronkan ke Cloud..."
-              : syncError
-              ? "Sinkron tertunda"
-              : isAuthenticated
-              ? "Tersimpan di Cloud"
-              : "Mode Tamu"}
-          </span>
-        </div>
+        {/* Cloud Sync Status Indicator (4 States: Tersimpan / Menyinkronkan / Menunggu (N) / Gagal) */}
+        <SyncStatusIndicator
+          syncStatus={syncStatus}
+          outboxCount={outboxCount}
+          syncError={syncError}
+          isAuthenticated={isAuthenticated}
+          onRetry={onRetrySync}
+        />
       </div>
     </header>
   );

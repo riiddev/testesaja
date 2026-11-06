@@ -29,6 +29,12 @@ dist-ssr
 .env.*
 !.env.example
 
+# Migration data (Keep local, never commit secrets/data)
+migration_data/
+*.csv
+backups/
+*.dump
+*.backup.json
 
 test-results/
 

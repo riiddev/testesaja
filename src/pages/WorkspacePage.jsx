@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AppSidebar } from "../components/layout/AppSidebar.jsx";
 import { AppTopbar } from "../components/layout/AppTopbar.jsx";
@@ -14,12 +14,16 @@ import { ProgressStats } from "../features/progress/ProgressStats.jsx";
 import { ProfileView } from "../features/profile/ProfileView.jsx";
 import { MissionsView } from "../features/missions/MissionsView.jsx";
 import { ContextMatching } from "../features/matching/ContextMatching.jsx";
+import { PracticeHistoryView } from "../features/history/PracticeHistoryView.jsx";
 import { SettingsPanel } from "../features/settings/SettingsPanel.jsx";
 import { CollectionView } from "../features/collection/CollectionView.jsx";
 import { KanciMascot } from "../components/mascot/KanciMascot.jsx";
 import { WidgetDeck } from "../components/widgets/WidgetDeck.jsx";
 import { useUserProfile } from "../hooks/useUserProfile.js";
 import { useProgressSync } from "../hooks/useProgressSync.js";
+import { useDailyQuests } from "../hooks/useDailyQuests.js";
+import { recordLearningActivity } from "../services/learningActivity.js";
+import { setAppBadge, clearAppBadge } from "../services/badging.js";
 
 // Static dataset imports
 import vocabData from "../data/vocabulary.json";
@@ -63,9 +67,12 @@ export function WorkspacePage() {
   const {
     progressMap,
     isSyncing,
+    syncStatus,
+    outboxCount,
     syncError,
     recordWordReview,
-    getWordStatus
+    getWordStatus,
+    retrySync
   } = useProgressSync();
 
   const vocabulary = vocabData.entries || [];
@@ -76,6 +83,19 @@ export function WorkspacePage() {
   const dialogues = dialoguesData.dialogues || [];
   const listening = listeningData.exercises || [];
   const pronunciation = pronunciationData.exercises || [];
+
+  const { allCompleted: missionsCompleted, quests, completedCount } = useDailyQuests();
+  const hasUnfinishedMissions = !missionsCompleted;
+
+  // PWA Badging API integration — updates dynamic icon badge on supported launchers
+  useEffect(() => {
+    if (missionsCompleted) {
+      clearAppBadge();
+    } else {
+      const unfinished = (quests?.length || 3) - (completedCount || 0);
+      setAppBadge(unfinished > 0 ? unfinished : 0);
+    }
+  }, [missionsCompleted, quests?.length, completedCount]);
 
   const viewTitles = {
     overview: "Beranda Belajar",
@@ -89,6 +109,8 @@ export function WorkspacePage() {
     adventure: "Cerita & Dialog",
     petualangan: "Cerita & Dialog",
     review: "Spaced Review & Jurnal",
+    riwayat: "Riwayat Latihan & Evaluasi",
+    history: "Riwayat Latihan & Evaluasi",
     progress: "Profil & Progres Belajar",
     profile: "Profil & Progres Belajar",
     collection: "Koleksi & Kanci",
@@ -123,6 +145,7 @@ export function WorkspacePage() {
         onClose={() => setSidebarOpen(false)}
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
+        hasUnfinishedMissions={hasUnfinishedMissions}
       />
 
       {/* Main Content Area */}
@@ -133,7 +156,10 @@ export function WorkspacePage() {
           isSidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
           isSyncing={isSyncing}
+          syncStatus={syncStatus}
+          outboxCount={outboxCount}
           syncError={syncError}
+          onRetrySync={retrySync}
           coins={userProfile.profile.coins ?? 0}
           level={userProfile.calculatedLevel || 1}
         />
@@ -207,9 +233,9 @@ export function WorkspacePage() {
                 </div>
 
                 <div className="card stat-card">
-                  <span className="stat-label">Total Corpus</span>
-                  <span className="stat-value">2.971</span>
-                  <span className="stat-desc">Oxford 3000 American English</span>
+                  <span className="stat-label">Kosakata Dipelajari</span>
+                  <span className="stat-value" id="stat-started">{Object.keys(progressMap).length}</span>
+                  <span className="stat-desc">Kata aktif dalam memori belajarmu</span>
                 </div>
               </div>
 
@@ -273,6 +299,14 @@ export function WorkspacePage() {
             <section className="view-section is-active" id="view-matching">
               <ContextMatching
                 vocabulary={vocabulary}
+                onRecordMatchComplete={async ({ score, count }) => {
+                  await recordLearningActivity({
+                    activityType: "matching",
+                    score,
+                    total: count,
+                    durationSeconds: 30
+                  });
+                }}
               />
             </section>
           )}
@@ -352,6 +386,13 @@ export function WorkspacePage() {
                 progressMap={progressMap}
                 onStartStudy={handleStartStudy}
               />
+            </section>
+          )}
+
+          {/* VIEW: RIWAYAT LATIHAN (BUTIR F) */}
+          {(currentView === "riwayat" || currentView === "history") && (
+            <section className="view-section is-active" id="view-history">
+              <PracticeHistoryView onStartStudyWord={handleStartStudy} />
             </section>
           )}
 

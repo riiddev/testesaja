@@ -3,15 +3,19 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "../hooks/useAuth.jsx";
 import { PWAProvider, usePWA } from "../hooks/usePWA.js";
 import { StudyReminderBanner } from "../components/common/StudyReminderBanner.jsx";
+import { SimulationBanner } from "../components/common/SimulationBanner.jsx";
 import { AppRoutes } from "./routes.jsx";
 
 function GlobalReminderRenderer() {
   const { activeInAppReminder, dismissInAppReminder } = usePWA();
   return (
-    <StudyReminderBanner
-      reminder={activeInAppReminder}
-      onDismiss={dismissInAppReminder}
-    />
+    <>
+      <SimulationBanner />
+      <StudyReminderBanner
+        reminder={activeInAppReminder}
+        onDismiss={dismissInAppReminder}
+      />
+    </>
   );
 }
 

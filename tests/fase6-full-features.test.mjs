@@ -1,0 +1,344 @@
+/**
+ * tests/fase6-full-features.test.mjs
+ * 
+ * Comprehensive automated test suite for Fase 6:
+ * 1. Settings API (get, update dailyGoal, theme, reminders)
+ * 2. Custom Avatar API (upload <=35KB bytea, get image, reject >35KB, delete)
+ * 3. Titles Catalog & Unlock API
+ * 4. Grammar Progress API (save topic score, query topics)
+ * 5. Adventure/Story Progress API (complete episode, query episodes)
+ * 6. Sentence Context Matching Session API (record round, award server rewards, activity log)
+ * 7. HABIT Reading Quiz API (record score, save wrongItems in attempt_details)
+ * 8. Practice History & Summary API (cursor pagination, filter by type, 7-day trend)
+ */
+
+import test from "node:test";
+import assert from "node:assert/strict";
+import "dotenv/config";
+import { eq, inArray } from "drizzle-orm";
+import { db, schema } from "../db/index.js";
+import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
+
+// Handler imports
+import settingsGetHandler from "../api/settings/get.js";
+import settingsUpdateHandler from "../api/settings/update.js";
+import avatarUploadHandler from "../api/avatar/upload.js";
+import avatarGetHandler from "../api/avatar/get.js";
+import avatarDeleteHandler from "../api/avatar/delete.js";
+import titlesGetHandler from "../api/titles/get.js";
+import titlesUnlockHandler from "../api/titles/unlock.js";
+import grammarGetHandler from "../api/grammar/get.js";
+import grammarSaveHandler from "../api/grammar/save.js";
+import storyGetHandler from "../api/story/get.js";
+import storyCompleteHandler from "../api/story/complete.js";
+import matchingRecordHandler from "../api/matching/record.js";
+import readingQuizRecordHandler from "../api/reading-quiz/record.js";
+import activityHistoryHandler from "../api/activity/history.js";
+import activitySummaryHandler from "../api/activity/summary.js";
+
+function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {
+  const req = {
+    method,
+    url,
+    headers: {
+      "content-type": "application/json",
+      ...(token ? { authorization: `Bearer ${token}` } : {})
+    },
+    body,
+    socket: { remoteAddress: "127.0.0.1" }
+  };
+
+  let statusCode = 200;
+  let headers = {};
+  let responseData = null;
+
+  const res = {
+    status(code) {
+      statusCode = code;
+      return this;
+    },
+    writeHead(code, h) {
+      statusCode = code;
+      headers = { ...headers, ...h };
+      return this;
+    },
+    setHeader(name, value) {
+      headers[name] = value;
+      return this;
+    },
+    json(data) {
+      responseData = data;
+      return this;
+    },
+    end(str) {
+      if (str && !responseData) {
+        try {
+          responseData = JSON.parse(str);
+        } catch {
+          responseData = str;
+        }
+      }
+      return this;
+    }
+  };
+
+  return { req, res, getStatus: () => statusCode, getHeaders: () => headers, getData: () => responseData };
+}
+
+test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t) => {
+  const testUserId = `test_fase6_${Date.now()}`;
+  const testEmail = `fase6_${Date.now()}@sinauenglish.test`;
+  let token = null;
+
+  await t.test("Setup test user and clean slate profile", async () => {
+    const { hash, salt } = await hashPassword("Fase6Password123!");
+    await db.insert(schema.users).values({
+      id: testUserId,
+      email: testEmail,
+      displayName: "Fase 6 Scholar",
+      passwordHash: hash,
+      salt,
+      role: "student"
+    });
+
+    await db.insert(schema.profiles).values({
+      userId: testUserId,
+      displayName: "Fase 6 Scholar",
+      activeTitle: "",
+      xp: 0,
+      coins: 0,
+      streak: 0,
+      avatarKey: "avatar_1"
+    });
+
+    await db.insert(schema.userStats).values({
+      userId: testUserId,
+      wordsStarted: 0,
+      wordsMastered: 0,
+      b2Mastered: 0,
+      totalReviews: 0,
+      grammarCompleted: 0,
+      readingCompleted: 0,
+      storiesCompleted: 0,
+      matchingCompleted: 0
+    });
+
+    const { rawToken, tokenHash } = createSessionToken();
+    token = rawToken;
+    await db.insert(schema.sessions).values({
+      id: `sess_${Date.now()}_${rawToken.slice(0, 8)}`,
+      userId: testUserId,
+      tokenHash,
+      expiresAt: new Date(Date.now() + 86400000)
+    });
+
+    assert.ok(token, "Session token must be established");
+  });
+
+  await t.test("1. Settings API: get default settings and update dailyGoal", async () => {
+    // 1a. GET settings
+    const mockGet = createMockReqRes({ method: "GET", token, url: "/api/settings/get" });
+    await settingsGetHandler(mockGet.req, mockGet.res);
+    assert.equal(mockGet.getStatus(), 200);
+    const initialSettings = mockGet.getData();
+    assert.equal(initialSettings.success, true);
+    assert.equal(initialSettings.data.settings.dailyGoal, 10);
+
+    // 1b. UPDATE settings
+    const mockUpdate = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/settings/update",
+      body: { dailyGoal: 15, theme: "light" }
+    });
+    await settingsUpdateHandler(mockUpdate.req, mockUpdate.res);
+    assert.equal(mockUpdate.getStatus(), 200);
+    assert.equal(mockUpdate.getData().data.settings.dailyGoal, 15);
+  });
+
+  await t.test("2. Avatar API: upload <=35KB, verify bytea, reject >35KB, delete", async () => {
+    // 2a. Small 1x1 PNG in base64 data URL
+    const validPngBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    const mockUpload = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/avatar/upload",
+      body: { imageBase64: validPngBase64, mimeType: "image/png" }
+    });
+    await avatarUploadHandler(mockUpload.req, mockUpload.res);
+    assert.equal(mockUpload.getStatus(), 200);
+    assert.equal(mockUpload.getData().success, true);
+
+    // 2b. GET avatar
+    const mockGetAvatar = createMockReqRes({ method: "GET", token, url: `/api/avatar/get?userId=${testUserId}` });
+    await avatarGetHandler(mockGetAvatar.req, mockGetAvatar.res);
+    assert.equal(mockGetAvatar.getStatus(), 200);
+    assert.ok(mockGetAvatar.getData(), "Binary buffer or base64 response must be returned");
+
+    // 2c. Reject oversized avatar (>35KB)
+    const largeBuffer = Buffer.alloc(36 * 1024, "A");
+    const largeDataUrl = `data:image/jpeg;base64,${largeBuffer.toString("base64")}`;
+    const mockReject = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/avatar/upload",
+      body: { imageBase64: largeDataUrl, mimeType: "image/jpeg" }
+    });
+    await avatarUploadHandler(mockReject.req, mockReject.res);
+    assert.equal(mockReject.getStatus(), 400);
+    assert.match(mockReject.getData().error, /maksimal.*35 KB/i);
+
+    // 2d. DELETE avatar
+    const mockDel = createMockReqRes({ method: "DELETE", token, url: "/api/avatar/delete" });
+    await avatarDeleteHandler(mockDel.req, mockDel.res);
+    assert.equal(mockDel.getStatus(), 200);
+    assert.equal(mockDel.getData().success, true);
+  });
+
+  await t.test("3. Titles API: unlock title and retrieve unlocked titles", async () => {
+    const mockUnlock = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "novice_scholar" }
+    });
+    await titlesUnlockHandler(mockUnlock.req, mockUnlock.res);
+    assert.equal(mockUnlock.getStatus(), 200);
+    const unlockRes = mockUnlock.getData();
+    assert.equal(unlockRes.success, true);
+    assert.equal(unlockRes.data.titleId, "novice_scholar");
+
+    // GET titles
+    const mockGetTitles = createMockReqRes({ method: "GET", token, url: "/api/titles/get" });
+    await titlesGetHandler(mockGetTitles.req, mockGetTitles.res);
+    assert.equal(mockGetTitles.getStatus(), 200);
+    const titlesData = mockGetTitles.getData().data;
+    assert.ok(titlesData.titles.includes("novice_scholar"));
+  });
+
+  await t.test("4. Grammar API: save progress and retrieve progress map", async () => {
+    const mockSaveGrammar = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/grammar/save",
+      body: {
+        topicId: "simple_present",
+        score: 5,
+        total: 5,
+        practiceDone: true
+      }
+    });
+    await grammarSaveHandler(mockSaveGrammar.req, mockSaveGrammar.res);
+    assert.equal(mockSaveGrammar.getStatus(), 200);
+    assert.equal(mockSaveGrammar.getData().success, true);
+
+    const mockGetGrammar = createMockReqRes({ method: "GET", token, url: "/api/grammar/get" });
+    await grammarGetHandler(mockGetGrammar.req, mockGetGrammar.res);
+    assert.equal(mockGetGrammar.getStatus(), 200);
+    const grammarMap = mockGetGrammar.getData().data.progress;
+    assert.ok(grammarMap["simple_present"]);
+    assert.equal(grammarMap["simple_present"].score, 5);
+  });
+
+  await t.test("5. Story API: record completed episode", async () => {
+    const mockStory = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/story/complete",
+      body: { storyId: "story_market_adventure", episodeId: 1, totalEpisodes: 3 }
+    });
+    await storyCompleteHandler(mockStory.req, mockStory.res);
+    assert.equal(mockStory.getStatus(), 200);
+    assert.equal(mockStory.getData().success, true);
+
+    const mockGetStory = createMockReqRes({ method: "GET", token, url: "/api/story/get" });
+    await storyGetHandler(mockGetStory.req, mockGetStory.res);
+    assert.equal(mockGetStory.getStatus(), 200);
+    const storyData = mockGetStory.getData().data;
+    assert.ok(storyData.allStories["story_market_adventure"]);
+  });
+
+  await t.test("6. Matching & Reading Quiz: record sessions with mistake tracking", async () => {
+    // 6a. Matching Round
+    const mockMatch = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/matching/record",
+      body: { score: 100, total: 5, durationSeconds: 25, sessionId: `match_${Date.now()}` }
+    });
+    await matchingRecordHandler(mockMatch.req, mockMatch.res);
+    assert.equal(mockMatch.getStatus(), 200);
+    assert.equal(mockMatch.getData().success, true);
+
+    // 6b. Reading Quiz with mistake breakdown
+    const mockQuiz = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reading-quiz/record",
+      body: {
+        articleId: "passage_science_space",
+        articleTitle: "Exploring the Solar System",
+        score: 4,
+        total: 5,
+        durationSeconds: 45,
+        wrongItems: ["gravity", "orbit"]
+      }
+    });
+    await readingQuizRecordHandler(mockQuiz.req, mockQuiz.res);
+    assert.equal(mockQuiz.getStatus(), 200);
+    assert.equal(mockQuiz.getData().success, true);
+  });
+
+  await t.test("7. Activity History (Butir F): cursor pagination, filter, and 7-day summary", async () => {
+    // 7a. GET History feed
+    const mockHistory = createMockReqRes({
+      method: "GET",
+      token,
+      url: "/api/activity/history?limit=10&type=all"
+    });
+    await activityHistoryHandler(mockHistory.req, mockHistory.res);
+    assert.equal(mockHistory.getStatus(), 200);
+    const historyData = mockHistory.getData().data;
+    assert.ok(Array.isArray(historyData.items));
+    assert.ok(historyData.items.length >= 2, "Must contain at least matching and reading quiz sessions");
+
+    // Check wrongItems persisted in attemptDetails
+    const quizItem = historyData.items.find((i) => i.activityType === "reading_quiz");
+    assert.ok(quizItem, "Reading quiz item must be recorded in history");
+    assert.deepEqual(quizItem.wrongItems, ["gravity", "orbit"]);
+
+    // 7b. Filter by module
+    const mockFiltered = createMockReqRes({
+      method: "GET",
+      token,
+      url: "/api/activity/history?limit=5&type=matching"
+    });
+    await activityHistoryHandler(mockFiltered.req, mockFiltered.res);
+    assert.equal(mockFiltered.getStatus(), 200);
+    const filteredItems = mockFiltered.getData().data.items;
+    assert.ok(filteredItems.every((i) => i.activityType === "matching"));
+
+    // 7c. GET 7-day summary
+    const mockSummary = createMockReqRes({ method: "GET", token, url: "/api/activity/summary" });
+    await activitySummaryHandler(mockSummary.req, mockSummary.res);
+    assert.equal(mockSummary.getStatus(), 200);
+    const summary = mockSummary.getData().data;
+    assert.ok(summary.totalSessions7Days >= 2, "Summary totalSessions7Days must be recorded");
+    assert.ok(Array.isArray(summary.days));
+    assert.equal(summary.days.length, 7);
+  });
+
+  await t.test("Teardown test user and related records", async () => {
+    await db.delete(schema.attemptDetails).where(eq(schema.attemptDetails.userId, testUserId));
+    await db.delete(schema.activityLog).where(eq(schema.activityLog.userId, testUserId));
+    await db.delete(schema.storyProgress).where(eq(schema.storyProgress.userId, testUserId));
+    await db.delete(schema.grammarProgress).where(eq(schema.grammarProgress.userId, testUserId));
+    await db.delete(schema.titles).where(eq(schema.titles.userId, testUserId));
+    await db.delete(schema.avatars).where(eq(schema.avatars.userId, testUserId));
+    await db.delete(schema.settings).where(eq(schema.settings.userId, testUserId));
+    await db.delete(schema.sessions).where(eq(schema.sessions.userId, testUserId));
+    await db.delete(schema.userStats).where(eq(schema.userStats.userId, testUserId));
+    await db.delete(schema.profiles).where(eq(schema.profiles.userId, testUserId));
+    await db.delete(schema.users).where(eq(schema.users.id, testUserId));
+  });
+});
