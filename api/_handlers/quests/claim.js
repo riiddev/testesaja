@@ -6,7 +6,7 @@
  * The ledger row and claim marker are committed in the same transaction.
  */
 import { eq, and } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
 import { getWibDateStr } from "../../_lib/wibDate.js";
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
     const coinsReward = Math.max(0, Number(quest.coinsReward) || 0);
     const eventId = "quest_claim:" + todayWib + ":" + questId;
 
-    const result = await getTransactionDb().transaction(async (tx) => {
+    const result = await withTransaction(async (tx) => {
       // The same account-level lock is used by the ledger and shop. It makes
       // the claim check, reward grant and claim marker serial for this user.
       await tx
