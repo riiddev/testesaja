@@ -56,7 +56,7 @@ export async function getBetterAuthSessionFromRequestHeaders(headers) {
   });
 }
 
-export async function createApplicationBridgeSession(userId, betterAuthSession) {
+export async function createApplicationBridgeSession(userId, betterAuthSession, displayName = "") {
   if (!userId || !betterAuthSession?.id) {
     throw new Error("Sesi Better Auth tidak valid untuk membuat sesi aplikasi.");
   }
@@ -70,7 +70,7 @@ export async function createApplicationBridgeSession(userId, betterAuthSession) 
   await withTransaction(async (tx) => {
     await tx.insert(schema.profiles).values({
       userId,
-      displayName: "Pelajar Sinau",
+      displayName: String(displayName || "Pelajar Sinau").slice(0, 100),
       activeTitle: "",
       xp: 0,
       coins: 0,
