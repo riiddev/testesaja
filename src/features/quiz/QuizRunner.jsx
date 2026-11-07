@@ -6,7 +6,7 @@ import { Badge } from "../../components/common/Badge.jsx";
 import { Button } from "../../components/common/Button.jsx";
 import { api } from "../../services/api.js";
 import { useAuth } from "../../hooks/useAuth.jsx";
-import { getGrammarTopic } from "../grammar/grammarRegistry.js";
+import { getGrammarTopic } from "../../data/grammar/grammarRegistry.js";
 
 export function QuizRunner({ topic, onFinish, onRetry }) {
   const [questionIndex, setQuestionIndex] = useState(0);
