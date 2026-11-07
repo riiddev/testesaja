@@ -56,9 +56,9 @@ Perubahan server-first untuk profil/avatar/koleksi, cache terisolasi, dan error 
 
 ## Pengujian
 
-Pengujian integrasi menggunakan Neon Development yang terisolasi dari Production. Suite yang wajib dijalankan ulang pada commit akhir 6.1 adalah `npm run test:all`, mencakup content, logic, responsif berbasis CSS, build, API/database, security, multi-device dan SPA smoke.
+Pengujian integrasi menggunakan Neon Development yang terisolasi dari Production. **GitHub Actions run 42363642736 pada commit kode `73966a4487168693d19a2768e72ee014ea6c09fb` berstatus SUCCESS** untuk keseluruhan `npm run test:all`: content, logic, responsif berbasis CSS, build, API/database, security, multi-device dan SPA smoke. Tes pendukung yang terukur pada run tersebut: profile data 8/8, Fase 5 backend 8/8, Fase 6 backend 11/11, security 12/12, multi-device 8/8, widget 5/5, dan Better Auth integration 1/1.
 
-Tes otomatis tidak membuktikan klik UI pada perangkat pengguna. Pemeriksaan manual yang tetap diperlukan:
+Tes otomatis tidak membuktikan klik UI pada perangkat pengguna. Perubahan kode lulus CI, tetapi penyelesaian A5 untuk alur browser masih menunggu pemeriksaan manual berikut:
 - Registrasi gagal: data tamu/cache lokal tetap ada; registrasi berhasil: sesi baru masuk dan profil akun baru mulai nol.
 - Sesudah latihan, reload, logout-login dan login di browser/perangkat kedua: XP/koin/progres tetap sama dengan server.
 - Gagal jaringan pada update nama, foto, pembelian, equip atau klaim: state tidak menampilkan perubahan sukses; pesan error terlihat.
