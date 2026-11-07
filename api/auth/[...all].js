@@ -39,15 +39,32 @@ export default async function authRouter(req, res) {
   const subpath = getAuthSubpath(req);
   const loadLegacyHandler = legacyAuthHandlers[subpath];
 
-  if (loadLegacyHandler) {
-    const routeModule = await loadLegacyHandler();
-    return routeModule.default(req, res);
+  try {
+    if (loadLegacyHandler) {
+      const routeModule = await loadLegacyHandler();
+      return await routeModule.default(req, res);
+    }
+
+    const [{ toNodeHandler }, { auth }] = await Promise.all([
+      import("better-auth/node"),
+      import("../_lib/better-auth.js")
+    ]);
+
+    return await toNodeHandler(auth)(req, res);
+  } catch (error) {
+    // Log the stack in Vercel Runtime Logs, but never expose secrets to the client.
+    console.error("[Better Auth route failure]", {
+      path: subpath,
+      name: error?.name || "Error",
+      message: error?.message || "Unknown auth route failure",
+      stack: error?.stack || null
+    });
+
+    if (res.headersSent) return res.end();
+    return res.status(500).json({
+      success: false,
+      error: "AUTH_HANDLER_FAILED",
+      message: "Layanan autentikasi sedang mengalami gangguan. Coba lagi nanti."
+    });
   }
-
-  const [{ toNodeHandler }, { auth }] = await Promise.all([
-    import("better-auth/node"),
-    import("../_lib/better-auth.js")
-  ]);
-
-  return toNodeHandler(auth)(req, res);
 }
