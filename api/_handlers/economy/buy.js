@@ -6,7 +6,7 @@
  */
 
 import { eq, and } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
 import { calculateLevelFromXp } from "../../_lib/rewardsConfig.js";
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       return sendValidationError(res, "Parameter itemId wajib disertakan.");
     }
 
-    const purchase = await getTransactionDb().transaction(async (tx) => {
+    const purchase = await withTransaction(async (tx) => {
       // Serialize purchases for this account before checking balance/ownership.
       const profileRows = await tx
         .select({ xp: schema.profiles.xp, coins: schema.profiles.coins })
