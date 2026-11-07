@@ -2,8 +2,9 @@
  * POST /api/auth/login
  *
  * Better Auth is the primary credential provider. Accounts created before
- * the Better Auth cutover retain a verified legacy-password login path and
- * are upgraded to Better Auth after a successful compatibility login later.
+ * the Better Auth cutover retain a verified legacy-password login path.
+ * Legacy SHA-256 hashes are upgraded to scrypt after successful verification;
+ * their credentials are not silently recreated or relinked in Better Auth.
  */
 
 import crypto from "crypto";
