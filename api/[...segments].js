@@ -22,6 +22,7 @@ const routeLoaders = {
   "/economy/inventory": () => import("./_handlers/economy/inventory.js"),
   "/grammar/get": () => import("./_handlers/grammar/get.js"),
   "/grammar/save": () => import("./_handlers/grammar/save.js"),
+  "/matching/round": () => import("./_handlers/matching/round.js"),
   "/matching/record": () => import("./_handlers/matching/record.js"),
   "/profile/get": () => import("./_handlers/profile/get.js"),
   "/profile/update": () => import("./_handlers/profile/update.js"),
