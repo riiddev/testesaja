@@ -31,8 +31,8 @@ export function CollectionView({ userProfileHook }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const currentCoins = profile.coins || 0;
-  const currentXp = profile.xp || 0;
+  const currentCoins = profile.coins ?? 0;
+  const currentXp = profile.xp ?? 0;
   const xpProgress = getXpProgressForLevel(currentXp);
 
   // Filter items
@@ -91,28 +91,34 @@ export function CollectionView({ userProfileHook }) {
     }
   };
 
-  // Equip handler
+  // Preview changes only after the server confirms an equip operation.
   const handleEquip = async (item, e) => {
     e.stopPropagation();
-    if (item.type === "border") {
-      await equipItem(item.id, "border");
-      setPreviewBorder(item.id);
-    } else if (item.type === "outfit") {
-      await equipItem(item.id, "outfit");
-      setPreviewOutfit(item.id.replace(/^outfit_/, ""));
+    setErrorMessage("");
+    const type = item.type === "outfit" ? "outfit" : "border";
+    const result = await equipItem(item.id, type);
+    if (!result?.success) {
+      setErrorMessage(result?.error || "Koleksi belum berhasil dipasang.");
+      return;
     }
+
+    if (type === "border") setPreviewBorder(item.id);
+    else setPreviewOutfit(item.id.replace(/^outfit_/, ""));
   };
 
-  // Unequip handler
+  // Unequip handler — keep the previous preview if the server rejects it.
   const handleUnequip = async (item, e) => {
     e.stopPropagation();
-    if (item.type === "border") {
-      await equipItem("none", "border");
-      setPreviewBorder("none");
-    } else if (item.type === "outfit") {
-      await equipItem("none", "outfit");
-      setPreviewOutfit(null);
+    setErrorMessage("");
+    const type = item.type === "outfit" ? "outfit" : "border";
+    const result = await equipItem("none", type);
+    if (!result?.success) {
+      setErrorMessage(result?.error || "Koleksi belum berhasil dilepas.");
+      return;
     }
+
+    if (type === "border") setPreviewBorder("none");
+    else setPreviewOutfit(null);
   };
 
   return (
