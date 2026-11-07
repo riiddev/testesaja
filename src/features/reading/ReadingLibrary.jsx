@@ -55,7 +55,7 @@ export function ReadingLibrary({ passages = [], onRecordWordReview, userProfileH
   return (
     <div>
       <div style={{ marginBottom: "var(--space-6)" }}>
-        <h2 className="section-title">156 Bacaan Bahasa Inggris Nyata</h2>
+        <h2 className="section-title">Perpustakaan Bacaan Bahasa Inggris</h2>
         <p className="section-desc">
           Tingkatkan kecepatan membaca, perluas konteks kosakata, dan uji pemahaman analitis melalui kuis komprehensif 4 dimensi.
         </p>
@@ -92,7 +92,7 @@ export function ReadingLibrary({ passages = [], onRecordWordReview, userProfileH
                 cursor: "pointer"
               }}
             >
-              {cat === "all" ? "Semua Kategori (156)" : cat}
+              {cat === "all" ? "Semua Kategori" : cat}
             </button>
           ))}
         </div>
