@@ -12,7 +12,7 @@ import {
 } from "../../components/common/Icons.jsx";
 import React, { useState } from "react";
 import { KanciMascot } from "../../components/mascot/KanciMascot.jsx";
-import { api } from "../../services/api.js";
+import { recordLearningActivity } from "../../services/learningActivity.js";
 import "../../styles/story-runner.css";
 
 export function StoryRunner({
@@ -91,17 +91,30 @@ export function StoryRunner({
   const handleCompleteEpisode = async () => {
     setIsFinishing(true);
     try {
-      const res = await api.completeStoryEpisode({
-        storyId: story.id,
-        episodeId: episode.id
-      });
+      const payload = {
+        eventId: `story:${story.id}:ep_${episode.id}`,
+        source: "story_episode",
+        refId: story.id,
+        meta: {
+          episodeId: episode.id,
+          totalEpisodes: story.totalEpisodes || 10
+        }
+      };
+      const res = claimReward
+        ? await claimReward(payload)
+        : await recordLearningActivity({
+            activityType: "story_episode",
+            refId: story.id,
+            meta: payload.meta
+          });
 
-      if (res?.success && res.data) {
+      if (res?.success) {
+        const data = res.data || res;
         setCompletionFeedback({
-          earnedXp: Number(res.data.earnedXp) || 0,
-          earnedCoins: Number(res.data.earnedCoins) || 0,
-          alreadyCompleted: Boolean(res.data.alreadyCompleted),
-          message: res.message || null
+          earnedXp: Number(res.earnedXp ?? data.earnedXp) || 0,
+          earnedCoins: Number(res.earnedCoins ?? data.earnedCoins) || 0,
+          alreadyCompleted: Boolean(res.alreadyRewarded ?? data.alreadyCompleted),
+          message: data.message || res.message || null
         });
 
         if (onEpisodeCompleted) {
