@@ -19,8 +19,8 @@ test("catch-all router falls back to the original request URL", () => {
 });
 
 test("all existing API endpoints remain explicitly routable", () => {
-  assert.equal(API_ROUTE_PATHS.length, 32);
-  assert.equal(new Set(API_ROUTE_PATHS).size, 32);
+  assert.equal(API_ROUTE_PATHS.length, 33);
+  assert.equal(new Set(API_ROUTE_PATHS).size, 33);
   for (const route of [
     "/auth/login",
     "/auth/register",
@@ -32,6 +32,7 @@ test("all existing API endpoints remain explicitly routable", () => {
     "/economy/buy",
     "/avatar/upload",
     "/story/complete",
+    "/matching/round",
     "/widget/summary"
   ]) {
     assert.ok(API_ROUTE_PATHS.includes(route), `Missing route: ${route}`);
