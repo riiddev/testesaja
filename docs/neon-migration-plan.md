@@ -397,7 +397,7 @@ STATUS UPDATE — 7 NOVEMBER 2026 (HASIL PENGERJAAN TERBARU)
 
 - Automated suite di GitHub Actions: lulus untuk commit `ef9aff0`.
 - Economy, SRS transactionality, auth handler Better Auth untuk akun baru, legacy login compatibility, server-side anti-tamper, dan UI catalog count regression: diuji di Neon Development/CI.
-- Belum lulus penuh: deployment Production dari SHA terbaru (tertahan batas deployment Vercel), verifikasi manual browser untuk semua alur UI setelah perubahan terbaru, screenshot visual di 320–1920 px, perangkat Android fisik, 7 hari pemakaian tanpa kehilangan data, audit akhir semua pemanggilan Apps Script, dan reset Sheets Fase 7.
+- Belum lulus penuh: deployment Production dari SHA terbaru (Production terakhir yang terverifikasi masih SHA 7a138e19, sedangkan main sudah 503e2a21), verifikasi manual browser untuk semua alur UI setelah perubahan terbaru, screenshot visual di 320–1920 px, perangkat Android fisik, 7 hari pemakaian tanpa kehilangan data, audit akhir semua pemanggilan Apps Script, dan reset Sheets Fase 7.
 - Karena syarat-syarat tersebut belum terpenuhi, **GERBANG STABILITAS BELUM DIBUKA**. Fase 12–20 tidak dimulai.
 
 
@@ -422,4 +422,39 @@ Catatan verifikasi:
 - Uji UI manual registrasi gagal/berhasil, reload, logout-login, dua browser/perangkat, dan pesan kegagalan jaringan masih harus dilakukan oleh pengguna.
 - Deployment Production terakhir yang terlihat berstatus READY pada SHA `ec9c67c53509922a4145392c55e1c978a47412c9`, bukan kode akhir Fase 6.1 (`73966a4`). Karena itu perubahan kode akhir belum dinyatakan aktif pada domain. Deployment Production harus cocok dengan SHA terbaru sebelum perubahan dianggap aktif.
 - Dampak kuota: satu SELECT tambahan ringan ke user_stats saat membaca profil; tidak ada tabel, migration, cron, atau layanan berbayar baru.
-- Fase 6.2 belum dimulai. Menunggu laporan/keputusan pengguna setelah 6.1.
+- Fase 6.2 selesai pada level implementasi kode dan suite otomatis di Neon Development; catatan terperinci ditambahkan di bawah. Verifikasi A5 manual masih wajib sebelum gerbang stabilitas dibuka.
+
+
+==========================================================
+STATUS FASE 6.2 — MISI HARIAN (7 NOVEMBER 2026)
+==========================================================
+
+Implementasi kode:
+- [x] Satu layanan aktivitas pusat `src/services/learningActivity.js` memetakan aktivitas fitur ke sumber misi. Aktivitas langsung (Grammar, Matching, kuis/selesai baca, cerita) memberi notifikasi refresh hanya setelah endpoint server mengonfirmasi simpan.
+- [x] Vocabulary baru dan SRS tetap memakai antrean offline-first. Endpoint `/api/progress/sync` mengirim daftar tipe aktivitas resmi dari event yang di-ACK server; setelah event terkonfirmasi dan dikeluarkan dari antrean, layanan pusat memberi tahu seluruh tampilan misi untuk mengambil snapshot terbaru.
+- [x] Tujuh sumber misi diuji terpisah pada Neon Development: `vocab_learn`, `srs_review`, `grammar`, `reading_quiz`, `reading_complete`, `matching`, dan `story`. Tes memisahkan akun pengguna, tanggal WIB, menghitung progres, dan memastikan batas target tidak terlampaui.
+- [x] Matching hanya menampilkan hadiah setelah server menerima ronde bertanda tangan; jika simpan gagal, tersedia aksi coba lagi. API Matching mengembalikan saldo akhir XP/koin dari ledger.
+- [x] Kuis Grammar dari halaman Grammar Detail maupun jalur QuizRunner lama diarahkan ke pencatat aktivitas pusat. Praktik persiapan Grammar tidak dihitung sebagai kuis resmi.
+- [x] Status indikator misi hanya menggunakan snapshot server akun/tanggal WIB aktif. Tanda seru merah memakai `--color-danger`, teks aksesibel `Ada misi yang belum selesai`, hilang saat semua misi selesai atau saat data belum terverifikasi, dan tetap terlihat pada sidebar yang diciutkan.
+- [x] Misi tidak menampilkan cache sebagai progres resmi saat snapshot belum terverifikasi; pengguna yang masuk dapat mencoba memuat ulang ketika server gagal. WIB date berganti otomatis saat tengah malam dan diperiksa ulang ketika halaman kembali fokus/terlihat.
+- [x] Tidak ada bottom navigation dalam aplikasi saat ini; karena itu indikator misi diterapkan pada satu-satunya navigasi utama yang tersedia, yaitu sidebar.
+- [x] Saldo XP/koin dari klaim misi, Matching, Grammar, cerita, bacaan, dan SRS diperbarui dari respons ledger server. Perlindungan user ID mencegah respons terlambat mengubah saldo akun lain.
+- [x] Tidak ada layanan berbayar baru, tabel baru, atau migration database yang ditambahkan khusus untuk Fase 6.2.
+
+Bukti otomatis:
+- GitHub Actions run `42369645467` pada commit `503e2a21b96f43bae12d3e5e44654cc9c7f229f4` berstatus SUCCESS untuk `npm run test:all`.
+- Suite mencakup tes logika misi/indikator/WIB, integrasi tujuh sumber aktivitas pada Neon Development, tes server claim dan anti-forgery, Matching signed round, sinkronisasi SRS dan saldo, security, multi-device data tests, widget, Better Auth, build, responsive audit, dan SPA smoke. Sembilan rute SPA serta lima aset build berhasil diverifikasi.
+- Tes integrasi hanya menggunakan Neon Development dan akun fixture sementara; Neon Production dan Google Sheets tidak disentuh.
+- Production domain `https://sinauuenglish.vercel.app` terakhir diuji HTTP 200; `/api/quests/claim` dan `/api/matching/record` menghasilkan 405 sesuai kontrak POST-only, bukan 404. Runtime error aggregate 1 jam sebelumnya tidak menemukan error.
+- Namun, deployment Production terakhir yang terdaftar masih SHA `7a138e19c4b47b961363abadaf347d0c7a4a11ea`; perubahan setelah itu yang ada di main belum terlihat sebagai deployment Production pada pemeriksaan terakhir. Jangan menyatakan fitur pada SHA `503e2a21` sudah aktif pada domain sampai Vercel mencatat SHA tersebut.
+
+Belum terverifikasi manual (bagian A5):
+- Uji aktivitas nyata pada akun pemilik: pertama kali, setelah reload, setelah logout-login, dan dari perangkat/browser kedua.
+- Uji visual aktual pada lebar 360, 768, 1280 px, termasuk sidebar normal/ringkas, zoom 200%, dan Android fisik.
+- Pantau penggunaan nyata selama 7 hari tanpa kehilangan data.
+- Setelah deployment Production SHA terbaru tersedia, periksa alur klaim dan badge pada akun sungguhan. Jangan mengklaim verifikasi lintas perangkat hanya berdasarkan tes unit/integrasi.
+
+Dampak kuota:
+- Menggunakan endpoint/API dan query misi yang sudah ada; tidak menambahkan cron, layanan pihak ketiga berbayar, tabel, atau migration.
+- Setelah aktivitas terkonfirmasi, setiap tampilan misi yang sedang terbuka mengambil snapshot misi server; saat tab/perangkat kembali fokus/terlihat, snapshot diambil ulang. Beban query bertambah sebanding dengan jumlah tampilan aktif yang mendengarkan event dan frekuensi tab kembali fokus, bukan polling periodik.
+- Fase 6.3 Achievement belum dimulai. Gerbang stabilitas masih tertutup sampai verifikasi manual A5 dan deployment Production cocok dengan SHA terbaru.
