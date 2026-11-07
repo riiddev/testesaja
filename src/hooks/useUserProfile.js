@@ -4,6 +4,7 @@ import { api } from "../services/api.js";
 import { getWordStatus } from "./useSpacedRepetition.js";
 import { TITLES_CATALOG, getTitleById, evaluateAllTitles } from "../features/profile/titleSystem.js";
 import { calculateLevelFromXp, getCatalogItemById } from "../features/collection/collectionCatalog.js";
+import { getUserScopedStorageKey, normalizeServerProfile } from "../lib/profileData.js";
 
 const LOCAL_PROFILE_KEY = "sinau_local_profile";
 const LOCAL_AVATAR_URL_KEY = "sinau_avatar_url";
@@ -12,11 +13,15 @@ const LOCAL_INVENTORY_KEY = "sinau_local_inventory";
 
 export function useUserProfile({ vocabulary = [], progressMap = {} }) {
   const { user, isAuthenticated } = useAuth();
+  const profileStorageKey = getUserScopedStorageKey(LOCAL_PROFILE_KEY, user?.id);
+  const avatarUrlStorageKey = getUserScopedStorageKey(LOCAL_AVATAR_URL_KEY, user?.id);
+  const avatarTimeStorageKey = getUserScopedStorageKey(LOCAL_AVATAR_TIME_KEY, user?.id);
+  const inventoryStorageKey = getUserScopedStorageKey(LOCAL_INVENTORY_KEY, user?.id);
 
   // Local state initialized from cache
   const [profile, setProfile] = useState(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_PROFILE_KEY);
+      const saved = localStorage.getItem(profileStorageKey);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       // ignore
@@ -28,13 +33,13 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
       xp: 0,
       streak: 0,
       coins: 0,
-      lastActiveDate: new Date().toISOString()
+      lastActiveDate: null
     };
   });
 
   const [avatarUrl, setAvatarUrl] = useState(() => {
     try {
-      return localStorage.getItem(LOCAL_AVATAR_URL_KEY) || null;
+      return localStorage.getItem(avatarUrlStorageKey) || null;
     } catch (e) {
       return null;
     }
@@ -42,7 +47,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
 
   const [avatarUpdatedAt, setAvatarUpdatedAt] = useState(() => {
     try {
-      return localStorage.getItem(LOCAL_AVATAR_TIME_KEY) || null;
+      return localStorage.getItem(avatarTimeStorageKey) || null;
     } catch (e) {
       return null;
     }
@@ -50,12 +55,13 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
 
   const [unlockedTitleIds, setUnlockedTitleIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Economy & Inventory state
   const [inventory, setInventory] = useState(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_INVENTORY_KEY);
+      const saved = localStorage.getItem(inventoryStorageKey);
       if (saved) return JSON.parse(saved);
     } catch (e) {}
     return [];
@@ -102,7 +108,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
       completedGrammarCount: grammarCount,
       readingCompletedCount: readingCount,
       adventureCompletedCount: Math.min(started > 10 ? 3 : 0, 12),
-      streak: profile.streak || 0
+      streak: profile.streak ?? 0
     };
   }, [vocabulary, progressMap, profile.streak]);
 
@@ -123,94 +129,142 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     });
   }, [evaluatedTitles, unlockedTitleIds, isAuthenticated]);
 
-  // Load from remote cloud if authenticated
+  // The authenticated profile is isolated per user and always refreshed from
+  // Neon. A scoped cache is only a temporary offline display, never authority.
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !user?.id) return;
 
     let isMounted = true;
+    const warnings = [];
+
+    const readJson = (key, fallback) => {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    };
+    const writeJson = (key, value) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch {}
+    };
+
+    // Hydrate only this account's cached copy while the server request runs.
+    const cachedProfile = readJson(profileStorageKey, null);
+    setProfile(normalizeServerProfile(cachedProfile || {}, user.displayName));
+    const cachedInventory = readJson(inventoryStorageKey, []);
+    setInventory(Array.isArray(cachedInventory) ? cachedInventory : []);
+    try {
+      setAvatarUrl(localStorage.getItem(avatarUrlStorageKey) || null);
+      setAvatarUpdatedAt(localStorage.getItem(avatarTimeStorageKey) || null);
+    } catch {
+      setAvatarUrl(null);
+      setAvatarUpdatedAt(null);
+    }
+
+    setUnlockedTitleIds([]);
+    setProfileError("");
     setIsLoading(true);
 
-    Promise.all([
-      api.getProfile(),
-      api.getInventory().catch(() => ({ success: false, data: { inventory: [] } }))
-    ])
-      .then(async ([profileRes, invRes]) => {
+    async function loadCloudProfile() {
+      try {
+        const [profileRes, inventoryRes] = await Promise.all([
+          api.getProfile(),
+          api.getInventory().catch((error) => ({
+            success: false,
+            error: error?.message || "Gagal memuat inventori dari server."
+          }))
+        ]);
+
+        if (!profileRes?.success || !profileRes.data?.profile) {
+          throw new Error(profileRes?.error || "Server belum mengonfirmasi data profil.");
+        }
         if (!isMounted) return;
 
-        // Sync inventory from server
-        if (invRes?.success && invRes.data?.inventory) {
-          setInventory(invRes.data.inventory);
-          try {
-            localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(invRes.data.inventory));
-          } catch (e) {}
+        const remoteProfile = profileRes.data.profile;
+        const canonicalProfile = normalizeServerProfile(remoteProfile, user.displayName);
+        setProfile(canonicalProfile);
+        writeJson(profileStorageKey, canonicalProfile);
+
+        // Unlock state comes from the server. Do not infer ownership from stale
+        // local counters or remove a server-confirmed title using cached totals.
+        const remoteTitles = (profileRes.data.unlockedTitles || [])
+          .map((title) => typeof title === "string" ? title : title?.titleId)
+          .filter((titleId) => typeof titleId === "string" && titleId.length > 0);
+        setUnlockedTitleIds([...new Set(remoteTitles)]);
+
+        if (inventoryRes?.success && Array.isArray(inventoryRes.data?.inventory)) {
+          setInventory(inventoryRes.data.inventory);
+          writeJson(inventoryStorageKey, inventoryRes.data.inventory);
+        } else {
+          warnings.push(inventoryRes?.error || "Inventori belum dapat diperbarui dari server.");
         }
 
-        if (!profileRes?.success || !profileRes.data) return;
-        const remoteP = profileRes.data.profile;
-        let remoteTitles = (profileRes.data.unlockedTitles || []).map((t) => (typeof t === "string" ? t : t.titleId));
+        // The server timestamp is the version for avatar cache invalidation.
+        const remoteAvatarTime = remoteProfile.avatarUpdatedAt ?? null;
+        let localAvatarTime = null;
+        let cachedAvatarUrl = null;
+        try {
+          localAvatarTime = localStorage.getItem(avatarTimeStorageKey);
+          cachedAvatarUrl = localStorage.getItem(avatarUrlStorageKey);
+        } catch {}
 
-        // Filter out premature "word_explorer" title if user has not actually reached 50 words started
-        if ((userStats.totalStartedWords || 0) < 50) {
-          remoteTitles = remoteTitles.filter((t) => t !== "word_explorer");
-        }
-
-        setProfile((prev) => {
-          const merged = {
-            ...prev,
-            displayName: remoteP.displayName || user?.displayName || prev.displayName,
-            activeTitle: remoteTitles.includes(remoteP.activeTitle) ? remoteP.activeTitle : "",
-            avatarKey: remoteP.avatarKey || prev.avatarKey,
-            xp: Number(remoteP.xp !== undefined ? remoteP.xp : (prev.xp ?? 0)),
-            streak: Number(remoteP.streak !== undefined ? remoteP.streak : (prev.streak ?? 0)),
-            coins: Number(remoteP.coins !== undefined ? remoteP.coins : (prev.coins ?? 0)),
-            lastActiveDate: remoteP.lastActiveDate || prev.lastActiveDate
-          };
-          try {
-            localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(merged));
-          } catch (e) {}
-          return merged;
-        });
-
-        setUnlockedTitleIds((prev) => Array.from(new Set([...prev.filter(t => t !== "word_explorer" || (userStats.totalStartedWords || 0) >= 50), ...remoteTitles])));
-
-        // Cache-aware Avatar Fetch
-        const remoteAvatarTime = remoteP.avatarUpdatedAt;
-        const localAvatarTime = localStorage.getItem(LOCAL_AVATAR_TIME_KEY);
-        const cachedUrl = localStorage.getItem(LOCAL_AVATAR_URL_KEY);
-
-        if (remoteAvatarTime && (remoteAvatarTime !== localAvatarTime || !cachedUrl)) {
-          try {
-            const avatarRes = await api.getAvatar();
-            if (isMounted && avatarRes.success && avatarRes.data?.hasAvatar) {
-              setAvatarUrl(avatarRes.data.avatarUrl);
-              setAvatarUpdatedAt(avatarRes.data.avatarUpdatedAt);
-              localStorage.setItem(LOCAL_AVATAR_URL_KEY, avatarRes.data.avatarUrl);
-              localStorage.setItem(LOCAL_AVATAR_TIME_KEY, avatarRes.data.avatarUpdatedAt || remoteAvatarTime);
-            } else if (isMounted && avatarRes.success && !avatarRes.data?.hasAvatar) {
-              setAvatarUrl(null);
-              localStorage.removeItem(LOCAL_AVATAR_URL_KEY);
-            }
-          } catch (e) {
-            console.warn("[UserProfile] Gagal fetch avatar:", e);
-          }
-        } else if (!remoteAvatarTime && cachedUrl) {
-          // Avatar was removed
+        if (!remoteAvatarTime) {
           setAvatarUrl(null);
-          localStorage.removeItem(LOCAL_AVATAR_URL_KEY);
-          localStorage.removeItem(LOCAL_AVATAR_TIME_KEY);
+          setAvatarUpdatedAt(null);
+          try {
+            localStorage.removeItem(avatarUrlStorageKey);
+            localStorage.removeItem(avatarTimeStorageKey);
+          } catch {}
+        } else if (remoteAvatarTime !== localAvatarTime || !cachedAvatarUrl) {
+          const avatarRes = await api.getAvatar();
+          if (!avatarRes?.success) {
+            warnings.push(avatarRes?.error || "Foto profil belum dapat diperbarui.");
+          } else if (avatarRes.data?.hasAvatar && avatarRes.data.avatarUrl) {
+            setAvatarUrl(avatarRes.data.avatarUrl);
+            setAvatarUpdatedAt(avatarRes.data.avatarUpdatedAt || remoteAvatarTime);
+            try {
+              localStorage.setItem(avatarUrlStorageKey, avatarRes.data.avatarUrl);
+              localStorage.setItem(avatarTimeStorageKey, avatarRes.data.avatarUpdatedAt || remoteAvatarTime);
+            } catch {}
+          } else {
+            setAvatarUrl(null);
+            setAvatarUpdatedAt(null);
+            try {
+              localStorage.removeItem(avatarUrlStorageKey);
+              localStorage.removeItem(avatarTimeStorageKey);
+            } catch {}
+          }
         }
-      })
-      .catch((err) => {
-        console.warn("[UserProfile] Gagal memuat profil cloud:", err.message);
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
 
+        if (isMounted && warnings.length) {
+          setProfileError(warnings.join(" "));
+        }
+      } catch (error) {
+        console.warn("[UserProfile] Gagal memuat profil cloud:", error?.message || error);
+        if (isMounted) {
+          setProfileError(error?.message || "Gagal memuat profil dari server.");
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadCloudProfile();
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, user]);
+  }, [
+    isAuthenticated,
+    user?.id,
+    user?.displayName,
+    profileStorageKey,
+    avatarUrlStorageKey,
+    avatarTimeStorageKey,
+    inventoryStorageKey
+  ]);
 
   // Calculate Level from XP
   const calculatedLevel = useMemo(() => {
@@ -240,7 +294,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     if (!isAuthenticated) {
       setProfile((prev) => {
         const next = { ...prev, displayName: trimmed };
-        try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+        try { localStorage.setItem(profileStorageKey, JSON.stringify(next)); } catch (e) {}
         return next;
       });
       return;
@@ -248,28 +302,32 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
 
     try {
       const res = await api.updateProfile({ displayName: trimmed });
-      if (res.success) {
-        setProfile((prev) => {
-          const next = { ...prev, displayName: trimmed };
-          try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
-          return next;
-        });
+      if (!res?.success) {
+        throw new Error(res?.error || "Server gagal menyimpan nama profil.");
       }
-    } catch (e) {
-      console.warn("Gagal update nama di server:", e);
-      throw e;
+      setProfile((prev) => {
+        const next = { ...prev, displayName: trimmed };
+        try { localStorage.setItem(profileStorageKey, JSON.stringify(next)); } catch {}
+        return next;
+      });
+      return { success: true };
+    } catch (error) {
+      console.warn("Gagal update nama di server:", error);
+      throw error;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, profileStorageKey]);
 
   // Change Active Title
   const setActiveTitle = useCallback(async (titleId) => {
     const exists = TITLES_CATALOG.some((t) => t.id === titleId);
-    if (!exists && titleId !== "") return;
+    if (!exists && titleId !== "") {
+      throw new Error("Gelar yang dipilih tidak terdaftar.");
+    }
 
     if (!isAuthenticated) {
       setProfile((prev) => {
         const next = { ...prev, activeTitle: titleId };
-        try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+        try { localStorage.setItem(profileStorageKey, JSON.stringify(next)); } catch (e) {}
         return next;
       });
       return;
@@ -277,70 +335,76 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
 
     try {
       const res = await api.updateProfile({ activeTitle: titleId });
-      if (res.success) {
-        setProfile((prev) => {
-          const next = { ...prev, activeTitle: titleId };
-          try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
-          return next;
-        });
+      if (!res?.success) {
+        throw new Error(res?.error || "Server gagal menyimpan gelar aktif.");
       }
-    } catch (e) {
-      console.warn("Gagal update active title di server:", e);
-      throw e;
+      setProfile((prev) => {
+        const next = { ...prev, activeTitle: titleId };
+        try { localStorage.setItem(profileStorageKey, JSON.stringify(next)); } catch {}
+        return next;
+      });
+      return { success: true };
+    } catch (error) {
+      console.warn("Gagal update active title di server:", error);
+      throw error;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, profileStorageKey]);
 
-  // Upload Custom Avatar (from gallery/crop)
+  // Upload Custom Avatar — server first, then update the visible state/cache.
   const uploadCustomAvatar = useCallback(async ({ imageBase64, mimeType = "image/webp" }) => {
-    setIsUploadingAvatar(true);
-    setAvatarUrl(imageBase64);
-    const now = new Date().toISOString();
-    setAvatarUpdatedAt(now);
-    try {
-      localStorage.setItem(LOCAL_AVATAR_URL_KEY, imageBase64);
-      localStorage.setItem(LOCAL_AVATAR_TIME_KEY, now);
-    } catch (e) {}
-
     if (!isAuthenticated) {
-      setIsUploadingAvatar(false);
-      return { success: true, localOnly: true };
+      return { success: false, error: "Silakan masuk sebelum mengunggah foto profil." };
     }
 
+    setIsUploadingAvatar(true);
     try {
       const res = await api.uploadAvatar({ imageBase64, mimeType });
-      if (res.success && res.data) {
-        if (res.data.avatarUpdatedAt) {
-          setAvatarUpdatedAt(res.data.avatarUpdatedAt);
-          try { localStorage.setItem(LOCAL_AVATAR_TIME_KEY, res.data.avatarUpdatedAt); } catch (e) {}
-        }
+      if (!res?.success || !res.data?.avatarUpdatedAt) {
+        throw new Error(res?.error || "Server belum mengonfirmasi penyimpanan foto profil.");
       }
-      return { success: true };
-    } catch (err) {
-      console.warn("Upload avatar warning:", err);
-      return { success: true, warning: err.message };
+
+      const updatedAt = res.data.avatarUpdatedAt;
+      setAvatarUrl(imageBase64);
+      setAvatarUpdatedAt(updatedAt);
+      try {
+        localStorage.setItem(avatarUrlStorageKey, imageBase64);
+        localStorage.setItem(avatarTimeStorageKey, updatedAt);
+      } catch {}
+
+      return { success: true, avatarUpdatedAt: updatedAt };
+    } catch (error) {
+      console.warn("Upload avatar gagal:", error);
+      return { success: false, error: error?.message || "Gagal mengunggah foto profil." };
     } finally {
       setIsUploadingAvatar(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, avatarUrlStorageKey, avatarTimeStorageKey]);
 
-  // Delete Custom Avatar (revert to initials)
+  // Delete Custom Avatar — keep the current photo until the server confirms.
   const deleteCustomAvatar = useCallback(async () => {
-    setAvatarUrl(null);
-    setAvatarUpdatedAt(null);
-    try {
-      localStorage.removeItem(LOCAL_AVATAR_URL_KEY);
-      localStorage.removeItem(LOCAL_AVATAR_TIME_KEY);
-    } catch (e) {}
-
-    if (isAuthenticated) {
-      try {
-        await api.deleteAvatar();
-      } catch (err) {
-        console.warn("Delete avatar warning:", err);
-      }
+    if (!isAuthenticated) {
+      return { success: false, error: "Silakan masuk sebelum menghapus foto profil." };
     }
-    return { success: true };
-  }, [isAuthenticated]);
+
+    try {
+      const res = await api.deleteAvatar();
+      if (!res?.success) {
+        throw new Error(res?.error || "Server gagal menghapus foto profil.");
+      }
+
+      setAvatarUrl(null);
+      setAvatarUpdatedAt(null);
+      try {
+        localStorage.removeItem(avatarUrlStorageKey);
+        localStorage.removeItem(avatarTimeStorageKey);
+      } catch {}
+
+      return { success: true };
+    } catch (error) {
+      console.warn("Delete avatar gagal:", error);
+      return { success: false, error: error?.message || "Gagal menghapus foto profil." };
+    }
+  }, [isAuthenticated, avatarUrlStorageKey, avatarTimeStorageKey]);
 
   // Buy item from collection catalog (Server is authoritative)
   const buyItem = useCallback(async (itemId) => {
@@ -357,7 +421,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
         const remainingCoins = res.data.remainingCoins;
         setProfile((prev) => {
           const next = { ...prev, coins: remainingCoins };
-          try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+          try { localStorage.setItem(profileStorageKey, JSON.stringify(next)); } catch {}
           return next;
         });
 
@@ -371,7 +435,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
 
         setInventory((prev) => {
           const next = [...prev, boughtItem];
-          try { localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(next)); } catch (e) {}
+          try { localStorage.setItem(inventoryStorageKey, JSON.stringify(next)); } catch (e) {}
           return next;
         });
 
@@ -383,32 +447,35 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     }
   }, [isAuthenticated]);
 
-  // Equip border or outfit (Server is authoritative)
+  // Equip border or outfit — UI/cache changes only after server confirmation.
   const equipItem = useCallback(async (itemId, type = "border") => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      return { success: false, error: "Silakan masuk sebelum memasang koleksi." };
+    }
 
     try {
       const res = await api.equipItem({ itemId, type });
-      if (res.success) {
-        setInventory((prev) => {
-          const next = prev.map((it) => {
-            const itType = it.type || (it.itemId?.startsWith("outfit_") ? "outfit" : "border");
-            if (itType === type) {
-              return {
-                ...it,
-                equipped: it.itemId === itemId
-              };
-            }
-            return it;
-          });
-          try { localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(next)); } catch (e) {}
-          return next;
-        });
+      if (!res?.success) {
+        throw new Error(res?.error || "Server gagal memasang koleksi.");
       }
-    } catch (err) {
-      console.warn("Equip item server warning:", err.message);
+
+      setInventory((prev) => {
+        const next = prev.map((item) => {
+          const itemType = item.type || (item.itemId?.startsWith("outfit_") ? "outfit" : "border");
+          if (itemType === type) {
+            return { ...item, equipped: item.itemId === itemId };
+          }
+          return item;
+        });
+        try { localStorage.setItem(inventoryStorageKey, JSON.stringify(next)); } catch {}
+        return next;
+      });
+      return { success: true };
+    } catch (error) {
+      console.warn("Equip item gagal:", error);
+      return { success: false, error: error?.message || "Gagal memasang koleksi." };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, inventoryStorageKey]);
 
   // Server-side idempotent reward grant
   const claimReward = useCallback(async ({ eventId, source, refId = "", meta = {} }) => {
@@ -437,7 +504,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
             coins: totalCoins !== undefined ? totalCoins : (prev.coins ?? 0),
             streak: streak !== undefined ? streak : (prev.streak ?? 0)
           };
-          try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(next)); } catch (e) {}
+          try { localStorage.setItem(profileStorageKey, JSON.stringify(next)); } catch (e) {}
           return next;
         });
 
@@ -473,6 +540,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     evaluatedTitles,
     calculatedLevel,
     isLoading,
+    profileError,
     updateDisplayName,
     setActiveTitle,
     uploadCustomAvatar,
