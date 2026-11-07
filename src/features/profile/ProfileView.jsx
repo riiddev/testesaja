@@ -26,6 +26,7 @@ function ProfileViewContent({ vocabulary = [], progressMap = {}, activeHook }) {
 
   const {
     profile,
+    profileError,
     userStats,
     avatarUrl,
     isUploadingAvatar,
@@ -198,18 +199,33 @@ function ProfileViewContent({ vocabulary = [], progressMap = {}, activeHook }) {
   };
 
   const handleDeleteAvatar = async () => {
-    await deleteCustomAvatar();
+    setAvatarError("");
+    setAvatarSuccess("");
+    const result = await deleteCustomAvatar();
+    if (!result?.success) {
+      setAvatarError(result?.error || "Gagal menghapus foto profil. Foto lama tetap digunakan.");
+      return;
+    }
     setAvatarSuccess("Foto profil dihapus. Profil kembali menggunakan inisial namamu.");
     setTimeout(() => setAvatarSuccess(""), 4000);
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    if (editName.trim()) {
-      updateDisplayName(editName.trim());
+    setAvatarError("");
+    setAvatarSuccess("");
+
+    try {
+      if (editName.trim()) {
+        await updateDisplayName(editName.trim());
+      }
+      await setActiveTitle(selectedTitleId);
+      setIsEditModalOpen(false);
+      setAvatarSuccess("Perubahan profil berhasil disimpan.");
+      setTimeout(() => setAvatarSuccess(""), 4000);
+    } catch (error) {
+      setAvatarError(error?.message || "Perubahan profil gagal disimpan. Coba lagi.");
     }
-    setActiveTitle(selectedTitleId);
-    setIsEditModalOpen(false);
   };
 
   const levels = [
@@ -221,6 +237,15 @@ function ProfileViewContent({ vocabulary = [], progressMap = {}, activeHook }) {
 
   return (
     <div className="profile-container" id="profile-view-root">
+      {profileError && (
+        <div
+          role="alert"
+          className="card card-tint-rose"
+          style={{ padding: "10px 14px", marginBottom: "var(--space-4)", color: "var(--color-danger)", fontSize: "var(--text-sm)", fontWeight: 600 }}
+        >
+          Data profil belum seluruhnya berhasil diperbarui dari server. {profileError}
+        </div>
+      )}
       {/* 1. SCHOLAR IDENTITY CARD */}
       <section className="scholar-id-card" aria-label="Profil Pelajar">
         <div className="scholar-header-wrap">
@@ -742,7 +767,7 @@ function ProfileViewContent({ vocabulary = [], progressMap = {}, activeHook }) {
                       {avatarUrl ? "Foto Profil Kustom Aktif" : "Foto Profil (Inisial Nama)"}
                     </strong>
                     <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)", display: "block", marginBottom: "var(--space-2)" }}>
-                      {avatarUrl ? "Tersimpan di Google Drive cloud akunmu." : "Bisa diganti dengan foto dari galeri atau kamera ponsel."}
+                      {avatarUrl ? "Tersimpan pada akun SinauEnglish-mu." : "Bisa diganti dengan foto dari galeri atau kamera ponsel."}
                     </span>
 
                     <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
