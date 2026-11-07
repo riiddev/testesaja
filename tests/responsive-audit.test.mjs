@@ -46,7 +46,10 @@ test("FASE 8 RESPONSIVE & ACCESSIBILITY AUDIT", async (t) => {
 
   await t.test("5. Sidebar count & mission alert badge styling", () => {
     assert.ok(allCss.includes(".sidebar-unread-alert"), "Must include styling for mission alert badge");
-    assert.ok(allCss.includes(".app-sidebar.is-collapsed .sidebar-unread-alert"), "Must handle alert badge when collapsed");
+    assert.ok(
+      allCss.includes(".app-sidebar.is-collapsed .sidebar-link span.sidebar-unread-alert"),
+      "Must keep the alert badge visible in collapsed sidebar mode"
+    );
   });
 });
 
