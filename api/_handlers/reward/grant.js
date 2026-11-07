@@ -7,7 +7,7 @@
  */
 
 import { eq, sql } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreakInTransaction } from "../../_lib/streak.js";
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     const reward = REWARDS_CONFIG.reading_first_complete;
     const eventId = "reading:" + refId + ":first_complete";
 
-    const result = await getTransactionDb().transaction(async (tx) => {
+    const result = await withTransaction(async (tx) => {
       const ledger = await recordLedgerTransactionInTransaction(tx, {
         userId: user.id,
         eventId,
