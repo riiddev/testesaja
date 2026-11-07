@@ -325,8 +325,8 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
     assert.equal(earlyClaimResult.statusCode, 400);
     assert.match(earlyClaimResult.body.error, /belum selesai/i);
 
-    // 5c. Update quest progress to completion
-    const { req: qUpReq, res: qUpRes } = createMockReqRes({
+    // 5c. Forged progress from the browser must be ignored by the server.
+    const { req: forgedUpdateReq, res: forgedUpdateRes } = createMockReqRes({
       method: "POST",
       token: sessionToken,
       body: {
@@ -336,10 +336,66 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
       }
     });
 
-    await questsUpdateHandler(qUpReq, qUpRes);
-    const qUpResult = qUpRes._getResult();
-    assert.equal(qUpResult.statusCode, 200);
-    assert.equal(qUpResult.body.data.isCompleted, true);
+    await questsUpdateHandler(forgedUpdateReq, forgedUpdateRes);
+    const forgedUpdateResult = forgedUpdateRes._getResult();
+    assert.equal(forgedUpdateResult.statusCode, 200);
+    const forgedQuest = forgedUpdateResult.body.data.quests.find(
+      (quest) => quest.questId === targetQuest.questId
+    );
+    assert.equal(forgedQuest.progress, 0, "Client-supplied progress must not be trusted");
+    assert.equal(forgedQuest.isCompleted, false, "A forged completion must not unlock rewards");
+
+    // 5d. Seed server-written learning events matching this official mission.
+    const activityTypeByQuest = {
+      quest_vocab_new_5: "vocab_learn",
+      quest_srs_review_8: "srs_review",
+      quest_grammar_quiz_1: "grammar",
+      quest_habit_reading_1: "reading_quiz",
+      quest_study_focus_3: "matching",
+      quest_adventure_explore_1: "story"
+    };
+    const questActivityType = activityTypeByQuest[targetQuest.questId];
+    assert.ok(questActivityType, "Official quest must have a server progress source");
+
+    if (questActivityType === "vocab_learn" || questActivityType === "srs_review") {
+      await db.insert(schema.progressEvents).values(
+        Array.from({ length: targetQuest.target }, (_, index) => ({
+          userId: testUserId,
+          eventId: "quest_event_" + Date.now() + "_" + index,
+          activityType: questActivityType
+        }))
+      );
+    } else {
+      await db.insert(schema.activityLog).values(
+        Array.from({ length: targetQuest.target }, (_, index) => ({
+          id: "quest_activity_" + Date.now() + "_" + index,
+          userId: testUserId,
+          activityType: questActivityType,
+          title: "Server-verified quest fixture",
+          score: 1,
+          totalQuestions: 1,
+          accuracyPercent: 100,
+          durationSeconds: 0,
+          xpEarned: 0,
+          coinsEarned: 0
+        }))
+      );
+    }
+
+    // Refresh the snapshot: it must now report completion from server evidence.
+    const { req: verifiedUpdateReq, res: verifiedUpdateRes } = createMockReqRes({
+      method: "POST",
+      token: sessionToken,
+      body: {}
+    });
+    await questsUpdateHandler(verifiedUpdateReq, verifiedUpdateRes);
+    const verifiedUpdateResult = verifiedUpdateRes._getResult();
+    assert.equal(verifiedUpdateResult.statusCode, 200);
+    const verifiedQuest = verifiedUpdateResult.body.data.quests.find(
+      (quest) => quest.questId === targetQuest.questId
+    );
+    assert.equal(verifiedQuest.progress, targetQuest.target);
+    assert.equal(verifiedQuest.isCompleted, true);
 
     // 5d. Claim quest reward -> Must succeed
     const { req: validClaimReq, res: validClaimRes } = createMockReqRes({
