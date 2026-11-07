@@ -46,7 +46,67 @@ export function SyncStatusIndicator({
     );
   }
 
-  // 1. "syncing"
+  // Do not show a cloud-save confirmation until the first authenticated read succeeds.
+  if (syncStatus === "checking") {
+    return (
+      <div
+        className="storage-pill storage-pill-checking"
+        role="status"
+        aria-live="polite"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "4px 10px",
+          borderRadius: "var(--radius-pill)",
+          backgroundColor: "var(--color-bg-secondary, #F1F5F9)",
+          border: "1px solid var(--border-color, #E2E8F0)",
+          fontSize: "12px",
+          fontWeight: 600,
+          color: "var(--color-text-secondary, #64748B)"
+        }}
+      >
+        <span>Memeriksa penyimpanan...</span>
+      </div>
+    );
+  }
+
+  // 1. "error" — must take priority over pending so failures stay visible.
+  if (syncStatus === "error") {
+    return (
+      <button
+        type="button"
+        onClick={onRetry}
+        className="storage-pill storage-pill-error"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "4px 10px",
+          borderRadius: "var(--radius-pill)",
+          backgroundColor: "#FEF2F2",
+          border: "1px solid #FCA5A5",
+          fontSize: "12px",
+          fontWeight: 600,
+          color: "#991B1B",
+          cursor: onRetry ? "pointer" : "default"
+        }}
+        title={syncError ? `${syncError}. Klik untuk mencoba lagi.` : "Gagal sinkron. Klik untuk mencoba lagi."}
+      >
+        <span
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            backgroundColor: "#DC2626"
+          }}
+        />
+        <span>Gagal, akan dicoba lagi</span>
+      </button>
+    );
+  }
+
+  // 2. "syncing"
   if (syncStatus === "syncing") {
     return (
       <div
@@ -85,7 +145,7 @@ export function SyncStatusIndicator({
     );
   }
 
-  // 2. "pending" (outboxCount > 0)
+  // 3. "pending" (outboxCount > 0)
   if (syncStatus === "pending" || outboxCount > 0) {
     return (
       <button
@@ -116,41 +176,6 @@ export function SyncStatusIndicator({
           }}
         />
         <span>Menunggu sinkronisasi ({outboxCount})</span>
-      </button>
-    );
-  }
-
-  // 3. "error"
-  if (syncStatus === "error") {
-    return (
-      <button
-        type="button"
-        onClick={onRetry}
-        className="storage-pill storage-pill-error"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-          padding: "4px 10px",
-          borderRadius: "var(--radius-pill)",
-          backgroundColor: "#FEF2F2",
-          border: "1px solid #FCA5A5",
-          fontSize: "12px",
-          fontWeight: 600,
-          color: "#991B1B",
-          cursor: onRetry ? "pointer" : "default"
-        }}
-        title={syncError ? `${syncError}. Klik untuk mencoba lagi.` : "Gagal sinkron. Klik untuk mencoba lagi."}
-      >
-        <span
-          style={{
-            width: "8px",
-            height: "8px",
-            borderRadius: "50%",
-            backgroundColor: "#DC2626"
-          }}
-        />
-        <span>Gagal, akan dicoba lagi</span>
       </button>
     );
   }
