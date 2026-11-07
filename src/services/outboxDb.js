@@ -72,7 +72,15 @@ export function openOutboxDb() {
 function getFallbackOutbox(userId) {
   try {
     const raw = localStorage.getItem(`sinau_outbox_${userId}`);
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+
+    // The localStorage key is user-scoped. Restore the namespace for older
+    // records, but never accept records that explicitly belong to another user.
+    return parsed
+      .filter((item) => item && typeof item.eventId === "string")
+      .filter((item) => !item.userId || item.userId === userId)
+      .map((item) => ({ ...item, userId }));
   } catch (e) {
     return [];
   }
@@ -81,142 +89,156 @@ function getFallbackOutbox(userId) {
 function saveFallbackOutbox(userId, items) {
   try {
     localStorage.setItem(`sinau_outbox_${userId}`, JSON.stringify(items));
-  } catch (e) {}
+    return true;
+  } catch (e) {
+    console.warn("[OutboxDB] localStorage fallback unavailable:", e?.message || e);
+    return false;
+  }
+}
+
+function mergeOutboxEvents(userId, indexedEvents = [], fallbackEvents = [], limit = 50) {
+  const byId = new Map();
+
+  for (const item of [...indexedEvents, ...fallbackEvents]) {
+    if (!item || typeof item.eventId !== "string" || item.userId !== userId) continue;
+    byId.set(item.eventId, item);
+  }
+
+  return [...byId.values()]
+    .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))
+    .slice(0, limit);
 }
 
 /**
  * Enqueue a new event to the persistent outbox
  */
 export async function enqueueOutboxEvent(userId, event) {
-  if (!userId || !event || !event.eventId) return;
-
-  const db = await openOutboxDb();
-  if (!db) {
-    const list = getFallbackOutbox(userId);
-    // Replace if same eventId exists, else push
-    const filtered = list.filter((it) => it.eventId !== event.eventId);
-    filtered.push(event);
-    saveFallbackOutbox(userId, filtered);
-    return;
+  if (
+    typeof userId !== "string" ||
+    !userId ||
+    !event ||
+    typeof event.eventId !== "string" ||
+    !event.eventId ||
+    (event.userId && event.userId !== userId)
+  ) {
+    return false;
   }
 
-  return new Promise((resolve, reject) => {
+  const normalizedEvent = { ...event, userId };
+  const db = await openOutboxDb();
+
+  if (!db) {
+    const list = getFallbackOutbox(userId).filter((item) => item.eventId !== normalizedEvent.eventId);
+    list.push(normalizedEvent);
+    return saveFallbackOutbox(userId, list);
+  }
+
+  const indexedWriteSucceeded = await new Promise((resolve) => {
+    let settled = false;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
+
     try {
       const tx = db.transaction(STORE_OUTBOX, "readwrite");
-      const store = tx.objectStore(STORE_OUTBOX);
-      store.put(event);
-
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => {
-        console.warn("[OutboxDB] tx put error, using fallback");
-        const list = getFallbackOutbox(userId);
-        const filtered = list.filter((it) => it.eventId !== event.eventId);
-        filtered.push(event);
-        saveFallbackOutbox(userId, filtered);
-        resolve(true);
-      };
+      tx.oncomplete = () => finish(true);
+      tx.onerror = () => finish(false);
+      tx.onabort = () => finish(false);
+      tx.objectStore(STORE_OUTBOX).put(normalizedEvent);
     } catch (err) {
-      resolve(false);
+      finish(false);
     }
   });
+
+  if (indexedWriteSucceeded) return true;
+
+  // Keep failed IndexedDB writes in localStorage. Readers merge both stores,
+  // so fallback records remain visible even while IndexedDB is still available.
+  const fallback = getFallbackOutbox(userId).filter((item) => item.eventId !== normalizedEvent.eventId);
+  fallback.push(normalizedEvent);
+  return saveFallbackOutbox(userId, fallback);
 }
 
 /**
- * Retrieve pending events for a user, ordered by createdAt
+ * Retrieve pending events from both durable stores. Merge by eventId to avoid
+ * duplicate delivery if one event exists in IndexedDB and in the fallback.
  */
 export async function getPendingOutboxEvents(userId, limit = 50) {
   if (!userId) return [];
 
+  const fallbackEvents = getFallbackOutbox(userId);
   const db = await openOutboxDb();
   if (!db) {
-    return getFallbackOutbox(userId).slice(0, limit);
+    return mergeOutboxEvents(userId, [], fallbackEvents, limit);
   }
 
-  return new Promise((resolve) => {
+  const indexedEvents = await new Promise((resolve) => {
     try {
       const tx = db.transaction(STORE_OUTBOX, "readonly");
-      const store = tx.objectStore(STORE_OUTBOX);
-      const index = store.index("userId");
-      const request = index.getAll(userId);
-
-      request.onsuccess = () => {
-        const results = request.result || [];
-        // Sort by createdAt ascending
-        results.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-        resolve(results.slice(0, limit));
-      };
-
-      request.onerror = () => {
-        resolve(getFallbackOutbox(userId).slice(0, limit));
-      };
+      const request = tx.objectStore(STORE_OUTBOX).index("userId").getAll(userId);
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => resolve([]);
     } catch (e) {
-      resolve(getFallbackOutbox(userId).slice(0, limit));
+      resolve([]);
     }
   });
+
+  return mergeOutboxEvents(userId, indexedEvents, fallbackEvents, limit);
 }
 
 /**
- * Remove confirmed eventIds from the outbox after server ACK
+ * Remove acknowledged IDs from every local store. If IndexedDB deletion fails,
+ * return false; the remaining copy can be replayed safely because the server is
+ * idempotent.
  */
 export async function removeConfirmedEvents(userId, eventIds = []) {
-  if (!userId || !eventIds.length) return;
+  if (!userId || !Array.isArray(eventIds) || !eventIds.length) return false;
 
-  const idSet = new Set(eventIds);
+  const ids = [...new Set(eventIds.filter((id) => typeof id === "string" && id))];
+  if (!ids.length) return false;
+
+  const fallbackEvents = getFallbackOutbox(userId);
+  const fallbackSaved = saveFallbackOutbox(
+    userId,
+    fallbackEvents.filter((item) => !ids.includes(item.eventId))
+  );
+
   const db = await openOutboxDb();
+  if (!db) return fallbackSaved;
 
-  if (!db) {
-    const list = getFallbackOutbox(userId);
-    const remaining = list.filter((it) => !idSet.has(it.eventId));
-    saveFallbackOutbox(userId, remaining);
-    return;
-  }
+  const indexedDeleteSucceeded = await new Promise((resolve) => {
+    let settled = false;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
 
-  return new Promise((resolve) => {
     try {
       const tx = db.transaction(STORE_OUTBOX, "readwrite");
+      tx.oncomplete = () => finish(true);
+      tx.onerror = () => finish(false);
+      tx.onabort = () => finish(false);
+
       const store = tx.objectStore(STORE_OUTBOX);
-
-      for (const id of eventIds) {
-        store.delete(id);
-      }
-
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => {
-        const list = getFallbackOutbox(userId);
-        const remaining = list.filter((it) => !idSet.has(it.eventId));
-        saveFallbackOutbox(userId, remaining);
-        resolve(true);
-      };
+      for (const id of ids) store.delete(id);
     } catch (e) {
-      resolve(false);
+      finish(false);
     }
   });
+
+  return indexedDeleteSucceeded && fallbackSaved;
 }
 
 /**
- * Get total count of pending items in outbox for a user
+ * Count merged, de-duplicated pending events so fallback records are not hidden
+ * when IndexedDB remains available but one of its writes previously failed.
  */
 export async function getOutboxCount(userId) {
   if (!userId) return 0;
-
-  const db = await openOutboxDb();
-  if (!db) {
-    return getFallbackOutbox(userId).length;
-  }
-
-  return new Promise((resolve) => {
-    try {
-      const tx = db.transaction(STORE_OUTBOX, "readonly");
-      const store = tx.objectStore(STORE_OUTBOX);
-      const index = store.index("userId");
-      const request = index.count(userId);
-
-      request.onsuccess = () => resolve(request.result || 0);
-      request.onerror = () => resolve(getFallbackOutbox(userId).length);
-    } catch (e) {
-      resolve(getFallbackOutbox(userId).length);
-    }
-  });
+  return (await getPendingOutboxEvents(userId, Number.MAX_SAFE_INTEGER)).length;
 }
 
 /**
