@@ -161,7 +161,23 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
         .finally(() => setIsLoading(false));
     };
 
-    return subscribeToDailyQuestsChanged(refreshAfterActivity);
+    // Refresh from the server when returning to a tab/device session. This
+    // picks up progress recorded by another tab or another signed-in device.
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        refreshAfterActivity();
+      }
+    };
+
+    const unsubscribe = subscribeToDailyQuestsChanged(refreshAfterActivity);
+    window.addEventListener("focus", refreshAfterActivity);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener("focus", refreshAfterActivity);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [authLoading, isAuthenticated, userId, refreshServerSnapshot]);
 
   const quests = useMemo(() => {

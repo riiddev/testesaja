@@ -161,3 +161,17 @@ test("legacy QuizRunner submits Grammar answers through the profile's shared rew
   assert.match(runner, /refId:\s*officialTopic\.id/);
   assert.match(workspace, /claimReward=\{userProfile\.claimReward\}/);
 });
+
+
+test("daily missions refresh from server when the app regains focus or visibility", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const hook = await readFile(
+    new URL("../src/hooks/useDailyQuests.js", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(hook, /window\.addEventListener\("focus", refreshAfterActivity\)/);
+  assert.match(hook, /document\.addEventListener\("visibilitychange", refreshWhenVisible\)/);
+  assert.match(hook, /window\.removeEventListener\("focus", refreshAfterActivity\)/);
+  assert.match(hook, /document\.removeEventListener\("visibilitychange", refreshWhenVisible\)/);
+});
