@@ -25,7 +25,10 @@ function clearLocalUserCache(userId = null) {
 }
 
 function authErrorMessage(result, fallback) {
-  return result?.error?.message || result?.error?.statusText || fallback;
+  return result?.error?.message ||
+    result?.error?.statusText ||
+    result?.error?.code ||
+    fallback;
 }
 
 async function getAppSession() {
@@ -99,8 +102,9 @@ export function AuthProvider({ children }) {
       return { success: true };
     } catch (err) {
       clearSessionToken();
-      setError(err.message);
-      return { success: false, error: err.message };
+      const message = err?.message || "Gagal masuk. Periksa email dan kata sandi.";
+      setError(message);
+      return { success: false, error: message };
     } finally {
       setLoading(false);
     }
@@ -111,15 +115,37 @@ export function AuthProvider({ children }) {
     setLoading(true);
     clearSessionToken();
 
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const normalizedName = String(displayName || "").trim();
+
     try {
       const result = await authClient.signUp.email({
-        name: String(displayName || "").trim(),
-        email: String(email || "").trim().toLowerCase(),
+        name: normalizedName,
+        email: normalizedEmail,
         password
       });
 
       if (result?.error) {
-        throw new Error(authErrorMessage(result, "Gagal membuat akun."));
+        // Transitional compatibility path: Better Auth remains the primary
+        // registration flow. If its HTTP endpoint rejects the request, use
+        // the existing Vercel registration handler, which creates the same
+        // zero-state profile, stats, settings and a hashed legacy session.
+        const legacy = await api.register({
+          email: normalizedEmail,
+          password,
+          displayName: normalizedName
+        });
+
+        if (legacy?.success && legacy.data?.user && legacy.data?.token) {
+          clearLocalUserCache(user?.id);
+          setUser(legacy.data.user);
+          return { success: true };
+        }
+
+        throw new Error(
+          legacy?.error ||
+          authErrorMessage(result, "Gagal membuat akun. Silakan coba lagi.")
+        );
       }
 
       const currentUser = await getAppSession();
@@ -129,8 +155,9 @@ export function AuthProvider({ children }) {
       return { success: true };
     } catch (err) {
       clearSessionToken();
-      setError(err.message);
-      return { success: false, error: err.message };
+      const message = err?.message || "Gagal membuat akun. Silakan coba lagi.";
+      setError(message);
+      return { success: false, error: message };
     } finally {
       setLoading(false);
     }
