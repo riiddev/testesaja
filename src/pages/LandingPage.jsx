@@ -207,8 +207,8 @@ export function LandingPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "var(--space-6)" }}>
             <div className="card card-interactive">
-              <span className="badge badge-gold" style={{ marginBottom: "var(--space-3)" }}>2.971 KATA</span>
-              <h3 style={{ fontSize: "var(--text-xl)", marginBottom: "var(--space-2)" }}>Oxford 3000 Corpus</h3>
+              <span className="badge badge-gold" style={{ marginBottom: "var(--space-3)" }}>KOSAKATA</span>
+              <h3 style={{ fontSize: "var(--text-xl)", marginBottom: "var(--space-2)" }}>Kosakata Inti Bahasa Inggris</h3>
               <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", marginBottom: "var(--space-4)", lineHeight: 1.6 }}>
                 Kosakata American English terpenting level A1, A2, B1, dan B2 lengkap dengan audio dan kalimat contoh autentik.
               </p>
@@ -224,10 +224,10 @@ export function LandingPage() {
             </div>
 
             <div className="card card-interactive">
-              <span className="badge badge-navy" style={{ marginBottom: "var(--space-3)" }}>19 TOPIK</span>
+              <span className="badge badge-navy" style={{ marginBottom: "var(--space-3)" }}>GRAMMAR</span>
               <h3 style={{ fontSize: "var(--text-xl)", marginBottom: "var(--space-2)" }}>Kurikulum Grammar</h3>
               <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", marginBottom: "var(--space-4)", lineHeight: 1.6 }}>
-                Pola kalimat tenses, modal verbs, passive voice, hingga conditional sentences dengan 57 kuis interaktif terstruktur.
+                Pola kalimat tenses, modal verbs, passive voice, hingga conditional sentences dengan kuis interaktif terstruktur.
               </p>
               {isAuthenticated ? (
                 <Link className="btn btn-secondary btn-sm" to="/belajar/grammar" style={{ minHeight: "44px" }}>
@@ -241,10 +241,10 @@ export function LandingPage() {
             </div>
 
             <div className="card card-interactive">
-              <span className="badge badge-sage" style={{ marginBottom: "var(--space-3)" }}>156 BACAAN</span>
+              <span className="badge badge-sage" style={{ marginBottom: "var(--space-3)" }}>READING</span>
               <h3 style={{ fontSize: "var(--text-xl)", marginBottom: "var(--space-2)" }}>HABIT Reading Library</h3>
               <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", marginBottom: "var(--space-4)", lineHeight: 1.6 }}>
-                63.309 kata bacaan berbobot untuk membangun intuisi membaca cepat dan melatih fokus pemahaman mendalam.
+                Materi bacaan autentik untuk membangun intuisi membaca cepat dan melatih fokus pemahaman mendalam.
               </p>
               {isAuthenticated ? (
                 <Link className="btn btn-secondary btn-sm" to="/belajar/reading" style={{ minHeight: "44px" }}>
