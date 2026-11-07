@@ -399,3 +399,27 @@ STATUS UPDATE — 7 NOVEMBER 2026 (HASIL PENGERJAAN TERBARU)
 - Economy, SRS transactionality, auth handler Better Auth untuk akun baru, legacy login compatibility, server-side anti-tamper, dan UI catalog count regression: diuji di Neon Development/CI.
 - Belum lulus penuh: deployment Production dari SHA terbaru (tertahan batas deployment Vercel), verifikasi manual browser untuk semua alur UI setelah perubahan terbaru, screenshot visual di 320–1920 px, perangkat Android fisik, 7 hari pemakaian tanpa kehilangan data, audit akhir semua pemanggilan Apps Script, dan reset Sheets Fase 7.
 - Karena syarat-syarat tersebut belum terpenuhi, **GERBANG STABILITAS BELUM DIBUKA**. Fase 12–20 tidak dimulai.
+
+
+==========================================================
+STATUS FASE 6.1 — PROGRES DAN PENYIMPANAN (7 NOVEMBER 2026)
+==========================================================
+
+- [x] Nilai profil cloud menjadi sumber kebenaran; nilai XP/koin/streak 0 menggantikan cache lama, bukan dianggap kosong.
+- [x] Perubahan profil, avatar, pembelian, equip, dan klaim hadiah menunggu konfirmasi server sebelum mengubah state/cache; kegagalan ditampilkan di UI.
+- [x] Cache profil/inventori per user ID; callback pembelian dan klaim hadiah mengikuti cache key akun aktif.
+- [x] Registrasi tidak menghapus cache tamu sebelum server mengonfirmasi keberhasilan akun dan sesi.
+- [x] Endpoint profil mengembalikan statistik server dari user_stats; totalReviews server dipetakan ke totalReviewsDone yang dipakai sistem gelar.
+- [x] Respons kuis bacaan mengirim saldo XP/koin akhir dari ledger server.
+- [x] Nilai streak 0 dipertahankan di progres gelar; tes regresi ditambahkan.
+- [x] Bukti database pada Neon Development ditambahkan: akun tes mulai XP 0/koin 0, enam event SRS resmi menghasilkan 6 progress_events, 6 transactions, XP 22, koin 8, totalReviews 6, wordsStarted 2; replay idempoten tidak menggandakan saldo/transaksi.
+- [x] GET /api/profile/get diuji mengembalikan saldo dan statistik yang sama dengan database setelah latihan.
+- [x] Laporan bukti terperinci: docs/fase-6-1-progress-proof.md.
+
+Catatan verifikasi:
+- CI otomatis yang terakhir selesai sebelum rangkaian final 6.1 berjalan pada commit 21ff46c; commit tambahan sesudahnya harus memiliki hasil test:all sukses sebelum 6.1 ditutup.
+- Tes ini memakai Neon Development; Neon Production dan Google Sheets tidak disentuh.
+- Uji UI manual registrasi gagal/berhasil, reload, logout-login, dua browser/perangkat, dan pesan kegagalan jaringan masih harus dilakukan oleh pengguna.
+- Deployment Production harus cocok dengan SHA terbaru sebelum perubahan dianggap aktif pada domain; deployment dari commit lama tidak dianggap sebagai verifikasi.
+- Dampak kuota: satu SELECT tambahan ringan ke user_stats saat membaca profil; tidak ada tabel, migration, cron, atau layanan berbayar baru.
+- Fase 6.2 belum dimulai. Menunggu laporan/keputusan pengguna setelah 6.1.
