@@ -1,1 +1,1 @@
-Run additive Fase 3 Better Auth Neon migration and integration checks (2026-11-07).
+Run additive Fase 3 Better Auth Neon migration and integration checks (2026-11-07, corrected Direct Neon development connection).
