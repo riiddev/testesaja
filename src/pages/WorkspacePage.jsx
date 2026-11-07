@@ -246,20 +246,20 @@ export function WorkspacePage() {
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
                   {[
-                    { id: "A1", label: "Level A1 (Beginner)", total: 892 },
-                    { id: "A2", label: "Level A2 (Elementary)", total: 792 },
-                    { id: "B1", label: "Level B1 (Intermediate)", total: 689 },
-                    { id: "B2", label: "Level B2 (Upper Intermediate)", total: 597 }
+                    { id: "A1", label: "Level A1 (Beginner)" },
+                    { id: "A2", label: "Level A2 (Elementary)" },
+                    { id: "B1", label: "Level B1 (Intermediate)" },
+                    { id: "B2", label: "Level B2 (Upper Intermediate)" }
                   ].map((lvl) => {
                     const levelWords = vocabulary.filter((w) => w.level === lvl.id);
                     const levelMastered = levelWords.filter((w) => getWordStatus(w.id) === "mastered").length;
-                    const pct = Math.round((levelMastered / lvl.total) * 100);
+                    const pct = levelWords.length > 0 ? Math.round((levelMastered / levelWords.length) * 100) : 0;
 
                     return (
                       <div key={lvl.id}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "var(--text-sm)", marginBottom: "4px" }}>
                           <span>{lvl.label}</span>
-                          <span id={`lvl-text-${lvl.id.toLowerCase()}`}>{levelMastered}/{lvl.total} ({pct}%)</span>
+                          <span id={`lvl-text-${lvl.id.toLowerCase()}`}>{levelMastered} dikuasai ({pct}%)</span>
                         </div>
                         <div className="study-progress-track" style={{ marginBottom: 0 }}>
                           <div
