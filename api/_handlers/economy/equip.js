@@ -6,7 +6,7 @@
  */
 
 import { eq, and } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import {
   sendSuccess,
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       return sendValidationError(res, "Parameter itemId wajib disertakan.");
     }
 
-    await getTransactionDb().transaction(async (tx) => {
+    await withTransaction(async (tx) => {
       await tx
         .select({ userId: schema.profiles.userId })
         .from(schema.profiles)
