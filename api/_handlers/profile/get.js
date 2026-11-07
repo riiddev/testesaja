@@ -13,19 +13,30 @@ export default async function handler(req, res) {
   try {
     const { user } = await authenticateRequest(req);
 
-    const profileRows = await db
-      .select()
-      .from(schema.profiles)
-      .where(eq(schema.profiles.userId, user.id))
-      .limit(1);
-
-    const unlockedTitles = await db
-      .select({
-        titleId: schema.titles.titleId,
-        unlockedAt: schema.titles.unlockedAt
-      })
-      .from(schema.titles)
-      .where(eq(schema.titles.userId, user.id));
+    const [profileRows, unlockedTitles, statsRows] = await Promise.all([
+      db
+        .select()
+        .from(schema.profiles)
+        .where(eq(schema.profiles.userId, user.id))
+        .limit(1),
+      db
+        .select({
+          titleId: schema.titles.titleId,
+          unlockedAt: schema.titles.unlockedAt
+        })
+        .from(schema.titles)
+        .where(eq(schema.titles.userId, user.id)),
+      db
+        .select({
+          wordsStarted: schema.userStats.wordsStarted,
+          wordsMastered: schema.userStats.wordsMastered,
+          b2Mastered: schema.userStats.b2Mastered,
+          totalReviews: schema.userStats.totalReviews
+        })
+        .from(schema.userStats)
+        .where(eq(schema.userStats.userId, user.id))
+        .limit(1)
+    ]);
 
     const profile = profileRows[0] || {
       userId: user.id,
@@ -39,8 +50,16 @@ export default async function handler(req, res) {
       avatarUpdatedAt: null
     };
 
+    const stats = statsRows[0] || {
+      wordsStarted: 0,
+      wordsMastered: 0,
+      b2Mastered: 0,
+      totalReviews: 0
+    };
+
     return sendSuccess(res, {
       profile,
+      userStats: stats,
       unlockedTitles: unlockedTitles.map((t) => t.titleId)
     });
   } catch (err) {
