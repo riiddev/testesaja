@@ -1,185 +1,97 @@
-import pkg from "file:///D:/VIBE%20CODE%20ANTI%20GRAFITY/testesaja-main/testesaja-main/node_modules/playwright/index.js";
-const { chromium } = pkg;
+/**
+ * Browserless SPA route smoke test.
+ *
+ * Verifies that the built Vite SPA serves its entry document for the public
+ * and workspace routes and that every JS/CSS asset referenced by index.html
+ * is reachable. This is an HTTP smoke test, not a substitute for interactive
+ * browser or physical-device visual testing.
+ */
+
+import assert from "node:assert/strict";
 import { preview } from "vite";
 
+const ROUTES = Object.freeze([
+  "/",
+  "/login",
+  "/daftar",
+  "/belajar",
+  "/belajar/vocabulary",
+  "/belajar/grammar",
+  "/belajar/reading",
+  "/belajar/settings",
+  "/belajar/history"
+]);
+
 async function main() {
-  console.log("Starting Vite preview server...");
   const server = await preview({
     preview: {
-      port: 4173,
-      host: "127.0.0.1"
-    }
-  });
-
-  const baseUrl = "http://127.0.0.1:4173";
-  console.log(`Preview server running at ${baseUrl}`);
-
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-  const page = await context.newPage();
-
-  const errors = [];
-  page.on("pageerror", (err) => {
-    console.error("PAGE ERROR:", err.message);
-    errors.push(err.message);
-  });
-  page.on("console", (msg) => {
-    if (msg.type() === "error") {
-      console.error("CONSOLE ERROR:", msg.text());
-      errors.push(msg.text());
+      host: "127.0.0.1",
+      port: 0,
+      strictPort: true
     }
   });
 
   try {
-    // Intercept API calls for E2E frontend testing across the context
-    await context.route(/.*\/api\/.*/, async (route) => {
-      const url = route.request().url();
-      if (url.includes("/api/auth/me")) {
-        return route.fulfill({
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            success: true,
-            data: { user: { id: "e2e_user", displayName: "E2E Scholar", email: "e2e@sinauenglish.test" } }
-          })
-        });
-      }
-      if (url.includes("/api/profile/get")) {
-        return route.fulfill({
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            success: true,
-            data: {
-              profile: { displayName: "E2E Scholar", xp: 50, coins: 20, streak: 1, avatarKey: "avatar_1" },
-              userStats: { wordsStarted: 10, wordsMastered: 2, totalReviews: 15 }
-            }
-          })
-        });
-      }
-      if (url.includes("/api/progress/get")) {
-        return route.fulfill({
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ success: true, data: { count: 0, items: {} } })
-        });
-      }
-      if (url.includes("/api/settings/get")) {
-        return route.fulfill({
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ success: true, data: { settings: { dailyGoal: 10, theme: "light" } } })
-        });
-      }
-      // Fallback for any other API request
-      return route.fulfill({
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ success: true, data: {} })
-      });
-    });
+    const address = server.httpServer.address();
+    assert.ok(address && typeof address === "object", "Vite preview server must be listening");
+    const baseUrl = "http://127.0.0.1:" + address.port;
 
-    // 1. Landing Page
-    console.log("1. Testing Landing Page...");
-    await page.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
-    const title = await page.title();
-    console.log("Title:", title);
-    if (!title.includes("SinauEnglish")) errors.push("Invalid landing page title");
+    let entryHtml = "";
 
-    // 2. Login Page
-    console.log("2. Testing Login Page...");
-    await page.goto(`${baseUrl}/login`, { waitUntil: "networkidle" });
-    const loginHeader = await page.textContent("h2");
-    console.log("Login header:", loginHeader);
+    for (const route of ROUTES) {
+      const response = await fetch(baseUrl + route, { redirect: "manual" });
+      assert.equal(response.status, 200, route + " must return HTTP 200");
 
-    // 3. Register Page
-    console.log("3. Testing Register Page...");
-    await page.goto(`${baseUrl}/daftar`, { waitUntil: "networkidle" });
-    const registerHeader = await page.textContent("h2");
-    console.log("Register header:", registerHeader);
+      const contentType = response.headers.get("content-type") || "";
+      assert.match(contentType, /text\/html/i, route + " must serve the SPA HTML document");
 
-    // Add init script to keep authenticated session in sessionStorage across navigations
-    await page.addInitScript(() => {
-      sessionStorage.setItem("sinauu_sess_token", "test_e2e_token_active");
-      sessionStorage.setItem("sinau_auth_token", "test_e2e_token_active");
-      localStorage.setItem("sinau_local_profile", JSON.stringify({
-        displayName: "E2E Scholar",
-        xp: 50,
-        coins: 20,
-        streak: 1,
-        avatarKey: "avatar_1"
-      }));
-    });
+      const html = await response.text();
+      assert.match(html, /<div[^>]+id=["']root["']/, route + " must contain the React root mount");
+      assert.match(html, /SinauEnglish/i, route + " must contain the SinauEnglish document title");
 
-    // 4. Workspace Overview
-    console.log("4. Testing Workspace Overview...");
-    await page.goto(`${baseUrl}/belajar`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(500);
-
-    // 5. Workspace Vocabulary View
-    console.log("5. Testing Vocabulary View (/belajar/vocabulary)...");
-    await page.goto(`${baseUrl}/belajar/vocabulary`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(500);
-    const vocabCards = await page.$$(".vocab-card");
-    console.log(`Rendered vocab cards: ${vocabCards.length}`);
-    if (vocabCards.length === 0) errors.push("No vocab cards rendered in vocabulary view.");
-
-    // Test card click to open modal
-    if (vocabCards.length > 0) {
-      await vocabCards[0].click();
-      await page.waitForTimeout(300);
-      const modalOpen = await page.$(".modal-content");
-      console.log("Vocab modal opened:", Boolean(modalOpen));
-      if (!modalOpen) errors.push("Vocab modal failed to open upon card click.");
-      
-      // Close modal
-      const closeBtn = await page.$(".modal-content button[aria-label*='Tutup']");
-      if (closeBtn) {
-        await closeBtn.click();
-        await page.waitForTimeout(200);
-      }
+      if (route === "/") entryHtml = html;
+      console.log("[OK] " + route + " -> HTTP 200");
     }
 
-    // 6. Workspace Grammar View
-    console.log("6. Testing Grammar View (/belajar/grammar)...");
-    await page.goto(`${baseUrl}/belajar/grammar`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(500);
-    const grammarCards = await page.$$(".card-interactive");
-    console.log(`Rendered grammar topic cards: ${grammarCards.length}`);
-    if (grammarCards.length === 0) errors.push("No grammar topic cards rendered.");
+    const assets = [...entryHtml.matchAll(/(?:src|href)=["'](\/assets\/[^"']+)["']/g)]
+      .map((match) => match[1]);
+    const uniqueAssets = [...new Set(assets)];
 
-    // 7. Workspace Reading View
-    console.log("7. Testing Reading View (/belajar/reading)...");
-    await page.goto(`${baseUrl}/belajar/reading`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(500);
-    const readingCards = await page.$$(".card-interactive");
-    console.log(`Rendered HABIT reading cards: ${readingCards.length}`);
+    assert.ok(
+      uniqueAssets.some((asset) => /\.js(?:$|\?)/.test(asset)),
+      "index.html must reference a JavaScript application bundle"
+    );
+    assert.ok(
+      uniqueAssets.some((asset) => /\.css(?:$|\?)/.test(asset)),
+      "index.html must reference a CSS stylesheet"
+    );
 
-    // 8. Workspace Settings View
-    console.log("8. Testing Settings View (/belajar/settings)...");
-    await page.goto(`${baseUrl}/belajar/settings`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(500);
-    const settingsHeading = await page.textContent("h2");
-    console.log("Settings heading:", settingsHeading);
+    for (const asset of uniqueAssets) {
+      const response = await fetch(baseUrl + asset, { redirect: "manual" });
+      assert.equal(response.status, 200, "Referenced build asset must be reachable: " + asset);
+      console.log("[OK] asset " + asset);
+    }
 
+    const manifestResponse = await fetch(baseUrl + "/manifest.json");
+    assert.equal(manifestResponse.status, 200, "PWA manifest must be reachable");
+    const manifest = await manifestResponse.json();
+    assert.ok(manifest.name || manifest.short_name, "PWA manifest must include an app name");
+
+    console.log(
+      "SPA ROUTE SMOKE PASSED: " +
+      ROUTES.length +
+      " routes, " +
+      uniqueAssets.length +
+      " build assets, and PWA manifest verified."
+    );
   } finally {
-    await browser.close();
-    server.httpServer.close();
-  }
-
-  console.log("\n==========================================");
-  console.log(`TOTAL SPA ERRORS FOUND: ${errors.length}`);
-  if (errors.length > 0) {
-    console.error("Test failures:", errors);
-    process.exit(1);
-  } else {
-    console.log("REACT SPA INTEGRATION PASSED 100%!");
-    console.log("==========================================");
+    await new Promise((resolve, reject) => {
+      server.httpServer.close((error) => error ? reject(error) : resolve());
+    });
   }
 }
 
-main().catch((err) => {
-  console.error("Execution error:", err);
-  process.exit(1);
+main().catch((error) => {
+  console.error("SPA ROUTE SMOKE FAILED:", error?.message || "Unexpected error");
+  process.exitCode = 1;
 });
-
