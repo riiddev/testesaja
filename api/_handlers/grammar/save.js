@@ -1,14 +1,15 @@
 /**
  * POST /api/grammar/save
- * 
- * Saves grammar practice or quiz completion and awards server-side XP & coins.
+ *
+ * Validates official Grammar answers and commits mastery, one-time rewards,
+ * activity history and the WIB streak as a single account transaction.
  */
 
 import { eq, and, sql } from "drizzle-orm";
-import { db, schema } from "../../../db/index.js";
+import { getTransactionDb, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
-import { recordLedgerTransaction } from "../../_lib/ledger.js";
-import { evaluateAndRecordStreak } from "../../_lib/streak.js";
+import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
+import { evaluateAndRecordStreakInTransaction } from "../../_lib/streak.js";
 import { REWARDS_CONFIG } from "../../_lib/rewardsConfig.js";
 import { getOfficialGrammarQuiz } from "../../_lib/grammarQuizCatalog.js";
 import {
@@ -18,6 +19,13 @@ import {
   sendServerError,
   sendJson
 } from "../../_lib/response.js";
+
+function validationError(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  error.code = "VALIDATION_ERROR";
+  return error;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -40,7 +48,10 @@ export default async function handler(req, res) {
 
     const submittedAnswers = Array.isArray(body.answers) ? body.answers : [];
     if (submittedAnswers.length !== officialQuestions.length) {
-      return sendValidationError(res, `Semua ${officialQuestions.length} soal wajib dijawab sebelum hasil disimpan.`);
+      return sendValidationError(
+        res,
+        "Semua " + officialQuestions.length + " soal wajib dijawab sebelum hasil disimpan."
+      );
     }
 
     const answerMap = new Map();
@@ -67,93 +78,96 @@ export default async function handler(req, res) {
     const isCompleted = scorePct >= 80;
     const now = new Date();
 
-    const existing = await db
-      .select()
-      .from(schema.grammarProgress)
-      .where(
-        and(
+    const result = await getTransactionDb().transaction(async (tx) => {
+      await tx
+        .select({ userId: schema.profiles.userId })
+        .from(schema.profiles)
+        .where(eq(schema.profiles.userId, user.id))
+        .for("update")
+        .limit(1);
+
+      const existing = await tx
+        .select()
+        .from(schema.grammarProgress)
+        .where(and(
           eq(schema.grammarProgress.userId, user.id),
           eq(schema.grammarProgress.topicId, topicId)
-        )
-      )
-      .limit(1);
+        ))
+        .limit(1);
 
-    const wasAlreadyCompleted = existing.length > 0 && existing[0].status === "completed";
+      const wasAlreadyCompleted = existing.length > 0 &&
+        existing[0].status === "completed";
 
-    if (existing.length === 0) {
-      await db.insert(schema.grammarProgress).values({
-        userId: user.id,
-        topicId,
-        status: isCompleted ? "completed" : "in_progress",
-        score,
-        total,
-        completedAt: isCompleted ? now : null
-      });
-    } else {
-      await db
-        .update(schema.grammarProgress)
-        .set({
-          status: isCompleted ? "completed" : existing[0].status,
-          score: Math.max(existing[0].score, score),
+      if (!existing.length) {
+        await tx.insert(schema.grammarProgress).values({
+          userId: user.id,
+          topicId,
+          status: isCompleted ? "completed" : "in_progress",
+          score,
           total,
-          completedAt: isCompleted ? now : existing[0].completedAt
-        })
-        .where(
-          and(
+          completedAt: isCompleted ? now : null
+        });
+      } else {
+        await tx
+          .update(schema.grammarProgress)
+          .set({
+            status: isCompleted ? "completed" : existing[0].status,
+            score: Math.max(Number(existing[0].score) || 0, score),
+            total,
+            completedAt: isCompleted ? (existing[0].completedAt || now) : existing[0].completedAt
+          })
+          .where(and(
             eq(schema.grammarProgress.userId, user.id),
             eq(schema.grammarProgress.topicId, topicId)
-          )
-        );
-    }
+          ));
+      }
 
-    let xpEarned = 0;
-    let coinsEarned = 0;
+      let xpEarned = 0;
+      let coinsEarned = 0;
 
-    // Grant reward if completed for the first time
-    if (isCompleted && !wasAlreadyCompleted) {
-      await db
-        .update(schema.userStats)
-        .set({
-          grammarCompleted: sql`${schema.userStats.grammarCompleted} + 1`,
-          updatedAt: now
-        })
-        .where(eq(schema.userStats.userId, user.id));
+      if (isCompleted && !wasAlreadyCompleted) {
+        const reward = REWARDS_CONFIG.grammar_quiz_complete;
+        const ledger = await recordLedgerTransactionInTransaction(tx, {
+          userId: user.id,
+          eventId: "grammar:" + topicId + ":first_complete",
+          source: "grammar_quiz",
+          xpEarned: reward.xp,
+          coinsEarned: reward.coins
+        });
 
-      const rewardConfig = REWARDS_CONFIG.grammar_quiz_complete || { xp: 30, coins: 15 };
-      const eventId = `grammar:${topicId}:first_complete`;
-      const tx = await recordLedgerTransaction({
+        if (!ledger.alreadyProcessed) {
+          xpEarned = ledger.xpEarned;
+          coinsEarned = ledger.coinsEarned;
+          await tx
+            .update(schema.userStats)
+            .set({
+              grammarCompleted: sql`${schema.userStats.grammarCompleted} + 1`,
+              updatedAt: now
+            })
+            .where(eq(schema.userStats.userId, user.id));
+        }
+      }
+
+      const activityId = "act_" + user.id + "_grammar_" + Date.now() + "_" +
+        Math.random().toString(36).slice(2, 8);
+
+      await tx.insert(schema.activityLog).values({
+        id: activityId,
         userId: user.id,
-        eventId,
-        source: "grammar_quiz",
-        xpEarned: rewardConfig.xp,
-        coinsEarned: rewardConfig.coins
+        activityType: "grammar",
+        title: ("Latihan Grammar: " + topicId).slice(0, 150),
+        score,
+        totalQuestions: total,
+        accuracyPercent: scorePct,
+        durationSeconds: 0,
+        xpEarned,
+        coinsEarned,
+        createdAt: now
       });
 
-      if (!tx.alreadyProcessed) {
-        xpEarned = rewardConfig.xp;
-        coinsEarned = rewardConfig.coins;
-      }
-    }
-
-    // Every fully submitted quiz is a completed learning activity, even
-    // when its score is below the mastery threshold. Mastery and rewards are
-    // still controlled separately by the server-side 80% threshold.
-    const activityId = `act_${user.id}_grammar_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    await db.insert(schema.activityLog).values({
-      id: activityId,
-      userId: user.id,
-      activityType: "grammar",
-      title: `Latihan Grammar: ${topicId}`.slice(0, 150),
-      score,
-      totalQuestions: total,
-      accuracyPercent: scorePct,
-      durationSeconds: 0,
-      xpEarned,
-      coinsEarned,
-      createdAt: now
+      const streak = await evaluateAndRecordStreakInTransaction(tx, user.id);
+      return { xpEarned, coinsEarned, streak };
     });
-
-    const streakRes = await evaluateAndRecordStreak(user.id);
 
     return sendSuccess(
       res,
@@ -163,9 +177,9 @@ export default async function handler(req, res) {
         score,
         total,
         scorePct,
-        xpEarned,
-        coinsEarned,
-        streak: streakRes?.streak
+        xpEarned: result.xpEarned,
+        coinsEarned: result.coinsEarned,
+        streak: result.streak?.streak
       },
       "Progres grammar berhasil disimpan."
     );
@@ -173,8 +187,10 @@ export default async function handler(req, res) {
     if (err.statusCode === 401 || err.code === "AUTH_ERROR") {
       return sendAuthError(res, err.message, 401);
     }
+    if (err.statusCode === 400 || err.code === "VALIDATION_ERROR") {
+      return sendValidationError(res, err.message);
+    }
     console.error("[API grammar/save] Error:", err);
-    return sendServerError(res, "Gagal menyimpan progres grammar: " + err.message);
+    return sendServerError(res, "Gagal menyimpan progres grammar.");
   }
 }
-
