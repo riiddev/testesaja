@@ -17,6 +17,7 @@ import { db, schema } from "../db/index.js";
 import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
 
 import progressGetHandler from "../api/_handlers/progress/get.js";
+import profileGetHandler from "../api/_handlers/profile/get.js";
 import progressSyncHandler from "../api/_handlers/progress/sync.js";
 import { getOfficialWords } from "../api/_lib/officialWordCatalog.js";
 
@@ -226,6 +227,14 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
   ];
 
   await t.test("3. Server derives progress, mastery, CEFR, XP and coins from official events", async () => {
+    const beforeRows = await db
+      .select({ xp: schema.profiles.xp, coins: schema.profiles.coins })
+      .from(schema.profiles)
+      .where(eq(schema.profiles.userId, userAId))
+      .limit(1);
+    assert.equal(beforeRows[0].xp, 0);
+    assert.equal(beforeRows[0].coins, 0);
+
     const { req, res } = createMockReqRes({
       method: "POST",
       token: tokenA,
@@ -291,6 +300,20 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
     assert.equal(transactionRows.reduce((sum, row) => sum + row.xpAmount, 0), 22);
     assert.equal(transactionRows.reduce((sum, row) => sum + row.coinsAmount, 0), 8);
     assert.equal(new Set(transactionRows.map((row) => row.eventId)).size, 6);
+
+    // The public profile read must expose the same canonical stats and balances
+    // that were just committed to the progress and economy ledgers.
+    const profileRequest = createMockReqRes({ method: "GET", token: tokenA });
+    await profileGetHandler(profileRequest.req, profileRequest.res);
+    const profileResult = profileRequest.res._getResult();
+    assert.equal(profileResult.statusCode, 200);
+    assert.equal(profileResult.body.success, true);
+    assert.equal(profileResult.body.data.profile.xp, 22);
+    assert.equal(profileResult.body.data.profile.coins, 8);
+    assert.equal(profileResult.body.data.userStats.totalReviews, 6);
+    assert.equal(profileResult.body.data.userStats.wordsStarted, 2);
+    assert.equal(profileResult.body.data.userStats.wordsMastered, 1);
+    assert.equal(profileResult.body.data.userStats.b2Mastered, 1);
   });
 
   // TEST 4: Idempotency — Re-sending the same batch must ACK without duplicates.
@@ -317,6 +340,18 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
     const eventsRows = await db.select().from(schema.progressEvents)
       .where(eq(schema.progressEvents.userId, userAId));
     assert.equal(eventsRows.length, 6);
+
+    const transactionsAfterReplay = await db.select().from(schema.transactions)
+      .where(eq(schema.transactions.userId, userAId));
+    assert.equal(transactionsAfterReplay.length, 6, "Replayed events must not add ledger rows");
+
+    const balancesAfterReplay = await db
+      .select({ xp: schema.profiles.xp, coins: schema.profiles.coins })
+      .from(schema.profiles)
+      .where(eq(schema.profiles.userId, userAId))
+      .limit(1);
+    assert.equal(balancesAfterReplay[0].xp, 22);
+    assert.equal(balancesAfterReplay[0].coins, 8);
 
     const beforeProfile = await db
       .select({ streak: schema.profiles.streak, lastActiveDate: schema.profiles.lastActiveDate })
