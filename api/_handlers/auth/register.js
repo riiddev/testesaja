@@ -1,19 +1,20 @@
 /**
  * POST /api/auth/register
- * 
- * Creates a brand-new user account starting strictly from ZERO.
- * Server is the source of truth.
+ *
+ * New credentials and primary session are created by Better Auth.
+ * A short-lived compatibility bearer is issued for existing app endpoints.
  */
 
-import crypto from "crypto";
 import { eq } from "drizzle-orm";
 import { db, schema } from "../../../db/index.js";
+import { parseJsonBody } from "../../_lib/auth.js";
+import { auth } from "../../_lib/better-auth.js";
 import {
-  hashPassword,
-  createSessionToken,
-  parseJsonBody,
-  getSessionCookieSecurity
-} from "../../_lib/auth.js";
+  createApplicationBridgeSession,
+  getBetterAuthSessionFromHeaders,
+  getLegacySessionCookie,
+  getSetCookieHeaders
+} from "../../_lib/app-auth-session.js";
 import {
   sendSuccess,
   sendValidationError,
@@ -26,33 +27,29 @@ export default async function handler(req, res) {
     return sendJson(res, 405, { error: "Metode HTTP tidak diizinkan. Gunakan POST." });
   }
 
-  let createdUserId = null;
-
   try {
     const body = await parseJsonBody(req);
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
     const displayName = String(body.displayName || "").trim();
 
-    // 1. Validation
     const errors = [];
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!email || !emailRegex.test(email)) {
       errors.push({ field: "email", message: "Alamat email tidak valid." });
     }
-    if (!password || password.length < 8) {
-      errors.push({ field: "password", message: "Kata sandi minimal harus 8 karakter." });
+    if (!password || password.length < 8 || password.length > 128) {
+      errors.push({ field: "password", message: "Kata sandi harus terdiri dari 8–128 karakter." });
     }
-    if (!displayName || displayName.length < 2) {
-      errors.push({ field: "displayName", message: "Nama tampilan minimal harus 2 karakter." });
+    if (!displayName || displayName.length < 2 || displayName.length > 100) {
+      errors.push({ field: "displayName", message: "Nama tampilan harus terdiri dari 2–100 karakter." });
     }
 
     if (errors.length > 0) {
       return sendValidationError(res, "Validasi pendaftaran gagal.", errors, 400);
     }
 
-    // 2. Check if email already registered
     const existing = await db
       .select({ id: schema.users.id })
       .from(schema.users)
@@ -65,93 +62,59 @@ export default async function handler(req, res) {
       ], 409);
     }
 
-    // 3. Hash Password
-    const { hash, salt } = hashPassword(password);
-    const userId = "u_" + crypto.randomBytes(8).toString("hex");
-    createdUserId = userId;
-    const { rawToken, tokenHash } = createSessionToken();
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-
-    // 4. Create Account (Sequential inserts with compensation rollback)
-    // a. Insert User
-    await db.insert(schema.users).values({
-      id: userId,
-      email,
-      displayName,
-      passwordHash: hash,
-      salt,
-      role: "student",
-      lastLoginAt: new Date()
+    const signup = await auth.api.signUpEmail({
+      returnHeaders: true,
+      body: {
+        name: displayName,
+        email,
+        password
+      }
     });
 
-    // b. Insert Profile starting strictly from 0
-    await db.insert(schema.profiles).values({
-      userId,
-      displayName,
-      activeTitle: "",
-      xp: 0,
-      coins: 0,
-      streak: 0,
-      avatarKey: "avatar_1"
-    });
+    const signupUser = signup?.response?.user;
+    if (!signupUser?.id) {
+      throw new Error("Better Auth tidak mengembalikan identitas akun setelah pendaftaran.");
+    }
 
-    // c. Insert User Stats starting strictly from 0
-    await db.insert(schema.userStats).values({
-      userId,
-      wordsStarted: 0,
-      wordsMastered: 0,
-      b2Mastered: 0,
-      totalReviews: 0,
-      grammarCompleted: 0,
-      readingCompleted: 0,
-      storiesCompleted: 0,
-      matchingCompleted: 0
-    });
+    const betterSession = await getBetterAuthSessionFromHeaders(signup.headers);
+    if (!betterSession?.session?.id) {
+      throw new Error("Sesi pendaftaran tidak berhasil dibuat. Silakan coba masuk kembali.");
+    }
 
-    // d. Insert Default Settings
-    await db.insert(schema.settings).values({
-      userId,
-      dailyGoal: 10,
-      theme: "light",
-      soundEffects: true,
-      morningReminderHour: 7,
-      eveningReminderHour: 19,
-      reminderEnabled: false
-    });
+    const applicationSession = await createApplicationBridgeSession(
+      signupUser.id,
+      betterSession.session
+    );
 
-    // e. Insert Active Session
-    await db.insert(schema.sessions).values({
-      id: "sess_" + crypto.randomBytes(8).toString("hex"),
-      userId,
-      tokenHash,
-      expiresAt
-    });
-
-    const cookieHeader = `sinau_session=${encodeURIComponent(rawToken)}; Path=/; HttpOnly; SameSite=Lax${getSessionCookieSecurity(req)}; Max-Age=${30 * 24 * 60 * 60}`;
+    const authCookies = getSetCookieHeaders(signup.headers);
+    const cookies = [
+      ...authCookies,
+      getLegacySessionCookie(req, applicationSession.token)
+    ];
 
     return sendSuccess(
       res,
       {
-        token: rawToken,
-        user: {
-          id: userId,
-          email,
-          displayName,
-          role: "student"
-        }
+        token: applicationSession.token,
+        user: applicationSession.user
       },
       "Pendaftaran berhasil! Selamat datang di SinauEnglish.",
       201,
-      { "Set-Cookie": cookieHeader }
+      { "Set-Cookie": cookies }
     );
   } catch (err) {
-    console.error("[API register] Error:", err);
-    // Compensation rollback if user was partially inserted
-    if (createdUserId) {
-      try {
-        await db.delete(schema.users).where(eq(schema.users.id, createdUserId));
-      } catch (e) {}
+    // Better Auth owns password hashing and credential persistence. Never
+    // fall back to the legacy custom hash during a new account registration.
+    const status = Number(err?.statusCode || err?.status);
+    if (status === 400 || status === 409 || err?.code === "VALIDATION_ERROR") {
+      return sendValidationError(
+        res,
+        err.message || "Pendaftaran tidak dapat diproses.",
+        [],
+        status === 409 ? 409 : 400
+      );
     }
-    return sendServerError(res, "Gagal memproses pendaftaran. " + err.message);
+    console.error("[API register] Better Auth registration failed:", err);
+    return sendServerError(res, "Gagal membuat akun. Silakan coba lagi.");
   }
 }
