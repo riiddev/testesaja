@@ -6,7 +6,7 @@
  */
 
 import { eq, and, sql } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreakInTransaction } from "../../_lib/streak.js";
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
     const isCompleted = scorePct >= 80;
     const now = new Date();
 
-    const result = await getTransactionDb().transaction(async (tx) => {
+    const result = await withTransaction(async (tx) => {
       await tx
         .select({ userId: schema.profiles.userId })
         .from(schema.profiles)
