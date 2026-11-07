@@ -6,17 +6,35 @@ import { Badge } from "../../components/common/Badge.jsx";
 import { Button } from "../../components/common/Button.jsx";
 import { api } from "../../services/api.js";
 import { useAuth } from "../../hooks/useAuth.jsx";
+import { getGrammarTopic } from "../grammar/grammarRegistry.js";
 
 export function QuizRunner({ topic, onFinish, onRetry }) {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("");
+  const [answers, setAnswers] = useState([]);
 
   const { isAuthenticated } = useAuth();
 
-  if (!topic || !topic.questions || topic.questions.length === 0) {
+  const officialTopic = topic?.id ? (getGrammarTopic(topic.id) || topic) : topic;
+  const questions = Array.isArray(officialTopic?.finalQuiz) && officialTopic.finalQuiz.length > 0
+    ? officialTopic.finalQuiz.map((question, index) => ({
+        id: question.id || `legacy-q-${index + 1}`,
+        prompt: question.question || question.prompt || "",
+        options: question.options || [],
+        answer: question.correctIndex,
+        explanation: typeof question.explanation === "string"
+          ? question.explanation
+          : question.explanation?.correctReason || "Jawaban telah diperiksa berdasarkan kunci resmi."
+      }))
+    : (officialTopic?.questions || []).map((question, index) => ({
+        ...question,
+        id: question.id || `legacy-q-${index + 1}`
+      }));
+
+  if (!topic || questions.length === 0) {
     return (
       <div className="card card-tint-sand" style={{ textAlign: "center", padding: "var(--space-10)" }}>
         <h3>Pilih Topik Grammar untuk Mengikuti Kuis</h3>
@@ -30,37 +48,59 @@ export function QuizRunner({ topic, onFinish, onRetry }) {
     );
   }
 
-  const questions = topic.questions;
   const isFinished = questionIndex >= questions.length;
-
   const currentQ = questions[questionIndex];
 
   const handleSelectOption = (idx) => {
-    if (selectedOption !== null) return;
+    if (selectedOption !== null || isFinished || !currentQ) return;
+
     setSelectedOption(idx);
     const correct = idx === currentQ.answer;
-    if (correct) {
-      setScore((prev) => prev + 1);
-    }
+    if (correct) setScore((prev) => prev + 1);
 
-    setTimeout(() => {
+    const nextAnswers = [
+      ...answers,
+      {
+        questionId: currentQ.id || `legacy-q-${questionIndex + 1}`,
+        selectedIndex: idx
+      }
+    ];
+    setAnswers(nextAnswers);
+
+    setTimeout(async () => {
       setSelectedOption(null);
       const nextIdx = questionIndex + 1;
       setQuestionIndex(nextIdx);
 
-      // If finished, save quiz attempts
-      if (nextIdx >= questions.length && isAuthenticated) {
+      if (nextIdx >= questions.length) {
+        if (!isAuthenticated) {
+          setSaveStatus("Masuk ke akun untuk menyimpan hasil kuis.");
+          return;
+        }
+
         setIsSaving(true);
-        const finalScore = correct ? score + 1 : score;
-        api.saveQuiz({
-          topicId: topic.id,
-          score: finalScore,
-          total: questions.length
-        }).catch(err => {
-          console.warn("Gagal menyimpan hasil kuis:", err.message);
-        }).finally(() => {
+        setSaveStatus("Menyimpan hasil kuis ke akunmu...");
+
+        try {
+          const res = await api.saveGrammarProgress({
+            topicId: topic.id,
+            answers: nextAnswers
+          });
+
+          if (!res?.success || !res.data) {
+            throw new Error(res?.error || res?.message || "Server belum mengonfirmasi penyimpanan.");
+          }
+
+          setSaveStatus(
+            res.data.status === "completed"
+              ? "Hasil tersimpan. Topik Grammar berhasil diselesaikan."
+              : "Hasil tersimpan. Skor minimal 80% diperlukan untuk menyelesaikan topik."
+          );
+        } catch (err) {
+          setSaveStatus("Gagal menyimpan hasil kuis: " + (err.message || "Kesalahan server."));
+        } finally {
           setIsSaving(false);
-        });
+        }
       }
     }, 1200);
   };
@@ -72,7 +112,7 @@ export function QuizRunner({ topic, onFinish, onRetry }) {
         <div style={{ fontSize: "52px", marginBottom: "var(--space-3)" }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "64px", height: "64px", borderRadius: "var(--radius-pill)", backgroundColor: "var(--color-bg-surface)", border: "var(--border-sm)", color: pct >= 80 ? "var(--color-accent-gold)" : "var(--color-accent-navy)" }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+              <path d="M6 9H4.5a2.5 2.5 0 0 0 0-5H6"/>
               <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
               <path d="M4 22h16"/>
               <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"/>
@@ -94,9 +134,13 @@ export function QuizRunner({ topic, onFinish, onRetry }) {
           <span style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)" }}>
             Akurasi Pemahaman: {pct}%
           </span>
-          {isSaving && (
-            <p style={{ fontSize: "var(--text-xs)", color: "var(--color-accent-gold)", marginTop: "var(--space-2)" }}>
-              Menyimpan hasil kuis...
+          {(isSaving || saveStatus) && (
+            <p role="status" aria-live="polite" style={{
+              fontSize: "var(--text-xs)",
+              color: saveStatus.startsWith("Gagal") ? "var(--color-danger)" : "var(--color-text-secondary)",
+              marginTop: "var(--space-3)"
+            }}>
+              {isSaving ? "Menyimpan hasil kuis..." : saveStatus}
             </p>
           )}
         </div>
@@ -111,6 +155,8 @@ export function QuizRunner({ topic, onFinish, onRetry }) {
               setQuestionIndex(0);
               setScore(0);
               setSelectedOption(null);
+              setAnswers([]);
+              setSaveStatus("");
               if (onRetry) onRetry(topic);
             }}
           >
@@ -139,7 +185,7 @@ export function QuizRunner({ topic, onFinish, onRetry }) {
 
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", marginBottom: "var(--space-6)" }}>
           {(currentQ.options || []).map((opt, idx) => {
-            let optStyle = {
+            const optStyle = {
               textAlign: "left",
               justifyContent: "flex-start",
               padding: "var(--space-4)"
@@ -194,4 +240,3 @@ export function QuizRunner({ topic, onFinish, onRetry }) {
     </div>
   );
 }
-
