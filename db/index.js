@@ -11,36 +11,40 @@ if (!connectionString) {
   console.warn("[Database] DATABASE_URL belum diatur di environment variable.");
 }
 
-// Fast stateless HTTP client for ordinary single-statement reads and writes.
+// Stateless HTTP client for ordinary single-statement reads and writes.
 const httpClient = neon(connectionString || "");
 export const db = drizzleHttp(httpClient, { schema });
 
-// Neon HTTP does not support interactive Drizzle transactions. Keep a lazy,
-// bounded WebSocket pool for the few operations that must be atomic.
-let transactionPool;
-let transactionDb;
-
-export function getTransactionDb() {
+/**
+ * Run an interactive Drizzle transaction using a request-scoped Neon
+ * WebSocket pool. Neon advises that Pool/Client connections in serverless
+ * handlers must be created, used and closed within the same request.
+ */
+export async function withTransaction(callback) {
   if (!connectionString) {
     throw new Error("DATABASE_URL belum diatur untuk transaksi database.");
   }
 
-  if (!transactionDb) {
-    if (typeof globalThis.WebSocket !== "function") {
-      throw new Error("Runtime Node.js tidak menyediakan WebSocket untuk transaksi database.");
-    }
-
-    neonConfig.webSocketConstructor = globalThis.WebSocket;
-    transactionPool = new Pool({
-      connectionString,
-      max: 1,
-      idleTimeoutMillis: 5000,
-      connectionTimeoutMillis: 10000
-    });
-    transactionDb = drizzleWs(transactionPool, { schema });
+  if (typeof globalThis.WebSocket !== "function") {
+    throw new Error("Runtime Node.js tidak menyediakan WebSocket untuk transaksi database.");
   }
 
-  return transactionDb;
+  neonConfig.webSocketConstructor = globalThis.WebSocket;
+  const pool = new Pool({
+    connectionString,
+    max: 1,
+    idleTimeoutMillis: 5000,
+    connectionTimeoutMillis: 10000
+  });
+
+  try {
+    const transactionDb = drizzleWs(pool, { schema });
+    return await transactionDb.transaction(callback);
+  } finally {
+    // Do not leave WebSocket connections attached to a warm serverless
+    // instance. A new pool is created only for the next transaction request.
+    await pool.end();
+  }
 }
 
 export { schema };
