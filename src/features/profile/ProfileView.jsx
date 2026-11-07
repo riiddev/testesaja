@@ -310,7 +310,7 @@ function ProfileViewContent({ vocabulary = [], progressMap = {}, activeHook }) {
         <div className="overview-header">
           <h3 className="overview-title">Ringkasan Kemajuan Belajar</h3>
           <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--color-text-secondary)" }}>
-            Oxford 3000 American English
+            Kosakata American English
           </span>
         </div>
 
