@@ -14,7 +14,7 @@
     "test:logic": "node --experimental-strip-types --test tests/logic.test.mjs && node --test tests/react-srs.test.mjs && node --test tests/api-router.test.mjs && node --test tests/daily-quests.test.mjs && node --test tests/auth-password-compat.test.mjs && node --test tests/grammar-quiz-catalog.test.mjs && node --test tests/matching-catalog.test.mjs && node --test tests/official-word-catalog.test.mjs && node --test tests/progress-outbox-migration.test.mjs && node --test tests/progress-sync-merge.test.mjs",
     "test:e2e": "node scripts/test-react-spa.mjs",
     "test:api": "node tests/auth-api.test.mjs && node tests/economy-fase4.test.mjs && node tests/progress-sync-fase5.test.mjs && node tests/fase6-full-features.test.mjs && node tests/security.test.mjs && node tests/multi-device-sync.test.mjs && node tests/widget-summary.test.mjs && node --test tests/better-auth-integration.test.mjs",
-    "test:all": "node scripts/verify-v2-data.mjs && npm run test:logic && node --test tests/responsive-audit.test.mjs && npm run test:api",
+    "test:all": "node scripts/verify-v2-data.mjs && npm run test:logic && node --test tests/responsive-audit.test.mjs && npm run build && npm run test:api && npm run test:spa-smoke",
     "test": "node scripts/verify-v2-data.mjs && node --test tests/react-srs.test.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -22,7 +22,8 @@
     "db:seed": "node scripts/seed-catalog.mjs",
     "db:backup": "node scripts/backup-db.mjs",
     "db:restore": "node scripts/restore-db.mjs",
-    "db:init:prod": "node scripts/init-production-db.mjs"
+    "db:init:prod": "node scripts/init-production-db.mjs",
+    "test:spa-smoke": "node scripts/test-react-spa.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.2.1",
