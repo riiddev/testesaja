@@ -11,12 +11,9 @@ import { ApiError, AuthError, ValidationError, NetworkError } from "./apiErrors.
 
 export { ApiError, AuthError, ValidationError, NetworkError };
 
-const API_URL = import.meta.env.VITE_API_URL || "";
 const TIMEOUT_MS = 15000; // 15 seconds
-const MAX_RETRIES = 1;
 
 // Strict Mock Flag: Simulation mode is STRICTLY DISALLOWED in production
-const IS_MOCK_ALLOWED = import.meta.env.DEV && import.meta.env.VITE_ENABLE_MOCK === "true";
 
 // In-memory token fallback if sessionStorage is restricted/unavailable
 let memoryToken = null;
@@ -120,7 +117,7 @@ async function requestApi(endpoint, options = {}, requiresAuth = true) {
 }
 
 /**
- * Gateway request handler — dispatches to Vercel Functions or legacy Apps Script
+ * Gateway request handler — dispatches only to explicitly supported Neon API routes.
  */
 async function request(action, payload = {}, requiresAuth = true, retryCount = 0) {
   // 1. Dispatch Auth Actions to Modern Vercel Functions
@@ -232,222 +229,12 @@ async function request(action, payload = {}, requiresAuth = true, retryCount = 0
     return requestApi("/api/activity/summary", { method: "GET" }, true);
   }
 
-  // 4. For remaining legacy actions, communicate with Google Apps Script Web App
-  const token = getSessionToken();
-  if (requiresAuth && !token) {
-    throw new AuthError("Sesi tidak ditemukan. Silakan masuk terlebih dahulu.");
-  }
-
-  if (!API_URL) {
-    if (IS_MOCK_ALLOWED) {
-      console.warn("[SinauAPI] VITE_API_URL belum dikonfigurasi. Menggunakan mode dev simulasi.");
-      return handleDevFallback(action, payload, token);
-    }
-    throw new NetworkError("Endpoint server belum dikonfigurasi.");
-  }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify({
-        action,
-        token: token || "",
-        payload
-      }),
-      signal: controller.signal
-    });
-
-    clearTimeout(timer);
-
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403 || response.status === 302) {
-        if (IS_MOCK_ALLOWED) {
-          console.warn("[SinauAPI] Endpoint Apps Script privat. Menggunakan mode dev simulasi.");
-          return handleDevFallback(action, payload, token);
-        }
-        throw new AuthError("Akses ke server ditolak (401/403). Silakan periksa izin backend.");
-      }
-      throw new ApiError(`HTTP Error ${response.status}: ${response.statusText}`, "SERVER_ERROR", response.status);
-    }
-
-    const json = await response.json();
-
-    if (!json.success) {
-      if (json.error && json.error.toLowerCase().includes("sesi")) {
-        clearSessionToken();
-        throw new AuthError(json.error || "Sesi remote kedaluwarsa.");
-      }
-      throw new ApiError(json.error || "Terjadi kesalahan pada server.", "SERVER_ERROR", 400);
-    }
-
-    return json;
-  } catch (error) {
-    clearTimeout(timer);
-
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    const isAbort = error.name === "AbortError";
-    const errorMessage = isAbort ? "Batas waktu koneksi habis (timeout)." : error.message;
-
-    // Retry transient network errors once
-    if (retryCount < MAX_RETRIES && (isAbort || error.message.includes("Failed to fetch") || error.message.includes("NetworkError"))) {
-      const delay = Math.pow(2, retryCount) * 1000;
-      await new Promise((r) => setTimeout(r, delay));
-      return request(action, payload, requiresAuth, retryCount + 1);
-    }
-
-    if (IS_MOCK_ALLOWED && (error.message.includes("Failed to fetch") || error.message.includes("NetworkError") || isAbort)) {
-      console.warn(`[SinauAPI] Gagal terhubung ke remote Apps Script (${errorMessage}). Menggunakan mode dev simulasi.`);
-      return handleDevFallback(action, payload, token);
-    }
-
-    throw new NetworkError(errorMessage);
-  }
+  throw new ApiError(
+    "Aksi '" + action + "' belum terhubung ke API SinauEnglish V2.",
+    "UNSUPPORTED_ACTION",
+    501
+  );
 }
-
-/**
- * Mock fallback — ONLY used when explicitly enabled in dev (VITE_ENABLE_MOCK=true)
- */
-function handleDevFallback(action, payload, token) {
-  if (action === "getProgress") {
-    return { success: true, data: { items: {} } };
-  }
-  if (action === "syncProgress") {
-    return { success: true, message: "Tersinkron (Dev Preview).", count: (payload.updates || []).length };
-  }
-  if (action === "getSettings") {
-    return { success: true, data: { settings: { dailyGoal: 10, theme: "light" } } };
-  }
-  if (action === "getProfile") {
-    return {
-      success: true,
-      data: {
-        profile: {
-          userId: "u_dev_user",
-          displayName: "Pelajar Sinau",
-          activeTitle: "",
-          xp: 0,
-          streak: 0,
-          coins: 0,
-          lastActiveDate: new Date().toISOString(),
-          avatarKey: "avatar_1"
-        },
-        unlockedTitles: []
-      }
-    };
-  }
-  if (action === "updateProfile") {
-    return { success: true, message: "Profil tersimpan (Dev Preview)." };
-  }
-  if (action === "getUserTitles") {
-    return { success: true, data: { titles: [] } };
-  }
-  if (action === "unlockTitle") {
-    return { success: true, message: "Gelar berhasil dibuka (Dev Preview)." };
-  }
-  if (action === "getDailyQuests") {
-    return {
-      success: true,
-      data: {
-        dateStr: payload.dateStr || new Date().toISOString().slice(0, 10),
-        quests: []
-      }
-    };
-  }
-  if (action === "updateQuestProgress") {
-    return { success: true, message: "Progres misi tersimpan (Dev Preview)." };
-  }
-  if (action === "claimQuestReward") {
-    return {
-      success: true,
-      message: "Hadiah berhasil diklaim (Dev Preview).",
-      data: {
-        questId: payload.questId,
-        claimedAt: new Date().toISOString(),
-        xpEarned: payload.xpReward || 35,
-        coinsEarned: payload.coinsReward || 15
-      }
-    };
-  }
-  if (action === "uploadAvatar") {
-    return {
-      success: true,
-      message: "Foto profil berhasil diunggah (Dev Preview).",
-      data: {
-        avatarUrl: payload.imageBase64,
-        avatarUpdatedAt: new Date().toISOString()
-      }
-    };
-  }
-  if (action === "getAvatar") {
-    return {
-      success: true,
-      data: { hasAvatar: false, avatarUrl: null, avatarUpdatedAt: null }
-    };
-  }
-  if (action === "deleteAvatar") {
-    return { success: true, message: "Avatar dihapus (Dev Preview)." };
-  }
-  if (action === "getCatalog") {
-    return { success: true, data: { catalog: [] } };
-  }
-  if (action === "getInventory") {
-    return { success: true, data: { inventory: [] } };
-  }
-  if (action === "buyItem") {
-    return { success: true, message: "Item berhasil dibeli (Dev Preview)." };
-  }
-  if (action === "equipItem") {
-    return { success: true, message: "Item berhasil dipasang (Dev Preview)." };
-  }
-  if (action === "getGrammarProgress") {
-    return { success: true, data: { progress: {} } };
-  }
-  if (action === "saveGrammarProgress") {
-    return { success: true, message: "Progres grammar tersimpan (Dev Preview)." };
-  }
-  if (action === "getStoryProgress") {
-    return {
-      success: true,
-      data: {
-        storyId: payload.storyId || "story-01",
-        currentEpisode: 1,
-        completedEpisodes: [],
-        isStoryCompleted: false
-      }
-    };
-  }
-  if (action === "completeStoryEpisode") {
-    return {
-      success: true,
-      message: "Episode selesai (Dev Preview).",
-      data: { isStoryCompleted: false }
-    };
-  }
-  if (action === "grantReward") {
-    return {
-      success: true,
-      data: {
-        earnedXp: 30,
-        earnedCoins: 15,
-        totalXp: 30,
-        totalCoins: 15,
-        level: 1,
-        isLevelUp: false
-      }
-    };
-  }
-  return { success: true, message: "Aksi " + action + " disimulasikan (Dev Preview)." };
-}
-
 /* ==========================================================================
    PUBLIC API EXPORTS
    ========================================================================== */
@@ -494,14 +281,6 @@ export const api = {
     return request("syncProgress", { updates, keepalive: Boolean(options.keepalive) }, true);
   },
 
-  // Quizzes
-  async saveQuiz({ topicId, score, total }) {
-    return request("saveQuiz", { topicId, score, total }, true);
-  },
-
-  async getQuizHistory() {
-    return request("getQuizHistory", {}, true);
-  },
 
   // Settings
   async getSettings() {
@@ -576,10 +355,6 @@ export const api = {
     return request("claimQuestReward", { questId, dateStr, xpReward, coinsReward }, true);
   },
 
-  // One-time migration
-  async importBackup(backupData) {
-    return request("importBackup", { backup: backupData }, true);
-  },
 
   // Grammar Progress
   async getGrammarProgress() {
