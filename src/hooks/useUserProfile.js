@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "./useAuth.jsx";
 import { api } from "../services/api.js";
+import { recordLearningActivity } from "../services/learningActivity.js";
 import { getWordStatus } from "./useSpacedRepetition.js";
 import { TITLES_CATALOG, getTitleById, evaluateAllTitles } from "../features/profile/titleSystem.js";
 import { calculateLevelFromXp, getCatalogItemById } from "../features/collection/collectionCatalog.js";
@@ -485,48 +486,85 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     }
   }, [isAuthenticated, inventoryStorageKey]);
 
-  // Server-side idempotent reward grant
+  // All supported learning completions use the shared activity recorder.
+  // Each feature endpoint validates and persists the work on the server; the
+  // returned canonical balances are applied only after server confirmation.
   const claimReward = useCallback(async ({ eventId, source, refId = "", meta = {} }) => {
     if (!isAuthenticated) {
       return { success: false, error: "Silakan masuk untuk mendapatkan hadiah." };
     }
 
     try {
+      let res;
       const isReadingQuiz = source === "article_quiz" || source === "reading_quiz_complete";
-      const res = isReadingQuiz
-        ? await api.recordReadingQuiz({
-            articleId: refId,
-            articleTitle: String(meta.articleTitle || refId).slice(0, 150),
-            score: Math.max(0, Number(meta.correctCount) || 0),
-            total: Math.max(1, Number(meta.totalQuestions) || 1),
-            durationSeconds: Math.max(0, Number(meta.durationSeconds) || 0),
-            answers: Array.isArray(meta.answers) ? meta.answers : []
-          })
-        : await api.grantReward({ eventId, source, refId, meta });
-      if (res.success && res.data) {
-        const { totalXp, totalCoins, earnedXp, earnedCoins, streak } = res.data;
-        setProfile((prev) => {
-          const next = {
-            ...prev,
-            xp: totalXp !== undefined ? totalXp : (prev.xp ?? 0),
-            coins: totalCoins !== undefined ? totalCoins : (prev.coins ?? 0),
-            streak: streak !== undefined ? streak : (prev.streak ?? 0)
-          };
-          try { localStorage.setItem(profileStorageKey, JSON.stringify(next)); } catch (e) {}
-          return next;
-        });
+      const isReadingCompletion = source === "reading_complete" || source === "reading_reward";
+      const isStoryEpisode = source === "story_episode";
+      const isGrammarQuiz = source === "grammar_quiz" || source === "grammar";
 
-        return {
-          success: true,
-          alreadyRewarded: res.data.alreadyRewarded || false,
-          earnedXp: earnedXp || 0,
-          earnedCoins: earnedCoins || 0
-        };
+      if (isReadingQuiz) {
+        res = await recordLearningActivity({
+          activityType: "reading_quiz",
+          refId,
+          title: String(meta.articleTitle || refId).slice(0, 150),
+          durationSeconds: Math.max(0, Number(meta.durationSeconds) || 0),
+          answers: Array.isArray(meta.answers) ? meta.answers : []
+        });
+      } else if (isReadingCompletion) {
+        res = await recordLearningActivity({
+          activityType: "reading_complete",
+          refId,
+          title: String(meta.articleTitle || refId).slice(0, 150),
+          durationSeconds: Math.max(0, Number(meta.durationSeconds) || 0),
+          meta
+        });
+      } else if (isStoryEpisode) {
+        res = await recordLearningActivity({
+          activityType: "story_episode",
+          refId,
+          meta
+        });
+      } else if (isGrammarQuiz) {
+        res = await recordLearningActivity({
+          activityType: "grammar",
+          refId,
+          answers: Array.isArray(meta.answers) ? meta.answers : []
+        });
+      } else {
+        res = await api.grantReward({ eventId, source, refId, meta });
       }
-      return { success: false, error: res.error || "Gagal memproses hadiah." };
+
+      if (!res?.success) {
+        throw new Error(res?.error || res?.message || "Server gagal memproses aktivitas belajar.");
+      }
+
+      const data = res.data || {};
+      const earnedXp = Number(res.earnedXp ?? data.earnedXp ?? data.xpEarned) || 0;
+      const earnedCoins = Number(res.earnedCoins ?? data.earnedCoins ?? data.coinsEarned) || 0;
+      const totalXp = data.totalXp ?? res.totalXp;
+      const totalCoins = data.totalCoins ?? res.totalCoins;
+      const streak = data.streak ?? res.streak;
+
+      setProfile((prev) => {
+        const next = {
+          ...prev,
+          xp: totalXp !== undefined ? totalXp : (prev.xp ?? 0) + earnedXp,
+          coins: totalCoins !== undefined ? totalCoins : (prev.coins ?? 0) + earnedCoins,
+          streak: streak !== undefined ? streak : (prev.streak ?? 0)
+        };
+        try { localStorage.setItem(profileStorageKey, JSON.stringify(next)); } catch {}
+        return next;
+      });
+
+      return {
+        success: true,
+        data,
+        alreadyRewarded: Boolean(res.alreadyRewarded ?? data.alreadyRewarded ?? data.alreadyCompleted),
+        earnedXp,
+        earnedCoins
+      };
     } catch (err) {
-      console.warn("Grant reward error:", err.message);
-      return { success: false, error: err.message };
+      console.warn("Learning activity recording error:", err.message);
+      return { success: false, error: err.message || "Gagal memproses aktivitas." };
     }
   }, [isAuthenticated, profileStorageKey]);
 
