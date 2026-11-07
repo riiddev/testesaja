@@ -1,11 +1,12 @@
 /**
  * POST /api/economy/equip
- * 
- * Equips border or outfit item for active user.
+ *
+ * Equips one owned border or outfit. Unequipping the previous item and
+ * equipping the selected item are committed as one transaction.
  */
 
 import { eq, and } from "drizzle-orm";
-import { db, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import {
   sendSuccess,
@@ -14,6 +15,13 @@ import {
   sendServerError,
   sendJson
 } from "../../_lib/response.js";
+
+function validationError(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  error.code = "VALIDATION_ERROR";
+  return error;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -26,59 +34,67 @@ export default async function handler(req, res) {
     const itemId = String(body.itemId || "").trim();
     const type = body.type === "outfit" ? "outfit" : "border";
 
-    // 1. Verify user owns item
-    const ownedItems = await db
-      .select({
-        id: schema.inventory.id,
-        itemId: schema.inventory.itemId,
-        type: schema.catalog.type
-      })
-      .from(schema.inventory)
-      .innerJoin(schema.catalog, eq(schema.inventory.itemId, schema.catalog.id))
-      .where(
-        and(
+    if (!itemId) {
+      return sendValidationError(res, "Parameter itemId wajib disertakan.");
+    }
+
+    await withTransaction(async (tx) => {
+      await tx
+        .select({ userId: schema.profiles.userId })
+        .from(schema.profiles)
+        .where(eq(schema.profiles.userId, user.id))
+        .for("update")
+        .limit(1);
+
+      const ownedItems = await tx
+        .select({
+          id: schema.inventory.id,
+          itemId: schema.inventory.itemId,
+          type: schema.catalog.type
+        })
+        .from(schema.inventory)
+        .innerJoin(schema.catalog, eq(schema.inventory.itemId, schema.catalog.id))
+        .where(and(
           eq(schema.inventory.userId, user.id),
           eq(schema.inventory.itemId, itemId)
-        )
-      )
-      .limit(1);
+        ))
+        .limit(1);
 
-    if (!ownedItems.length) {
-      return sendValidationError(res, "Item tidak ditemukan dalam inventori Anda.");
-    }
+      if (!ownedItems.length || ownedItems[0].type !== type) {
+        throw validationError("Item tidak ditemukan dalam inventori Anda.");
+      }
 
-    // 2. Find all user's items of the same type and unequip them
-    const allUserItems = await db
-      .select({
-        id: schema.inventory.id,
-        type: schema.catalog.type
-      })
-      .from(schema.inventory)
-      .innerJoin(schema.catalog, eq(schema.inventory.itemId, schema.catalog.id))
-      .where(eq(schema.inventory.userId, user.id));
+      const sameTypeItems = await tx
+        .select({ id: schema.inventory.id })
+        .from(schema.inventory)
+        .innerJoin(schema.catalog, eq(schema.inventory.itemId, schema.catalog.id))
+        .where(and(
+          eq(schema.inventory.userId, user.id),
+          eq(schema.catalog.type, type)
+        ));
 
-    for (const it of allUserItems) {
-      if (it.type === type) {
-        await db
+      for (const inventoryItem of sameTypeItems) {
+        await tx
           .update(schema.inventory)
           .set({ equipped: false })
-          .where(eq(schema.inventory.id, it.id));
+          .where(eq(schema.inventory.id, inventoryItem.id));
       }
-    }
 
-    // 3. Equip target item
-    await db
-      .update(schema.inventory)
-      .set({ equipped: true })
-      .where(eq(schema.inventory.id, ownedItems[0].id));
+      await tx
+        .update(schema.inventory)
+        .set({ equipped: true })
+        .where(eq(schema.inventory.id, ownedItems[0].id));
+    });
 
     return sendSuccess(res, { equippedItemId: itemId }, "Item berhasil dipasang!");
   } catch (err) {
     if (err.statusCode === 401 || err.code === "AUTH_ERROR") {
       return sendAuthError(res, err.message, 401);
     }
+    if (err.statusCode === 400 || err.code === "VALIDATION_ERROR") {
+      return sendValidationError(res, err.message);
+    }
     console.error("[API economy/equip] Error:", err);
-    return sendServerError(res, "Gagal memasang item: " + err.message);
+    return sendServerError(res, "Gagal memasang item.");
   }
 }
-

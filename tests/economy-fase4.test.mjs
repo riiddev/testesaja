@@ -19,6 +19,7 @@ import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
 import { evaluateAndRecordStreak } from "../api/_lib/streak.js";
 import { recordLedgerTransaction } from "../api/_lib/ledger.js";
 import { getWibDateStr, getWibYesterdayStr } from "../api/_lib/wibDate.js";
+import habitReadingLibrary from "../src/data/habit-reading-library.json" with { type: "json" };
 
 import profileGetHandler from "../api/_handlers/profile/get.js";
 import profileUpdateHandler from "../api/_handlers/profile/update.js";
@@ -185,7 +186,8 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
 
   // TEST 3: Butir A Habit Reading deterministic 1x reward
   await t.test("3. Butir A: Habit Reading grants reward ONCE ever; re-reading gives 0 reward without duplicate tx", async () => {
-    const articleRef = `science_article_${Date.now()}`;
+    const articleRef = habitReadingLibrary.passages?.[0]?.id;
+    assert.ok(articleRef, "Official HABIT article must be available for reward tests");
 
     // First completion
     const { req: req1, res: res1 } = createMockReqRes({
@@ -323,8 +325,8 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
     assert.equal(earlyClaimResult.statusCode, 400);
     assert.match(earlyClaimResult.body.error, /belum selesai/i);
 
-    // 5c. Update quest progress to completion
-    const { req: qUpReq, res: qUpRes } = createMockReqRes({
+    // 5c. Forged progress from the browser must be ignored by the server.
+    const { req: forgedUpdateReq, res: forgedUpdateRes } = createMockReqRes({
       method: "POST",
       token: sessionToken,
       body: {
@@ -334,10 +336,66 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
       }
     });
 
-    await questsUpdateHandler(qUpReq, qUpRes);
-    const qUpResult = qUpRes._getResult();
-    assert.equal(qUpResult.statusCode, 200);
-    assert.equal(qUpResult.body.data.isCompleted, true);
+    await questsUpdateHandler(forgedUpdateReq, forgedUpdateRes);
+    const forgedUpdateResult = forgedUpdateRes._getResult();
+    assert.equal(forgedUpdateResult.statusCode, 200);
+    const forgedQuest = forgedUpdateResult.body.data.quests.find(
+      (quest) => quest.questId === targetQuest.questId
+    );
+    assert.equal(forgedQuest.progress, 0, "Client-supplied progress must not be trusted");
+    assert.equal(forgedQuest.isCompleted, false, "A forged completion must not unlock rewards");
+
+    // 5d. Seed server-written learning events matching this official mission.
+    const activityTypeByQuest = {
+      quest_vocab_new_5: "vocab_learn",
+      quest_srs_review_8: "srs_review",
+      quest_grammar_quiz_1: "grammar",
+      quest_habit_reading_1: "reading_quiz",
+      quest_study_focus_3: "matching",
+      quest_adventure_explore_1: "story"
+    };
+    const questActivityType = activityTypeByQuest[targetQuest.questId];
+    assert.ok(questActivityType, "Official quest must have a server progress source");
+
+    if (questActivityType === "vocab_learn" || questActivityType === "srs_review") {
+      await db.insert(schema.progressEvents).values(
+        Array.from({ length: targetQuest.target }, (_, index) => ({
+          userId: testUserId,
+          eventId: "quest_event_" + Date.now() + "_" + index,
+          activityType: questActivityType
+        }))
+      );
+    } else {
+      await db.insert(schema.activityLog).values(
+        Array.from({ length: targetQuest.target }, (_, index) => ({
+          id: "quest_activity_" + Date.now() + "_" + index,
+          userId: testUserId,
+          activityType: questActivityType,
+          title: "Server-verified quest fixture",
+          score: 1,
+          totalQuestions: 1,
+          accuracyPercent: 100,
+          durationSeconds: 0,
+          xpEarned: 0,
+          coinsEarned: 0
+        }))
+      );
+    }
+
+    // Refresh the snapshot: it must now report completion from server evidence.
+    const { req: verifiedUpdateReq, res: verifiedUpdateRes } = createMockReqRes({
+      method: "POST",
+      token: sessionToken,
+      body: {}
+    });
+    await questsUpdateHandler(verifiedUpdateReq, verifiedUpdateRes);
+    const verifiedUpdateResult = verifiedUpdateRes._getResult();
+    assert.equal(verifiedUpdateResult.statusCode, 200);
+    const verifiedQuest = verifiedUpdateResult.body.data.quests.find(
+      (quest) => quest.questId === targetQuest.questId
+    );
+    assert.equal(verifiedQuest.progress, targetQuest.target);
+    assert.equal(verifiedQuest.isCompleted, true);
 
     // 5d. Claim quest reward -> Must succeed
     const { req: validClaimReq, res: validClaimRes } = createMockReqRes({
@@ -381,12 +439,12 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
       .where(eq(schema.profiles.userId, testUserId));
 
     // Evaluating streak today should increment to 6
-    const res1 = await evaluateAndRecordStreak(testUserId);
-    assert.equal(res1.streak, 6, "Streak should increment to 6 on consecutive day");
-
-    // Evaluating again today should return 6 (no double increment)
-    const res2 = await evaluateAndRecordStreak(testUserId);
-    assert.equal(res2.streak, 6, "Streak must remain 6 on same day");
+    const [res1, res2] = await Promise.all([
+      evaluateAndRecordStreak(testUserId),
+      evaluateAndRecordStreak(testUserId)
+    ]);
+    assert.equal(res1.streak, 6, "Concurrent same-day activity must increment streak only once");
+    assert.equal(res2.streak, 6, "Concurrent same-day activity must see the locked profile state");
 
     // Simulate 2-day gap (lastActiveDate = 3 days ago)
     const threeDaysAgo = new Date();
@@ -402,9 +460,17 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
       .where(eq(schema.profiles.userId, testUserId));
 
     // User already bought streak_freeze in Test 4, so it should consume freeze and preserve streak (6 + 1 = 7)
-    const res3 = await evaluateAndRecordStreak(testUserId);
-    assert.equal(res3.freezeUsed, true, "streak_freeze must be consumed");
+    const [res3, res4] = await Promise.all([
+      evaluateAndRecordStreak(testUserId),
+      evaluateAndRecordStreak(testUserId)
+    ]);
+    assert.equal(
+      [res3, res4].filter((result) => result.freezeUsed).length,
+      1,
+      "Two concurrent streak checks must consume exactly one freeze"
+    );
     assert.equal(res3.streak, 7, "Streak preserved and incremented to 7");
+    assert.equal(res4.streak, 7, "Concurrent streak check must observe the final streak");
 
     // Verify streak_freeze was deleted from inventory
     const freezeCount = await db
@@ -417,6 +483,60 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
         )
       );
     assert.equal(freezeCount.length, 0, "streak_freeze must have been consumed from inventory");
+  });
+
+  await t.test("7. Ledger concurrency: duplicate and distinct events never lose or double-mint balance", async () => {
+    const beforeRows = await db
+      .select({ xp: schema.profiles.xp, coins: schema.profiles.coins })
+      .from(schema.profiles)
+      .where(eq(schema.profiles.userId, testUserId))
+      .limit(1);
+    const before = beforeRows[0];
+    const duplicateEventId = "concurrent_duplicate_" + Date.now();
+
+    const duplicateResults = await Promise.all(
+      Array.from({ length: 8 }, () => recordLedgerTransaction({
+        userId: testUserId,
+        eventId: duplicateEventId,
+        source: "concurrency_test",
+        xpEarned: 7,
+        coinsEarned: 3
+      }))
+    );
+
+    assert.equal(
+      duplicateResults.filter((result) => !result.alreadyProcessed).length,
+      1,
+      "Exactly one concurrent duplicate request may apply the event"
+    );
+
+    const duplicateRows = await db
+      .select()
+      .from(schema.transactions)
+      .where(and(
+        eq(schema.transactions.userId, testUserId),
+        eq(schema.transactions.eventId, duplicateEventId)
+      ));
+    assert.equal(duplicateRows.length, 1, "Unique ledger event must have one row");
+
+    const distinctResults = await Promise.all(
+      Array.from({ length: 6 }, (_, index) => recordLedgerTransaction({
+        userId: testUserId,
+        eventId: "concurrent_distinct_" + Date.now() + "_" + index,
+        source: "concurrency_test",
+        xpEarned: 1,
+        coinsEarned: 1
+      }))
+    );
+    assert.equal(distinctResults.filter((result) => !result.alreadyProcessed).length, 6);
+
+    const afterRows = await db
+      .select({ xp: schema.profiles.xp, coins: schema.profiles.coins })
+      .from(schema.profiles)
+      .where(eq(schema.profiles.userId, testUserId))
+      .limit(1);
+    assert.equal(Number(afterRows[0].xp), Number(before.xp) + 13);
+    assert.equal(Number(afterRows[0].coins), Number(before.coins) + 9);
   });
 
   // Teardown: Clean up test user

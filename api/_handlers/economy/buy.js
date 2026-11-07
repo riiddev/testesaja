@@ -1,13 +1,14 @@
 /**
  * POST /api/economy/buy
- * 
- * Purchases collection items with server-side catalog price & balance validation.
+ *
+ * Purchases collection items with server-side catalog price, level and
+ * ownership checks. Coin deduction and inventory insertion commit together.
  */
 
 import { eq, and } from "drizzle-orm";
-import { db, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
-import { recordLedgerTransaction } from "../../_lib/ledger.js";
+import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
 import { calculateLevelFromXp } from "../../_lib/rewardsConfig.js";
 import {
   sendSuccess,
@@ -16,6 +17,13 @@ import {
   sendServerError,
   sendJson
 } from "../../_lib/response.js";
+
+function validationError(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  error.code = "VALIDATION_ERROR";
+  return error;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -31,94 +39,102 @@ export default async function handler(req, res) {
       return sendValidationError(res, "Parameter itemId wajib disertakan.");
     }
 
-    // 1. Check Catalog Item
-    const catRows = await db
-      .select()
-      .from(schema.catalog)
-      .where(and(eq(schema.catalog.id, itemId), eq(schema.catalog.isActive, true)))
-      .limit(1);
+    const purchase = await withTransaction(async (tx) => {
+      // Serialize purchases for this account before checking balance/ownership.
+      const profileRows = await tx
+        .select({ xp: schema.profiles.xp, coins: schema.profiles.coins })
+        .from(schema.profiles)
+        .where(eq(schema.profiles.userId, user.id))
+        .for("update")
+        .limit(1);
 
-    if (!catRows.length) {
-      return sendValidationError(res, "Item tidak ditemukan di katalog.");
-    }
+      if (!profileRows.length) {
+        throw validationError("Profil pengguna tidak ditemukan.");
+      }
 
-    const item = catRows[0];
+      const catalogRows = await tx
+        .select()
+        .from(schema.catalog)
+        .where(and(
+          eq(schema.catalog.id, itemId),
+          eq(schema.catalog.isActive, true)
+        ))
+        .limit(1);
 
-    // 2. Fetch User Profile
-    const profileRows = await db
-      .select({ xp: schema.profiles.xp, coins: schema.profiles.coins })
-      .from(schema.profiles)
-      .where(eq(schema.profiles.userId, user.id))
-      .limit(1);
+      if (!catalogRows.length) {
+        throw validationError("Item tidak ditemukan di katalog.");
+      }
 
-    if (!profileRows.length) {
-      return sendValidationError(res, "Profil pengguna tidak ditemukan.");
-    }
+      const item = catalogRows[0];
+      const xp = Number(profileRows[0].xp) || 0;
+      const coins = Number(profileRows[0].coins) || 0;
+      const userLevel = calculateLevelFromXp(xp);
 
-    const { xp, coins } = profileRows[0];
+      if (userLevel < item.levelReq) {
+        throw validationError(
+          "Level cendekiawanmu belum mencukupi (Butuh Level " +
+          item.levelReq +
+          ", levelmu saat ini Level " +
+          userLevel +
+          ")."
+        );
+      }
 
-    // 3. Level Requirement Check
-    const userLevel = calculateLevelFromXp(xp);
-    if (userLevel < item.levelReq) {
-      return sendValidationError(
-        res,
-        `Level cendekiawanmu belum mencukupi (Butuh Level ${item.levelReq}, levelmu saat ini Level ${userLevel}).`
-      );
-    }
-
-    // 4. Ownership Limit Check
-    const existingItems = await db
-      .select()
-      .from(schema.inventory)
-      .where(
-        and(
+      const existingItems = await tx
+        .select({ id: schema.inventory.id })
+        .from(schema.inventory)
+        .where(and(
           eq(schema.inventory.userId, user.id),
           eq(schema.inventory.itemId, itemId)
-        )
-      );
+        ))
+        .limit(1);
 
-    if (item.type === "border" || item.type === "outfit") {
+      // Inventory has a unique (user_id, item_id) key, so each catalog item
+      // can have one owned row. Checking it inside the locked transaction
+      // avoids concurrent duplicate purchases.
       if (existingItems.length > 0) {
-        return sendValidationError(res, "Kamu sudah memiliki item ini di inventori.");
+        throw validationError("Kamu sudah memiliki item ini di inventori.");
       }
-    } else if (itemId === "streak_freeze") {
-      if (existingItems.length >= 2) {
-        return sendValidationError(res, "Kamu sudah mencapai batas simpanan Pelindung Streak (maksimal 2).");
+
+      if (coins < item.price) {
+        throw validationError(
+          "Sinau Coin tidak mencukupi (Harga: " +
+          item.price +
+          " Coin, saldomu: " +
+          coins +
+          " Coin)."
+        );
       }
-    }
 
-    // 5. Coin Balance Check
-    if (coins < item.price) {
-      return sendValidationError(
-        res,
-        `Sinau Coin tidak mencukupi (Harga: ${item.price} Coin, saldomu: ${coins} Coin).`
-      );
-    }
+      const eventId = "buy_item:" + user.id + ":" + itemId + ":" + Date.now();
+      const ledger = await recordLedgerTransactionInTransaction(tx, {
+        userId: user.id,
+        eventId,
+        source: "shop_purchase",
+        xpEarned: 0,
+        coinsEarned: -Number(item.price)
+      });
 
-    // 6. Execute Deduct Transaction in Ledger
-    const eventId = `buy_item:${user.id}:${itemId}:${Date.now()}`;
-    const tx = await recordLedgerTransaction({
-      userId: user.id,
-      eventId,
-      source: "shop_purchase",
-      xpEarned: 0,
-      coinsEarned: -item.price
-    });
+      await tx.insert(schema.inventory).values({
+        userId: user.id,
+        itemId: item.id,
+        equipped: false
+      });
 
-    // 7. Insert Item into Inventory
-    await db.insert(schema.inventory).values({
-      userId: user.id,
-      itemId: item.id,
-      equipped: false
+      return {
+        item,
+        remainingCoins: ledger.balanceAfterCoins
+      };
     });
 
     return sendSuccess(
       res,
-      {
-        item,
-        remainingCoins: tx.balanceAfterCoins
-      },
-      `Berhasil membeli ${item.name} seharga ${item.price} Sinau Coin.`
+      purchase,
+      "Berhasil membeli " +
+        purchase.item.name +
+        " seharga " +
+        purchase.item.price +
+        " Sinau Coin."
     );
   } catch (err) {
     if (err.statusCode === 401 || err.code === "AUTH_ERROR") {
@@ -128,7 +144,6 @@ export default async function handler(req, res) {
       return sendValidationError(res, err.message);
     }
     console.error("[API economy/buy] Error:", err);
-    return sendServerError(res, "Gagal memproses pembelian item: " + err.message);
+    return sendServerError(res, "Gagal memproses pembelian item.");
   }
 }
-
