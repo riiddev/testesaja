@@ -1,155 +1,139 @@
 /**
- * SINAUENGLISH V2 — Unified Learning Activity Hub
- * 
- * Central coordinator connecting all learning features:
- * - Vocabulary & Spaced Repetition (SRS)
- * - Sentence Context Matching
- * - Grammar Curriculum
- * - HABIT Reading & Comprehension Quizzes
- * - Everyday Adventure Stories
- * 
- * Automatically synchronizes activity logs, daily quests progress, and rewards!
+ * Unified learning-activity recorder.
+ *
+ * Activity ownership remains on the server: every case calls its dedicated
+ * validator/transaction. This module only normalizes the feature calls and
+ * announces a refresh after the server accepts an activity.
+ *
+ * SRS/vocabulary attempts are queued through useProgressSync's offline-first
+ * outbox; the hook announces the same refresh only after server ACK.
  */
 
 import { api } from "./api.js";
+import { notifyDailyQuestsChanged } from "./dailyQuestEvents.js";
+
+export const QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE = Object.freeze({
+  vocabulary_new: "vocab_learn",
+  srs_review: "srs_review",
+  grammar: "grammar",
+  matching: "matching",
+  reading_quiz: "reading_quiz",
+  reading_complete: "reading_complete",
+  story_episode: "story"
+});
+
+function copyRewardResult(result, data) {
+  result.data = data || null;
+  result.earnedXp = Number(data?.earnedXp ?? data?.xpEarned) || 0;
+  result.earnedCoins = Number(data?.earnedCoins ?? data?.coinsEarned) || 0;
+  result.totalXp = data?.totalXp;
+  result.totalCoins = data?.totalCoins;
+  result.streak = data?.streak;
+  result.alreadyRewarded = Boolean(data?.alreadyRewarded || data?.alreadyCompleted);
+  result.alreadyCompleted = Boolean(data?.alreadyCompleted);
+}
 
 export async function recordLearningActivity({
   activityType,
   refId = "",
   title = "",
-  score = 0,
-  total = 0,
   durationSeconds = 0,
-  wrongItems = [],
-  questionsBreakdown = [],
   answers = [],
   matchedPairs = [],
   roundToken = "",
   meta = {}
 }) {
-  let result = {
-    success: true,
+  const result = {
+    success: false,
     activityType,
+    data: null,
     earnedXp: 0,
     earnedCoins: 0,
-    streak: undefined
+    streak: undefined,
+    error: null
   };
 
   try {
+    let response;
+
     switch (activityType) {
       case "matching": {
-        const res = await api.recordMatchingSession({
+        response = await api.recordMatchingSession({
           matchedPairs,
           durationSeconds,
           sessionId: refId || `match_${Date.now()}`,
           roundToken
         });
-        if (!res?.success) {
-          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
-        }
-        if (res.success && res.data) {
-          result.earnedXp = res.data.earnedXp || 0;
-          result.earnedCoins = res.data.earnedCoins || 0;
-          result.streak = res.data.streak;
-        }
-        // Auto-advance matching quest
-        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
       case "grammar": {
-        const res = await api.saveGrammarProgress({
+        if (!Array.isArray(answers) || answers.length === 0) {
+          throw new Error("Jawaban resmi kuis Grammar wajib disertakan.");
+        }
+        response = await api.saveGrammarProgress({
           topicId: refId,
-          score,
-          total,
-          practiceDone: score >= Math.ceil(total * 0.7)
+          answers
         });
-        if (!res?.success) {
-          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
-        }
-        if (res.success && res.data) {
-          result.earnedXp = res.data.xpEarned || 0;
-          result.earnedCoins = res.data.coinsEarned || 0;
-          result.streak = res.data.streak;
-        }
-        // Auto-advance grammar quest
-        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
       case "reading_quiz": {
-        const res = await api.recordReadingQuiz({
+        response = await api.recordReadingQuiz({
           articleId: refId,
           articleTitle: title,
           durationSeconds,
           answers
         });
-        if (!res?.success) {
-          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
-        }
-        if (res.success && res.data) {
-          result.earnedXp = res.data.earnedXp || 0;
-          result.earnedCoins = res.data.earnedCoins || 0;
-          result.streak = res.data.streak;
-        }
-        // Auto-advance reading quest
-        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
       case "reading_complete": {
-        const res = await api.grantReward({
+        response = await api.grantReward({
           eventId: `reading:${refId}:first_complete`,
           source: "reading_complete",
           refId,
-          meta
+          meta: {
+            ...meta,
+            articleTitle: title || meta.articleTitle || refId,
+            durationSeconds
+          }
         });
-        if (!res?.success) {
-          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
-        }
-        if (res.success && res.data) {
-          result.earnedXp = res.data.earnedXp || 0;
-          result.earnedCoins = res.data.earnedCoins || 0;
-          result.streak = res.data.streak;
-          result.alreadyRewarded = res.data.alreadyRewarded;
-        }
-        // Auto-advance reading quest
-        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
       case "story_episode": {
-        const res = await api.completeStoryEpisode({
+        response = await api.completeStoryEpisode({
           storyId: refId,
           episodeId: meta.episodeId || 1,
           totalEpisodes: meta.totalEpisodes || 5
         });
-        if (!res?.success) {
-          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
-        }
-        if (res.success && res.data) {
-          result.earnedXp = res.data.earnedXp || 0;
-          result.earnedCoins = res.data.earnedCoins || 0;
-          result.streak = res.data.streak;
-        }
-        // Auto-advance story quest
-        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
-      default: {
-        const error = `Tipe aktivitas '${activityType}' tidak dikenal.`;
-        console.warn(`[LearningActivity] ${error}`);
-        result.success = false;
-        result.error = error;
-      }
+      case "vocabulary_new":
+      case "srs_review":
+        throw new Error("Aktivitas kosakata dan SRS harus dicatat melalui antrean offline-first useProgressSync.");
+
+      default:
+        throw new Error(`Tipe aktivitas '${activityType}' tidak dikenal.`);
     }
+
+    if (!response?.success || !response.data) {
+      throw new Error(response?.error || response?.message || "Server gagal mencatat aktivitas belajar.");
+    }
+
+    result.success = true;
+    copyRewardResult(result, response.data);
+    result.message = response.message || null;
+
+    // Every consumer (sidebar, mission page, widgets) re-reads the server
+    // snapshot. No client-side increment is sent to the mission endpoint.
+    notifyDailyQuestsChanged();
   } catch (err) {
     console.warn(`[LearningActivity] Gagal mencatat ${activityType}:`, err.message);
-    result.success = false;
     result.error = err.message || "Gagal mencatat aktivitas belajar.";
   }
 
   return result;
 }
-
