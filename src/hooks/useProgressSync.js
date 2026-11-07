@@ -29,7 +29,7 @@ export function useProgressSync() {
 
   const [progressMap, setProgressMap] = useState({});
   const [outboxCount, setOutboxCount] = useState(0);
-  const [syncStatus, setSyncStatus] = useState("saved"); // "saved" | "syncing" | "pending" | "error"
+  const [syncStatus, setSyncStatus] = useState("checking"); // "checking" | "saved" | "syncing" | "pending" | "error"
   const [syncError, setSyncError] = useState(null);
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true
@@ -50,50 +50,83 @@ export function useProgressSync() {
   const flushOutbox = useCallback(async ({ keepalive = false } = {}) => {
     if (isSyncingRef.current || !isAuthenticated || userId === "guest") return;
 
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      setSyncStatus("pending");
-      return;
-    }
-
-    const pending = await getPendingOutboxEvents(userId, 25);
-    if (!pending.length) {
-      setOutboxCount(0);
-      setSyncStatus("saved");
-      setSyncError(null);
-      return;
-    }
-
     isSyncingRef.current = true;
-    setSyncStatus("syncing");
-    setSyncError(null);
-
     try {
-      const res = await api.syncProgress(pending, { keepalive });
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        const count = await getOutboxCount(userId);
+        setOutboxCount(count);
+        setSyncStatus(count > 0 ? "pending" : "error");
+        setSyncError(count > 0
+          ? "Perangkat sedang offline. Aktivitas tetap menunggu di perangkat."
+          : "Belum dapat memeriksa penyimpanan cloud. Coba lagi saat online.");
+        return;
+      }
 
+      const pending = await getPendingOutboxEvents(userId, 25);
+      if (!pending.length) {
+        // An empty local queue is not proof that the cloud is reachable. Verify
+        // the authenticated server before displaying the green "Tersimpan" state.
+        const [latest, pendingAfterCheck] = await Promise.all([
+          api.getProgress(),
+          getPendingOutboxEvents(userId, OUTBOX_REPLAY_LIMIT)
+        ]);
+
+        if (!latest?.success || !latest.data?.items || typeof latest.data.items !== "object") {
+          throw new Error(latest?.error || "Server belum mengonfirmasi status penyimpanan.");
+        }
+
+        const canonical = mergeServerProgressWithPendingEvents(
+          latest.data.items,
+          pendingAfterCheck
+        );
+        replaceProgressMap(canonical);
+        await saveProgressToCache(userId, canonical);
+
+        const remainingCount = pendingAfterCheck.length;
+        setOutboxCount(remainingCount);
+        setSyncStatus(remainingCount > 0 ? "pending" : "saved");
+        setSyncError(null);
+        if (remainingCount > 0 && !keepalive) {
+          if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+          retryTimerRef.current = setTimeout(() => flushOutbox(), 500);
+        }
+        return;
+      }
+
+      setSyncStatus("syncing");
+      setSyncError(null);
+
+      const res = await api.syncProgress(pending, { keepalive });
       if (!res?.success || !Array.isArray(res.data?.processedEvents)) {
         throw new Error(res?.error || "Server tidak mengonfirmasi antrean progres.");
       }
-      if (res.data.processedEvents.length === 0) {
+
+      // Only acknowledge IDs that were actually present in the submitted batch.
+      const submittedIds = new Set(pending.map((item) => item.eventId));
+      const acknowledgedIds = [...new Set(res.data.processedEvents)]
+        .filter((eventId) => submittedIds.has(eventId));
+      if (!acknowledgedIds.length) {
         throw new Error("Belum ada event yang dikonfirmasi server. Antrean lokal tetap disimpan.");
       }
 
-      // Strict ACK: delete only event IDs explicitly confirmed by the server.
-      await removeConfirmedEvents(userId, res.data.processedEvents);
+      const removalSucceeded = await removeConfirmedEvents(userId, acknowledgedIds);
+      if (!removalSucceeded) {
+        throw new Error("Server sudah menerima aktivitas, tetapi antrean lokal belum dapat dibersihkan. Sinkronisasi akan diulang dengan aman.");
+      }
 
       const remainingCount = await getOutboxCount(userId);
       setOutboxCount(remainingCount);
 
       if (remainingCount > 0) {
         setSyncStatus("pending");
-        // A closing page sends one keepalive batch only. Remaining events are
-        // picked up automatically when the user opens the app again.
+        // Send one batch while closing; remaining batches resume on next open.
         if (!keepalive) {
           if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
           retryTimerRef.current = setTimeout(() => flushOutbox(), 500);
         }
       } else {
-        // Re-read canonical server state after the queue is fully acknowledged.
-        // Do not start a second non-keepalive request while the page is closing.
+        // The explicit server ACK is sufficient proof for the just-submitted
+        // events. Refresh the canonical view when the page is still active.
         if (!keepalive) {
           try {
             const [latest, pendingAfterAck] = await Promise.all([
@@ -110,13 +143,12 @@ export function useProgressSync() {
               await saveProgressToCache(userId, canonical);
             }
           } catch (refreshError) {
-            // The confirmed writes are safe; the next normal load will refresh
-            // the view from the server if this optional read fails.
+            // The server ACK remains valid; this only delays the visual refresh.
             console.warn("[ProgressSync] Gagal memperbarui tampilan progres:", refreshError.message);
           }
         }
 
-        setSyncStatus(remainingCount === 0 ? "saved" : "pending");
+        setSyncStatus("saved");
         setSyncError(null);
       }
     } catch (err) {
@@ -153,10 +185,6 @@ export function useProgressSync() {
       lastReviewedAt: new Date().toISOString()
     };
 
-    const updatedMap = { ...currentMap, [wordId]: updated };
-    replaceProgressMap(updatedMap);
-    await saveProgressToCache(userId, updatedMap);
-
     const event = {
       eventId: `srs_${userId}_${wordId}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       userId,
@@ -166,7 +194,17 @@ export function useProgressSync() {
       createdAt: new Date().toISOString()
     };
 
-    await enqueueOutboxEvent(userId, event);
+    const queued = await enqueueOutboxEvent(userId, event);
+    if (!queued) {
+      setSyncStatus("error");
+      setSyncError("Aktivitas belum tersimpan ke antrean perangkat. Ulangi latihan sebelum meninggalkan halaman.");
+      return null;
+    }
+
+    const updatedMap = { ...currentMap, [wordId]: updated };
+    replaceProgressMap(updatedMap);
+    await saveProgressToCache(userId, updatedMap);
+
     const count = await getOutboxCount(userId);
     setOutboxCount(count);
     setSyncStatus("pending");
@@ -190,7 +228,7 @@ export function useProgressSync() {
 
     replaceProgressMap({});
     setOutboxCount(0);
-    setSyncStatus("saved");
+    setSyncStatus("checking");
     setSyncError(null);
 
     async function initUserProgress() {
@@ -213,18 +251,29 @@ export function useProgressSync() {
 
       try {
         const res = await api.getProgress();
-        if (isMounted && res?.success && res.data?.items) {
+        if (!res?.success || !res.data?.items || typeof res.data.items !== "object") {
+          throw new Error(res?.error || "Server belum mengonfirmasi status penyimpanan.");
+        }
+
+        if (isMounted) {
           const merged = mergeServerProgressWithPendingEvents(res.data.items, pending);
           replaceProgressMap(merged);
           await saveProgressToCache(userId, merged);
+          if (count > 0) {
+            setSyncStatus("pending");
+            flushOutbox();
+          } else {
+            setSyncStatus("saved");
+            setSyncError(null);
+          }
         }
       } catch (err) {
         console.warn("[ProgressSync] Gagal memuat progres server:", err.message);
-        // Keep the user-scoped local cache available while offline.
-      }
-
-      if (isMounted && count > 0) {
-        flushOutbox();
+        // Keep the user-scoped cache and durable outbox, but never claim cloud save.
+        if (isMounted) {
+          setSyncStatus("error");
+          setSyncError(err.message || "Gagal memeriksa penyimpanan cloud.");
+        }
       }
     }
 
