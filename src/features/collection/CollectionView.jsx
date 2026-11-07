@@ -123,6 +123,15 @@ export function CollectionView({ userProfileHook }) {
 
   return (
     <div className="collection-container" id="collection-view-root">
+      {errorMessage && !confirmItem && (
+        <div
+          role="alert"
+          className="card card-tint-rose"
+          style={{ padding: "10px 14px", marginBottom: "var(--space-4)", color: "var(--color-danger)", fontSize: "var(--text-sm)", fontWeight: 600 }}
+        >
+          {errorMessage}
+        </div>
+      )}
       {/* 1. ECONOMY STATUS BANNER */}
       <section className="collection-header-card" aria-label="Status Ekonomi Pelajar">
         <div>
