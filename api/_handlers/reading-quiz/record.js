@@ -1,14 +1,15 @@
 /**
  * POST /api/reading-quiz/record
- * 
- * Records comprehension quiz outcome for HABIT reading articles.
+ *
+ * Validates official HABIT reading answers. The first-completion reward,
+ * practice history, mistake details and streak update are atomic.
  */
 
-import { eq, sql } from "drizzle-orm";
-import { db, schema } from "../../../db/index.js";
+import { eq } from "drizzle-orm";
+import { getTransactionDb, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
-import { recordLedgerTransaction } from "../../_lib/ledger.js";
-import { evaluateAndRecordStreak } from "../../_lib/streak.js";
+import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
+import { evaluateAndRecordStreakInTransaction } from "../../_lib/streak.js";
 import { REWARDS_CONFIG } from "../../_lib/rewardsConfig.js";
 import habitReadingQuizzes from "../../../src/data/habit-reading-quizzes.json" with { type: "json" };
 import {
@@ -42,7 +43,10 @@ export default async function handler(req, res) {
     const questions = officialQuiz.questions;
     const submittedAnswers = Array.isArray(body.answers) ? body.answers : [];
     if (submittedAnswers.length !== questions.length) {
-      return sendValidationError(res, `Semua ${questions.length} soal wajib dijawab sebelum hasil disimpan.`);
+      return sendValidationError(
+        res,
+        "Semua " + questions.length + " soal wajib dijawab sebelum hasil disimpan."
+      );
     }
 
     const answerMap = new Map();
@@ -85,49 +89,58 @@ export default async function handler(req, res) {
     }
 
     const total = questions.length;
-    const articleTitle = String(officialQuiz.passageTitle || officialQuiz.title || articleId).slice(0, 150);
+    const articleTitle = String(
+      officialQuiz.passageTitle || officialQuiz.title || articleId
+    ).slice(0, 150);
     const now = new Date();
     const accuracy = Math.round((score / total) * 100);
+    const activityId = "act_" + user.id + "_rq_" + Date.now() + "_" +
+      Math.random().toString(36).slice(2, 8);
+    const reward = REWARDS_CONFIG.reading_quiz_first_complete;
 
-    // 1. Reward: 1x first complete per article
-    const rewardConfig = REWARDS_CONFIG.reading_quiz_first_complete || { xp: 35, coins: 15 };
-    const eventId = `reading_quiz:${articleId}:first_complete`;
-    const tx = await recordLedgerTransaction({
-      userId: user.id,
-      eventId,
-      source: "reading_quiz_complete",
-      xpEarned: rewardConfig.xp,
-      coinsEarned: rewardConfig.coins
-    });
+    const result = await getTransactionDb().transaction(async (tx) => {
+      await tx
+        .select({ userId: schema.profiles.userId })
+        .from(schema.profiles)
+        .where(eq(schema.profiles.userId, user.id))
+        .for("update")
+        .limit(1);
 
-    // 2. Insert activity log
-    const activityId = `act_${user.id}_rq_${Date.now()}`;
-    await db.insert(schema.activityLog).values({
-      id: activityId,
-      userId: user.id,
-      activityType: "reading_quiz",
-      title: `Kuis Bacaan: ${articleTitle}`,
-      score,
-      totalQuestions: total,
-      accuracyPercent: accuracy,
-      durationSeconds,
-      xpEarned: tx.alreadyProcessed ? 0 : tx.xpEarned,
-      coinsEarned: tx.alreadyProcessed ? 0 : tx.coinsEarned,
-      createdAt: now
-    });
-
-    // 3. Insert attempt details (90 days retention for practice history)
-    if (wrongItems.length > 0) {
-      await db.insert(schema.attemptDetails).values({
-        activityId,
+      const ledger = await recordLedgerTransactionInTransaction(tx, {
         userId: user.id,
-        wrongItems,
-        questionsBreakdown: body.questionsBreakdown || [],
+        eventId: "reading_quiz:" + articleId + ":first_complete",
+        source: "reading_quiz_complete",
+        xpEarned: reward.xp,
+        coinsEarned: reward.coins
+      });
+
+      await tx.insert(schema.activityLog).values({
+        id: activityId,
+        userId: user.id,
+        activityType: "reading_quiz",
+        title: "Kuis Bacaan: " + articleTitle,
+        score,
+        totalQuestions: total,
+        accuracyPercent: accuracy,
+        durationSeconds,
+        xpEarned: ledger.alreadyProcessed ? 0 : ledger.xpEarned,
+        coinsEarned: ledger.alreadyProcessed ? 0 : ledger.coinsEarned,
         createdAt: now
       });
-    }
 
-    const streakRes = await evaluateAndRecordStreak(user.id);
+      if (wrongItems.length > 0) {
+        await tx.insert(schema.attemptDetails).values({
+          activityId,
+          userId: user.id,
+          wrongItems,
+          questionsBreakdown,
+          createdAt: now
+        });
+      }
+
+      const streak = await evaluateAndRecordStreakInTransaction(tx, user.id);
+      return { ledger, streak };
+    });
 
     return sendSuccess(
       res,
@@ -136,10 +149,10 @@ export default async function handler(req, res) {
         score,
         total,
         accuracy,
-        alreadyRewarded: tx.alreadyProcessed,
-        earnedXp: tx.alreadyProcessed ? 0 : tx.xpEarned,
-        earnedCoins: tx.alreadyProcessed ? 0 : tx.coinsEarned,
-        streak: streakRes?.streak
+        alreadyRewarded: result.ledger.alreadyProcessed,
+        earnedXp: result.ledger.alreadyProcessed ? 0 : result.ledger.xpEarned,
+        earnedCoins: result.ledger.alreadyProcessed ? 0 : result.ledger.coinsEarned,
+        streak: result.streak?.streak
       },
       "Kuis bacaan berhasil diselesaikan!"
     );
@@ -147,8 +160,10 @@ export default async function handler(req, res) {
     if (err.statusCode === 401 || err.code === "AUTH_ERROR") {
       return sendAuthError(res, err.message, 401);
     }
+    if (err.statusCode === 400 || err.code === "VALIDATION_ERROR") {
+      return sendValidationError(res, err.message);
+    }
     console.error("[API reading-quiz/record] Error:", err);
-    return sendServerError(res, "Gagal mencatat kuis bacaan: " + err.message);
+    return sendServerError(res, "Gagal mencatat kuis bacaan.");
   }
 }
-
