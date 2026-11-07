@@ -471,3 +471,27 @@ Bila disetujui, Fase 2 dapat dimulai. Bila ada komponen yang tidak disetujui, ub
 - [Vercel Blob private storage](https://vercel.com/docs/vercel-blob/private-storage)
 - [Vercel Private Blob general availability (30 June 2026)](https://vercel.com/changelog/vercel-private-blob-is-now-generally-available)
 
+
+
+---
+
+## Implementation status — 7 November 2026
+
+This section records the implementation state after the Fase 4 atomicity work and the Better Auth handler integration.
+
+### Authentication runtime
+
+- Better Auth self-hosted is now the credential/session authority for newly registered accounts. The application registration handler calls `auth.api.signUpEmail`; the Better Auth login path calls `auth.api.signInEmail`.
+- The React authentication client already uses Better Auth first. The Vercel handlers now implement the same Better Auth flow for API-based fallback and integration tests.
+- The application issues a compatibility bearer token after successful Better Auth authentication because existing feature API clients still send `Authorization: Bearer ...`. Only a hash of this bridge token is stored in `sessions`; the Better Auth HttpOnly cookie remains the primary session.
+- Logout revokes the Better Auth session and any compatibility bridge linked through `auth_session_id`. Legacy-only session tokens are also revoked.
+- Existing Neon accounts without an `auth_accounts` credential row remain supported through the legacy verifier. A valid legacy SHA-256×5,000 hash is upgraded to the current scrypt format after successful login. The account ID and learning data are preserved; no re-registration is required.
+- This is a deliberately compatible transition, not a completed conversion of every legacy Neon account into a Better Auth credential. Legacy credential verification remains in the code until the remaining old accounts have safely transitioned or the owner explicitly chooses a cutover plan.
+- New Better Auth registration creates application profile, statistics and settings in a database transaction, all with zero learning progress/XP/coins/streak. Integration tests verify the Better Auth credential row, auth session, bridge, logout, and the legacy login path.
+
+### Data and deployment status
+
+- Neon Production data has not been reset or migrated as part of this work. The existing Production account and its profile/session rows are intentionally preserved.
+- The Development database is the target for CI integration tests. GitHub Actions requires the direct Neon Development connection through `NEON_DEV_DIRECT_URL`; no database URL is emitted in logs. A random masked Better Auth secret is created per CI job.
+- Vercel Production has its own `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL`. The Production database remains separate from CI Development.
+- The Vercel deployment API reached the Hobby daily deployment limit during the 7 November 2026 implementation session. Newer `main` commits passed CI but could not be built/promoted to Production until the deployment limit resets. The previous READY Production deployment remains available; do not interpret it as containing commits made after that deployment.
