@@ -1,53 +1,117 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import { validateOfficialMatchingPairs } from "../api/_lib/matchingCatalog.js";
+import {
+  createOfficialMatchingRound,
+  validateOfficialMatchingRound
+} from "../api/_lib/matchingCatalog.js";
 
-const vocabulary = JSON.parse(
-  fs.readFileSync(new URL("../src/data/vocabulary.json", import.meta.url), "utf8")
-).entries;
+const TEST_SECRET = "unit-test-matching-secret-with-at-least-32-characters";
+const USER_ID = "matching-test-user";
 
-const validPairs = vocabulary.slice(0, 5).map((entry, index) => ({
-  leftId: `pair_${entry.id}_${index}`,
-  rightId: `pair_${entry.id}_${index}`,
-  wordId: entry.id
-}));
+function completePairs(round) {
+  return round.leftItems.map((left) => ({
+    leftId: left.id,
+    rightId: left.id,
+    wordId: left.wordId
+  }));
+}
 
-test("official Matching catalog accepts five unique, valid vocabulary pairs", () => {
-  assert.deepEqual(validateOfficialMatchingPairs(validPairs), {
-    valid: true,
-    score: 5,
-    total: 5
-  });
+test("server creates five unique official pairs and signs the account-bound round", () => {
+  const round = createOfficialMatchingRound(USER_ID, "all", TEST_SECRET);
+  assert.equal(round.totalPairs, 5);
+  assert.equal(round.leftItems.length, 5);
+  assert.equal(round.rightItems.length, 5);
+  assert.ok(round.roundToken);
+  assert.match(round.roundId, /^round_[a-f0-9]{32}$/);
+
+  const result = validateOfficialMatchingRound({
+    userId: USER_ID,
+    roundId: round.roundId,
+    roundToken: round.roundToken,
+    matchedPairs: completePairs(round)
+  }, TEST_SECRET);
+
+  assert.equal(result.valid, true);
+  assert.equal(result.score, 5);
+  assert.equal(result.total, 5);
+  assert.equal(result.questionsBreakdown.length, 5);
 });
 
-test("Matching rejects IDs outside the official vocabulary catalog", () => {
-  const forged = validPairs.map((pair) => ({ ...pair }));
-  forged[0] = {
-    leftId: "pair_unlisted_0",
-    rightId: "pair_unlisted_0",
-    wordId: "unlisted"
+test("Matching rejects forged pairs that were not included in the signed round", () => {
+  const round = createOfficialMatchingRound(USER_ID, "all", TEST_SECRET);
+  const pairs = completePairs(round);
+  pairs[0] = {
+    leftId: "pair_forged_0",
+    rightId: "pair_forged_0",
+    wordId: "forged"
   };
-  assert.equal(validateOfficialMatchingPairs(forged).valid, false);
+
+  const result = validateOfficialMatchingRound({
+    userId: USER_ID,
+    roundId: round.roundId,
+    roundToken: round.roundToken,
+    matchedPairs: pairs
+  }, TEST_SECRET);
+
+  assert.equal(result.valid, false);
 });
 
-test("Matching rejects duplicate word IDs, mismatched columns, and invalid pair indices", () => {
-  const duplicate = [...validPairs];
+test("Matching rejects modified signatures and rounds belonging to another account", () => {
+  const round = createOfficialMatchingRound(USER_ID, "all", TEST_SECRET);
+  const alteredToken = round.roundToken.slice(0, -1) +
+    (round.roundToken.endsWith("A") ? "B" : "A");
+
+  assert.equal(validateOfficialMatchingRound({
+    userId: USER_ID,
+    roundId: round.roundId,
+    roundToken: alteredToken,
+    matchedPairs: completePairs(round)
+  }, TEST_SECRET).valid, false);
+
+  assert.equal(validateOfficialMatchingRound({
+    userId: "another-account",
+    roundId: round.roundId,
+    roundToken: round.roundToken,
+    matchedPairs: completePairs(round)
+  }, TEST_SECRET).valid, false);
+});
+
+test("Matching rejects missing, duplicated, and mismatched submitted pairs", () => {
+  const round = createOfficialMatchingRound(USER_ID, "all", TEST_SECRET);
+  const pairs = completePairs(round);
+
+  assert.equal(validateOfficialMatchingRound({
+    userId: USER_ID,
+    roundId: round.roundId,
+    roundToken: round.roundToken,
+    matchedPairs: pairs.slice(0, 4)
+  }, TEST_SECRET).valid, false);
+
+  const duplicate = [...pairs];
   duplicate[1] = { ...duplicate[0] };
-  assert.equal(validateOfficialMatchingPairs(duplicate).valid, false);
+  assert.equal(validateOfficialMatchingRound({
+    userId: USER_ID,
+    roundId: round.roundId,
+    roundToken: round.roundToken,
+    matchedPairs: duplicate
+  }, TEST_SECRET).valid, false);
 
-  const mismatched = validPairs.map((pair) => ({ ...pair }));
-  mismatched[0].rightId = "pair_different_0";
-  assert.equal(validateOfficialMatchingPairs(mismatched).valid, false);
-
-  const invalidIndex = validPairs.map((pair) => ({ ...pair }));
-  invalidIndex[0].leftId = `pair_${invalidIndex[0].wordId}_9`;
-  invalidIndex[0].rightId = invalidIndex[0].leftId;
-  assert.equal(validateOfficialMatchingPairs(invalidIndex).valid, false);
+  const mismatch = [...pairs];
+  mismatch[0] = { ...mismatch[0], rightId: "pair_other_0" };
+  assert.equal(validateOfficialMatchingRound({
+    userId: USER_ID,
+    roundId: round.roundId,
+    roundToken: round.roundToken,
+    matchedPairs: mismatch
+  }, TEST_SECRET).valid, false);
 });
 
-test("Matching requires exactly five pairs", () => {
-  assert.equal(validateOfficialMatchingPairs(validPairs.slice(0, 4)).valid, false);
-  assert.equal(validateOfficialMatchingPairs([...validPairs, validPairs[0]]).valid, false);
-  assert.equal(validateOfficialMatchingPairs(null).valid, false);
+test("Matching rejects a token with the wrong signing key", () => {
+  const round = createOfficialMatchingRound(USER_ID, "all", TEST_SECRET);
+  assert.equal(validateOfficialMatchingRound({
+    userId: USER_ID,
+    roundId: round.roundId,
+    roundToken: round.roundToken,
+    matchedPairs: completePairs(round)
+  }, "a-different-key-that-is-also-longer-than-32").valid, false);
 });
