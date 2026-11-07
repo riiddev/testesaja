@@ -417,9 +417,9 @@ STATUS FASE 6.1 — PROGRES DAN PENYIMPANAN (7 NOVEMBER 2026)
 - [x] Laporan bukti terperinci: docs/fase-6-1-progress-proof.md.
 
 Catatan verifikasi:
-- CI otomatis yang terakhir selesai sebelum rangkaian final 6.1 berjalan pada commit 21ff46c; commit tambahan sesudahnya harus memiliki hasil test:all sukses sebelum 6.1 ditutup.
+- GitHub Actions run 42363642736 pada commit kode `73966a4487168693d19a2768e72ee014ea6c09fb` berstatus SUCCESS untuk `npm run test:all`; profile data 8/8, Fase 5 backend 8/8, Fase 6 backend 11/11, security 12/12, multi-device 8/8, widget 5/5, Better Auth 1/1, dan SPA smoke lulus.
 - Tes ini memakai Neon Development; Neon Production dan Google Sheets tidak disentuh.
 - Uji UI manual registrasi gagal/berhasil, reload, logout-login, dua browser/perangkat, dan pesan kegagalan jaringan masih harus dilakukan oleh pengguna.
-- Deployment Production harus cocok dengan SHA terbaru sebelum perubahan dianggap aktif pada domain; deployment dari commit lama tidak dianggap sebagai verifikasi.
+- Deployment Production terakhir yang terlihat berstatus READY pada SHA `ec9c67c53509922a4145392c55e1c978a47412c9`, bukan kode akhir Fase 6.1 (`73966a4`). Karena itu perubahan kode akhir belum dinyatakan aktif pada domain. Deployment Production harus cocok dengan SHA terbaru sebelum perubahan dianggap aktif.
 - Dampak kuota: satu SELECT tambahan ringan ke user_stats saat membaca profil; tidak ada tabel, migration, cron, atau layanan berbayar baru.
 - Fase 6.2 belum dimulai. Menunggu laporan/keputusan pengguna setelah 6.1.
