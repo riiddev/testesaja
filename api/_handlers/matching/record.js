@@ -50,6 +50,8 @@ export default async function handler(req, res) {
     const dayStart = new Date(Date.parse(wibDate + "T00:00:00+07:00"));
     const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
     const eventId = "matching:" + user.id + ":" + sessionId;
+    const rewardConfig = REWARDS_CONFIG.matching_round_complete;
+    const capXp = Math.max(0, Number(rewardConfig.dailyCapXp) || 100);
 
     const result = await withTransaction(async (tx) => {
       // Serialize matching sessions per account so simultaneous sessions
@@ -78,11 +80,9 @@ export default async function handler(req, res) {
           xpEarned: 0,
           coinsEarned: 0
         });
-        return { ledger, activityId: null, score, total, accuracy, dailyCapXp: 0, streak: null };
+        return { ledger, activityId: null, score, total, accuracy, dailyCapXp: capXp, streak: null };
       }
 
-      const rewardConfig = REWARDS_CONFIG.matching_round_complete;
-      const capXp = Math.max(0, Number(rewardConfig.dailyCapXp) || 100);
       const spentRows = await tx
         .select({ spentXp: sum(schema.transactions.xpAmount) })
         .from(schema.transactions)
