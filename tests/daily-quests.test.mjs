@@ -96,3 +96,18 @@ test("the shared activity recorder declares all quest sources including offline-
     story_episode: "story"
   });
 });
+
+
+test("sidebar alert renders an accessible exclamation using the danger token, including collapsed mode", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [component, styles] = await Promise.all([
+    readFile(new URL("../src/components/layout/AppSidebar.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles/workspace.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(component, /aria-label="Ada misi yang belum selesai"/);
+  assert.match(component, /title="Ada misi yang belum selesai"/);
+  assert.match(component, /<span\s+className="sidebar-unread-alert"[\s\S]*?>\s*!\s*<\/span>/);
+  assert.match(styles, /\.sidebar-unread-alert\s*\{[\s\S]*?background-color:\s*var\(--color-danger\)/);
+  assert.match(styles, /\.app-sidebar\.is-collapsed \.sidebar-unread-alert\s*\{[\s\S]*?display:\s*inline-flex[\s\S]*?position:\s*absolute/);
+});

@@ -6,10 +6,7 @@ import { db, schema } from "../db/index.js";
 import { QUEST_POOL } from "../src/features/missions/missionsEngine.js";
 import { calculateDailyQuestProgress } from "../api/_lib/dailyQuestProgress.js";
 
-const dateStr = "2026-11-06";
-const dayStart = new Date(Date.parse(`${dateStr}T00:00:00+07:00`));
-const sameDay = new Date(Date.parse(`${dateStr}T12:00:00+07:00`));
-const previousDay = new Date(dayStart.getTime() - 1000);
+const dateForCase = (index) => `2026-11-${String(6 + index).padStart(2, "0")}`;
 const runId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 const userA = { id: `test_quest_a_${runId}`, email: `test_quest_a_${runId}@example.com` };
 const userB = { id: `test_quest_b_${runId}`, email: `test_quest_b_${runId}@example.com` };
@@ -102,9 +99,14 @@ test("Fase 6.2 — every daily mission reads only its server activity source, ac
     const item = cases[index];
     await t.test(item.name, async () => {
       const suffix = `${runId}_${index}`;
+      const dateStr = dateForCase(index);
+      const dayStart = new Date(Date.parse(`${dateStr}T00:00:00+07:00`));
+      const sameDay = new Date(Date.parse(`${dateStr}T12:00:00+07:00`));
+      const previousDay = new Date(dayStart.getTime() - 1000);
 
-      // Exactly one valid activity for user A on the requested WIB date.
-      // The previous-day event and user B event are decoys and must not count.
+      // Each mission source has an isolated WIB date so that reading_quiz and
+      // reading_complete fixtures cannot count one another. The previous-day
+      // event and user B event are decoys and must not count.
       if (item.table === "progress") {
         await insertProgressEvent(userA.id, `today_${suffix}`, item.type, sameDay);
         await insertProgressEvent(userA.id, `yesterday_${suffix}`, item.type, previousDay);

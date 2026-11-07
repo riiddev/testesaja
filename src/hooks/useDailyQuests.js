@@ -194,14 +194,8 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
         throw new Error(res?.error || res?.message || "Server belum mengonfirmasi klaim hadiah.");
       }
 
+      // The event refreshes every mounted mission consumer, including this hook.
       notifyDailyQuestsChanged();
-      try {
-        await refreshServerSnapshot();
-      } catch (refreshError) {
-        console.warn("[DailyQuests] Hadiah telah dikonfirmasi, tetapi snapshot misi belum dapat diperbarui:", refreshError.message);
-        setServerSnapshotKey(null);
-        setLoadError("Hadiah berhasil diklaim. Status misi sedang menunggu konfirmasi server.");
-      }
 
       if (onRewardClaimed) {
         onRewardClaimed({

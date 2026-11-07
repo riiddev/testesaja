@@ -54,6 +54,10 @@ export async function recordLearningActivity({
   };
 
   try {
+    if (!Object.prototype.hasOwnProperty.call(QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE, activityType)) {
+      throw new Error(`Tipe aktivitas '${activityType}' tidak dikenal.`);
+    }
+
     let response;
 
     switch (activityType) {
