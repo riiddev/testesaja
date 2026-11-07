@@ -13,6 +13,8 @@
  */
 
 import test from "node:test";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import "dotenv/config";
 import { eq, inArray } from "drizzle-orm";
@@ -20,21 +22,22 @@ import { db, schema } from "../db/index.js";
 import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
 
 // Handler imports
-import settingsGetHandler from "../api/settings/get.js";
-import settingsUpdateHandler from "../api/settings/update.js";
-import avatarUploadHandler from "../api/avatar/upload.js";
-import avatarGetHandler from "../api/avatar/get.js";
-import avatarDeleteHandler from "../api/avatar/delete.js";
-import titlesGetHandler from "../api/titles/get.js";
-import titlesUnlockHandler from "../api/titles/unlock.js";
-import grammarGetHandler from "../api/grammar/get.js";
-import grammarSaveHandler from "../api/grammar/save.js";
-import storyGetHandler from "../api/story/get.js";
-import storyCompleteHandler from "../api/story/complete.js";
-import matchingRecordHandler from "../api/matching/record.js";
-import readingQuizRecordHandler from "../api/reading-quiz/record.js";
-import activityHistoryHandler from "../api/activity/history.js";
-import activitySummaryHandler from "../api/activity/summary.js";
+import settingsGetHandler from "../api/_handlers/settings/get.js";
+import settingsUpdateHandler from "../api/_handlers/settings/update.js";
+import avatarUploadHandler from "../api/_handlers/avatar/upload.js";
+import avatarGetHandler from "../api/_handlers/avatar/get.js";
+import avatarDeleteHandler from "../api/_handlers/avatar/delete.js";
+import titlesGetHandler from "../api/_handlers/titles/get.js";
+import titlesUnlockHandler from "../api/_handlers/titles/unlock.js";
+import grammarGetHandler from "../api/_handlers/grammar/get.js";
+import grammarSaveHandler from "../api/_handlers/grammar/save.js";
+import storyGetHandler from "../api/_handlers/story/get.js";
+import storyCompleteHandler from "../api/_handlers/story/complete.js";
+import matchingRecordHandler from "../api/_handlers/matching/record.js";
+import readingQuizRecordHandler from "../api/_handlers/reading-quiz/record.js";
+import rewardGrantHandler from "../api/_handlers/reward/grant.js";
+import activityHistoryHandler from "../api/_handlers/activity/history.js";
+import activitySummaryHandler from "../api/_handlers/activity/summary.js";
 
 function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {
   const req = {
@@ -195,98 +198,349 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(mockDel.getData().success, true);
   });
 
-  await t.test("3. Titles API: unlock title and retrieve unlocked titles", async () => {
-    const mockUnlock = createMockReqRes({
+  await t.test("3. Titles API: reject forged IDs and unlock only a qualified official title", async () => {
+    const mockForge = createMockReqRes({
       method: "POST",
       token,
       url: "/api/titles/unlock",
       body: { titleId: "novice_scholar" }
     });
+    await titlesUnlockHandler(mockForge.req, mockForge.res);
+    assert.equal(mockForge.getStatus(), 400);
+    assert.match(mockForge.getData().error, /tidak terdaftar/i);
+
+    const mockUnqualified = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "word_explorer" }
+    });
+    await titlesUnlockHandler(mockUnqualified.req, mockUnqualified.res);
+    assert.equal(mockUnqualified.getStatus(), 400);
+    assert.match(mockUnqualified.getData().error, /belum memenuhi syarat/i);
+
+    // Simulate the server's accumulated statistic reaching the official threshold.
+    await db.update(schema.userStats)
+      .set({ wordsStarted: 50 })
+      .where(eq(schema.userStats.userId, testUserId));
+
+    const mockUnlock = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "word_explorer" }
+    });
     await titlesUnlockHandler(mockUnlock.req, mockUnlock.res);
     assert.equal(mockUnlock.getStatus(), 200);
-    const unlockRes = mockUnlock.getData();
-    assert.equal(unlockRes.success, true);
-    assert.equal(unlockRes.data.titleId, "novice_scholar");
+    assert.equal(mockUnlock.getData().data.titleId, "word_explorer");
+
+    const contextBefore = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "context_scholar" }
+    });
+    await titlesUnlockHandler(contextBefore.req, contextBefore.res);
+    assert.equal(contextBefore.getStatus(), 400);
+
+    await db.insert(schema.activityLog).values({
+      id: `act_${testUserId}_context_100`,
+      userId: testUserId,
+      activityType: "matching",
+      title: "Verified context matching practice",
+      totalQuestions: 100
+    });
+
+    const contextQualified = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/titles/unlock",
+      body: { titleId: "context_scholar" }
+    });
+    await titlesUnlockHandler(contextQualified.req, contextQualified.res);
+    assert.equal(contextQualified.getStatus(), 200);
+    assert.equal(contextQualified.getData().data.titleId, "context_scholar");
 
     // GET titles
     const mockGetTitles = createMockReqRes({ method: "GET", token, url: "/api/titles/get" });
     await titlesGetHandler(mockGetTitles.req, mockGetTitles.res);
     assert.equal(mockGetTitles.getStatus(), 200);
     const titlesData = mockGetTitles.getData().data;
-    assert.ok(titlesData.titles.includes("novice_scholar"));
+    assert.ok(titlesData.titles.includes("word_explorer"));
+    assert.ok(!titlesData.titles.includes("novice_scholar"));
   });
 
-  await t.test("4. Grammar API: save progress and retrieve progress map", async () => {
+  await t.test("4. Grammar API: verify official answers and grant one server-side completion reward", async () => {
+    const grammarData = JSON.parse(
+      fs.readFileSync(new URL("../src/data/grammar/present-simple.json", import.meta.url), "utf8")
+    );
+    const officialQuestions = grammarData.finalQuiz;
+    const wrongAnswers = officialQuestions.map((question) => ({
+      questionId: question.id,
+      selectedIndex: (question.correctIndex + 1) % question.options.length
+    }));
+
+    const mockForged = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/grammar/save",
+      body: {
+        topicId: "present-simple",
+        answers: wrongAnswers,
+        score: officialQuestions.length,
+        quizScore: 100,
+        total: officialQuestions.length,
+        practiceDone: true
+      }
+    });
+    await grammarSaveHandler(mockForged.req, mockForged.res);
+    assert.equal(mockForged.getStatus(), 200);
+    assert.equal(mockForged.getData().data.score, 0);
+    assert.equal(mockForged.getData().data.scorePct, 0);
+    assert.equal(mockForged.getData().data.status, "in_progress");
+    assert.equal(mockForged.getData().data.xpEarned, 0);
+    const failedQuizActivity = await db.select().from(schema.activityLog)
+      .where(eq(schema.activityLog.userId, testUserId));
+    assert.ok(
+      failedQuizActivity.some((activity) => activity.activityType === "grammar" && activity.accuracyPercent === 0),
+      "A fully submitted quiz must be recorded even when it does not reach mastery"
+    );
+
+    const correctAnswers = officialQuestions.map((question) => ({
+      questionId: question.id,
+      selectedIndex: question.correctIndex
+    }));
     const mockSaveGrammar = createMockReqRes({
       method: "POST",
       token,
       url: "/api/grammar/save",
       body: {
-        topicId: "simple_present",
-        score: 5,
-        total: 5,
-        practiceDone: true
+        topicId: "present-simple",
+        answers: correctAnswers,
+        // These browser-supplied figures must not determine the server result.
+        score: 0,
+        quizScore: 0,
+        total: 1,
+        practiceDone: false
       }
     });
     await grammarSaveHandler(mockSaveGrammar.req, mockSaveGrammar.res);
     assert.equal(mockSaveGrammar.getStatus(), 200);
     assert.equal(mockSaveGrammar.getData().success, true);
+    assert.equal(mockSaveGrammar.getData().data.score, officialQuestions.length);
+    assert.equal(mockSaveGrammar.getData().data.scorePct, 100);
+    assert.equal(mockSaveGrammar.getData().data.status, "completed");
+    assert.ok(mockSaveGrammar.getData().data.xpEarned > 0);
+
+    // The compatibility reward endpoint uses the same ledger event ID, so it
+    // cannot mint a second payout after /grammar/save has already granted it.
+    const duplicateReward = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reward/grant",
+      body: { source: "grammar_quiz", refId: "present-simple", eventId: "forged-second-payment" }
+    });
+    await rewardGrantHandler(duplicateReward.req, duplicateReward.res);
+    assert.equal(duplicateReward.getStatus(), 200);
+    assert.equal(duplicateReward.getData().data.alreadyRewarded, true);
+    assert.equal(duplicateReward.getData().data.earnedXp, 0);
+
+    const mockRetake = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/grammar/save",
+      body: { topicId: "present-simple", answers: wrongAnswers }
+    });
+    await grammarSaveHandler(mockRetake.req, mockRetake.res);
+    assert.equal(mockRetake.getData().data.status, "completed");
+    assert.equal(mockRetake.getData().data.xpEarned, 0);
 
     const mockGetGrammar = createMockReqRes({ method: "GET", token, url: "/api/grammar/get" });
     await grammarGetHandler(mockGetGrammar.req, mockGetGrammar.res);
     assert.equal(mockGetGrammar.getStatus(), 200);
     const grammarMap = mockGetGrammar.getData().data.progress;
-    assert.ok(grammarMap["simple_present"]);
-    assert.equal(grammarMap["simple_present"].score, 5);
+    assert.ok(grammarMap["present-simple"]);
+    assert.equal(grammarMap["present-simple"].score, officialQuestions.length);
   });
+  await t.test("5. Story API: enforce official stories and sequential episode completion", async () => {
+    const mockUnknownStory = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/story/complete",
+      body: { storyId: "story_market_adventure", episodeId: 1 }
+    });
+    await storyCompleteHandler(mockUnknownStory.req, mockUnknownStory.res);
+    assert.equal(mockUnknownStory.getStatus(), 400);
 
-  await t.test("5. Story API: record completed episode", async () => {
+    const mockSkipEpisode = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/story/complete",
+      body: { storyId: "story-01", episodeId: 2 }
+    });
+    await storyCompleteHandler(mockSkipEpisode.req, mockSkipEpisode.res);
+    assert.equal(mockSkipEpisode.getStatus(), 400);
+    assert.match(mockSkipEpisode.getData().error, /berurutan/i);
+
     const mockStory = createMockReqRes({
       method: "POST",
       token,
       url: "/api/story/complete",
-      body: { storyId: "story_market_adventure", episodeId: 1, totalEpisodes: 3 }
+      body: { storyId: "story-01", episodeId: 1, totalEpisodes: 999 }
     });
     await storyCompleteHandler(mockStory.req, mockStory.res);
     assert.equal(mockStory.getStatus(), 200);
     assert.equal(mockStory.getData().success, true);
+    assert.equal(mockStory.getData().data.isStoryCompleted, false);
+
+    const mockRepeat = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/story/complete",
+      body: { storyId: "story-01", episodeId: 1 }
+    });
+    await storyCompleteHandler(mockRepeat.req, mockRepeat.res);
+    assert.equal(mockRepeat.getStatus(), 200);
+    assert.equal(mockRepeat.getData().data.earnedXp, 0);
+    assert.equal(mockRepeat.getData().data.alreadyCompleted, true);
 
     const mockGetStory = createMockReqRes({ method: "GET", token, url: "/api/story/get" });
     await storyGetHandler(mockGetStory.req, mockGetStory.res);
     assert.equal(mockGetStory.getStatus(), 200);
     const storyData = mockGetStory.getData().data;
-    assert.ok(storyData.allStories["story_market_adventure"]);
+    assert.ok(storyData.allStories["story-01"]);
+    assert.deepEqual(storyData.allStories["story-01"].completedEpisodes, [1]);
   });
-
   await t.test("6. Matching & Reading Quiz: record sessions with mistake tracking", async () => {
     // 6a. Matching Round
-    const mockMatch = createMockReqRes({
+    const matchingVocabulary = JSON.parse(
+      fs.readFileSync(new URL("../src/data/vocabulary.json", import.meta.url), "utf8")
+    ).entries;
+    const officialPairs = matchingVocabulary.slice(0, 5).map((entry, index) => ({
+      leftId: `pair_${entry.id}_${index}`,
+      rightId: `pair_${entry.id}_${index}`,
+      wordId: entry.id
+    }));
+
+    const invalidMatch = createMockReqRes({
       method: "POST",
       token,
       url: "/api/matching/record",
-      body: { score: 100, total: 5, durationSeconds: 25, sessionId: `match_${Date.now()}` }
+      body: {
+        sessionId: `round_${Date.now()}_invalid`,
+        durationSeconds: 25,
+        matchedPairs: [{ leftId: "pair_forged_0", rightId: "pair_forged_0", wordId: "forged" }]
+      }
     });
-    await matchingRecordHandler(mockMatch.req, mockMatch.res);
-    assert.equal(mockMatch.getStatus(), 200);
-    assert.equal(mockMatch.getData().success, true);
+    await matchingRecordHandler(invalidMatch.req, invalidMatch.res);
+    assert.equal(invalidMatch.getStatus(), 400);
+
+    const matchingRewards = [];
+    for (let round = 0; round < 5; round++) {
+      const mockMatch = createMockReqRes({
+        method: "POST",
+        token,
+        url: "/api/matching/record",
+        body: {
+          sessionId: `round_${Date.now()}_${round}`,
+          durationSeconds: 25,
+          matchedPairs: officialPairs
+        }
+      });
+      await matchingRecordHandler(mockMatch.req, mockMatch.res);
+      assert.equal(mockMatch.getStatus(), 200);
+      assert.equal(mockMatch.getData().success, true);
+      matchingRewards.push(mockMatch.getData().data.earnedXp);
+    }
+
+    assert.deepEqual(matchingRewards.slice(0, 4), [25, 25, 25, 25]);
+    assert.equal(matchingRewards[4], 0, "Matching rewards must stop at the 100 EXP daily cap.");
 
     // 6b. Reading Quiz with mistake breakdown
+    const readingQuizData = JSON.parse(
+      fs.readFileSync(new URL("../src/data/habit-reading-quizzes.json", import.meta.url), "utf8")
+    );
+    const articleId = "the-tiny-tenants-inside-you";
+    const officialQuestions = readingQuizData.quizzes[articleId].questions;
+    const answers = officialQuestions.map((question, index) => ({
+      questionId: question.id,
+      selectedIndex: index === 0
+        ? (question.correctIndex + 1) % question.options.length
+        : question.correctIndex
+    }));
+
     const mockQuiz = createMockReqRes({
       method: "POST",
       token,
       url: "/api/reading-quiz/record",
       body: {
-        articleId: "passage_science_space",
-        articleTitle: "Exploring the Solar System",
-        score: 4,
-        total: 5,
+        articleId,
         durationSeconds: 45,
-        wrongItems: ["gravity", "orbit"]
+        answers,
+        // Forged scores and wrongItems must be ignored by the API.
+        score: officialQuestions.length,
+        total: officialQuestions.length,
+        wrongItems: ["forged-item"]
       }
     });
     await readingQuizRecordHandler(mockQuiz.req, mockQuiz.res);
     assert.equal(mockQuiz.getStatus(), 200);
     assert.equal(mockQuiz.getData().success, true);
+    assert.equal(mockQuiz.getData().data.score, officialQuestions.length - 1);
+  });
+
+  await t.test("7. HABIT Reading completion: records one server-backed activity and reward", async () => {
+    const forgedArticle = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reward/grant",
+      body: {
+        source: "reading_complete",
+        refId: "invented-article-id",
+        meta: { articleTitle: "Fake reading article" }
+      }
+    });
+    await rewardGrantHandler(forgedArticle.req, forgedArticle.res);
+    assert.equal(forgedArticle.getStatus(), 400);
+    assert.match(forgedArticle.getData().error, /perpustakaan HABIT resmi/i);
+
+    const articleId = "the-tiny-tenants-inside-you";
+    const mockComplete = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reward/grant",
+      body: {
+        source: "reading_complete",
+        refId: articleId,
+        eventId: "client-event-is-not-authoritative",
+        meta: { articleTitle: "The Tiny Tenants Inside You", durationSeconds: 180 }
+      }
+    });
+
+    await rewardGrantHandler(mockComplete.req, mockComplete.res);
+    assert.equal(mockComplete.getStatus(), 200);
+    assert.equal(mockComplete.getData().success, true);
+    assert.equal(mockComplete.getData().data.earnedXp, 40);
+    assert.equal(mockComplete.getData().data.earnedCoins, 20);
+
+    const readingActivities = await db.select().from(schema.activityLog)
+      .where(eq(schema.activityLog.userId, testUserId));
+    assert.ok(readingActivities.some((activity) =>
+      activity.activityType === "reading_complete" &&
+      activity.title.includes("The Tiny Tenants Inside You") &&
+      activity.accuracyPercent === 100
+    ));
+
+    const duplicateComplete = createMockReqRes({
+      method: "POST",
+      token,
+      url: "/api/reward/grant",
+      body: { source: "reading_complete", refId: articleId }
+    });
+    await rewardGrantHandler(duplicateComplete.req, duplicateComplete.res);
+    assert.equal(duplicateComplete.getStatus(), 200);
+    assert.equal(duplicateComplete.getData().data.alreadyRewarded, true);
+    assert.equal(duplicateComplete.getData().data.earnedXp, 0);
   });
 
   await t.test("7. Activity History (Butir F): cursor pagination, filter, and 7-day summary", async () => {
@@ -305,7 +559,7 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     // Check wrongItems persisted in attemptDetails
     const quizItem = historyData.items.find((i) => i.activityType === "reading_quiz");
     assert.ok(quizItem, "Reading quiz item must be recorded in history");
-    assert.deepEqual(quizItem.wrongItems, ["gravity", "orbit"]);
+    assert.deepEqual(quizItem.wrongItems, ["q1"]);
 
     // 7b. Filter by module
     const mockFiltered = createMockReqRes({

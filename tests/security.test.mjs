@@ -22,14 +22,14 @@ import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
 import { recordLedgerTransaction } from "../api/_lib/ledger.js";
 
 // Handler imports
-import loginHandler from "../api/auth/login.js";
-import profileUpdateHandler from "../api/profile/update.js";
-import profileGetHandler from "../api/profile/get.js";
-import questsGetHandler from "../api/quests/get.js";
-import questsUpdateHandler from "../api/quests/update.js";
-import questsClaimHandler from "../api/quests/claim.js";
-import buyItemHandler from "../api/economy/buy.js";
-import progressGetHandler from "../api/progress/get.js";
+import loginHandler from "../api/_handlers/auth/login.js";
+import profileUpdateHandler from "../api/_handlers/profile/update.js";
+import profileGetHandler from "../api/_handlers/profile/get.js";
+import questsGetHandler from "../api/_handlers/quests/get.js";
+import questsUpdateHandler from "../api/_handlers/quests/update.js";
+import questsClaimHandler from "../api/_handlers/quests/claim.js";
+import buyItemHandler from "../api/_handlers/economy/buy.js";
+import progressGetHandler from "../api/_handlers/progress/get.js";
 
 function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {
   const req = {
@@ -196,16 +196,34 @@ test("FASE 8 SECURITY SUITE — Zero-Trust, Anti-Tamper & Isolation Checks", asy
     await questsGetHandler(mockGetQ.req, mockGetQ.res);
     const targetQuest = mockGetQ.getData().data.quests[0];
 
-    // Complete the quest
+    // A forged browser progress value must not complete the mission.
     const mockUpdateQ = createMockReqRes({
       method: "POST",
       token: tokenA,
       url: "/api/quests/update",
-      body: { questId: targetQuest.questId, progress: targetQuest.target }
+      body: { questId: targetQuest.questId, progress: 999999, target: 1 }
     });
     await questsUpdateHandler(mockUpdateQ.req, mockUpdateQ.res);
+    assert.equal(mockUpdateQ.getStatus(), 200);
+    const refreshedQuest = mockUpdateQ.getData().data.quests.find(
+      (quest) => quest.questId === targetQuest.questId
+    );
+    assert.equal(refreshedQuest.progress, 0, "Client-supplied progress must be ignored");
 
-    // First claim: Success
+    // Simulate legitimate server-written learning events for this mission.
+    const verifiedActivityType = targetQuest.questId === "quest_vocab_new_5"
+      ? "vocab_learn"
+      : "srs_review";
+    for (let index = 0; index < targetQuest.target; index++) {
+      await db.insert(schema.progressEvents).values({
+        userId: userAId,
+        eventId: `quest_test_${targetQuest.questId}_${index}_${Date.now()}`,
+        activityType: verifiedActivityType,
+        payload: { wordId: `verified-word-${index}` }
+      });
+    }
+
+    // First claim: Success only after the server records enough activities.
     const mockClaim1 = createMockReqRes({
       method: "POST",
       url: "/api/quests/claim",

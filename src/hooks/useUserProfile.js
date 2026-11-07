@@ -417,7 +417,17 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     }
 
     try {
-      const res = await api.grantReward({ eventId, source, refId, meta });
+      const isReadingQuiz = source === "article_quiz" || source === "reading_quiz_complete";
+      const res = isReadingQuiz
+        ? await api.recordReadingQuiz({
+            articleId: refId,
+            articleTitle: String(meta.articleTitle || refId).slice(0, 150),
+            score: Math.max(0, Number(meta.correctCount) || 0),
+            total: Math.max(1, Number(meta.totalQuestions) || 1),
+            durationSeconds: Math.max(0, Number(meta.durationSeconds) || 0),
+            answers: Array.isArray(meta.answers) ? meta.answers : []
+          })
+        : await api.grantReward({ eventId, source, refId, meta });
       if (res.success && res.data) {
         const { totalXp, totalCoins, earnedXp, earnedCoins, streak } = res.data;
         setProfile((prev) => {

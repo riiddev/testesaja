@@ -8,6 +8,27 @@
       "when": 1793853363535,
       "tag": "0000_init_neon_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793969157347,
+      "tag": "0001_auth_rate_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793984939021,
+      "tag": "0002_better_auth_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793985497753,
+      "tag": "0003_auth_session_bridge",
+      "breakpoints": true
     }
   ]
 }

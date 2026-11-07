@@ -1,215 +1,339 @@
-# SINAUENGLISHV2 Neon Migration Plan
+==========================================================
+SINAUENGLISHV2 — RENCANA KERJA TERPADU
+Migrasi Neon + Stabilisasi + Ekspansi Fitur
+==========================================================
 
-Repository: riiddev/testesaja
-Branch: feat/neon-migration
-Base: main at e88c70517ff97ddcc1e1bd03cd9cf1965943e393 (6 Nov 2026)
+CARA MEMBACA DOKUMEN INI
+- BAGIAN A: konteks dan aturan yang SELALU berlaku.
+- BAGIAN B: stabilisasi (Fase 0–11). Wajib selesai lebih dulu.
+- GERBANG STABILITAS: pintu antara Bagian B dan C.
+- BAGIAN C: ekspansi fitur (Fase 12–20). Hanya setelah saya menulis "GERBANG DIBUKA".
 
-This is the operational checklist consolidating the user requirements. The uploaded roadmap addendum is included in the full plan below in summarized form; the source addendum remains available in the conversation attachment. This is not a byte-for-byte transcript of the long main chat message. The conversation remains authoritative if there is any wording ambiguity.
+PETA FASE
+| Fase | Isi                                             | Bagian |
+|------|-------------------------------------------------|--------|
+| 0    | Verifikasi temuan audit (tanpa ubah kode)       | B |
+| 1    | Arsitektur dan keputusan (tunggu persetujuan)   | B |
+| 2    | Setup Neon + Vercel                             | B |
+| 3    | Autentikasi dan API inti                        | B |
+| 4    | Ekonomi dan hadiah di server                    | B |
+| 5    | Sinkronisasi offline-first                      | B |
+| 6    | Pindahkan semua fitur + perbaikan (6.1–6.10)    | B |
+| 7    | Reset data legacy Google Sheets (tanpa migrasi) | B |
+| 8    | Audit dan perbaikan bug HABIT Reading           | B |
+| 9    | Tampilan rapi di semua ukuran layar             | B |
+| 10   | Pengujian dan CI                                | B |
+| 11   | Persiapan produksi                              | B |
+| —    | GERBANG STABILITAS                              | — |
+| 12   | Email + lupa password                           | C |
+| 13   | Hapus akun + Privacy Policy                     | C |
+| 14   | Kotak Surat                                     | C |
+| 15   | In-app dan push notification                    | C |
+| 16   | Smart analysis + saran dan prioritas belajar    | C |
+| 17   | Laporan mingguan                                | C |
+| 18   | Footer (GitHub dan Instagram)                   | C |
+| 19   | Widget layar utama Android                      | C |
+| 20   | Tambah 5.000 kosakata                           | C |
 
-IMPORTANT: old documents on main claimed Fases 1-10 were completed, but those claims are not accepted as evidence. Their statuses are reset here. Only tasks marked complete below have current-session evidence.
+==========================================================
+BAGIAN A — KONTEKS DAN ATURAN (SELALU BERLAKU)
+==========================================================
 
-## Decisions
-- Neon PostgreSQL Free is the target database; Vercel Functions in api/ are the backend; React 19 + Vite stays.
-- Cost target Rp0.
-- Branch feat/neon-migration only. main must not be edited.
-- User approved option A: use latest main as baseline; do not merge old branches.
-- Keep Google Sheets, Apps Script and Drive until all data/features are migrated and verified.
-- Preview only until release checklist and user approval.
-- One phase, one commit, report, then wait for approval.
+A1. PERAN
+Kamu senior full-stack engineer + product designer (security-minded).
 
-## Mandatory rules
-1. Never ask the user to paste DATABASE_URL, tokens, passwords, private keys or other secrets into chat. Use environment variables. Keep .env and .env.* in .gitignore except .env.example. Give exact Neon/Vercel dashboard steps; the user enters secret values there.
-2. Server is source of truth. Client cannot set XP, coins, streak, prices, rewards, inventory ownership or user_id. Resolve user_id from authenticated session on server and scope every personal query by it.
-3. UI must never claim saved/success/reward/purchase/claim before server confirmation. Show failures; console.warn alone is insufficient.
-4. Preserve existing working features and design during backend migration. UI redesign exceptions: History, Profile/Achievements, content total badges/mission alert, requested responsive/notif work, Android widget.
-5. New accounts start at zero for progress, achievements, XP, coins, streak, inventory, titles and learning records. No fake default values.
-6. Verify current official Neon Free limits in Fase 1. User-provided reference: 1 GB storage, autoscale to 2 CU, 100 compute hours, 10 branches. Keep data compact, no large blobs, no unnecessary database pings. Verify whether development branch deltas count against project storage.
-7. Be honest about failures and unverified claims. Do not invent tests, screenshots, database rows or success.
-8. Do not ask for Google credentials. User will count Google Sheets accounts/rows. CSV exports are supplied locally under a gitignored folder for Fase 7; never commit, log or send emails/password hashes to chat.
-9. No production changes, production cutover, Apps Script shutdown, PR merge or main changes without explicit user approval.
-10. Read this document again at the start of each phase. Check boxes only with evidence.
+A2. REPO DAN CABANG
+- Repo kerja: https://github.com/riiddev/testesaja.git (React 19 + Vite; backend lama Google Apps Script + Google Sheets + Drive).
+- Buat cabang `feat/neon-migration` dari main TERBARU. JANGAN menyentuh main. Pull Request hanya setelah checklist lulus; saya yang memutuskan merge.
+- Jika masih ada cabang fitur lain yang belum di-merge (mis. feat/economy-story-reading), laporkan dan tanyakan urutannya dulu agar tidak konflik.
+- Bagian C dikerjakan di cabang terpisah dari main terbaru setelah Gerbang dibuka (mis. feat/v2-expansion).
 
-## Stability gate
-No new features until all engines work without bugs: authentication, sync, progress, SRS, EXP/coins, quests, achievements, history, profile/avatar, inventory, matching, grammar, HABIT reading, stories and basic notifications.
+A3. KEPUTUSAN YANG SUDAH DIAMBIL
+- Database utama: Neon PostgreSQL paket Free. Backend/API: Vercel Functions (folder api/). Frontend React + Vite dipertahankan. Biaya target Rp0.
+- Google Sheets/Apps Script tetap dipertahankan sementara sampai fitur aplikasi benar-benar beralih ke API Neon. Namun, data akun dan progres lama di Google Sheets TIDAK dimigrasikan: data legacy akan dikosongkan pada Fase 7 setelah aplikasi berhenti menulis ke Sheets. Neon tidak ikut dikosongkan.
+- Semua perubahan diuji di preview (Vercel preview + branch Neon). Production tidak disentuh sebelum checklist lulus.
+- Mode gelap tetap dihapus. Angka total konten (jumlah kata/topik/artikel) tidak ditampilkan di UI.
 
-### Part 1: Stabilization Fases 0-9
-Also includes two bug-fix efforts:
-- 1A HABIT audit: text rendering/format, completion marker, quiz button, one-time reward, reading progress, mobile, empty/broken articles, data consistency. List bug + file:line + reproduction; fix proven bugs; automated render/non-empty test every article and manual samples.
-- 1B responsive audit at 320, 360, 390, 412, 600, 768, 1024, 1280, 1536, 1920 px, portrait and landscape, safe areas, OS text zoom 200%, tap targets >=44x44, no horizontal scroll/clipping/overlap. Playwright screenshots at key widths, before/after.
+A4. ATURAN UMUM
+Keamanan dan data
+- Jangan pernah meminta saya menempel secret (DATABASE_URL, token, password) ke chat. Pakai environment variable; sediakan .env.example tanpa nilai asli; pastikan .env* ada di .gitignore. Beri langkah persis kapan dan di mana saya mengisi variabel di dashboard Vercel/Neon.
+- Server adalah sumber kebenaran. Client TIDAK boleh menentukan XP, koin, streak, harga, atau hadiah. user_id selalu dari sesi di server, bukan dari body request. Semua query dibatasi user_id.
+- Jangan menyatakan sesuatu "berhasil" di UI sebelum server mengonfirmasi. Kegagalan harus terlihat di UI.
+- Akun baru mulai dari NOL untuk semua progres, pencapaian, XP, koin, streak, inventory, dan data lain (tanpa angka default palsu).
+- Cache lokal diberi namespace user_id dan dibersihkan saat logout atau ganti akun.
 
-### Gate requirements for Part 2
-All required simultaneously:
-- npm run test:all fully passes and CI is green.
-- Fase 8 security and two-device tests pass.
-- No known P0/P1 bugs; all items A-I pass.
-- User has used app for at least 7 real days with no data loss.
-- User explicitly writes GERBANG DIBUKA.
-Without that exact phrase, do not start any Part 2 phase or its small tasks.
+Akses dan reset data lama
+- Jangan meminta kredensial Google dan jangan mengekspor akun/progres lama untuk migrasi. Keputusan pengguna: seluruh akun dan data lama di Google Sheets dibuang; pengguna baru akan mendaftar dari nol. Tidak ada CSV akun, hash password, atau progres yang dipindahkan ke Neon.
+- Reset dilakukan hanya setelah aplikasi preview sudah berhenti memakai/menulis ke Google Sheets agar reset tidak membuat login/registrasi aplikasi aktif rusak atau data lama terbentuk kembali. Pada Fase 7, kosongkan baris data (bukan header/struktur tab) pada tab legacy yang digunakan, minimal `Accounts`, `LearningStates`, dan `Collections`; audit tab lain sebelum reset agar tidak ada data pengguna tertinggal. Neon tidak boleh dihapus atau di-reset sebagai bagian dari keputusan ini.
 
-## Fase 0: verify audit findings, no source changes
-Classify every finding TERBUKTI / TIDAK TERBUKTI / SEBAGIAN with file:line and safe reproduction.
+Kuota gratis
+- Neon Free: VERIFIKASI angka terbaru dari halaman harga/dokumentasi Neon (penyimpanan per proyek, jam komputasi, jumlah branch, auto-suspend, riwayat pemulihan, apakah data di branch development ikut dihitung dalam batas penyimpanan). Jangan memakai angka dari ingatan; catat hasilnya di docs/kuota.md. Rancang data ringkas, hindari file/gambar besar di database, dan jangan membuat ping terus-menerus agar database tidak tidur.
+- Setiap fase: tulis estimasi dampaknya ke kuota Neon dan Vercel.
 
-1. src/services/api.js handleDevFallback: empty API URL, network failure, timeout, 401/403/302, unknown action, session error; distinguish development mock from production.
-2. backend/Code.gs handleUpdateProfile accepting client XP/streak/coins.
-3. backend/Code.gs handleClaimQuestReward trusting client rewards, no completion/double-claim check, creates completed rows.
-4. useDailyQuests.updateProgress call sites across Workspace/Missions and learning modules.
-5. useProgressSync memory queue vs IndexedDB/outbox, ACK and close-tab flush.
-6. Avatar version field/avatarUpdatedAt and stale cache invalidation; distinguish GAS vs Neon; service worker.
-7. Inventory localStorage vs api.getInventory.
-8. totalReviewsDone/totalReviews/hasStudyActivity mismatch and possible profile reset.
-9. daily quest storage key user namespace.
-10. ContextMatching callback wiring.
-11. SRS implementations, first interval and test expectations.
-12. daily goal getSettings/updateSettings persistence.
-13. notification timer vs service worker push/periodicsync; browser-closed claims.
-14. GAS doPost global waitLock on reads and writes.
-15. optimistic profile/economy/avatar actions and false success after failures.
-16. duplicate useUserProfile hook in ProfileView.
-17. zero fallback using || versus ??.
-18. guest data cleared before/after server confirms registration.
-19. npm test/test:all/CI coverage of content, logic, API/integration, E2E and GitHub Actions.
+Perubahan UI
+- Larangan mengubah desain hanya untuk bagian di luar: tampilan Riwayat, profil dan achievement, penghapusan angka total konten, tanda seru merah pada Misi, perbaikan responsif, dan fitur baru di Bagian C.
+- Bebas dari ciri AI slop; copy dalam bahasa Indonesia yang jelas.
 
-Also inspect duplicate setupDatabase() in backend/Code.gs and backend/setup.gs, jsonResponse status handling, other security/data integrity issues, plus Google Sheets account/row count. User will provide the counts; do not ask for credentials or invent numbers.
+Kejujuran
+- Jika ada langkah gagal atau tidak mungkin, laporkan jujur dan beri alternatif. Jangan mengarang hasil. Tandai yang tidak bisa kamu uji (butuh perangkat fisik atau akses yang tidak kamu punya).
 
-Additional B-F:
-- B Progress/XP/coins: inspect actual API route map, VITE_API_URL, production mock behavior, demo accounts, hidden errors and database evidence. .env.example does not prove Vercel env presence. If user must check, ask only whether envs are present in Vercel, never values. Later add honest UI sync states: Saved, Pending sync (N), Failed/retrying. After migration prove progress_events/transactions/profiles rows and before/after balances.
-- C Quests: map vocabulary, SRS, grammar, quizzes, matching, reading, stories to quest types. Fase 0 audit only. Implementation in Fases 4-6; server counts real recorded activities; test each type after reload and across devices.
-- D Achievements: audit counters/targets/unlock/rewards server vs client. Final state server-derived and idempotent.
-- E Avatar cross-device: inspect cache/version, SW cache, avatar_updated_at and two browsers. Don't claim physical testing without evidence.
-- F History: Fase 0 audits existing history only; future implementation in Fases 4-6 with permanent activity_log, attempt_details JSONB 90 days, cursor paging, filters, 7-day summary, question-level answer/explanation detail, wrong-answer review and Kanci empty state.
-Write Fase 0 results to docs/audit-verification.md. Do not change app source.
+A5. DEFINISI SELESAI (berlaku untuk setiap butir)
+1. Ada tes otomatis untuk logika yang dibuat/diubah.
+2. Lolos 4 kondisi: pertama kali, setelah reload, setelah logout-login, dan di perangkat lain.
+3. Ada bukti nyata: baris di database, screenshot, atau hasil tes (bukan sekadar "build berhasil").
+4. Rapi di 360, 768, dan 1280 px.
+5. test:all tetap hijau (tanpa regresi).
 
-## Fase 1: architecture and decisions (approval required)
-Read latest official Neon, Neon Auth/Better Auth and Vercel Functions docs. Write docs/architecture-neon.md covering:
-1. Neon Auth/Managed Better Auth vs Better Auth OSS on Vercel+Neon vs safe/free alternative; current free limits, pros/cons/recommendation. Do not write custom password hashing if proven solution exists.
-2. Driver/ORM e.g. @neondatabase/serverless + Drizzle and versioned schema migration.
-3. Avatar: small PostgreSQL bytea (128-256 px WebP, strict size) vs Vercel Blob free tier; storage calculation.
-4. Compact schema: profiles, progress, progress_events, grammar_progress, daily_quests, quest_claims, story_progress, reading_quiz_attempts, matching_attempts, settings, catalog, inventory, titles, transactions, avatars, with user_stats/activity_log/attempt_details as needed. UNIQUE(user_id,event_id), CHECK coins>=0, server reward config, WIB dates.
-5. Sheets data/password plan: migrate old hashes + verify/rehash at first login or re-signup if accounts are test-only, based on user's counts.
-6. Cold-start UI skeleton, clear timeout/messages, limited retries and fewer initial requests.
-7. Independent pg_dump backup plan due to limited Neon Free recovery.
-Wait for approval before Fase 2.
+A6. CARA KERJA
+- Kerjakan SATU fase pada satu waktu. Di fase besar (Fase 6), berhenti dan lapor di tiap sub-bagian. Setelah selesai, laporkan dan TUNGGU persetujuan saya sebelum fase berikutnya.
+- Langkah pertama: simpan seluruh dokumen ini apa adanya ke docs/neon-migration-plan.md, baca ulang di awal tiap fase, dan beri tanda centang pada butir yang selesai.
+- Format laporan tiap fase: (a) status, (b) file dibuat/diubah, (c) bukti verifikasi, (d) keputusan yang butuh saya, (e) dampak kuota, (f) yang belum bisa diverifikasi.
 
-## Fase 2: Neon + Vercel setup
-Give exact user steps to create Neon project in Singapore, development branch, pooled connection, and Vercel Preview envs. User enters secrets. Prepare schema migration, catalog seed, .env.example, and safe connection check script that never prints secrets.
+==========================================================
+BAGIAN B — STABILISASI (FASE 0–11)
+==========================================================
 
-## Fase 3: Auth and core API
-1. Login/register/logout/getMe/session in Vercel Functions per Fase 1, with login rate limit.
-2. Remove production fake fallback. Mock only with VITE_ENABLE_MOCK=true in development plus visible MODE SIMULASI banner; production ignores it.
-3. Structured SUCCESS/AUTH_ERROR/NETWORK_ERROR/VALIDATION_ERROR and correct HTTP status. Network errors never count as success.
-4. Unauthenticated users go to signup; all features require account.
+FASE 0 — VERIFIKASI TEMUAN AUDIT (TANPA MENGUBAH KODE)
+Temuan di bawah berasal dari audit AI lain (tinjauan statis, belum terbukti). Untuk TIAP temuan tentukan TERBUKTI / TIDAK TERBUKTI / SEBAGIAN, sertakan file:baris dan cara reproduksi. Tulis di docs/audit-verification.md.
+1. src/services/api.js: handleDevFallback() mengembalikan success:true (login, register, getMe, syncProgress, update profil, klaim hadiah) saat URL backend kosong, koneksi gagal, timeout, 401/403/302, action tak dikenal, atau error sesi.
+2. backend/Code.gs handleUpdateProfile(): menerima payload.xp, streak, coins dari client dan langsung menyimpannya.
+3. backend/Code.gs handleClaimQuestReward(): memakai payload.xpReward/coinsReward dari client, tidak memvalidasi misi/progres/klaim ganda, bisa membuat baris quest baru berstatus selesai.
+4. useDailyQuests.updateProgress() tidak dipanggil dari aktivitas belajar (MissionsView/WorkspacePage), progres misi tidak bertambah.
+5. useProgressSync.js: antrean pending hanya di memori (pendingQueueRef), flush di beforeunload tidak dijamin, tidak ada antrean permanen.
+6. Avatar: backend menyimpan avatar_updated_at tapi handleGetProfile() tidak mengembalikan avatarUpdatedAt; frontend menghapus cache avatar saat nilainya tidak ada sehingga foto hilang setelah reload.
+7. useUserProfile.js: inventory dimuat dari localStorage ("sinau_local_inventory"), api.getInventory() tidak dipanggil.
+8. useUserProfile.js: nama properti totalReviewsDone vs totalReviews tidak cocok sehingga hasStudyActivity salah dan xp/streak/coins cloud bisa tertimpa 0.
+9. useDailyQuests.js: key penyimpanan lokal tanpa user ID (sinau_daily_quests_<tanggal>), data antarakun bisa tercampur.
+10. ContextMatching tidak menerima callback onRecordMatchComplete dari WorkspacePage, penyelesaian sesi tidak tercatat.
+11. useSpacedRepetition.js: interval pertama [1,3,8,16,30] terlewat (keberhasilan pertama = 3 hari); src/lib/mastery.ts berbeda; tes mengharapkan 3 hari. Ada dua implementasi SRS.
+12. SettingsPanel: target belajar harian hanya state lokal (useState(10)), tidak disimpan ke getSettings/updateSettings.
+13. Notifikasi: hanya setInterval 20 detik saat aplikasi berjalan, tanpa push/periodicsync di service worker, padahal Settings menjanjikan notifikasi saat browser ditutup.
+14. backend/Code.gs doPost(): lock.waitLock(...) global untuk semua request, termasuk baca.
+15. useUserProfile.js: pembelian/equip/klaim/avatar/profil diterapkan lokal dulu; saat server gagal hanya console.warn, dan beli item tetap return success:true.
+16. ProfileView membuat instance useUserProfile kedua padahal sudah menerima dari WorkspacePage.
+17. ProfileView memakai profile.xp || 50, coins || 50, streak || 1 (nol dianggap kosong).
+18. useAuth.jsx: data lokal tamu dihapus sebelum registrasi dikonfirmasi server.
+19. npm test hanya menjalankan test:content dan react-srs.test; logic dan e2e tidak masuk; tidak ada GitHub Actions.
 
-## Fase 4: server economy/rewards
-1. updateProfile whitelist only safe fields (display_name, unlocked active_title, avatar); no XP/coins/streak writes.
-2. XP/coins only via server transaction ledger with unique event_id, valid source and daily caps; reward amounts on server.
-3. Server validates quest belongs to user and WIB day, target reached from recorded activity and not previously claimed.
-4. Purchase validates balance, server catalog price, level, ownership in one DB transaction. Failure changes neither balance nor inventory.
-5. Streak server-calculated by WIB date.
-6. A HABIT: reading reward once/article/account, deterministic reading:<article_id>:first_complete plus UNIQUE(user_id,event_id). Rereading allowed with clear no-more-reward UI. Quiz reward also once/article. Test repeated read/quiz and single transaction row.
+Selain itu, selidiki dan laporkan:
+- AKAR MASALAH laporan saya "progres/EXP/koin tidak tercatat": apakah build production memakai fallback simulasi, apakah VITE_API_URL benar, apakah request gagal diam-diam, apakah akun yang dipakai akun demo. Jika perlu saya cek pengaturan Vercel, minta dan beri langkahnya.
+- Penyebab progres misi dan achievement tidak bertambah (temuan 4, 8).
+- Penyebab foto profil tidak berganti di perangkat lain: cache avatar tanpa versi, penghapusan cache yang salah, service worker (public/sw.js) yang meng-cache endpoint/gambar avatar, respons profil tanpa avatar_updated_at.
+- Audit apa yang sudah ada terkait riwayat latihan.
+- Temuan lain, termasuk dua definisi setupDatabase() (backend/Code.gs dan backend/setup.gs) dan jsonResponse yang tidak benar-benar mengatur status.
+- Tanyakan saya jumlah akun/baris di Google Sheets (saya yang menghitung).
 
-## Fase 5: offline-first sync
-1. Persistent IndexedDB outbox per user, unique event_id.
-2. Batch to server; remove only after ACK. beforeunload not guaranteed; keepalive/sendBeacon best-effort only.
-3. Server idempotent for same event and two devices.
-4. Cache keys namespaced by user_id and cleared on logout/account switch. Browser is cache/outbox, not source of balances or inventory.
+FASE 1 — ARSITEKTUR DAN KEPUTUSAN (TUNGGU PERSETUJUAN SAYA)
+Baca dokumentasi TERBARU Neon, Neon Auth/Better Auth, dan Vercel Functions, lalu tulis docs/architecture-neon.md berisi:
+1. Opsi login: (a) Neon Auth / Managed Better Auth, (b) library Better Auth open-source di Vercel Functions terhubung ke Neon, (c) opsi lain yang aman dan gratis. Beri kelebihan/kekurangan, batas gratis terbaru, dan rekomendasi. Jangan menulis sistem hashing sendiri bila ada solusi teruji.
+2. Driver/ORM (mis. @neondatabase/serverless + Drizzle), alasan, dan cara migrasi skema berversi.
+3. Penyimpanan foto profil: bandingkan (a) bytea kecil di Postgres (128–256 px WebP, batas ukuran ketat) dan (b) Vercel Blob free tier, dengan perhitungan ukuran terhadap batas penyimpanan Neon. Rekomendasikan satu.
+4. Skema PostgreSQL (ringkas): profiles, progress (status SRS per kata), progress_events (ledger aktivitas, event_id unik), grammar_progress, daily_quests + quest_claims, story_progress, reading_quiz_attempts, matching_attempts, settings, catalog, inventory, titles, transactions (ledger XP/koin), avatars, activity_log, user_stats. Wajib: UNIQUE (user_id, event_id) untuk idempotensi, CHECK coins >= 0, konfigurasi hadiah di sisi server, tanggal pakai zona Asia/Jakarta (WIB) untuk misi, streak, batas harian, dan episode cerita.
+5. Strategi migrasi data dari Google Sheets, termasuk password: migrasi hash lama lalu hash ulang saat login pertama, ATAU minta daftar ulang jika akun yang ada hanya akun uji. Sesuaikan dengan jumlah akun dari saya.
+6. Penanganan cold start Neon (skeleton UI, timeout dan pesan jelas, retry terbatas, kurangi request awal).
+7. Backup mandiri (pg_dump manual/terjadwal), karena pemulihan Neon Free terbatas.
+8. Strategi branch Neon dan pembersihan data uji (hasil verifikasi kuota di A4).
 
-## Fase 6: migrate every engine and stabilize
-Migrate profile/avatar/inventory/titles/settings/daily goal/quests/matching/grammar/reading quiz/stories/SRS/stats.
-- Central src/services/learningActivity.js connects completed learning activity to missions; only emit after activity succeeds; server calculates mission progress.
-- Connect matching recording.
-- Unify profile hook instance.
-- Use ?? for meaningful zero values.
-- Keep guest data until server confirms registration.
-- Unify SRS; ask user desired interval (proposal first correct=1 day) then update tests.
-- No browser-closed notification promises until push works.
+FASE 2 — SETUP NEON + VERCEL
+1. Beri langkah persis bagi saya: membuat proyek Neon (region Singapore), membuat branch development, mengambil connection string pooled, mengisi Environment Variables Vercel untuk Preview. Saya yang mengerjakan di dashboard; jangan meminta nilainya.
+2. Siapkan migrasi skema, seed katalog item, .env.example, dan skrip cek koneksi yang tidak mencetak secret.
 
-F History UI:
-- Sidebar History page; group by day; filters vocabulary, SRS, grammar, article quiz, matching, stories and date range.
-- Each row type/title/score/accuracy/duration/EXP/coins.
-- Details per quiz/matching: questions, user's answers, correct answers, explanation; SRS words/outcomes; reading question categories; story episode.
-- Latih lagi yang salah adds errors to Review SRS.
-- 7-day summary + accuracy/category.
-- activity_log permanent and attempt_details JSONB retained 90 days; cursor paging; Kanci empty state.
+FASE 3 — AUTENTIKASI DAN API INTI
+1. Login, registrasi, logout, getMe, dan sesi di Vercel Functions sesuai keputusan Fase 1. Rate limit percobaan login.
+2. HAPUS fallback palsu dari build production. Mode simulasi hanya aktif bila VITE_ENABLE_MOCK=true pada build development, dengan banner "MODE SIMULASI"; build production mengabaikannya.
+3. Respons API terstruktur: SUCCESS, AUTH_ERROR (minta login ulang), NETWORK_ERROR (tidak pernah dianggap sukses), VALIDATION_ERROR. Perbaiki penanganan status HTTP.
+4. Pengguna belum login diarahkan membuat akun; semua fitur wajib akun.
 
-G Profile/Achievements UI:
-- Original V2 profile: identity card photo/border/title/name/level, XP-to-next-level, personal XP/coins/streak/words mastered per level, achievements, latest activity link to History, account settings.
-- Achievement categories vocabulary/streak/reading/grammar/matching/story/collection; 3 tiers, bars, locked/in-progress/completed/claimable, detail conditions/progress/date/reward, category/status filters; meaningful claim animation and reduced motion.
-- All figures from server; zero stays zero using ??.
+FASE 4 — EKONOMI DAN HADIAH DI SERVER
+1. updateProfile hanya boleh mengubah field yang diizinkan (display_name, active_title yang sudah terbuka, avatar). XP, koin, streak TIDAK bisa diubah lewat endpoint profil.
+2. XP dan koin hanya berubah lewat operasi server yang tercatat di transactions: event_id unik, sumber aktivitas valid, batas harian per sumber, nilai hadiah dari konfigurasi server.
+3. Klaim misi: server memvalidasi misi milik pengguna hari itu, target tercapai berdasarkan aktivitas tercatat, dan belum diklaim.
+4. Pembelian item: cek saldo, harga katalog, syarat level, kepemilikan, dalam satu transaksi database. Gagal berarti saldo dan inventory tidak berubah.
+5. Streak dihitung server berdasarkan hari aktif WIB.
 
-H Remove content totals and mission badge:
-- Remove content totals in dashboard/sidebar (2971/2947/19/156 and similar data-derived values); search only rendered UI strings and .length used as displayed totals. Keep exercise counters/timers and personal stats.
-- Mission badge number 3 becomes danger-token red circle !, only if at least one today mission unfinished, hidden if complete or not loaded; aria-label "Ada misi yang belum selesai".
-- Server/WIB computes unfinished status.
+FASE 5 — SINKRONISASI OFFLINE-FIRST
+1. Ganti antrean memori dengan antrean permanen (outbox) di IndexedDB per pengguna. Tiap aktivitas punya event_id unik.
+2. Kirim batch; hapus dari antrean HANYA setelah server mengonfirmasi. Jangan mengandalkan beforeunload (fetch keepalive/sendBeacon hanya tambahan).
+3. Server idempoten dan menangani dua perangkat dengan ledger aktivitas.
+4. Indikator status simpan yang jujur di UI: "Tersimpan", "Menunggu sinkronisasi (N)", "Gagal, akan dicoba lagi". Tidak boleh tampil "tersimpan" sebelum server mengonfirmasi.
 
-I Cross-device:
-Every A-H must pass first-time, reload, logout/login and another device. Cache namespaced by user ID and cleared on logout.
+FASE 6 — PINDAHKAN SEMUA FITUR KE API BARU + PERBAIKAN
+Cakupan: profil, avatar, inventory, titles, settings (termasuk target harian), misi, matching, grammar, reading quiz, cerita/petualangan, SRS, statistik. Kerjakan per sub-bagian; berhenti dan lapor setelah tiap sub-bagian; semuanya memenuhi A5.
 
-## Fase 7: data migration
-Read-only Sheets export to Neon development. Dry run first, per-table counts before/after, random per-account sample. Never delete Sheets. Skip only if Fase0 says test-only and user agrees. User CSV stays in gitignored local folder; never print/commit emails or password hashes. No real migration until user approves counts and password approach.
+6.1 Progres dan penyimpanan
+- Buktikan dengan data nyata: setelah menyelesaikan latihan, tunjukkan baris di progress_events, transactions, profiles beserta nilai EXP/koin sebelum dan sesudah. Skrip verifikasi tidak mencetak secret.
+- Perbaiki temuan 8, 15, 17, 18 (cloud menang atas default; || diganti ??; jangan hapus data tamu sebelum registrasi sukses; kegagalan server terlihat di UI).
 
-## Fase 8: test and CI
-1. npm run test:all includes content, logic, API integration and E2E; free GitHub Actions on each branch push.
-2. Security: wrong login denied, backend-down creates no demo account, fake XP/coins denied, incomplete quest claim denied, double claim once, insufficient-balance purchase denied, cross-user isolation, expired token asks login again, duplicate event_id no double reward.
-3. Two profiles/devices: same data; offline close/reopen; outbox sent once.
-4. Each feature first-time/reload/logout-login/other device at 360/768/1280 px.
-5. New account zero in every feature.
+6.2 Misi harian
+- Satu layanan pencatatan aktivitas (src/services/learningActivity.js) dengan pemetaan aktivitas → jenis misi (kosakata baru, review SRS, grammar, kuis, matching, bacaan, cerita). Tiap modul memanggilnya saat aktivitas selesai. Progres misi dihitung di server dari aktivitas tercatat. Klaim hanya bila target tercapai dan belum diklaim.
+- Matching tersambung ke pencatatan (temuan 10).
+- TANDA SERU MERAH pada menu Misi (sidebar dan bottom navigation bila ada), menggantikan badge angka "3": lingkaran merah dengan "!". Tampil HANYA bila ada minimal satu misi hari ini yang belum selesai; hilang total bila semua selesai atau data belum termuat. Pakai token warna bahaya dari design system. aria-label "Ada misi yang belum selesai"; jangan hanya mengandalkan warna. Status dihitung dari data misi di server (WIB), bukan cache lokal.
+- Uji tiap jenis misi satu per satu (UI dan database, setelah reload dan di perangkat lain).
 
-## Fase 9: production (only with approval)
-Separate production DB/branch and cutover plan; keep Apps Script until verified. Independent backup, operational README, Neon/Vercel quota guide. PR to main only after checklist passes; user alone decides merge.
+6.3 Achievement
+- Progres dihitung di server dari aktivitas nyata (tabel user_stats diperbarui dalam transaksi yang sama dengan aktivitasnya). Client hanya menampilkan.
+- Tiap achievement punya penghitung, target bertingkat, tanggal terbuka, dan status klaim hadiah (koin/EXP/title) yang idempoten.
 
-## Fase 10: Android home-screen widget
-After stability; Android device; native home-screen widget, not website component; Rp0; sideload APK, no Play Store unless requested.
-- J1 verify current official Chrome Android/Android/Capacitor/App Widgets docs; PWA alone may not create native widgets; do not invent.
-- J2 free stage: manifest shortcuts "Misi Hari Ini", "Review (SRS)", "Riwayat" deep links; Badging API only if supported; badge when unfinished and clear when done; user tests on phone/screenshot.
-- J3 native only after separate plan approval: Capacitor android folder, bundled build vs URL, update impact, Android Studio, APK build, USB debugging, install. Kotlin App Widget 2x2/4x2, mission count x/3, streak, continue button, !. Read-only /api/widget/summary; scoped widget token not full session; EncryptedSharedPreferences; revoke on logout/server. WorkManager refresh limits verified in docs, manual refresh, cached timestamp offline, no real-time promises. Keystore/signing secrets never commit; .gitignore and docs/android-widget.md.
-- Mockup approval first: small = mission x/3 + streak; medium = missions + Lanjut belajar; large = mission/streak/today priorities if Fase16 exists. Map container/Box, Row, Stack to Jetpack Glance Box/Row/Column.
+6.4 HABIT Reading: hadiah sekali
+- Hadiah membaca hanya SEKALI per artikel per akun, dijaga di server dengan event_id deterministik (mis. reading:<article_id>:first_complete) + UNIQUE (user_id, event_id). Hadiah kuis artikel hanya untuk percobaan pertama.
+- Membaca ulang boleh; UI menjelaskan bahwa artikel sudah selesai dan tidak memberi hadiah lagi, tanpa pesan error.
+- Uji: baca artikel yang sama dua kali; EXP/koin bertambah sekali dan hanya ada satu baris transactions.
 
-## Fase 11: refinement (after Fase10 or earlier only if user asks)
-a. Mobile audit at 320/360/390/768 with before/after screenshots.
-b. Root-cause reminders not appearing; no browser-closed promise before real push.
-c. Heads-up only where Android/Chrome allow; settings test-notification button and guide.
+6.5 Foto profil lintas perangkat
+- Server selalu mengembalikan avatar_updated_at (versi); client membandingkan versi saat memuat profil dan mengambil ulang bila berbeda; endpoint avatar network-first atau URL berversi (?v=<updated_at>); cache bernamespace user_id; jangan hapus cache hanya karena field kosong; periksa service worker.
+- Uji dengan dua perangkat/profil browser: ganti foto di satu, muat ulang di yang lain, foto berubah tanpa logout. Uji juga hapus foto.
 
-## Part 2: phases only after GERBANG DIBUKA
+6.6 SRS, pengaturan, dan lainnya
+- Satukan SRS jadi SATU implementasi dan TANYAKAN saya perilaku interval yang diinginkan (usulan: keberhasilan pertama = 1 hari), lalu perbarui tes.
+- Target belajar harian tersimpan di server (temuan 12).
+- Satukan instance hook profil (temuan 16). Inventory dan titles dimuat dari server (temuan 7). Cache misi bernamespace user_id (temuan 9).
+- Teks UI jangan menjanjikan notifikasi saat browser ditutup bila belum ada push yang benar-benar berjalan (sampai Fase 15).
 
-### Fase 12 Email/password reset
-Research latest official free transactional email constraints (arbitrary recipients, verified domain/sender, quotas, spam risks); compare Apps Script MailApp via protected endpoint and alternatives; recommend and wait. Forgot endpoint always returns same neutral response regardless of email existence. Random one-time token stored hashed, TTL 30-60 minutes, email/IP rate limits. Reset validates token, changes password, revokes all sessions and widget/push tokens, sends password-change notification. Align Better Auth; test expired/reused/other-account/unknown email/rate limits. Email verification only with user's agreement.
+6.7 Riwayat latihan (BARU)
+- Halaman "Riwayat" (menu sendiri di sidebar): daftar per hari dengan filter jenis (kosakata, SRS, grammar, kuis artikel, matching, cerita) dan rentang tanggal. Tiap item: jenis, judul (mis. "Grammar: Present Perfect, kuis"), skor/akurasi, durasi, EXP dan koin.
+- Detail sesi: kuis/matching menampilkan tiap soal, jawabanmu, jawaban benar, pembahasan; kosakata/SRS daftar kata dan hasil; bacaan hasil per kategori soal; cerita episode yang diselesaikan. Tombol "Latih lagi yang salah" memasukkan item salah ke antrean SRS.
+- Ringkasan: aktivitas 7 hari terakhir (grafik sederhana) dan akurasi per kategori.
+- Data: activity_log (ringkasan per sesi, permanen) dan attempt_details (JSONB ringkas, disimpan 90 hari lalu dipangkas). Paginasi cursor. State kosong dengan maskot Kanci.
 
-### Fase 13 Delete account + privacy policy
-Delete requires password re-confirmation and clear warning; JSON export offered; propose cancellable 7-day grace period and wait. Delete every user row across profiles/progress/history/transactions/inventory/titles/settings/avatar/sessions/widget tokens/push subscriptions/mailbox. Test no remaining user_id rows. Document backup copy retention/rotation. Indonesian privacy policy only from actual app code: collected data/purpose/storage and Neon/Vercel/email vendors/retention/rights/contact supplied by user/minors/effective date. No copied text or false claims; not legal advice; recommend UU PDP review.
+6.8 Profil dan achievement (desain ulang)
+- Audit profil sekarang, lalu desain ulang sesuai tema V2 (orisinal, bukan salinan referensi). Bagian: kartu identitas (foto, border, title aktif, nama, level), progres EXP menuju level berikutnya, ubin statistik pribadi (EXP, koin, streak, kata dikuasai per level), galeri achievement, aktivitas terbaru (tautan ke Riwayat), pengaturan akun.
+- Achievement dikelompokkan per kategori (kosakata, konsistensi/streak, membaca, grammar, matching, cerita, koleksi), bertingkat (mis. 3 tingkat), progress bar, status terkunci/berjalan/selesai/siap klaim, detail (syarat, progres, tanggal diraih, hadiah), filter kategori dan status, animasi klaim bermakna (hormati reduced motion).
+- Semua angka dari server dengan ?? (nol tetap 0).
 
-### Fase 14 Mailbox
-Header/sidebar unread badge; global release announcements stored once with per-user read table; personal inbox_messages per user. Markdown content/changelog/YYYY-MM-DD.md synced to announcements at deploy. Categories/filter/read-unread/delete/deep link/cursor/Kanci empty state/90-day personal retention. Server-computed cross-device badge.
+6.9 Hapus angka total konten
+- Hapus angka total dari data konten di dashboard dan sidebar: badge jumlah kata (mis. 2.971/2947), jumlah topik grammar, jumlah artikel, dan angka serupa yang di-hardcode atau dihitung dari .length dataset (cari "2947", "2971", "19", "156" hanya pada teks yang dirender di UI).
+- Pertahankan angka fungsional dalam latihan ("soal 3 dari 10", penghitung, timer) dan statistik pribadi (EXP, koin, streak, level). Daftar semua angka yang dihapus di laporan.
 
-### Fase 15 in-app and push
-In-app toast/banner plus mailbox. Web Push VAPID through Vercel Functions; per-device subscriptions and cleanup on failure/logout; polite permission, per-kind preferences, Test Notification. Verify Vercel Hobby cron current limits and timing drift; offer free external scheduler such as GitHub Actions and explain delay/reliability. Avoid waking Neon frequently; few fixed WIB slots, lightweight query and batches; estimate Neon CU hours/Vercel use. Never promise unsupported heads-up; Android/Chrome controls it. At most one concrete reminder/day; respect quiet hours.
+6.10 Cerita/petualangan, grammar, reading quiz, matching
+- Pastikan semuanya memakai API baru, progres tersimpan di server, dan lolos A5.
 
-### Fase 16 Smart analysis
-Deterministic own activity data, no paid AI/third-party tracker: skill accuracy (vocab/grammar/reading General/Specific/Implied/Vocabulary in Context/matching), weak words/topics, SRS forgetting, active days/time, weekly rate, recurring confusions. CEFR only labeled estimate above minimum data; else "Data belum cukup". Analysis charts with explanations. 3-5 ranked priorities with reason/minutes/deep link, daily update integrated with quest generation. Server from activity_log/user_stats, light cached query.
+FASE 7 — RESET DATA LEGACY GOOGLE SHEETS (TANPA MIGRASI)
+Keputusan pengguna: mulai dari nol akun. Tidak ada akun, password/hash, progres, koleksi, atau data pengguna lama yang dipindahkan ke Neon.
+1. Jangan reset Sheets sebelum seluruh alur aplikasi preview sudah beralih ke API Neon dan tidak lagi membaca/menulis akun/progres melalui Apps Script. Ini mencegah login/registrasi rusak atau data lama tercipta kembali.
+2. Inventarisasi semua tab yang berisi data pengguna. Minimal tab yang diketahui: `Accounts`, `LearningStates`, dan `Collections`. Pertahankan tab serta baris header/struktur; hapus hanya baris data. Periksa tab lain agar tidak ada data pengguna yang tertinggal.
+3. Catat jumlah baris sebelum dan sesudah pengosongan tanpa menampilkan email, hash password, atau isi data pribadi. Verifikasi ketiga tab tersebut tidak lagi memiliki baris akun/progres/koleksi.
+4. Cakupan reset hanya Google Sheets lama. JANGAN menghapus, mengosongkan, atau mengubah data di Neon. Akun yang dibuat setelah cutover harus registrasi baru dan seluruh progres/EXP/koin/streak/inventory dimulai dari nol.
+5. Jangan membuat ekspor CSV atau skrip migrasi akun lama. Jangan menghapus proyek Apps Script atau spreadsheet sebelum verifikasi akhir Fase 11; data di Sheets sudah kosong, tetapi artefak legacy dapat dipertahankan sementara untuk audit.
 
-### Fase 17 weekly report
-Weekly WIB report of active days, XP, new/reviewed words, accuracy, strongest/weakest categories, streak, quests/achievements, prior-week comparison, three next priorities. Mailbox plus optional email opt-in using Fase12 service; archive. Batch within Fase15 constraints; no-activity user receives brief message.
+FASE 8 — AUDIT DAN PERBAIKAN BUG HABIT READING
+Audit menyeluruh: render teks dan format, daftar/filter/pencarian, penanda selesai membaca, tombol kuis, hadiah sekali per artikel (6.4), progres bacaan, tampilan mobile, artikel rusak atau kosong, konsistensi data, kuis (soal, kunci jawaban, pembahasan). Daftar semua bug dengan file:baris dan cara reproduksi, lalu perbaiki yang terbukti. Pembuktian: tes otomatis tiap artikel (render tidak error, teks tidak kosong) + uji manual sampel.
 
-### Fase 18 footer
-Landing and settings footer GitHub https://github.com/riiddev (verify) + Instagram username only when user supplies it; until then constant in src/config/social.js, never guess. Open new tab with noopener noreferrer, accessible labels/contrast/responsive; link Privacy Policy.
+FASE 9 — TAMPILAN RAPI DI SEMUA UKURAN LAYAR
+- Audit di 320, 360, 390, 412, 600, 768, 1024, 1280, 1536, 1920 px, portrait dan landscape, safe-area, pembesaran teks sistem hingga 200%, area sentuh minimal 44x44 px, tanpa scroll horizontal, tanpa teks terpotong/tumpang tindih.
+- Tes screenshot otomatis (Playwright) per ukuran utama sebagai regresi. Screenshot sebelum dan sesudah.
 
-### Fase 19 Android widget detailed follow-up
-Follow Fase10 verification, shortcuts/badge, native Capacitor, restricted token and sideload. Mockups first. Small mission x/3 and streak; medium quest list + Lanjut belajar; large mission/streak/priorities if Fase16 exists. Jetpack Glance Box/Row/Column mapping.
+FASE 10 — PENGUJIAN DAN CI
+1. Perintah test:all yang menjalankan content, logic, integrasi API, dan e2e. GitHub Actions gratis menjalankannya pada tiap push ke cabang ini.
+2. Tes keamanan wajib lulus: login salah ditolak; backend mati tidak membuat akun demo; XP/koin palsu ditolak; klaim misi belum selesai ditolak; klaim ganda hanya satu kali; beli tanpa saldo ditolak; akses data akun lain ditolak; token kedaluwarsa meminta login ulang; event_id sama tidak menggandakan hadiah.
+3. Tes dua perangkat (dua profil browser): data sama di keduanya; offline lalu tutup dan buka ulang, antrean terkirim satu kali.
+4. Tes 4 kondisi per fitur dan uji di 360, 768, 1280 px. Akun baru mulai dari nol di semua fitur.
 
-### Fase 20 add 5,000 vocabulary (last)
-Propose lawful sources/licenses for frequency/CEFR; do not copy copyrighted material; existing American Oxford 3000 unchanged; await approval. Fields: stable word_id, word, POS, IPA, Indonesian meaning, example + translation, level. Deduplicate/normalize; generated content marked needs review; uncertain IPA/meaning marked verify. Batch 500; show 30 random sample words, duplicates/problem list; wait approval each batch. Static frontend JSON chunks lazy loaded/indexed; DB only progress; measure bundle/mobile load; old word progress unchanged; test vocabulary/SRS/matching/quiz/missions.
+FASE 11 — PERSIAPAN PRODUKSI
+1. Rencana database production terpisah (branch/proyek) dan cutover, tanpa mematikan Apps Script sampai terverifikasi.
+2. Backup mandiri terjadwal atau panduan manual, README operasional, panduan memantau kuota Neon dan Vercel.
+3. Pull Request ke main hanya setelah semua lulus. Saya yang memutuskan merge.
 
-## Report format
-Each phase: (a) status, (b) exact files changed, (c) evidence including tests/screenshots/database rows only if real, (d) user decisions, (e) unverified items. One commit per phase. Do not trust old completion claims.
+==========================================================
+GERBANG STABILITAS (WAJIB LULUS SEBELUM BAGIAN C)
+==========================================================
+"Engine" = autentikasi, sinkronisasi, progres, SRS, EXP/koin, misi, achievement, riwayat, profil/avatar, inventory, matching, grammar, HABIT reading, cerita, notifikasi dasar.
+Syarat:
+- npm run test:all lulus penuh dan CI hijau.
+- Tes keamanan dan tes dua perangkat (Fase 10) lulus.
+- Nol bug P0/P1 yang diketahui; seluruh sub-bagian Fase 6 lulus A5.
+- Pemakaian nyata oleh saya minimal 7 hari tanpa kehilangan data.
+- Saya menulis "GERBANG DIBUKA" secara eksplisit. Tanpa kalimat itu, JANGAN memulai satu pun fase di Bagian C, termasuk yang kecil. Jika ditemukan bug engine di Bagian C, berhenti dan perbaiki dulu.
 
-## Fase 0 tracking
-- [x] Repo/default branch checked.
-- [x] Main SHA recorded.
-- [x] feat/neon-migration created from exact main SHA.
-- [x] User approved option A; no old branches merged.
-- [x] Static audit and CI logs reviewed.
-- [ ] User provides own Google Sheets account/row count.
-- [ ] User safely checks Vercel Preview variables presence; no values shared.
-- [ ] Actual Preview database transaction/rows verified.
-- [ ] User approves Fase 0 report.
+==========================================================
+BAGIAN C — EKSPANSI (FASE 12–20, SETELAH GERBANG DIBUKA)
+==========================================================
 
-STOP after Fase0. Fase1 requires explicit approval.
+Tiap fase berdiri sendiri: rencana dulu, tunggu persetujuan saya, uji, laporkan.
+
+FASE 12 — EMAIL + LUPA PASSWORD
+1. Verifikasi dari dokumentasi terbaru opsi pengiriman email yang benar-benar Rp0: (a) layanan email transaksional paket gratis (apakah bisa kirim ke alamat sembarang tanpa domain terverifikasi, kuota, syarat pengirim), (b) Apps Script MailApp dari Gmail saya lewat endpoint kecil yang dilindungi secret (kuota harian), (c) opsi lain. Beri kelebihan/kekurangan, risiko spam, rekomendasi. Tunggu keputusan saya.
+2. Alur: halaman "Lupa password" meminta email; server SELALU membalas pesan netral yang sama (tidak membocorkan apakah email terdaftar); kirim link reset berisi token acak sekali pakai, disimpan sebagai hash, kedaluwarsa 30–60 menit; dibatasi per email dan per IP. Halaman buat ulang password memvalidasi token, mengatur password baru, mencabut SEMUA sesi dan token widget/push lama, lalu mengirim email pemberitahuan password diubah. Token dihapus dari URL setelah dibaca dan tidak pernah dicatat di log.
+3. Selaraskan dengan solusi login Fase 1 (mis. reset bawaan Better Auth). Tes: token kedaluwarsa, dipakai dua kali, milik akun lain, email tidak terdaftar, rate limit.
+4. Verifikasi email saat registrasi hanya jika saya setuju.
+
+FASE 13 — HAPUS AKUN + PRIVACY POLICY
+1. Hapus akun: konfirmasi ulang dengan password, peringatan jelas, opsi unduh data saya (JSON) sebelum menghapus, dan opsi masa tenggang 7 hari yang bisa dibatalkan (usulkan, tunggu keputusan saya). Hapus SEMUA data akun di semua tabel (profil, progres, riwayat, transaksi, inventory, titles, pengaturan, foto profil, sesi, token widget, langganan push, pesan kotak surat), diuji dengan skrip yang memastikan tidak ada baris tersisa untuk user_id itu. Dokumentasikan bahwa salinan di backup mandiri tetap ada sampai dirotasi, beserta kebijakan rotasinya.
+2. Privacy policy (halaman publik /privasi, bahasa Indonesia yang jelas, tertaut dari footer landing, pengaturan, dan form registrasi): tulis HANYA berdasarkan praktik data yang benar-benar ada (audit kode): data yang dikumpulkan (email, nama, foto, progres, aktivitas, langganan notifikasi, log), tujuan, penyimpanan dan pihak ketiga (mis. Neon, Vercel, penyedia email, GitHub), lama penyimpanan, hak pengguna (akses, ubah, hapus, unduh), kontak (saya beri emailnya), kebijakan untuk pengguna di bawah umur, tanggal berlaku. Jangan menyalin teks situs lain dan jangan menulis klaim yang tidak benar. Rujukan hukum (mis. UU PDP) harus diverifikasi dari sumber resmi. Tandai sebagai DRAF yang bukan nasihat hukum dan perlu ditinjau pihak yang paham UU PDP.
+3. Kotak persetujuan saat daftar; simpan consent_version dan waktunya.
+
+FASE 14 — KOTAK SURAT
+Satu "Kotak Surat" (ikon di header/sidebar dengan badge belum dibaca) untuk info pembaruan aplikasi dan notifikasi in-app (misi, pencapaian, laporan mingguan, sistem).
+1. Pesan global disimpan SATU kali di tabel announcements dengan status baca per pengguna di tabel terpisah (hemat penyimpanan). Pesan personal di inbox_messages per user_id.
+2. Konten pembaruan ditulis sebagai file markdown di repo (mis. content/changelog/YYYY-MM-DD.md) dan disinkronkan ke announcements saat deploy, tanpa panel admin.
+3. Fitur: kategori dan filter, tandai dibaca/belum, hapus, deep link ke fitur terkait, paginasi, state kosong dengan Kanci, retensi pesan personal 90 hari.
+4. Semua dihitung di server; badge konsisten lintas perangkat.
+
+FASE 15 — IN-APP DAN PUSH NOTIFICATION
+1. In-app: toast/banner dan masuk ke Kotak Surat.
+2. Push: Web Push (VAPID) lewat Vercel Functions; langganan di tabel push_subscriptions (per perangkat; dibersihkan saat gagal atau logout). Izin diminta sopan, bisa diatur per jenis di Pengaturan. Tombol "Uji notifikasi". Perbaiki masalah pengingat misi yang tidak muncul pada jamnya.
+3. PENJADWALAN (batas nyata): Vercel Hobby setahu saya hanya mengizinkan cron sekali per hari dengan waktu yang bisa meleset (verifikasi di dokumentasi terbaru). Usulkan pemicu eksternal gratis (mis. GitHub Actions terjadwal) beserta kelemahannya. JANGAN membangunkan database Neon terlalu sering: pakai beberapa slot jam tetap (mis. pagi, siang, sore, malam WIB), pengguna memilih slot, query ringan, kirim dalam batch agar muat dalam batas durasi fungsi. Hitung perkiraan pemakaian kuota Neon dan Vercel dan tunjukkan ke saya.
+4. Teks UI tidak boleh menjanjikan hal yang tidak berjalan. Notifikasi melayang (heads-up) diatur Android/Chrome; jelaskan batasannya dan sediakan panduan pengaturan.
+5. Isi notifikasi konkret, maksimal 1 pengingat per hari, hormati jam tenang, jangan kirim bila misi hari itu sudah selesai.
+
+FASE 16 — SMART ANALYSIS + SARAN DAN PRIORITAS BELAJAR
+1. Analisis deterministik dari data aktivitas milik pengguna sendiri (tanpa API AI berbayar, tanpa pelacak pihak ketiga): akurasi per keterampilan (kosakata, grammar, kategori soal bacaan General/Specific/Implied/Vocabulary in Context, matching), topik/kata terlemah, laju lupa (SRS), konsistensi (hari aktif, jam belajar), laju belajar per minggu, pola kesalahan berulang. Estimasi level CEFR hanya sebagai estimasi berlabel dengan batas data minimum; bila data kurang tampilkan "Data belum cukup".
+2. Halaman "Analisis" dengan grafik sederhana dan penjelasan "mengapa" tiap temuan.
+3. "Prioritas Belajar": 3–5 saran berperingkat, masing-masing dengan alasan, estimasi menit, dan deep link; diperbarui harian dan terhubung dengan pembuat misi harian. Rumus skor tertulis di docs/rekomendasi.md dan deterministik. Pengguna bisa menunda/menyembunyikan saran.
+4. Dihitung di server dari activity_log/user_stats dengan query ringan, pra-agregasi harian, dan caching.
+
+FASE 17 — LAPORAN MINGGUAN
+1. Dibuat sekali seminggu (WIB) dari analisis Fase 16: hari aktif, EXP, kata baru/diulang, akurasi, kategori terkuat dan terlemah, streak, misi dan achievement, perbandingan dengan minggu lalu, 3 prioritas minggu depan.
+2. Dikirim ke Kotak Surat; email opsional (opt-in, default mati) lewat layanan Fase 12. Arsip laporan (12 minggu).
+3. Penjadwalan mengikuti batas Fase 15 dan dibuat dalam batch kecil. Pengguna tanpa aktivitas mendapat pesan singkat yang menyemangati, bukan laporan kosong.
+
+FASE 18 — FOOTER
+Tulisan kecil di footer landing page dan footer Pengaturan dengan dua tautan: GitHub (https://github.com/riiddev, verifikasi) dan Instagram (username saya beri; sebelum itu simpan sebagai konstanta di src/config/social.js, jangan menebak). Tab baru dengan rel="noopener noreferrer", aria-label jelas, kontras terbaca, responsif. Tautkan Privacy Policy dari footer yang sama.
+
+FASE 19 — WIDGET LAYAR UTAMA ANDROID
+Perangkat saya Android. Yang dimaksud widget di layar utama HP, bukan komponen di dalam website. Target Rp0. Distribusi: APK dipasang langsung (sideload).
+19.1 VERIFIKASI (tanpa ubah kode): baca dokumentasi resmi terbaru (Chrome/Android, Capacitor, Android App Widgets); laporkan jujur apakah PWA di Chrome Android bisa membuat widget layar utama; jangan mengarang dukungan.
+19.2 TAHAP A (gratis, lebih dulu): PWA shortcuts di manifest ("Misi Hari Ini", "Review (SRS)", "Riwayat") dengan deep link; Badging API pada ikon aplikasi saat ada misi belum selesai (verifikasi dukungan dan jelaskan batasnya). Uji di HP Android saya.
+19.3 TAHAP B (rencana dulu, tunggu persetujuan saya):
+- Bungkus web app dengan Capacitor (folder android/); jelaskan cara kerja, konsekuensi pembaruan, apa yang harus saya install (Android Studio), langkah build APK, USB debugging, dan pasang APK.
+- Widget native (Kotlin; Jetpack Glance bila cocok) dengan komposisi container (kartu/Box berlatar dan sudut membulat), row (ikon, teks, angka), dan stack (lapisan: latar + konten, mis. badge tanda seru di atas kartu). Tiga ukuran: kecil (misi x dari 3 dan streak), sedang (daftar misi + tombol "Lanjut belajar"), besar (misi, streak, dan prioritas belajar hari ini bila Fase 16 sudah ada). Jelaskan pemetaan ke Box/Row/Column dan beri mockup dulu untuk persetujuan saya.
+- Data: endpoint ringkas read-only (mis. /api/widget/summary) dengan token khusus widget bercakupan terbatas (bukan token sesi penuh), disimpan di EncryptedSharedPreferences, dicabut saat logout dan bisa dicabut dari server.
+- Penyegaran: WorkManager berkala (batas minimum Android sekitar 15–30 menit) + tombol segarkan manual; offline menampilkan data terakhir beserta waktunya. Jangan menjanjikan real-time.
+- Keystore/kunci penandatanganan TIDAK di-commit; sediakan .gitignore dan panduan membuatnya. Tidak ada secret di kode widget.
+- Uji di HP Android saya (saya yang build dan melapor): login, logout, offline, semua misi selesai (tanda seru hilang), ganti akun. Tulis docs/android-widget.md.
+
+FASE 20 — TAMBAH 5.000 KOSAKATA (TERAKHIR, PALING BERISIKO)
+1. SUMBER DAN LISENSI DULU (tunggu keputusan saya): usulkan sumber daftar kata yang sah (frekuensi/level CEFR) dengan lisensi dan kewajibannya (atribusi/share-alike); hindari menyalin konten berhak cipta (daftar Oxford dan definisinya berhak cipta). American Oxford 3000 yang sekarang tidak diubah.
+2. Data per kata: word_id baru yang stabil dan unik (word_id lama tidak boleh berubah atau dipakai ulang), kata, kelas kata, perkiraan level CEFR, IPA, makna Indonesia, definisi Inggris sederhana, contoh kalimat + terjemahan, tag topik, sumber, status tinjauan. Deteksi duplikat terhadap data yang ada, normalisasi bentuk kata, saring nama diri/kata kasar/arkais, tandai konten hasil generate "perlu ditinjau".
+3. Per batch 500 kata. Setelah tiap batch tunjukkan 30 sampel acak untuk saya periksa (IPA, makna, contoh) beserta laporan duplikat dan kata bermasalah. Jangan lanjut tanpa persetujuan saya. Jangan mengarang IPA atau makna yang kamu ragukan; tandai "perlu verifikasi". Bila kualitas tidak tercapai, serahkan lebih sedikit dan laporkan, jangan mengisi demi angka.
+4. Teknis: data statis di frontend (JSON per level/chunk, dimuat malas, diindeks untuk pencarian), BUKAN di Neon; hanya progres per kata di database. Ukur dan laporkan ukuran bundle dan dampak waktu muat di HP. Kosakata, SRS, Matching, Kuis, dan Misi harus bekerja dengan kata baru tanpa mengubah progres kata lama. Jangan menampilkan angka total kata di UI.
+
+==========================================================
+MULAI SEKARANG
+==========================================================
+1. Simpan dokumen ini apa adanya ke docs/neon-migration-plan.md.
+2. Kerjakan FASE 0 saja (tanpa mengubah kode), lalu laporkan dan tunggu persetujuan saya.
+
+==========================================================
+CATATAN STATUS PELAKSANAAN — 6 NOVEMBER 2026
+==========================================================
+- Fase 0: audit statis dan laporan verifikasi sudah didokumentasikan. Pengujian runtime/production yang membutuhkan akses dashboard dan database tetap ditandai belum terverifikasi.
+- Fase 1: riset arsitektur dan kuota sudah didokumentasikan di `docs/architecture-neon.md` dan `docs/kuota.md`. Rekomendasi teknis telah disiapkan, tetapi keputusan final komponen masih menunggu persetujuan pengguna.
+- Keputusan data: tidak memigrasikan akun/progres lama dari Google Sheets; reset hanya menyentuh Sheets pada Fase 7 setelah preview cutover; Neon tidak boleh dihapus atau dikosongkan.
+- Fase 2 belum dimulai. Belum ada Neon project/branch baru, Environment Variables yang diubah, migration database yang dijalankan, atau deployment Production yang dilakukan.
+- Main dan PR merge tetap menunggu keputusan eksplisit pengguna.
+
+
+==========================================================
+STATUS FASE 2 — 6 NOVEMBER 2026
+==========================================================
+- Pengguna menyetujui tujuh rekomendasi arsitektur Fase 1.
+- Pemeriksaan read-only Vercel menemukan project `sinauuenglish` di tim Hobby, terhubung ke repo `riiddev/testesaja`; Preview branch `feat/neon-migration` saat pemeriksaan berjalan di region `iad1`.
+- Konfigurasi repository `vercel.json` disiapkan untuk mengarahkan Function Preview ke Singapore `sin1`. Perubahan berlaku pada deployment dari branch ini; Production tidak disentuh.
+- Neon project/branch belum dapat dibuat atau diverifikasi melalui koneksi yang tersedia. Pemilik akun harus membuat/memilih project di Neon Console dan menyiapkan branch `development`.
+- Runtime memakai pooled `DATABASE_URL`; migration/backup memakai direct `DATABASE_URL_UNPOOLED`. Direct URL tidak disimpan pada Vercel runtime.
+- Environment Variables Vercel: BETTER_AUTH_SECRET (Sensitive) dan BETTER_AUTH_URL telah dibuat khusus untuk Preview branch; DATABASE_URL pooled menunggu Neon project. Variable legacy `SINAI_APPS_SCRIPT_URL` tidak diubah.
+- Schema Drizzle, dua migration awal, seed katalog, dan skrip koneksi sudah tersedia sebelum Fase 2; konfigurasi migrasi/koneksi diperketat. Belum ada migration atau seed yang dijalankan pada database.
+- Lihat `docs/fase-2-setup.md` untuk checklist langkah manual, verifikasi, dan batas aman.
+- Environment Variables Vercel branch-specific `BETTER_AUTH_SECRET` (Sensitive) dan `BETTER_AUTH_URL` telah dibuat untuk Preview `feat/neon-migration`; `DATABASE_URL` pooled masih menunggu project Neon development.
+- CI run 42246638151 berhasil untuk install, audit logic/content, dan build Vite; Backend Integration & Security Tests dilewati karena DATABASE_URL belum tersedia.
+- Preview deployment commit ini berstatus READY dan region Function terverifikasi `sin1`; alias branch tetap `https://sinauuenglish-git-feat-neon-migration-thoodev.vercel.app`.

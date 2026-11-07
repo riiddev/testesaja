@@ -22,6 +22,8 @@ export async function recordLearningActivity({
   durationSeconds = 0,
   wrongItems = [],
   questionsBreakdown = [],
+  answers = [],
+  matchedPairs = [],
   meta = {}
 }) {
   let result = {
@@ -36,22 +38,20 @@ export async function recordLearningActivity({
     switch (activityType) {
       case "matching": {
         const res = await api.recordMatchingSession({
-          score,
-          total,
+          matchedPairs,
           durationSeconds,
           sessionId: refId || `match_${Date.now()}`
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.earnedXp || 0;
           result.earnedCoins = res.data.earnedCoins || 0;
           result.streak = res.data.streak;
         }
         // Auto-advance matching quest
-        api.updateQuestProgress({
-          questId: "quest_matching_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
@@ -62,17 +62,16 @@ export async function recordLearningActivity({
           total,
           practiceDone: score >= Math.ceil(total * 0.7)
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.xpEarned || 0;
           result.earnedCoins = res.data.coinsEarned || 0;
           result.streak = res.data.streak;
         }
         // Auto-advance grammar quest
-        api.updateQuestProgress({
-          questId: "quest_grammar_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
@@ -80,23 +79,19 @@ export async function recordLearningActivity({
         const res = await api.recordReadingQuiz({
           articleId: refId,
           articleTitle: title,
-          score,
-          total,
           durationSeconds,
-          wrongItems,
-          questionsBreakdown
+          answers
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.earnedXp || 0;
           result.earnedCoins = res.data.earnedCoins || 0;
           result.streak = res.data.streak;
         }
         // Auto-advance reading quest
-        api.updateQuestProgress({
-          questId: "quest_reading_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
@@ -107,6 +102,9 @@ export async function recordLearningActivity({
           refId,
           meta
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.earnedXp || 0;
           result.earnedCoins = res.data.earnedCoins || 0;
@@ -114,11 +112,7 @@ export async function recordLearningActivity({
           result.alreadyRewarded = res.data.alreadyRewarded;
         }
         // Auto-advance reading quest
-        api.updateQuestProgress({
-          questId: "quest_reading_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
@@ -128,27 +122,30 @@ export async function recordLearningActivity({
           episodeId: meta.episodeId || 1,
           totalEpisodes: meta.totalEpisodes || 5
         });
+        if (!res?.success) {
+          throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
+        }
         if (res.success && res.data) {
           result.earnedXp = res.data.earnedXp || 0;
           result.earnedCoins = res.data.earnedCoins || 0;
           result.streak = res.data.streak;
         }
         // Auto-advance story quest
-        api.updateQuestProgress({
-          questId: "quest_story_1",
-          progress: 1,
-          target: 1
-        }).catch(() => {});
+        api.updateQuestProgress({}).catch(() => {});
         break;
       }
 
       default: {
-        console.warn(`[LearningActivity] Tipe aktivitas '${activityType}' tidak dikenal.`);
+        const error = `Tipe aktivitas '${activityType}' tidak dikenal.`;
+        console.warn(`[LearningActivity] ${error}`);
+        result.success = false;
+        result.error = error;
       }
     }
   } catch (err) {
     console.warn(`[LearningActivity] Gagal mencatat ${activityType}:`, err.message);
-    result.error = err.message;
+    result.success = false;
+    result.error = err.message || "Gagal mencatat aktivitas belajar.";
   }
 
   return result;

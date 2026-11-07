@@ -19,11 +19,21 @@ export function MissionsView({ onRewardClaimed }) {
   } = useDailyQuests({ onRewardClaimed });
 
   const [claimFeedback, setClaimFeedback] = useState(null);
+  const [claimingQuestId, setClaimingQuestId] = useState(null);
 
-  const handleClaim = (quest) => {
-    claimReward(quest.id);
-    setClaimFeedback(`Berhasil mengklaim +${quest.xpReward} EXP & +${quest.coinsReward} Koin Sinau!`);
-    setTimeout(() => setClaimFeedback(null), 3500);
+  const handleClaim = async (quest) => {
+    if (claimingQuestId) return;
+
+    setClaimingQuestId(quest.id);
+    try {
+      const claimed = await claimReward(quest.id);
+      if (!claimed) return;
+
+      setClaimFeedback(`Berhasil mengklaim +${quest.xpReward} EXP & +${quest.coinsReward} Koin Sinau!`);
+      setTimeout(() => setClaimFeedback(null), 3500);
+    } finally {
+      setClaimingQuestId(null);
+    }
   };
 
   // Format today date nicely in Indonesian (e.g. "Rabu, 4 November 2026")
@@ -175,12 +185,13 @@ export function MissionsView({ onRewardClaimed }) {
                     type="button"
                     className="btn-claim-reward"
                     onClick={() => handleClaim(quest)}
+                    disabled={claimingQuestId === quest.id}
                     aria-label={`Klaim hadiah untuk ${quest.title}`}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
-                    Klaim Hadiah
+                    {claimingQuestId === quest.id ? "Memproses..." : "Klaim Hadiah"}
                   </button>
                 ) : (
                   <Link

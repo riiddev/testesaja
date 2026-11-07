@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
-import registerHandler from "../api/auth/register.js";
-import loginHandler from "../api/auth/login.js";
-import meHandler from "../api/auth/me.js";
-import logoutHandler from "../api/auth/logout.js";
+import registerHandler from "../api/_handlers/auth/register.js";
+import loginHandler from "../api/_handlers/auth/login.js";
+import meHandler from "../api/_handlers/auth/me.js";
+import logoutHandler from "../api/_handlers/auth/logout.js";
 
 // Helper to mock request and response for testing serverless handlers
 function createMockReqRes({ method = "GET", body = {}, headers = {} }) {
@@ -116,6 +116,26 @@ test("AUTH SUITE — Reject duplicate email registration", async () => {
   assert.equal(res.statusCode, 409);
   assert.equal(res.body.success, false);
   assert.equal(res.body.status, "VALIDATION_ERROR");
+});
+
+test("AUTH SUITE — Persistent login rate limit blocks the sixth attempt", async () => {
+  const uniqueEmail = `rate_limit_${Date.now()}@sinauenglish.test`;
+  const requestLogin = async () => {
+    const { req, res } = createMockReqRes({
+      method: "POST",
+      body: { email: uniqueEmail, password: "WrongPassword123!" }
+    });
+    await loginHandler(req, res);
+    return res;
+  };
+
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const response = await requestLogin();
+    assert.equal(response.statusCode, 401, `Attempt ${attempt} should reach credential verification`);
+  }
+
+  const blocked = await requestLogin();
+  assert.equal(blocked.statusCode, 429, "The sixth attempt in the active window must be rate limited");
 });
 
 test("AUTH SUITE — Reject registration with short password", async () => {

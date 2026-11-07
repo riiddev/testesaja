@@ -44,51 +44,34 @@ export function GrammarMasteryQuiz({
 
   const handleSubmitQuiz = async () => {
     setIsSubmitted(true);
-    let correctCount = 0;
-    questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctIndex) {
-        correctCount++;
-      }
-    });
+    const answers = questions.map((question) => ({
+      questionId: question.id,
+      selectedIndex: selectedAnswers[question.id]
+    }));
 
-    const scorePct = Math.round((correctCount / questions.length) * 100);
-    const isMastered = scorePct >= 80;
-
-    // Save to Cloud Progress
+    // The server verifies official answers, calculates the score, and grants
+    // the first-completion reward. No second reward endpoint is called.
     setIsSaving(true);
+    setRewardFeedback(null);
     try {
-      if (onSaveProgress) {
-        await onSaveProgress({
-          topicId: topic.id,
-          practiceDone: true,
-          quizScore: scorePct
-        });
-      } else {
-        await api.saveGrammarProgress({
-          topicId: topic.id,
-          practiceDone: true,
-          quizScore: scorePct
-        });
+      const payload = { topicId: topic.id, answers };
+      const res = onSaveProgress
+        ? await onSaveProgress(payload)
+        : await api.saveGrammarProgress(payload);
+
+      if (!res?.success || !res.data) {
+        throw new Error(res?.error || res?.message || "Hasil kuis Grammar belum berhasil disimpan.");
       }
 
-      // Claim server-side reward if mastered
-      if (isMastered && claimReward) {
-        const eventId = `quiz_grammar_${topic.id}_${Date.now()}`;
-        const res = await claimReward({
-          eventId,
-          source: "grammar_quiz",
-          refId: topic.id,
-          meta: { scorePct, correctCount, totalQuestions: questions.length }
+      if (Number(res.data.xpEarned) > 0 || Number(res.data.coinsEarned) > 0) {
+        setRewardFeedback({
+          earnedXp: Number(res.data.xpEarned) || 0,
+          earnedCoins: Number(res.data.coinsEarned) || 0
         });
-        if (res && res.success) {
-          setRewardFeedback({
-            earnedXp: res.earnedXp || 25,
-            earnedCoins: res.earnedCoins || 15
-          });
-        }
       }
     } catch (err) {
       console.warn("Failed to save grammar quiz progress:", err);
+      setRewardFeedback({ error: err.message || "Hasil kuis Grammar belum berhasil disimpan." });
     } finally {
       setIsSaving(false);
     }
@@ -245,21 +228,32 @@ export function GrammarMasteryQuiz({
           {/* Reward Banner */}
           {rewardFeedback && (
             <div
-              className="card card-tint-cream"
+              className={`card ${rewardFeedback.error ? "card-tint-sand" : "card-tint-cream"}`}
+              role="status"
+              aria-live="polite"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
+                flexWrap: "wrap",
                 gap: "var(--space-3)",
                 padding: "var(--space-3) var(--space-5)",
                 border: "1.5px solid #D69E2E",
                 marginBottom: "var(--space-6)"
               }}
             >
-              <span style={{ fontWeight: 800, color: "#744210", fontSize: "var(--text-sm)" }}>
-                Hadiah Penguasaan Topik:
-              </span>
-              <span className="scholar-chip chip-gold">+{rewardFeedback.earnedXp} EXP</span>
-              <span className="scholar-chip chip-level">+{rewardFeedback.earnedCoins} Sinau Coin</span>
+              {rewardFeedback.error ? (
+                <span style={{ fontWeight: 700, color: "var(--color-danger)", fontSize: "var(--text-sm)" }}>
+                  {rewardFeedback.error}
+                </span>
+              ) : (
+                <>
+                  <span style={{ fontWeight: 800, color: "#744210", fontSize: "var(--text-sm)" }}>
+                    Hadiah Penguasaan Topik:
+                  </span>
+                  {rewardFeedback.earnedXp > 0 && <span className="scholar-chip chip-gold">+{rewardFeedback.earnedXp} EXP</span>}
+                  {rewardFeedback.earnedCoins > 0 && <span className="scholar-chip chip-level">+{rewardFeedback.earnedCoins} Sinau Coin</span>}
+                </>
+              )}
             </div>
           )}
 

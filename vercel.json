@@ -1,10 +1,19 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "regions": [
+    "sin1"
+  ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api(?:/|$)).*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/[...segments].js": {
+      "includeFiles": "data/oxford3000/{A1,A2,B1,B2,UNCLASSIFIED}.json.gz.b64"
+    }
+  }
 }

@@ -16,8 +16,9 @@ import { eq, and } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
 import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
 
-import progressGetHandler from "../api/progress/get.js";
-import progressSyncHandler from "../api/progress/sync.js";
+import progressGetHandler from "../api/_handlers/progress/get.js";
+import progressSyncHandler from "../api/_handlers/progress/sync.js";
+import { getOfficialWords } from "../api/_lib/officialWordCatalog.js";
 
 function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {
   const req = {
@@ -166,34 +167,65 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
     assert.equal(result.body.data.count, 0);
   });
 
-  // TEST 2: POST /api/progress/sync processes a batch of learning updates
-  const event1Id = `evt_a_word1_${Date.now()}`;
-  const event2Id = `evt_a_word2_${Date.now()}`;
+  const officialA1 = getOfficialWords().find((word) => word.level === "A1");
+  const officialB2 = getOfficialWords().find((word) => word.level === "B2");
+  assert.ok(officialA1 && officialB2, "Official A1 and B2 corpus entries must exist");
 
-  await t.test("2. POST /api/progress/sync processes batch of 2 words and updates ledger & stats", async () => {
-    const batchUpdates = [
-      {
-        eventId: event1Id,
-        wordId: "abandon",
-        level: "B2",
-        masteryStage: "learning",
-        intervalDays: 1,
-        correctCount: 1,
-        wrongCount: 0,
-        nextReviewAt: new Date(Date.now() + 86400000).toISOString()
-      },
-      {
-        eventId: event2Id,
-        wordId: "ability",
-        level: "B2",
-        masteryStage: "mastered",
-        intervalDays: 30,
-        correctCount: 5,
-        wrongCount: 0,
-        nextReviewAt: new Date(Date.now() + 30 * 86400000).toISOString()
+  const eventIds = [
+    `evt_a_first_${Date.now()}`,
+    ...Array.from({ length: 5 }, (_, index) => `evt_b2_review_${Date.now()}_${index}`)
+  ];
+
+  // TEST 2: forged client progress must not create an unlisted word or select its level/mastery.
+  await t.test("2. Reject forged word IDs before writing any progress", async () => {
+    const { req, res } = createMockReqRes({
+      method: "POST",
+      token: tokenA,
+      body: {
+        updates: [{
+          eventId: `evt_forged_${Date.now()}`,
+          wordId: "not-an-oxford-headword",
+          isCorrect: true,
+          level: "B2",
+          masteryStage: "mastered"
+        }]
       }
-    ];
+    });
 
+    await progressSyncHandler(req, res);
+    const result = res._getResult();
+    assert.equal(result.statusCode, 400);
+    const rows = await db.select().from(schema.progress)
+      .where(eq(schema.progress.userId, userAId));
+    assert.equal(rows.length, 0, "Invalid word IDs must not create database progress");
+  });
+
+  // TEST 3: only answer correctness is sent; server calculates CEFR, counts, interval, mastery, and rewards.
+  const batchUpdates = [
+    {
+      eventId: eventIds[0],
+      wordId: officialA1.id,
+      isCorrect: true,
+      // Forged browser values must be ignored.
+      level: "B2",
+      masteryStage: "mastered",
+      correctCount: 999,
+      wrongCount: 0,
+      intervalDays: 30
+    },
+    ...eventIds.slice(1).map((eventId) => ({
+      eventId,
+      wordId: officialB2.id,
+      isCorrect: true,
+      level: "A1",
+      masteryStage: "fresh",
+      correctCount: 0,
+      wrongCount: 999,
+      intervalDays: 1
+    }))
+  ];
+
+  await t.test("3. Server derives progress, mastery, CEFR, XP and coins from official events", async () => {
     const { req, res } = createMockReqRes({
       method: "POST",
       token: tokenA,
@@ -204,81 +236,63 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
     const result = res._getResult();
     assert.equal(result.statusCode, 200);
     assert.equal(result.body.success, true);
-    assert.equal(result.body.data.count, 2);
-    assert.deepEqual(result.body.data.processedEvents, [event1Id, event2Id]);
-    assert.equal(result.body.data.xpGranted, 6, "2 words * 3 XP = 6 XP");
-    assert.equal(result.body.data.coinsGranted, 2, "2 words * 1 Coin = 2 Coins");
+    assert.equal(result.body.data.count, 6);
+    assert.deepEqual(result.body.data.processedEvents, eventIds);
+    assert.equal(result.body.data.xpGranted, 22, "First word gets 5 XP; B2 first review gets 5 XP and four reviews get 3 XP");
+    assert.equal(result.body.data.coinsGranted, 8, "New words get 2 coins each; four reviews get 1 coin each");
 
-    // Verify database progress rows
-    const progressRows = await db
-      .select()
-      .from(schema.progress)
+    const progressRows = await db.select().from(schema.progress)
       .where(eq(schema.progress.userId, userAId));
-    assert.equal(progressRows.length, 2, "User A must have 2 words in progress");
+    assert.equal(progressRows.length, 2, "Only two official words must exist in progress");
+    const a1Progress = progressRows.find((row) => row.wordId === officialA1.id);
+    const b2Progress = progressRows.find((row) => row.wordId === officialB2.id);
+    assert.equal(a1Progress.level, "A1", "Server must use the official A1 level");
+    assert.equal(a1Progress.correctCount, 1);
+    assert.equal(a1Progress.masteryStage, "learning");
+    assert.equal(a1Progress.intervalDays, 1);
+    assert.equal(b2Progress.level, "B2", "Server must use the official B2 level");
+    assert.equal(b2Progress.correctCount, 5);
+    assert.equal(b2Progress.masteryStage, "mastered");
+    assert.equal(b2Progress.intervalDays, 30);
 
-    // Verify userStats
-    const statsRow = await db
-      .select()
-      .from(schema.userStats)
+    const statsRows = await db.select().from(schema.userStats)
       .where(eq(schema.userStats.userId, userAId));
-    assert.equal(statsRow[0].totalReviews, 2);
-    assert.equal(statsRow[0].wordsStarted, 2);
-    assert.equal(statsRow[0].wordsMastered, 1);
-    assert.equal(statsRow[0].b2Mastered, 1);
+    assert.equal(statsRows[0].totalReviews, 6);
+    assert.equal(statsRows[0].wordsStarted, 2);
+    assert.equal(statsRows[0].wordsMastered, 1);
+    assert.equal(statsRows[0].b2Mastered, 1);
 
-    // Verify progress_events ledger
-    const eventsRows = await db
-      .select()
-      .from(schema.progressEvents)
+    const eventsRows = await db.select().from(schema.progressEvents)
       .where(eq(schema.progressEvents.userId, userAId));
-    assert.equal(eventsRows.length, 2, "Must record 2 ledger event rows");
+    assert.equal(eventsRows.length, 6);
+    assert.equal(eventsRows.filter((row) => row.activityType === "vocab_learn").length, 2);
+    assert.equal(eventsRows.filter((row) => row.activityType === "srs_review").length, 4);
   });
 
-  // TEST 3: Idempotency — Re-sending the same batch must ACK without duplicates
-  await t.test("3. Idempotency: Re-submitting the exact same events returns ACK without double counting", async () => {
-    const duplicateBatch = [
-      {
-        eventId: event1Id,
-        wordId: "abandon",
-        level: "B2",
-        masteryStage: "learning"
-      },
-      {
-        eventId: event2Id,
-        wordId: "ability",
-        level: "B2",
-        masteryStage: "mastered"
-      }
-    ];
-
+  // TEST 4: Idempotency — Re-sending the same batch must ACK without duplicates.
+  await t.test("4. Idempotency: re-submitting the exact same events returns ACK without double counting", async () => {
     const { req, res } = createMockReqRes({
       method: "POST",
       token: tokenA,
-      body: { updates: duplicateBatch }
+      body: { updates: batchUpdates }
     });
 
     await progressSyncHandler(req, res);
     const result = res._getResult();
     assert.equal(result.statusCode, 200);
     assert.equal(result.body.success, true);
-    assert.deepEqual(result.body.data.processedEvents, [event1Id, event2Id]);
-    assert.equal(result.body.data.xpGranted, 0, "No duplicate XP awarded");
-    assert.equal(result.body.data.coinsGranted, 0, "No duplicate coins awarded");
+    assert.deepEqual(result.body.data.processedEvents, eventIds);
+    assert.equal(result.body.data.xpGranted, 0);
+    assert.equal(result.body.data.coinsGranted, 0);
 
-    // Verify stats were NOT incremented again
-    const statsRow = await db
-      .select()
-      .from(schema.userStats)
+    const statsRows = await db.select().from(schema.userStats)
       .where(eq(schema.userStats.userId, userAId));
-    assert.equal(statsRow[0].totalReviews, 2, "totalReviews remains 2");
-    assert.equal(statsRow[0].wordsStarted, 2, "wordsStarted remains 2");
+    assert.equal(statsRows[0].totalReviews, 6);
+    assert.equal(statsRows[0].wordsStarted, 2);
 
-    // Verify events ledger did NOT duplicate
-    const eventsRows = await db
-      .select()
-      .from(schema.progressEvents)
+    const eventsRows = await db.select().from(schema.progressEvents)
       .where(eq(schema.progressEvents.userId, userAId));
-    assert.equal(eventsRows.length, 2, "progress_events remains 2");
+    assert.equal(eventsRows.length, 6);
   });
 
   // TEST 4: Cross-tenant isolation — User B cannot see User A's progress

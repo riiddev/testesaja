@@ -15,9 +15,10 @@ import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
 import { hashPassword, createSessionToken } from "../api/_lib/auth.js";
+import { getOfficialWord } from "../api/_lib/officialWordCatalog.js";
 
-import progressGetHandler from "../api/progress/get.js";
-import progressSyncHandler from "../api/progress/sync.js";
+import progressGetHandler from "../api/_handlers/progress/get.js";
+import progressSyncHandler from "../api/_handlers/progress/sync.js";
 
 function createMockReqRes({ method = "GET", body = {}, token = null, url = "/" } = {}) {
   const req = {
@@ -141,22 +142,28 @@ test("FASE 8 MULTI-DEVICE SYNC — Concurrent Device Consistency", async (t) => 
     assert.deepEqual(mockDev2.getData().data.items, {});
   });
 
+  const officialAbandon = getOfficialWord("abandon");
+  const officialAbility = getOfficialWord("ability");
+  assert.ok(officialAbandon && officialAbility, "Official vocabulary records must be present");
+
   await t.test("2. Device 1 studies 2 words and syncs to server", async () => {
     const updates = [
       {
         eventId: `ev_dev1_w1_${Date.now()}`,
-        wordId: "abandon",
+        wordId: officialAbandon.id,
         level: "B2",
-        masteryStage: "learning",
-        correctCount: 1,
+        isCorrect: true,
+        masteryStage: "mastered",
+        correctCount: 999,
         wrongCount: 0,
-        intervalDays: 1,
-        nextReviewAt: new Date(Date.now() + 86400000).toISOString()
+        intervalDays: 30,
+        nextReviewAt: new Date(Date.now() + 30 * 86400000).toISOString()
       },
       {
         eventId: `ev_dev1_w2_${Date.now()}`,
-        wordId: "ability",
+        wordId: officialAbility.id,
         level: "B2",
+        isCorrect: true,
         masteryStage: "learning",
         correctCount: 1,
         wrongCount: 0,
@@ -172,7 +179,7 @@ test("FASE 8 MULTI-DEVICE SYNC — Concurrent Device Consistency", async (t) => 
       body: { updates }
     });
     await progressSyncHandler(mockSync.req, mockSync.res);
-    assert.equal(mockSync.getStatus(), 200);
+    assert.equal(mockSync.getStatus(), 200, `Device 1 sync response: ${JSON.stringify(mockSync.getData())}`);
     assert.equal(mockSync.getData().data.count, 2);
   });
 
@@ -182,21 +189,22 @@ test("FASE 8 MULTI-DEVICE SYNC — Concurrent Device Consistency", async (t) => 
     assert.equal(mockDev2.getStatus(), 200);
     const items = mockDev2.getData().data.items;
     assert.equal(Object.keys(items).length, 2);
-    assert.equal(items["abandon"].correctCount, 1);
-    assert.equal(items["ability"].correctCount, 1);
+    assert.equal(items[officialAbandon.id].correctCount, 1);
+    assert.equal(items[officialAbility.id].correctCount, 1);
   });
 
   await t.test("4. Device 2 advances 'abandon' to stage 2 and syncs", async () => {
     const updates = [
       {
         eventId: `ev_dev2_w1_adv_${Date.now()}`,
-        wordId: "abandon",
-        level: "B2",
-        masteryStage: "learning",
-        correctCount: 2,
-        wrongCount: 0,
-        intervalDays: 3,
-        nextReviewAt: new Date(Date.now() + 3 * 86400000).toISOString()
+        wordId: officialAbandon.id,
+        level: "A1",
+        isCorrect: true,
+        masteryStage: "fresh",
+        correctCount: 0,
+        wrongCount: 999,
+        intervalDays: 1,
+        nextReviewAt: new Date(Date.now() + 86400000).toISOString()
       }
     ];
 
@@ -207,7 +215,7 @@ test("FASE 8 MULTI-DEVICE SYNC — Concurrent Device Consistency", async (t) => 
       body: { updates }
     });
     await progressSyncHandler(mockSyncDev2.req, mockSyncDev2.res);
-    assert.equal(mockSyncDev2.getStatus(), 200);
+    assert.equal(mockSyncDev2.getStatus(), 200, `Device 2 sync response: ${JSON.stringify(mockSyncDev2.getData())}`);
     assert.equal(mockSyncDev2.getData().data.count, 1);
   });
 
@@ -216,8 +224,8 @@ test("FASE 8 MULTI-DEVICE SYNC — Concurrent Device Consistency", async (t) => 
     await progressGetHandler(mockDev1.req, mockDev1.res);
     assert.equal(mockDev1.getStatus(), 200);
     const items = mockDev1.getData().data.items;
-    assert.equal(items["abandon"].correctCount, 2);
-    assert.equal(items["abandon"].intervalDays, 3);
+    assert.equal(items[officialAbandon.id].correctCount, 2);
+    assert.equal(items[officialAbandon.id].intervalDays, 3);
   });
 
   await t.test("Teardown test user and related sessions", async () => {

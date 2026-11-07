@@ -7,11 +7,14 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
   const { user, isAuthenticated } = useAuth();
 
   const todayStr = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Jakarta",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
   }, []);
 
   // Namespaced by user ID to prevent cross-account leak
@@ -74,22 +77,47 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     return enrichQuestsWithProgress(templateQuests, storedQuests);
   }, [templateQuests, storedQuests]);
 
-  // Update progress for a specific quest
+  // Guest progress is local-only. Authenticated progress is refreshed from
+  // server-written activity records; client-supplied increments are never trusted.
   const updateProgress = useCallback((questId, increment = 1) => {
+    if (isAuthenticated) {
+      api.updateQuestProgress({})
+        .then((res) => {
+          if (!res?.success || !Array.isArray(res.data?.quests)) return;
+          const remote = res.data.quests.map((quest) => ({
+            questId: quest.questId,
+            dateStr: res.data.dateStr || todayStr,
+            progress: quest.progress,
+            target: quest.target,
+            isCompleted: quest.isCompleted,
+            claimedAt: quest.claimedAt || null
+          }));
+          setStoredQuests(remote);
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(remote));
+          } catch (e) {}
+        })
+        .catch((err) => {
+          console.warn("[DailyQuests] Gagal memperbarui progres server:", err.message);
+        });
+      return;
+    }
+
     setStoredQuests((prev) => {
       const existing = prev.find((q) => q.questId === questId);
       const targetQuest = templateQuests.find((q) => q.id === questId);
-      const currentProgress = existing ? Number(existing.progress) || 0 : 0;
-      const target = targetQuest ? targetQuest.target : 1;
-      const newProgress = Math.min(target, currentProgress + increment);
-      const isCompleted = newProgress >= target;
+      if (!targetQuest) return prev;
 
+      const currentProgress = existing ? Number(existing.progress) || 0 : 0;
+      const target = targetQuest.target;
+      const safeIncrement = Math.max(0, Number(increment) || 0);
+      const newProgress = Math.min(target, currentProgress + safeIncrement);
       const updated = {
         questId,
         dateStr: todayStr,
         progress: newProgress,
         target,
-        isCompleted,
+        isCompleted: newProgress >= target,
         claimedAt: existing?.claimedAt || null
       };
 
@@ -97,16 +125,6 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
       try {
         localStorage.setItem(storageKey, JSON.stringify(next));
       } catch (e) {}
-
-      if (isAuthenticated) {
-        api.updateQuestProgress({
-          questId,
-          progress: newProgress,
-          target,
-          dateStr: todayStr
-        }).catch(() => {});
-      }
-
       return next;
     });
   }, [templateQuests, todayStr, storageKey, isAuthenticated]);
@@ -114,11 +132,11 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
   // Claim quest reward (Server validates completion & double claim)
   const claimReward = useCallback(async (questId) => {
     const quest = quests.find((q) => q.id === questId);
-    if (!quest || !quest.isCompleted || quest.isClaimed) return;
+    if (!quest || !quest.isCompleted || quest.isClaimed) return false;
 
     if (!isAuthenticated) {
       alert("Silakan masuk akun terlebih dahulu untuk mengklaim hadiah misi.");
-      return;
+      return false;
     }
 
     try {
@@ -126,6 +144,10 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
         questId,
         dateStr: todayStr
       });
+
+      if (!res?.success || !res.data) {
+        throw new Error(res?.error || res?.message || "Server belum mengonfirmasi klaim hadiah.");
+      }
 
       if (res.success && res.data) {
         const now = new Date().toISOString();
@@ -154,10 +176,14 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
             coins: res.data.earnedCoins
           });
         }
+        return true;
       }
+
+      return false;
     } catch (err) {
       console.warn("[DailyQuests] Gagal mengklaim misi:", err.message);
       alert(err.message || "Gagal mengklaim hadiah misi.");
+      return false;
     }
   }, [quests, todayStr, storageKey, isAuthenticated, onRewardClaimed]);
 
@@ -166,8 +192,13 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-      const diffMs = midnight - now;
+      const wibClock = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      const nextWibMidnightUtc = Date.UTC(
+        wibClock.getUTCFullYear(),
+        wibClock.getUTCMonth(),
+        wibClock.getUTCDate() + 1
+      ) - 7 * 60 * 60 * 1000;
+      const diffMs = nextWibMidnightUtc - now.getTime();
 
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));

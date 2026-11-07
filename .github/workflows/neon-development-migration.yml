@@ -1,0 +1,129 @@
+name: Neon Development Migration (Preview Only)
+
+on:
+  push:
+    branches:
+      - feat/neon-migration
+    paths:
+      - .github/neon-migration.trigger
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neon-development-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate Neon development database
+    if: github.ref == 'refs/heads/feat/neon-migration'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL_UNPOOLED: ${{ secrets.NEON_DEV_DIRECT_URL }}
+
+    steps:
+      - name: Check required secret and target type
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL_UNPOOLED:-}" ]; then
+            echo "::error::GitHub repository secret NEON_DEV_DIRECT_URL is missing."
+            exit 1
+          fi
+          node --input-type=module -e '
+            const u = new URL(process.env.DATABASE_URL_UNPOOLED);
+            if (!["postgres:", "postgresql:"].includes(u.protocol)) throw new Error("Expected a PostgreSQL connection.");
+            if (u.hostname.includes("-pooler")) throw new Error("A direct (non-pooled) Neon connection is required.");
+            console.log("Direct connection secret is present; credentials are hidden.");
+          '
+
+      - name: Checkout Preview branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Safety check — database must be empty
+        run: |
+          node --input-type=module <<'NODE'
+          import { neon } from "@neondatabase/serverless";
+
+          const sql = neon(process.env.DATABASE_URL_UNPOOLED);
+          const rows = await sql`
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+          `;
+
+          if (rows.length > 0) {
+            console.error("STOPPED: the selected database already contains public tables.");
+            console.error("No migration or seed was run. Verify that NEON_DEV_DIRECT_URL points to the fresh development branch.");
+            process.exit(1);
+          }
+
+          console.log("Safety check passed: the selected database has no public tables.");
+          NODE
+
+      - name: Apply Drizzle migrations
+        run: npm run db:migrate
+        env:
+          DATABASE_URL_UNPOOLED: ${{ secrets.NEON_DEV_DIRECT_URL }}
+
+      - name: Seed initial catalog
+        run: npm run db:seed
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DEV_DIRECT_URL }}
+
+      - name: Verify schema and catalog
+        run: |
+          node --input-type=module <<'NODE'
+          import { neon } from "@neondatabase/serverless";
+
+          const sql = neon(process.env.DATABASE_URL_UNPOOLED);
+          const expected = [
+            "activity_log", "attempt_details", "avatars", "auth_rate_limits",
+            "catalog", "daily_quests", "grammar_progress", "inventory",
+            "profiles", "progress", "progress_events", "quest_claims",
+            "sessions", "settings", "story_progress", "titles",
+            "transactions", "user_stats", "users"
+          ];
+
+          const rows = await sql`
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+          `;
+          const actual = new Set(rows.map((row) => row.table_name));
+          const missing = expected.filter((name) => !actual.has(name));
+
+          if (missing.length > 0) {
+            console.error("Verification failed: expected application tables are missing.");
+            console.error("Missing table count:", missing.length);
+            process.exit(1);
+          }
+
+          const catalogRows = await sql`SELECT count(*)::int AS count FROM catalog`;
+          const catalogCount = Number(catalogRows[0]?.count ?? 0);
+
+          if (catalogCount !== 11) {
+            console.error("Verification failed: expected 11 catalog entries, found", catalogCount);
+            process.exit(1);
+          }
+
+          console.log("Verification passed: all 19 application tables exist.");
+          console.log("Verification passed: all 11 initial catalog entries exist.");
+          NODE
+        env:
+          DATABASE_URL_UNPOOLED: ${{ secrets.NEON_DEV_DIRECT_URL }}

@@ -62,10 +62,6 @@ export function clearSessionToken() {
  */
 async function requestApi(endpoint, options = {}, requiresAuth = true) {
   const token = getSessionToken();
-  if (requiresAuth && !token) {
-    throw new AuthError("Sesi tidak ditemukan. Silakan masuk terlebih dahulu.");
-  }
-
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {})
@@ -81,6 +77,7 @@ async function requestApi(endpoint, options = {}, requiresAuth = true) {
   try {
     const res = await fetch(endpoint, {
       ...options,
+      credentials: "same-origin",
       headers,
       signal: controller.signal
     });
@@ -178,7 +175,12 @@ async function request(action, payload = {}, requiresAuth = true, retryCount = 0
     return requestApi("/api/progress/get", { method: "GET" }, true);
   }
   if (action === "syncProgress") {
-    return requestApi("/api/progress/sync", { method: "POST", body: JSON.stringify(payload) }, true);
+    const { keepalive = false, ...body } = payload;
+    return requestApi("/api/progress/sync", {
+      method: "POST",
+      body: JSON.stringify(body),
+      keepalive
+    }, true);
   }
 
   // 4. Dispatch Fase 6 Settings, Avatar, Titles, Grammar, Story, Matching, Reading Quiz, and Activity History
@@ -488,8 +490,8 @@ export const api = {
     return request("getProgress", {}, true);
   },
 
-  async syncProgress(updates = []) {
-    return request("syncProgress", { updates }, true);
+  async syncProgress(updates = [], options = {}) {
+    return request("syncProgress", { updates, keepalive: Boolean(options.keepalive) }, true);
   },
 
   // Quizzes
@@ -584,8 +586,8 @@ export const api = {
     return request("getGrammarProgress", {}, true);
   },
 
-  async saveGrammarProgress({ topicId, practiceDone, quizScore }) {
-    return request("saveGrammarProgress", { topicId, practiceDone, quizScore }, true);
+  async saveGrammarProgress({ topicId, answers = [] }) {
+    return request("saveGrammarProgress", { topicId, answers }, true);
   },
 
   // Storytelling & Adventures
@@ -598,13 +600,13 @@ export const api = {
   },
 
   // Sentence Context Matching (Fase 6)
-  async recordMatchingSession({ score, total, durationSeconds, sessionId }) {
-    return request("recordMatchingSession", { score, total, durationSeconds, sessionId }, true);
+  async recordMatchingSession({ matchedPairs = [], durationSeconds, sessionId }) {
+    return request("recordMatchingSession", { matchedPairs, durationSeconds, sessionId }, true);
   },
 
   // Reading Comprehension Quiz (Fase 6)
-  async recordReadingQuiz({ articleId, articleTitle, score, total, durationSeconds, wrongItems = [], questionsBreakdown = [] }) {
-    return request("recordReadingQuiz", { articleId, articleTitle, score, total, durationSeconds, wrongItems, questionsBreakdown }, true);
+  async recordReadingQuiz({ articleId, articleTitle, durationSeconds, answers = [] }) {
+    return request("recordReadingQuiz", { articleId, articleTitle, durationSeconds, answers }, true);
   },
 
   // Practice History & 7-Day Trend (Butir F)

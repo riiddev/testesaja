@@ -5,7 +5,7 @@ import {
   IconClose,
   IconLightbulb
 } from "../../components/common/Icons.jsx";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { KanciMascot } from "../../components/mascot/KanciMascot.jsx";
 import "../../styles/reading-quiz.css";
 
@@ -24,6 +24,7 @@ export function ReadingQuizRunner({
   const [showPassageDrawer, setShowPassageDrawer] = useState(false);
   const [addedSrsWords, setAddedSrsWords] = useState(() => new Set());
   const [rewardFeedback, setRewardFeedback] = useState(null);
+  const quizStartedAt = useRef(Date.now());
 
   const currentQ = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
@@ -51,29 +52,50 @@ export function ReadingQuizRunner({
 
     const scorePct = Math.round((correctCount / questions.length) * 100);
 
-    // Claim Server-side reward
+    // Record the complete quiz result through the dedicated server endpoint.
+    // The server owns reward policy and idempotency; the client only submits answers.
     if (claimReward) {
-      const eventId = `quiz_habit_${passage.id}_${Date.now()}`;
+      const answers = questions.map((question) => ({
+        questionId: question.id,
+        selectedIndex: selectedAnswers[question.id]
+      }));
+
       try {
         const res = await claimReward({
-          eventId,
+          eventId: `quiz_habit_${passage.id}`,
           source: "article_quiz",
           refId: passage.id,
           meta: {
+            articleTitle: passage.title,
             scorePct,
             correctCount,
-            totalQuestions: questions.length
+            totalQuestions: questions.length,
+            durationSeconds: Math.max(0, Math.round((Date.now() - quizStartedAt.current) / 1000)),
+            answers
           }
         });
-        if (res && res.success) {
+
+        if (res?.success) {
           setRewardFeedback({
-            earnedXp: res.earnedXp || (scorePct >= 80 ? 30 : 0),
-            earnedCoins: res.earnedCoins || (scorePct === 100 ? 20 : 0)
+            earnedXp: Number(res.earnedXp) || 0,
+            earnedCoins: Number(res.earnedCoins) || 0,
+            alreadyRewarded: Boolean(res.alreadyRewarded)
+          });
+        } else {
+          setRewardFeedback({
+            error: res?.error || "Hasil kuis belum berhasil disimpan ke akun."
           });
         }
       } catch (err) {
-        console.warn("Quiz reward claim error:", err);
+        console.warn("Quiz result save error:", err);
+        setRewardFeedback({
+          error: err.message || "Hasil kuis belum berhasil disimpan ke akun."
+        });
       }
+    } else {
+      setRewardFeedback({
+        error: "Hasil kuis hanya tersimpan untuk akun yang sedang masuk."
+      });
     }
   };
 
@@ -325,28 +347,43 @@ export function ReadingQuizRunner({
                 </div>
               </div>
 
-              {/* Reward Notification Banner */}
-              {rewardFeedback && (rewardFeedback.earnedXp > 0 || rewardFeedback.earnedCoins > 0) && (
+              {/* Server-backed result and reward status */}
+              {rewardFeedback && (
                 <div
-                  className="card card-tint-cream"
+                  className={`card ${rewardFeedback.error ? "card-tint-sand" : "card-tint-cream"}`}
                   id="quiz-reward-banner"
+                  role="status"
+                  aria-live="polite"
                   style={{
                     padding: "var(--space-3) var(--space-4)",
                     marginBottom: "var(--space-4)",
-                    display: "inline-flex",
+                    display: "flex",
+                    flexWrap: "wrap",
                     alignItems: "center",
                     gap: "var(--space-3)",
                     border: "1.5px solid #D69E2E"
                   }}
                 >
-                  <span style={{ fontWeight: 800, color: "#744210", fontSize: "var(--text-sm)" }}>
-                    Reward Berhasil Diklaim:
-                  </span>
-                  {rewardFeedback.earnedXp > 0 && (
-                    <span className="scholar-chip chip-gold">+{rewardFeedback.earnedXp} EXP</span>
-                  )}
-                  {rewardFeedback.earnedCoins > 0 && (
-                    <span className="scholar-chip chip-level">+{rewardFeedback.earnedCoins} Sinau Coin</span>
+                  {rewardFeedback.error ? (
+                    <span style={{ fontWeight: 700, color: "var(--color-danger)", fontSize: "var(--text-sm)" }}>
+                      {rewardFeedback.error}
+                    </span>
+                  ) : rewardFeedback.alreadyRewarded ? (
+                    <span style={{ fontWeight: 700, color: "#744210", fontSize: "var(--text-sm)" }}>
+                      Hasil kuis tercatat. Hadiah untuk artikel ini sudah pernah diterima.
+                    </span>
+                  ) : (
+                    <>
+                      <span style={{ fontWeight: 800, color: "#744210", fontSize: "var(--text-sm)" }}>
+                        Hasil kuis berhasil disimpan:
+                      </span>
+                      {rewardFeedback.earnedXp > 0 && (
+                        <span className="scholar-chip chip-gold">+{rewardFeedback.earnedXp} EXP</span>
+                      )}
+                      {rewardFeedback.earnedCoins > 0 && (
+                        <span className="scholar-chip chip-level">+{rewardFeedback.earnedCoins} Sinau Coin</span>
+                      )}
+                    </>
                   )}
                 </div>
               )}
