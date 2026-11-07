@@ -1,10 +1,33 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "./useAuth.jsx";
 import { api } from "../services/api.js";
 import { generateDailyQuests, enrichQuestsWithProgress } from "../features/missions/missionsEngine.js";
+import { hasUnfinishedServerMissions } from "../features/missions/missionStatus.js";
+import { notifyDailyQuestsChanged, subscribeToDailyQuestsChanged } from "../services/dailyQuestEvents.js";
+
+function readStoredQuests(storageKey) {
+  try {
+    const saved = localStorage.getItem(storageKey);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function normalizeRemoteQuests(remoteQuests, dateStr) {
+  return remoteQuests.map((quest) => ({
+    questId: quest.questId || quest.id,
+    dateStr,
+    progress: Math.max(0, Number(quest.progress ?? quest.current ?? quest.currentProgress) || 0),
+    target: Math.max(1, Number(quest.target) || 1),
+    isCompleted: Boolean(quest.isCompleted),
+    claimedAt: quest.claimedAt || null
+  }));
+}
 
 export function useDailyQuests({ onRewardClaimed } = {}) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   const todayStr = useMemo(() => {
     const parts = new Intl.DateTimeFormat("en-CA", {
@@ -17,122 +40,148 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     return `${values.year}-${values.month}-${values.day}`;
   }, []);
 
-  // Namespaced by user ID to prevent cross-account leak
-  const storageKey = `sinau_daily_quests_${user?.id || "guest"}_${todayStr}`;
+  const userId = user?.id || null;
+  const storageKey = `sinau_daily_quests_${userId || "guest"}_${todayStr}`;
+  const activeSnapshotKey = `${userId || "guest"}:${todayStr}`;
 
-  // Generated template quests for today
   const templateQuests = useMemo(() => {
-    return generateDailyQuests(todayStr, user?.id || "pelajar");
-  }, [todayStr, user?.id]);
+    return generateDailyQuests(todayStr, userId || "pelajar");
+  }, [todayStr, userId]);
 
-  // Saved quest states (progress & claims)
-  const [storedQuests, setStoredQuests] = useState(() => {
+  const [storedQuests, setStoredQuests] = useState(() => readStoredQuests(storageKey));
+  const [isLoading, setIsLoading] = useState(true);
+  const [serverSnapshotKey, setServerSnapshotKey] = useState(null);
+  const [loadError, setLoadError] = useState("");
+  const refreshGenerationRef = useRef(0);
+
+  const refreshServerSnapshot = useCallback(async () => {
+    if (!isAuthenticated || !userId) return null;
+
+    const requestGeneration = ++refreshGenerationRef.current;
+    const res = await api.getDailyQuests(todayStr);
+    if (
+      !res?.success ||
+      !Array.isArray(res.data?.quests) ||
+      res.data.quests.length !== templateQuests.length
+    ) {
+      throw new Error(res?.error || "Server belum mengirim seluruh misi hari ini.");
+    }
+
+    if (requestGeneration !== refreshGenerationRef.current) return null;
+
+    const remote = normalizeRemoteQuests(res.data.quests, res.data.dateStr || todayStr);
+    const expectedIds = new Set(templateQuests.map((quest) => quest.id));
+    if (
+      remote.length !== expectedIds.size ||
+      remote.some((quest) => !expectedIds.has(quest.questId))
+    ) {
+      throw new Error("Daftar misi dari server tidak cocok dengan tanggal dan akun aktif.");
+    }
+
+    setStoredQuests(remote);
+    setServerSnapshotKey(activeSnapshotKey);
+    setLoadError("");
     try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return [];
-  });
+      localStorage.setItem(storageKey, JSON.stringify(remote));
+    } catch {}
 
-  const [isLoading, setIsLoading] = useState(false);
+    return remote;
+  }, [
+    isAuthenticated,
+    userId,
+    todayStr,
+    templateQuests,
+    activeSnapshotKey,
+    storageKey
+  ]);
 
-  // Sync with cloud if authenticated
+  // A signed-in account must wait for Better Auth to resolve, then use only
+  // its own server snapshot as the authority for mission completion.
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (authLoading) {
+      setIsLoading(true);
+      return;
+    }
 
-    let isMounted = true;
+    if (!isAuthenticated || !userId) {
+      setStoredQuests(readStoredQuests(storageKey));
+      setServerSnapshotKey(null);
+      setLoadError("");
+      setIsLoading(false);
+      return;
+    }
+
+    setStoredQuests(readStoredQuests(storageKey));
+    setServerSnapshotKey(null);
+    setLoadError("");
     setIsLoading(true);
 
-    api.getDailyQuests(todayStr)
-      .then((res) => {
-        if (!isMounted || !res.success || !res.data?.quests) return;
-        const remoteQuests = res.data.quests;
-        if (remoteQuests.length > 0) {
-          setStoredQuests((prev) => {
-            const mergedMap = new Map();
-            prev.forEach((q) => mergedMap.set(q.questId, q));
-            remoteQuests.forEach((q) => mergedMap.set(q.questId, q));
-            const merged = Array.from(mergedMap.values());
-            try {
-              localStorage.setItem(storageKey, JSON.stringify(merged));
-            } catch (e) {}
-            return merged;
-          });
-        }
-      })
+    refreshServerSnapshot()
       .catch((err) => {
         console.warn("[DailyQuests] Gagal mengambil misi dari cloud:", err.message);
+        setServerSnapshotKey(null);
+        setLoadError(err?.message || "Misi belum dapat diverifikasi dari server.");
       })
       .finally(() => {
-        if (isMounted) setIsLoading(false);
+        setIsLoading(false);
       });
 
     return () => {
-      isMounted = false;
+      // Ignore responses from a previous account/date after a switch or unmount.
+      refreshGenerationRef.current += 1;
     };
-  }, [isAuthenticated, todayStr, storageKey]);
+  }, [authLoading, isAuthenticated, userId, storageKey, refreshServerSnapshot]);
 
-  // Enriched active quests
+  // Every mounted consumer (sidebar and Missions page) refreshes from the same
+  // server-written activity ledger after an accepted learning activity/claim.
+  useEffect(() => {
+    if (authLoading || !isAuthenticated || !userId) return;
+
+    const refreshAfterActivity = () => {
+      setServerSnapshotKey(null);
+      setIsLoading(true);
+      refreshServerSnapshot()
+        .catch((err) => {
+          console.warn("[DailyQuests] Gagal menyegarkan misi:", err.message);
+          setServerSnapshotKey(null);
+          setLoadError(err?.message || "Misi belum dapat diverifikasi dari server.");
+        })
+        .finally(() => setIsLoading(false));
+    };
+
+    return subscribeToDailyQuestsChanged(refreshAfterActivity);
+  }, [authLoading, isAuthenticated, userId, refreshServerSnapshot]);
+
   const quests = useMemo(() => {
     return enrichQuestsWithProgress(templateQuests, storedQuests);
   }, [templateQuests, storedQuests]);
 
-  // Guest progress is local-only. Authenticated progress is refreshed from
-  // server-written activity records; client-supplied increments are never trusted.
-  const updateProgress = useCallback((questId, increment = 1) => {
+  const isServerConfirmed = Boolean(
+    isAuthenticated &&
+    serverSnapshotKey &&
+    serverSnapshotKey === activeSnapshotKey
+  );
+
+  const updateProgress = useCallback(async () => {
     if (isAuthenticated) {
-      api.updateQuestProgress({})
-        .then((res) => {
-          if (!res?.success || !Array.isArray(res.data?.quests)) return;
-          const remote = res.data.quests.map((quest) => ({
-            questId: quest.questId,
-            dateStr: res.data.dateStr || todayStr,
-            progress: quest.progress,
-            target: quest.target,
-            isCompleted: quest.isCompleted,
-            claimedAt: quest.claimedAt || null
-          }));
-          setStoredQuests(remote);
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(remote));
-          } catch (e) {}
-        })
-        .catch((err) => {
-          console.warn("[DailyQuests] Gagal memperbarui progres server:", err.message);
-        });
-      return;
+      try {
+        return await refreshServerSnapshot();
+      } catch (err) {
+        console.warn("[DailyQuests] Gagal memperbarui progres server:", err.message);
+        setServerSnapshotKey(null);
+        setLoadError(err?.message || "Misi belum dapat diverifikasi dari server.");
+        return null;
+      }
     }
 
-    setStoredQuests((prev) => {
-      const existing = prev.find((q) => q.questId === questId);
-      const targetQuest = templateQuests.find((q) => q.id === questId);
-      if (!targetQuest) return prev;
+    // Guest mode is local-only. This path is never used for authenticated
+    // claims or for the sidebar's server-confirmed red alert.
+    return storedQuests;
+  }, [isAuthenticated, refreshServerSnapshot, storedQuests]);
 
-      const currentProgress = existing ? Number(existing.progress) || 0 : 0;
-      const target = targetQuest.target;
-      const safeIncrement = Math.max(0, Number(increment) || 0);
-      const newProgress = Math.min(target, currentProgress + safeIncrement);
-      const updated = {
-        questId,
-        dateStr: todayStr,
-        progress: newProgress,
-        target,
-        isCompleted: newProgress >= target,
-        claimedAt: existing?.claimedAt || null
-      };
-
-      const next = prev.filter((q) => q.questId !== questId).concat(updated);
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(next));
-      } catch (e) {}
-      return next;
-    });
-  }, [templateQuests, todayStr, storageKey, isAuthenticated]);
-
-  // Claim quest reward (Server validates completion & double claim)
   const claimReward = useCallback(async (questId) => {
     const quest = quests.find((q) => q.id === questId);
-    if (!quest || !quest.isCompleted || quest.isClaimed) return false;
+    if (!quest || !isServerConfirmed || !quest.isCompleted || quest.isClaimed) return false;
 
     if (!isAuthenticated) {
       alert("Silakan masuk akun terlebih dahulu untuk mengklaim hadiah misi.");
@@ -140,54 +189,43 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     }
 
     try {
-      const res = await api.claimQuestReward({
-        questId,
-        dateStr: todayStr
-      });
-
+      const res = await api.claimQuestReward({ questId, dateStr: todayStr });
       if (!res?.success || !res.data) {
         throw new Error(res?.error || res?.message || "Server belum mengonfirmasi klaim hadiah.");
       }
 
-      if (res.success && res.data) {
-        const now = new Date().toISOString();
-        setStoredQuests((prev) => {
-          const existing = prev.find((q) => q.questId === questId);
-          const updated = {
-            questId,
-            dateStr: todayStr,
-            progress: quest.target,
-            target: quest.target,
-            isCompleted: true,
-            claimedAt: now
-          };
-
-          const next = prev.filter((q) => q.questId !== questId).concat(updated);
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(next));
-          } catch (e) {}
-          return next;
-        });
-
-        if (onRewardClaimed) {
-          onRewardClaimed({
-            questId,
-            xp: res.data.earnedXp,
-            coins: res.data.earnedCoins
-          });
-        }
-        return true;
+      notifyDailyQuestsChanged();
+      try {
+        await refreshServerSnapshot();
+      } catch (refreshError) {
+        console.warn("[DailyQuests] Hadiah telah dikonfirmasi, tetapi snapshot misi belum dapat diperbarui:", refreshError.message);
+        setServerSnapshotKey(null);
+        setLoadError("Hadiah berhasil diklaim. Status misi sedang menunggu konfirmasi server.");
       }
 
-      return false;
+      if (onRewardClaimed) {
+        onRewardClaimed({
+          questId,
+          xp: res.data.earnedXp,
+          coins: res.data.earnedCoins
+        });
+      }
+      return true;
     } catch (err) {
       console.warn("[DailyQuests] Gagal mengklaim misi:", err.message);
       alert(err.message || "Gagal mengklaim hadiah misi.");
       return false;
     }
-  }, [quests, todayStr, storageKey, isAuthenticated, onRewardClaimed]);
+  }, [
+    quests,
+    isServerConfirmed,
+    isAuthenticated,
+    todayStr,
+    refreshServerSnapshot,
+    onRewardClaimed
+  ]);
 
-  // Time remaining until midnight local time
+  // Time remaining until midnight in Asia/Jakarta.
   const [timeUntilReset, setTimeUntilReset] = useState("");
   useEffect(() => {
     const updateCountdown = () => {
@@ -212,8 +250,14 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
 
   const completedCount = quests.filter((q) => q.isCompleted).length;
   const claimedCount = quests.filter((q) => q.isClaimed).length;
-  const allCompleted = completedCount === quests.length;
-  const allClaimed = claimedCount === quests.length;
+  const allCompleted = isServerConfirmed && quests.length > 0 && completedCount === quests.length;
+  const allClaimed = isServerConfirmed && quests.length > 0 && claimedCount === quests.length;
+  const hasUnfinishedMissions = hasUnfinishedServerMissions({
+    isAuthenticated,
+    isLoading,
+    hasServerSnapshot: isServerConfirmed,
+    quests
+  });
 
   return {
     quests,
@@ -224,7 +268,11 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     allCompleted,
     allClaimed,
     isLoading,
+    isServerConfirmed,
+    hasUnfinishedMissions,
+    loadError,
     updateProgress,
+    refresh: refreshServerSnapshot,
     claimReward
   };
 }
