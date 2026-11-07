@@ -84,18 +84,27 @@ export function WorkspacePage() {
   const listening = listeningData.exercises || [];
   const pronunciation = pronunciationData.exercises || [];
 
-  const { allCompleted: missionsCompleted, quests, completedCount } = useDailyQuests();
-  const hasUnfinishedMissions = !missionsCompleted;
+  const {
+    quests,
+    isServerConfirmed: missionsServerConfirmed,
+    hasUnfinishedMissions
+  } = useDailyQuests();
 
-  // PWA Badging API integration — updates dynamic icon badge on supported launchers
+  // Never show an app badge from cached/default mission data. The server
+  // snapshot is the only authority for the active account and WIB date.
   useEffect(() => {
-    if (missionsCompleted) {
+    if (!missionsServerConfirmed) {
       clearAppBadge();
-    } else {
-      const unfinished = (quests?.length || 3) - (completedCount || 0);
-      setAppBadge(unfinished > 0 ? unfinished : 0);
+      return;
     }
-  }, [missionsCompleted, quests?.length, completedCount]);
+
+    if (hasUnfinishedMissions) {
+      const unfinished = quests.filter((quest) => !quest.isCompleted).length;
+      setAppBadge(unfinished);
+    } else {
+      clearAppBadge();
+    }
+  }, [missionsServerConfirmed, hasUnfinishedMissions, quests]);
 
   const viewTitles = {
     overview: "Beranda Belajar",
