@@ -24,6 +24,7 @@ export async function recordLearningActivity({
   questionsBreakdown = [],
   answers = [],
   matchedPairs = [],
+  roundToken = "",
   meta = {}
 }) {
   let result = {
@@ -40,7 +41,8 @@ export async function recordLearningActivity({
         const res = await api.recordMatchingSession({
           matchedPairs,
           durationSeconds,
-          sessionId: refId || `match_${Date.now()}`
+          sessionId: refId || `match_${Date.now()}`,
+          roundToken
         });
         if (!res?.success) {
           throw new Error(res?.error || res?.message || "Server gagal mencatat aktivitas.");
