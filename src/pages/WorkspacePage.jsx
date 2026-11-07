@@ -299,7 +299,7 @@ export function WorkspacePage() {
             <section className="view-section is-active" id="view-matching">
               <ContextMatching
                 vocabulary={vocabulary}
-                onRecordMatchComplete={async ({ roundId, matchedPairs }) => {
+                onRecordMatchComplete={async ({ roundId, roundToken, matchedPairs }) => {
                   await recordLearningActivity({
                     activityType: "matching",
                     refId: roundId,
