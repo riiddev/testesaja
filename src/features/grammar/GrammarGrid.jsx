@@ -26,7 +26,7 @@ export function GrammarGrid({ topics = [], onSelectTopic }) {
   return (
     <div>
       <div style={{ marginBottom: "var(--space-6)" }}>
-        <h2 className="section-title">19 Modul Tata Bahasa (A1–B2)</h2>
+        <h2 className="section-title">Kurikulum Tata Bahasa (A1–B2)</h2>
         <p className="section-desc">
           Pahami konsep dari intuisi ke kaidah baku, bedah kesalahan transfer bahasa Indonesia, tuntaskan 12 praktik bertingkat, dan raih ambang penguasaan 80%.
         </p>
@@ -93,7 +93,7 @@ export function GrammarGrid({ topics = [], onSelectTopic }) {
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "var(--border-sm)", paddingTop: "var(--space-3)", marginTop: "var(--space-4)" }}>
                 <span className="badge badge-gold" style={{ fontSize: "11px" }}>
-                  {isEnhanced ? "12 Latihan + 10 Soal" : `${t.questions ? t.questions.length : 3} Soal Kuis`}
+                  {isEnhanced ? "Latihan bertingkat dan kuis" : "Materi dan kuis"}
                 </span>
                 <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--color-accent-navy)" }}>
                   Pelajari Modul
