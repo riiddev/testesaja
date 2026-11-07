@@ -200,10 +200,12 @@ export async function removeConfirmedEvents(userId, eventIds = []) {
   if (!ids.length) return false;
 
   const fallbackEvents = getFallbackOutbox(userId);
-  const fallbackSaved = saveFallbackOutbox(
-    userId,
-    fallbackEvents.filter((item) => !ids.includes(item.eventId))
-  );
+  const remainingFallback = fallbackEvents.filter((item) => !ids.includes(item.eventId));
+  // Do not require localStorage to be writable when it has no copy of an ACKed
+  // event; IndexedDB can remain the sole durable store in restricted browsers.
+  const fallbackSaved = remainingFallback.length === fallbackEvents.length
+    ? true
+    : saveFallbackOutbox(userId, remainingFallback);
 
   const db = await openOutboxDb();
   if (!db) return fallbackSaved;
