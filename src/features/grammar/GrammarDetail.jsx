@@ -60,7 +60,7 @@ export function GrammarDetail({ topic, onBack, onStartQuiz, userProfileHook }) {
       {/* Back button */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-4)" }}>
         <Button variant="secondary" size="sm" onClick={onBack} id="back-to-grammar-grid-btn">
-          <><IconArrowLeft size={13} style={{ marginRight: 4 }} /> Kembali ke 19 Modul Grammar</>
+          <><IconArrowLeft size={13} style={{ marginRight: 4 }} /> Kembali ke daftar Grammar</>
         </Button>
 
         {isMastered && (
