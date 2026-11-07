@@ -6,7 +6,7 @@
  */
 
 import { eq, and, gte, lt, sum, sql } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreakInTransaction } from "../../_lib/streak.js";
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
     const eventId = "matching:" + user.id + ":" + sessionId;
 
-    const result = await getTransactionDb().transaction(async (tx) => {
+    const result = await withTransaction(async (tx) => {
       // Serialize matching sessions per account so simultaneous sessions
       // cannot all read the same remaining daily XP allowance.
       await tx
