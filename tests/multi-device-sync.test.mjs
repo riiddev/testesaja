@@ -178,7 +178,7 @@ test("FASE 8 MULTI-DEVICE SYNC — Concurrent Device Consistency", async (t) => 
       body: { updates }
     });
     await progressSyncHandler(mockSync.req, mockSync.res);
-    assert.equal(mockSync.getStatus(), 200);
+    assert.equal(mockSync.getStatus(), 200, `Device 1 sync response: ${JSON.stringify(mockSync.getData())}`);
     assert.equal(mockSync.getData().data.count, 2);
   });
 
@@ -214,7 +214,7 @@ test("FASE 8 MULTI-DEVICE SYNC — Concurrent Device Consistency", async (t) => 
       body: { updates }
     });
     await progressSyncHandler(mockSyncDev2.req, mockSyncDev2.res);
-    assert.equal(mockSyncDev2.getStatus(), 200);
+    assert.equal(mockSyncDev2.getStatus(), 200, `Device 2 sync response: ${JSON.stringify(mockSyncDev2.getData())}`);
     assert.equal(mockSyncDev2.getData().data.count, 1);
   });
 
