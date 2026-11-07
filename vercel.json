@@ -7,12 +7,128 @@
   ],
   "rewrites": [
     {
+      "source": "/api/activity/history",
+      "destination": "/api/router?route=activity/history"
+    },
+    {
+      "source": "/api/activity/summary",
+      "destination": "/api/router?route=activity/summary"
+    },
+    {
+      "source": "/api/avatar/delete",
+      "destination": "/api/router?route=avatar/delete"
+    },
+    {
+      "source": "/api/avatar/get",
+      "destination": "/api/router?route=avatar/get"
+    },
+    {
+      "source": "/api/avatar/upload",
+      "destination": "/api/router?route=avatar/upload"
+    },
+    {
+      "source": "/api/economy/buy",
+      "destination": "/api/router?route=economy/buy"
+    },
+    {
+      "source": "/api/economy/catalog",
+      "destination": "/api/router?route=economy/catalog"
+    },
+    {
+      "source": "/api/economy/equip",
+      "destination": "/api/router?route=economy/equip"
+    },
+    {
+      "source": "/api/economy/inventory",
+      "destination": "/api/router?route=economy/inventory"
+    },
+    {
+      "source": "/api/grammar/get",
+      "destination": "/api/router?route=grammar/get"
+    },
+    {
+      "source": "/api/grammar/save",
+      "destination": "/api/router?route=grammar/save"
+    },
+    {
+      "source": "/api/matching/round",
+      "destination": "/api/router?route=matching/round"
+    },
+    {
+      "source": "/api/matching/record",
+      "destination": "/api/router?route=matching/record"
+    },
+    {
+      "source": "/api/profile/get",
+      "destination": "/api/router?route=profile/get"
+    },
+    {
+      "source": "/api/profile/update",
+      "destination": "/api/router?route=profile/update"
+    },
+    {
+      "source": "/api/progress/get",
+      "destination": "/api/router?route=progress/get"
+    },
+    {
+      "source": "/api/progress/sync",
+      "destination": "/api/router?route=progress/sync"
+    },
+    {
+      "source": "/api/quests/claim",
+      "destination": "/api/router?route=quests/claim"
+    },
+    {
+      "source": "/api/quests/get",
+      "destination": "/api/router?route=quests/get"
+    },
+    {
+      "source": "/api/quests/update",
+      "destination": "/api/router?route=quests/update"
+    },
+    {
+      "source": "/api/reading-quiz/record",
+      "destination": "/api/router?route=reading-quiz/record"
+    },
+    {
+      "source": "/api/reward/grant",
+      "destination": "/api/router?route=reward/grant"
+    },
+    {
+      "source": "/api/settings/get",
+      "destination": "/api/router?route=settings/get"
+    },
+    {
+      "source": "/api/settings/update",
+      "destination": "/api/router?route=settings/update"
+    },
+    {
+      "source": "/api/story/complete",
+      "destination": "/api/router?route=story/complete"
+    },
+    {
+      "source": "/api/story/get",
+      "destination": "/api/router?route=story/get"
+    },
+    {
+      "source": "/api/titles/get",
+      "destination": "/api/router?route=titles/get"
+    },
+    {
+      "source": "/api/titles/unlock",
+      "destination": "/api/router?route=titles/unlock"
+    },
+    {
+      "source": "/api/widget/summary",
+      "destination": "/api/router?route=widget/summary"
+    },
+    {
       "source": "/((?!api(?:/|$)).*)",
       "destination": "/index.html"
     }
   ],
   "functions": {
-    "api/[...segments].js": {
+    "api/router.js": {
       "includeFiles": "data/oxford3000/{A1,A2,B1,B2,UNCLASSIFIED}.json.gz.b64"
     }
   }
