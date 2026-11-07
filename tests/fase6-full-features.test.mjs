@@ -33,6 +33,7 @@ import grammarGetHandler from "../api/_handlers/grammar/get.js";
 import grammarSaveHandler from "../api/_handlers/grammar/save.js";
 import storyGetHandler from "../api/_handlers/story/get.js";
 import storyCompleteHandler from "../api/_handlers/story/complete.js";
+import matchingRoundHandler from "../api/_handlers/matching/round.js";
 import matchingRecordHandler from "../api/_handlers/matching/record.js";
 import readingQuizRecordHandler from "../api/_handlers/reading-quiz/record.js";
 import rewardGrantHandler from "../api/_handlers/reward/grant.js";
@@ -411,24 +412,42 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.deepEqual(storyData.allStories["story-01"].completedEpisodes, [1]);
   });
   await t.test("6. Matching & Reading Quiz: record sessions with mistake tracking", async () => {
-    // 6a. Matching Round
-    const matchingVocabulary = JSON.parse(
-      fs.readFileSync(new URL("../src/data/vocabulary.json", import.meta.url), "utf8")
-    ).entries;
-    const officialPairs = matchingVocabulary.slice(0, 5).map((entry, index) => ({
-      leftId: `pair_${entry.id}_${index}`,
-      rightId: `pair_${entry.id}_${index}`,
-      wordId: entry.id
+    // 6a. Server-generated, account-bound Matching rounds.
+    const fetchOfficialRound = async () => {
+      const mockRound = createMockReqRes({
+        method: "GET",
+        token,
+        url: "/api/matching/round?level=all"
+      });
+      await matchingRoundHandler(mockRound.req, mockRound.res);
+      assert.equal(mockRound.getStatus(), 200, JSON.stringify(mockRound.getData()));
+      assert.equal(mockRound.getData().success, true);
+      assert.equal(mockRound.getData().data.totalPairs, 5);
+      assert.ok(mockRound.getData().data.roundToken);
+      return mockRound.getData().data;
+    };
+
+    const firstOfficialRound = await fetchOfficialRound();
+    const forgedPairs = firstOfficialRound.leftItems.map((left) => ({
+      leftId: left.id,
+      rightId: left.id,
+      wordId: left.wordId
     }));
+    forgedPairs[0] = {
+      leftId: "pair_forged_0",
+      rightId: "pair_forged_0",
+      wordId: "forged"
+    };
 
     const invalidMatch = createMockReqRes({
       method: "POST",
       token,
       url: "/api/matching/record",
       body: {
-        sessionId: `round_${Date.now()}_invalid`,
+        sessionId: firstOfficialRound.roundId,
+        roundToken: firstOfficialRound.roundToken,
         durationSeconds: 25,
-        matchedPairs: [{ leftId: "pair_forged_0", rightId: "pair_forged_0", wordId: "forged" }]
+        matchedPairs: forgedPairs
       }
     });
     await matchingRecordHandler(invalidMatch.req, invalidMatch.res);
@@ -436,18 +455,25 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
 
     const matchingRewards = [];
     for (let round = 0; round < 5; round++) {
+      const officialRound = await fetchOfficialRound();
+      const officialPairs = officialRound.leftItems.map((left) => ({
+        leftId: left.id,
+        rightId: left.id,
+        wordId: left.wordId
+      }));
       const mockMatch = createMockReqRes({
         method: "POST",
         token,
         url: "/api/matching/record",
         body: {
-          sessionId: `round_${Date.now()}_${round}`,
+          sessionId: officialRound.roundId,
+          roundToken: officialRound.roundToken,
           durationSeconds: 25,
           matchedPairs: officialPairs
         }
       });
       await matchingRecordHandler(mockMatch.req, mockMatch.res);
-      assert.equal(mockMatch.getStatus(), 200);
+      assert.equal(mockMatch.getStatus(), 200, JSON.stringify(mockMatch.getData()));
       assert.equal(mockMatch.getData().success, true);
       matchingRewards.push(mockMatch.getData().data.earnedXp);
     }
