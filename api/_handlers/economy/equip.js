@@ -64,10 +64,21 @@ export default async function handler(req, res) {
         throw validationError("Item tidak ditemukan dalam inventori Anda.");
       }
 
-      await tx
-        .update(schema.inventory)
-        .set({ equipped: false })
-        .where(eq(schema.inventory.userId, user.id));
+      const sameTypeItems = await tx
+        .select({ id: schema.inventory.id })
+        .from(schema.inventory)
+        .innerJoin(schema.catalog, eq(schema.inventory.itemId, schema.catalog.id))
+        .where(and(
+          eq(schema.inventory.userId, user.id),
+          eq(schema.catalog.type, type)
+        ));
+
+      for (const inventoryItem of sameTypeItems) {
+        await tx
+          .update(schema.inventory)
+          .set({ equipped: false })
+          .where(eq(schema.inventory.id, inventoryItem.id));
+      }
 
       await tx
         .update(schema.inventory)
