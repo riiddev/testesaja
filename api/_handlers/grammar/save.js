@@ -166,14 +166,19 @@ export default async function handler(req, res) {
       });
 
       const streak = await evaluateAndRecordStreakInTransaction(tx, user.id);
-      return { xpEarned, coinsEarned, streak };
+      return {
+        xpEarned,
+        coinsEarned,
+        status: isCompleted || wasAlreadyCompleted ? "completed" : "in_progress",
+        streak
+      };
     });
 
     return sendSuccess(
       res,
       {
         topicId,
-        status: isCompleted ? "completed" : "in_progress",
+        status: result.status,
         score,
         total,
         scorePct,
