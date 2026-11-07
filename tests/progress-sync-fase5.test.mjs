@@ -293,6 +293,42 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
     const eventsRows = await db.select().from(schema.progressEvents)
       .where(eq(schema.progressEvents.userId, userAId));
     assert.equal(eventsRows.length, 6);
+
+    const beforeProfile = await db
+      .select({ streak: schema.profiles.streak, lastActiveDate: schema.profiles.lastActiveDate })
+      .from(schema.profiles)
+      .where(eq(schema.profiles.userId, userAId))
+      .limit(1);
+
+    // Multiple devices replaying the same acknowledged batch concurrently must
+    // all receive ACKs without minting rewards or advancing the streak again.
+    const retries = Array.from({ length: 3 }, () => {
+      const { req, res } = createMockReqRes({
+        method: "POST",
+        token: tokenA,
+        body: { updates: batchUpdates }
+      });
+      return { req, res };
+    });
+
+    await Promise.all(retries.map(({ req, res }) => progressSyncHandler(req, res)));
+
+    for (const { res } of retries) {
+      const retryResult = res._getResult();
+      assert.equal(retryResult.statusCode, 200);
+      assert.equal(retryResult.body.data.count, 6);
+      assert.equal(retryResult.body.data.newlyProcessedCount, 0);
+      assert.equal(retryResult.body.data.xpGranted, 0);
+      assert.equal(retryResult.body.data.coinsGranted, 0);
+    }
+
+    const afterProfile = await db
+      .select({ streak: schema.profiles.streak, lastActiveDate: schema.profiles.lastActiveDate })
+      .from(schema.profiles)
+      .where(eq(schema.profiles.userId, userAId))
+      .limit(1);
+    assert.equal(afterProfile[0].streak, beforeProfile[0].streak);
+    assert.equal(afterProfile[0].lastActiveDate, beforeProfile[0].lastActiveDate);
   });
 
   // TEST 4: Cross-tenant isolation — User B cannot see User A's progress
