@@ -46,6 +46,28 @@ export default async function handler(req, res) {
         .for("update")
         .limit(1);
 
+      const sameTypeItems = await tx
+        .select({ id: schema.inventory.id })
+        .from(schema.inventory)
+        .innerJoin(schema.catalog, eq(schema.inventory.itemId, schema.catalog.id))
+        .where(and(
+          eq(schema.inventory.userId, user.id),
+          eq(schema.catalog.type, type)
+        ));
+
+      // "none" is the explicit un-equip action used by the collection UI.
+      // It still runs under the same account lock and updates only this user's
+      // items of the requested type.
+      if (itemId === "none") {
+        for (const inventoryItem of sameTypeItems) {
+          await tx
+            .update(schema.inventory)
+            .set({ equipped: false })
+            .where(eq(schema.inventory.id, inventoryItem.id));
+        }
+        return;
+      }
+
       const ownedItems = await tx
         .select({
           id: schema.inventory.id,
@@ -64,15 +86,6 @@ export default async function handler(req, res) {
         throw validationError("Item tidak ditemukan dalam inventori Anda.");
       }
 
-      const sameTypeItems = await tx
-        .select({ id: schema.inventory.id })
-        .from(schema.inventory)
-        .innerJoin(schema.catalog, eq(schema.inventory.itemId, schema.catalog.id))
-        .where(and(
-          eq(schema.inventory.userId, user.id),
-          eq(schema.catalog.type, type)
-        ));
-
       for (const inventoryItem of sameTypeItems) {
         await tx
           .update(schema.inventory)
@@ -86,7 +99,11 @@ export default async function handler(req, res) {
         .where(eq(schema.inventory.id, ownedItems[0].id));
     });
 
-    return sendSuccess(res, { equippedItemId: itemId }, "Item berhasil dipasang!");
+    return sendSuccess(
+      res,
+      { equippedItemId: itemId === "none" ? null : itemId, equipped: itemId !== "none" },
+      itemId === "none" ? "Item berhasil dilepas." : "Item berhasil dipasang!"
+    );
   } catch (err) {
     if (err.statusCode === 401 || err.code === "AUTH_ERROR") {
       return sendAuthError(res, err.message, 401);
