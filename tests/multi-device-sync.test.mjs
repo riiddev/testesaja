@@ -163,6 +163,7 @@ test("FASE 8 MULTI-DEVICE SYNC — Concurrent Device Consistency", async (t) => 
         eventId: `ev_dev1_w2_${Date.now()}`,
         wordId: officialAbility.id,
         level: "B2",
+        isCorrect: true,
         masteryStage: "learning",
         correctCount: 1,
         wrongCount: 0,
