@@ -83,7 +83,8 @@ export default async function handler(req, res) {
 
     const applicationSession = await createApplicationBridgeSession(
       signupUser.id,
-      betterSession.session
+      betterSession.session,
+      signupUser.name || signupUser.displayName || displayName
     );
 
     const authCookies = getSetCookieHeaders(signup.headers);
