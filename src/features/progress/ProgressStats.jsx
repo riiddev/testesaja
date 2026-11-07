@@ -2,8 +2,6 @@ import React from "react";
 import { getWordStatus } from "../../hooks/useSpacedRepetition.js";
 
 export function ProgressStats({ vocabulary = [], progressMap = {} }) {
-  const totalCorpus = 2971;
-
   const masteredCount = vocabulary.filter((w) => {
     const p = progressMap[w.id];
     return p && getWordStatus(p) === "mastered";
@@ -20,10 +18,10 @@ export function ProgressStats({ vocabulary = [], progressMap = {} }) {
   }).length;
 
   const levels = [
-    { id: "A1", label: "Level A1 (Beginner)", total: 892 },
-    { id: "A2", label: "Level A2 (Elementary)", total: 792 },
-    { id: "B1", label: "Level B1 (Intermediate)", total: 689 },
-    { id: "B2", label: "Level B2 (Upper Intermediate)", total: 597 }
+    { id: "A1", label: "Level A1 (Beginner)" },
+    { id: "A2", label: "Level A2 (Elementary)" },
+    { id: "B1", label: "Level B1 (Intermediate)" },
+    { id: "B2", label: "Level B2 (Upper Intermediate)" }
   ];
 
   return (
@@ -70,13 +68,13 @@ export function ProgressStats({ vocabulary = [], progressMap = {} }) {
 
         <div className="card card-tint-slate" style={{ padding: "var(--space-6)" }}>
           <span style={{ fontSize: "var(--text-xs)", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-text-secondary)", fontWeight: 700 }}>
-            Total Korpus Oxford 3000
+            Perlu Pengulangan
           </span>
           <div style={{ fontSize: "var(--text-4xl)", fontWeight: 700, fontFamily: "var(--font-heading)", color: "var(--color-accent-navy)", marginBlock: "4px" }}>
-            {totalCorpus}
+            {weakCount}
           </div>
           <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)" }}>
-            American Oxford 3000 A1–B2
+            Kata yang perlu kamu pelajari kembali
           </span>
         </div>
       </div>
@@ -94,13 +92,14 @@ export function ProgressStats({ vocabulary = [], progressMap = {} }) {
               return w.level === lvl.id && p && getWordStatus(p) === "mastered";
             }).length;
 
-            const pct = Math.round((masteredInLevel / lvl.total) * 100);
+            const levelWords = vocabulary.filter((word) => word.level === lvl.id);
+            const pct = levelWords.length > 0 ? Math.round((masteredInLevel / levelWords.length) * 100) : 0;
 
             return (
               <div key={lvl.id}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "var(--text-sm)", marginBottom: "var(--space-2)" }}>
                   <span>{lvl.label}</span>
-                  <span>{masteredInLevel} / {lvl.total} ({pct}%)</span>
+                  <span>{masteredInLevel} dikuasai ({pct}%)</span>
                 </div>
                 <div
                   style={{
