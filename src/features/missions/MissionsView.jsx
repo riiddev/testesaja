@@ -15,6 +15,9 @@ export function MissionsView({ onRewardClaimed }) {
     completedCount,
     claimedCount,
     allCompleted,
+    isLoading,
+    isServerConfirmed,
+    loadError,
     claimReward
   } = useDailyQuests({ onRewardClaimed });
 
@@ -115,6 +118,18 @@ export function MissionsView({ onRewardClaimed }) {
         )}
       </section>
 
+      {isLoading && (
+        <div className="card" role="status" aria-live="polite" style={{ padding: "var(--space-3) var(--space-4)", marginBottom: "var(--space-4)" }}>
+          Memeriksa progres misi dari server...
+        </div>
+      )}
+
+      {!isLoading && !isServerConfirmed && (
+        <div className="card" role="alert" style={{ padding: "var(--space-3) var(--space-4)", marginBottom: "var(--space-4)", borderLeft: "3px solid var(--color-danger)" }}>
+          {loadError || "Masuk ke akun untuk memuat dan memverifikasi progres misi harian."}
+        </div>
+      )}
+
       {/* 2. THREE DAILY QUEST CARDS */}
       <section className="missions-list" aria-label="Daftar Misi Hari Ini">
         {quests.map((quest, index) => {
@@ -185,7 +200,7 @@ export function MissionsView({ onRewardClaimed }) {
                     type="button"
                     className="btn-claim-reward"
                     onClick={() => handleClaim(quest)}
-                    disabled={claimingQuestId === quest.id}
+                    disabled={!isServerConfirmed || claimingQuestId === quest.id}
                     aria-label={`Klaim hadiah untuk ${quest.title}`}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
