@@ -6,14 +6,18 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: sinauuenglish-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    name: Build, Audit & Test Suite
+    name: Full Build, Audit, API & SPA Smoke Suite
     runs-on: ubuntu-latest
     env:
-      # Expose the optional repository secret to step conditions without ever
-      # printing it. Backend integration tests run only when it is configured.
-      DATABASE_URL: ${{ secrets.NEON_DEV_DIRECT_URL != '' && secrets.NEON_DEV_DIRECT_URL || secrets.DATABASE_URL }}
+      # Always use the isolated Neon Development direct connection for tests.
+      # It is never copied into Vercel Production.
+      DATABASE_URL: ${{ secrets.NEON_DEV_DIRECT_URL }}
 
     steps:
       - name: Checkout Code
@@ -28,17 +32,26 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Verify Content Parity & Core SRS Logic
-        run: npm test
-
-      - name: Verify Adaptive Learning Logic
-        run: npm run test:logic
-
-      - name: Build Vite Client
-        run: npm run build
+      - name: Verify isolated Neon Development test database is configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::Repository secret NEON_DEV_DIRECT_URL is required for the full integration suite."
+            exit 1
+          fi
+          node --input-type=module -e '
+            const u = new URL(process.env.DATABASE_URL);
+            if (!["postgres:", "postgresql:"].includes(u.protocol)) {
+              throw new Error("Expected a PostgreSQL development connection.");
+            }
+            if (u.hostname.includes("-pooler")) {
+              throw new Error("CI tests require the direct Neon Development connection.");
+            }
+            console.log("Direct Neon Development test connection is configured; credentials are hidden.");
+          '
 
       - name: Create ephemeral Better Auth test secret
-        if: ${{ env.DATABASE_URL != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -47,7 +60,5 @@ jobs:
           echo "BETTER_AUTH_SECRET=$SECRET" >> "$GITHUB_ENV"
           echo "BETTER_AUTH_URL=http://localhost:5173" >> "$GITHUB_ENV"
 
-      - name: Run Backend Integration & Security Tests
-        if: ${{ env.DATABASE_URL != '' }}
-        run: npm run test:api
-
+      - name: Run complete test:all suite
+        run: npm run test:all
