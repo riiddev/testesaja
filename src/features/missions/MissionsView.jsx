@@ -39,17 +39,18 @@ export function MissionsView({ onRewardClaimed }) {
     }
   };
 
-  // Format today date nicely in Indonesian (e.g. "Rabu, 4 November 2026")
+  // Format the exact WIB date supplied by the mission hook.
   const formattedDate = (() => {
     try {
-      const d = new Date();
+      const d = new Date(`${todayStr}T12:00:00+07:00`);
       return d.toLocaleDateString("id-ID", {
+        timeZone: "Asia/Jakarta",
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric"
       });
-    } catch (e) {
+    } catch {
       return todayStr;
     }
   })();
@@ -83,7 +84,9 @@ export function MissionsView({ onRewardClaimed }) {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
-              {completedCount} / {quests.length} Selesai
+              {isServerConfirmed
+                ? `${completedCount} / ${quests.length} Selesai`
+                : isLoading ? "Memeriksa..." : "Belum terverifikasi"}
             </span>
           </div>
         </div>
@@ -130,7 +133,8 @@ export function MissionsView({ onRewardClaimed }) {
         </div>
       )}
 
-      {/* 2. THREE DAILY QUEST CARDS */}
+      {/* Never render local-cache progress as an authoritative mission result. */}
+      {isServerConfirmed && (
       <section className="missions-list" aria-label="Daftar Misi Hari Ini">
         {quests.map((quest, index) => {
           return (
@@ -222,6 +226,7 @@ export function MissionsView({ onRewardClaimed }) {
           );
         })}
       </section>
+      )}
 
       {/* 3. DAILY COMPLETION CELEBRATION BOX */}
       {allCompleted && (

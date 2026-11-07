@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { generateDailyQuests } from "../src/features/missions/missionsEngine.js";
 import { hasUnfinishedServerMissions } from "../src/features/missions/missionStatus.js";
 import { QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE } from "../src/services/learningActivity.js";
+import { getWibDateString } from "../src/features/missions/wibDate.js";
 
 test("daily missions are deterministic for the same user and WIB date", () => {
   const dateStr = "2026-11-06";
@@ -110,4 +111,26 @@ test("sidebar alert renders an accessible exclamation using the danger token, in
   assert.match(component, /<span\s+className="sidebar-unread-alert"[\s\S]*?>\s*!\s*<\/span>/);
   assert.match(styles, /\.sidebar-unread-alert\s*\{[\s\S]*?background-color:\s*var\(--color-danger\)/);
   assert.match(styles, /\.app-sidebar\.is-collapsed \.sidebar-unread-alert\s*\{[\s\S]*?display:\s*inline-flex[\s\S]*?position:\s*absolute/);
+});
+
+
+test("WIB mission date changes exactly at midnight in Asia/Jakarta", () => {
+  assert.equal(getWibDateString(new Date("2026-11-06T16:59:59.999Z")), "2026-11-06");
+  assert.equal(getWibDateString(new Date("2026-11-06T17:00:00.000Z")), "2026-11-07");
+  assert.equal(getWibDateString(new Date("2026-11-07T16:59:59.999Z")), "2026-11-07");
+  assert.equal(getWibDateString(new Date("2026-11-07T17:00:00.000Z")), "2026-11-08");
+});
+
+test("daily quest page hides cached quest cards until server confirms the active WIB snapshot", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const component = await readFile(
+    new URL("../src/features/missions/MissionsView.jsx", import.meta.url),
+    "utf8"
+  );
+
+  const guardIndex = component.indexOf("{isServerConfirmed && (");
+  const listIndex = component.indexOf('<section className="missions-list"');
+  assert.ok(guardIndex >= 0 && listIndex > guardIndex);
+  assert.match(component, /Belum terverifikasi/);
+  assert.match(component, /Memeriksa.../);
 });

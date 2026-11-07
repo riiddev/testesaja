@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "./useAuth.jsx";
 import { api } from "../services/api.js";
 import { generateDailyQuests, enrichQuestsWithProgress } from "../features/missions/missionsEngine.js";
+import { getWibDateString } from "../features/missions/wibDate.js";
 import { hasUnfinishedServerMissions } from "../features/missions/missionStatus.js";
 import { notifyDailyQuestsChanged, subscribeToDailyQuestsChanged } from "../services/dailyQuestEvents.js";
 
@@ -29,15 +30,25 @@ function normalizeRemoteQuests(remoteQuests, dateStr) {
 export function useDailyQuests({ onRewardClaimed } = {}) {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
 
-  const todayStr = useMemo(() => {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Jakarta",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    }).formatToParts(new Date());
-    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-    return `${values.year}-${values.month}-${values.day}`;
+  const [todayStr, setTodayStr] = useState(() => getWibDateString());
+
+  // Keep the daily mission date aligned with Asia/Jakarta even when the app
+  // remains open across midnight or returns from the background.
+  useEffect(() => {
+    const refreshWibDate = () => {
+      const latest = getWibDateString();
+      setTodayStr((current) => current === latest ? current : latest);
+    };
+
+    const interval = setInterval(refreshWibDate, 60000);
+    window.addEventListener("focus", refreshWibDate);
+    document.addEventListener("visibilitychange", refreshWibDate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refreshWibDate);
+      document.removeEventListener("visibilitychange", refreshWibDate);
+    };
   }, []);
 
   const userId = user?.id || null;
@@ -61,6 +72,7 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     const res = await api.getDailyQuests(todayStr);
     if (
       !res?.success ||
+      res.data?.dateStr !== todayStr ||
       !Array.isArray(res.data?.quests) ||
       res.data.quests.length !== templateQuests.length
     ) {
