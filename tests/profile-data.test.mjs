@@ -1,3 +1,4 @@
+import { TITLES_CATALOG } from "../src/features/profile/titleSystem.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -89,4 +90,19 @@ test("missing server statistics signal an offline/local fallback rather than fak
   assert.equal(normalizeServerUserStats(undefined), null);
   assert.equal(normalizeServerUserStats(null), null);
   assert.equal(normalizeServerUserStats([]), null);
+});
+
+
+test("zero streak remains zero in consistency title progress", () => {
+  const streakTitles = TITLES_CATALOG.filter((title) =>
+    title.id === "cadence_keeper" || title.id === "endurance_polymath"
+  );
+
+  assert.equal(streakTitles.length, 2);
+  for (const title of streakTitles) {
+    const progress = title.evaluate({ streak: 0 });
+    assert.equal(progress.current, 0);
+    assert.equal(progress.percentage, 0);
+    assert.equal(progress.unlocked, false);
+  }
 });
