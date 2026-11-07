@@ -192,5 +192,8 @@ jobs:
       - name: Run Better Auth database integration tests
         run: node --test tests/better-auth-integration.test.mjs
 
+      - name: Run Neon progress and multi-device persistence tests
+        run: node tests/progress-sync-fase5.test.mjs && node tests/multi-device-sync.test.mjs
+
       - name: Run authentication and API security tests
         run: node tests/security.test.mjs
