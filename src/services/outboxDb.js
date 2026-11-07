@@ -291,13 +291,14 @@ export async function loadProgressFromCache(userId) {
 /**
  * Wipe all cached data and pending outbox for user (upon logout / switch account)
  */
-export async function clearAllUserData(userId) {
+export async function clearAllUserData(userId, { preserveOutbox = false } = {}) {
   if (!userId) return;
 
   try {
-    // 1. Clear namespaced localStorage items
+    // 1. Clear namespaced localStorage items. Pending events survive logout
+    // so an offline learner does not lose work before the next sign-in.
     const prefixes = [
-      `sinau_outbox_${userId}`,
+      ...(!preserveOutbox ? [`sinau_outbox_${userId}`] : []),
       `sinau_progress_${userId}`,
       `sinau_local_profile_${userId}`,
       `sinau_local_inventory_${userId}`,
@@ -318,7 +319,8 @@ export async function clearAllUserData(userId) {
     // Remove any user quest keys
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
-      if (key && (key.includes(userId) || key.startsWith("sinau_daily_quests_"))) {
+      const isPreservedOutbox = preserveOutbox && key === `sinau_outbox_${userId}`;
+      if (key && !isPreservedOutbox && (key.includes(userId) || key.startsWith("sinau_daily_quests_"))) {
         localStorage.removeItem(key);
       }
     }
@@ -329,17 +331,20 @@ export async function clearAllUserData(userId) {
   if (!db) return;
 
   try {
-    const tx = db.transaction([STORE_OUTBOX, STORE_PROGRESS], "readwrite");
-    const outboxStore = tx.objectStore(STORE_OUTBOX);
-    const index = outboxStore.index("userId");
-    const req = index.getAllKeys(userId);
+    const stores = preserveOutbox
+      ? [STORE_PROGRESS]
+      : [STORE_OUTBOX, STORE_PROGRESS];
+    const tx = db.transaction(stores, "readwrite");
 
-    req.onsuccess = () => {
-      const keys = req.result || [];
-      for (const k of keys) {
-        outboxStore.delete(k);
-      }
-    };
+    if (!preserveOutbox) {
+      const outboxStore = tx.objectStore(STORE_OUTBOX);
+      const index = outboxStore.index("userId");
+      const req = index.getAllKeys(userId);
+      req.onsuccess = () => {
+        const keys = req.result || [];
+        for (const k of keys) outboxStore.delete(k);
+      };
+    }
 
     tx.objectStore(STORE_PROGRESS).delete(userId);
   } catch (e) {}

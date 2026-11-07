@@ -175,7 +175,12 @@ async function request(action, payload = {}, requiresAuth = true, retryCount = 0
     return requestApi("/api/progress/get", { method: "GET" }, true);
   }
   if (action === "syncProgress") {
-    return requestApi("/api/progress/sync", { method: "POST", body: JSON.stringify(payload) }, true);
+    const { keepalive = false, ...body } = payload;
+    return requestApi("/api/progress/sync", {
+      method: "POST",
+      body: JSON.stringify(body),
+      keepalive
+    }, true);
   }
 
   // 4. Dispatch Fase 6 Settings, Avatar, Titles, Grammar, Story, Matching, Reading Quiz, and Activity History
@@ -485,8 +490,8 @@ export const api = {
     return request("getProgress", {}, true);
   },
 
-  async syncProgress(updates = []) {
-    return request("syncProgress", { updates }, true);
+  async syncProgress(updates = [], options = {}) {
+    return request("syncProgress", { updates, keepalive: Boolean(options.keepalive) }, true);
   },
 
   // Quizzes

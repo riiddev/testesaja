@@ -20,7 +20,7 @@ function clearLocalUserCache(userId = null) {
   }
 
   if (userId) {
-    clearAllUserData(userId).catch(() => {});
+    clearAllUserData(userId, { preserveOutbox: true }).catch(() => {});
   }
 }
 
