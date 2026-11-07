@@ -3,12 +3,14 @@ import {
 } from "../../components/common/Icons.jsx";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { generateMatchingRound } from "./matchingGenerator.js";
+import { api } from "../../services/api.js";
 import "../../styles/matching.css";
 
 export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
   const [levelFilter, setLevelFilter] = useState("all");
-  const [roundData, setRoundData] = useState(() => generateMatchingRound(vocabulary, "all", 5));
+  const [roundData, setRoundData] = useState(null);
+  const [roundLoading, setRoundLoading] = useState(true);
+  const [roundError, setRoundError] = useState("");
   const [selectedLeft, setSelectedLeft] = useState(null);
   const [selectedRight, setSelectedRight] = useState(null);
   const [matchedPairs, setMatchedPairs] = useState([]);
@@ -23,7 +25,30 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
 
   const boardRef = useRef(null);
 
-  // Initialize new round
+  // Fetch server-issued signed Matching challenges; the browser never
+  // decides which five vocabulary pairs are eligible for a reward.
+  const loadRound = useCallback(async (lvl = "all") => {
+    setRoundLoading(true);
+    setRoundError("");
+    try {
+      const response = await api.getMatchingRound({ level: lvl });
+      if (!response?.success || !response.data?.roundToken || !response.data?.roundId) {
+        throw new Error(response?.error || response?.message || "Server belum mengirim ronde resmi.");
+      }
+      setRoundData(response.data);
+    } catch (error) {
+      setRoundData(null);
+      setRoundError(error?.message || "Gagal memuat ronde Matching.");
+    } finally {
+      setRoundLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadRound(levelFilter);
+  }, [levelFilter, loadRound]);
+
+  // Initialize a fresh server-issued round.
   const startNewRound = useCallback((lvl = levelFilter) => {
     setSelectedLeft(null);
     setSelectedRight(null);
@@ -32,13 +57,23 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
     setHintedPair(null);
     setLines([]);
     setDragState(null);
-    setRoundData(generateMatchingRound(vocabulary, lvl, 5));
-  }, [vocabulary, levelFilter]);
+    if (lvl !== levelFilter) {
+      setLevelFilter(lvl);
+    } else {
+      void loadRound(lvl);
+    }
+  }, [levelFilter, loadRound]);
 
-  // Handle level change
+  // Handle level change. The effect above will request the new official round.
   const handleLevelChange = (lvl) => {
+    setSelectedLeft(null);
+    setSelectedRight(null);
+    setMatchedPairs([]);
+    setWrongPair(null);
+    setHintedPair(null);
+    setLines([]);
+    setDragState(null);
     setLevelFilter(lvl);
-    startNewRound(lvl);
   };
 
   // Measure anchor ports and recalculate Bézier curves
@@ -99,6 +134,7 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
         if (onRecordMatchComplete) {
           onRecordMatchComplete({
             roundId: roundData.roundId,
+            roundToken: roundData.roundToken,
             matchedPairs: newMatched
           });
         }
@@ -203,7 +239,23 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
     setDragState(null);
   };
 
-  const isRoundComplete = matchedPairs.length === roundData.totalPairs;
+  const isRoundComplete = Boolean(roundData && matchedPairs.length === roundData.totalPairs);
+
+  if (roundLoading || !roundData) {
+    return (
+      <div className="card card-tint-sand" style={{ maxWidth: "680px", margin: "0 auto", padding: "var(--space-8)", textAlign: "center" }} role="status" aria-live="polite">
+        <h3 style={{ marginTop: 0 }}>Memuat ronde Matching</h3>
+        <p style={{ color: "var(--color-text-secondary)" }}>
+          {roundError || "Menyiapkan pasangan kata dan konteks resmi dari server."}
+        </p>
+        {roundError && (
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => void loadRound(levelFilter)}>
+            Coba Lagi
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
