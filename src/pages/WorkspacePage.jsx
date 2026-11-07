@@ -304,6 +304,7 @@ export function WorkspacePage() {
                     activityType: "matching",
                     refId: roundId,
                     matchedPairs,
+                    roundToken,
                     durationSeconds: 30
                   });
                 }}
