@@ -4,7 +4,7 @@ import { api } from "../services/api.js";
 import { getWordStatus } from "./useSpacedRepetition.js";
 import { TITLES_CATALOG, getTitleById, evaluateAllTitles } from "../features/profile/titleSystem.js";
 import { calculateLevelFromXp, getCatalogItemById } from "../features/collection/collectionCatalog.js";
-import { getUserScopedStorageKey, normalizeServerProfile } from "../lib/profileData.js";
+import { getUserScopedStorageKey, normalizeServerProfile, normalizeServerUserStats } from "../lib/profileData.js";
 
 const LOCAL_PROFILE_KEY = "sinau_local_profile";
 const LOCAL_AVATAR_URL_KEY = "sinau_avatar_url";
@@ -54,6 +54,8 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
   });
 
   const [unlockedTitleIds, setUnlockedTitleIds] = useState([]);
+  const [serverStatsState, setServerStatsState] = useState({ userId: null, stats: null });
+  const serverUserStats = serverStatsState.userId === user?.id ? serverStatsState.stats : null;
   const [isLoading, setIsLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -100,17 +102,19 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     } catch (e) {}
 
     return {
-      totalStartedWords: started,
-      masteredWordsCount: mastered,
-      b2MasteredCount: b2Mastered,
-      totalReviewsDone: totalReviews,
-      contextReviewsCount: Math.round(totalReviews * 0.7),
+      // The server's user_stats ledger is authoritative for authenticated
+      // accounts. Local progress remains a fallback for offline-only display.
+      totalStartedWords: serverUserStats?.totalStartedWords ?? started,
+      masteredWordsCount: serverUserStats?.masteredWordsCount ?? mastered,
+      b2MasteredCount: serverUserStats?.b2MasteredCount ?? b2Mastered,
+      totalReviewsDone: serverUserStats?.totalReviewsDone ?? totalReviews,
+      contextReviewsCount: Math.round((serverUserStats?.totalReviewsDone ?? totalReviews) * 0.7),
       completedGrammarCount: grammarCount,
       readingCompletedCount: readingCount,
       adventureCompletedCount: Math.min(started > 10 ? 3 : 0, 12),
       streak: profile.streak ?? 0
     };
-  }, [vocabulary, progressMap, profile.streak]);
+  }, [vocabulary, progressMap, profile.streak, serverUserStats]);
 
   // Evaluated titles with live progress
   const evaluatedTitles = useMemo(() => {
@@ -186,6 +190,10 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
         const remoteProfile = profileRes.data.profile;
         const canonicalProfile = normalizeServerProfile(remoteProfile, user.displayName);
         setProfile(canonicalProfile);
+        setServerStatsState({
+          userId: user.id,
+          stats: normalizeServerUserStats(profileRes.data.userStats)
+        });
         writeJson(profileStorageKey, canonicalProfile);
 
         // Unlock state comes from the server. Do not infer ownership from stale
@@ -445,7 +453,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     } catch (err) {
       return { success: false, error: err.message || "Gagal membeli item." };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, profileStorageKey, inventoryStorageKey]);
 
   // Equip border or outfit — UI/cache changes only after server confirmation.
   const equipItem = useCallback(async (itemId, type = "border") => {
@@ -520,7 +528,7 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
       console.warn("Grant reward error:", err.message);
       return { success: false, error: err.message };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, profileStorageKey]);
 
   const activeTitleObj = useMemo(() => {
     if (!profile.activeTitle) return null;
