@@ -337,3 +337,65 @@ STATUS FASE 2 — 6 NOVEMBER 2026
 - Environment Variables Vercel branch-specific `BETTER_AUTH_SECRET` (Sensitive) dan `BETTER_AUTH_URL` telah dibuat untuk Preview `feat/neon-migration`; `DATABASE_URL` pooled masih menunggu project Neon development.
 - CI run 42246638151 berhasil untuk install, audit logic/content, dan build Vite; Backend Integration & Security Tests dilewati karena DATABASE_URL belum tersedia.
 - Preview deployment commit ini berstatus READY dan region Function terverifikasi `sin1`; alias branch tetap `https://sinauuenglish-git-feat-neon-migration-thoodev.vercel.app`.
+
+
+==========================================================
+STATUS UPDATE — 7 NOVEMBER 2026 (HASIL PENGERJAAN TERBARU)
+==========================================================
+
+## Repository, merge, and deployment
+
+- Repo aktif tetap `riiddev/testesaja`; perubahan dilanjutkan langsung pada `main` sesuai persetujuan pengguna.
+- PR #35 ("Fix Fase 4 economy atomicity and database recovery") telah digabung ke `main` melalui merge commit `f89a7c184dbef69f6ec7cc38410bb29886844c96`.
+- Perubahan lanjutan setelah merge—CI lengkap, perbaikan jalur auth, penghapusan jalur API legacy yang tidak didukung, sinkronisasi preferensi pengingat, dan penghapusan angka total katalog dari UI—sudah masuk `main`.
+- CI `npm run test:all` pada commit `ef9aff06c54d92b18d58c528384c76aaffa2b7f6` berstatus SUCCESS. CI mencakup verifikasi konten, logic, tes regresi responsif berbasis CSS, build Vite, backend API/security/integration di Neon Development, dan smoke test HTTP untuk 9 rute SPA beserta aset dan manifest.
+- Vercel Production deployment API mencapai batas gratis harian lebih dari 100 permintaan deployment dalam periode 24 jam pada 7 November 2026. Permintaan deployment langsung ditolak dengan HTTP 402 dan `retryAfter=86400`. Tidak ada paket berbayar atau perubahan billing yang dilakukan.
+- Deployment Production terakhir yang READY sebelum perubahan setelah commit `04cdaaa9becb41a347058a2abf6207c1ea260f98`. Halaman utama Production tetap merespons HTTP 200 dan tidak ada runtime error pada pemeriksaan terakhir, tetapi perubahan `main` setelah commit tersebut BELUM dipromosikan ke Production. Jangan menganggap kode terbaru di GitHub sudah aktif di domain Production sampai ada deployment READY baru dari SHA terbaru.
+
+## Fase 3 — autentikasi dan API inti (status aktual)
+
+- Better Auth kini menjadi sumber credential dan session untuk akun baru: handler registrasi memakai `auth.api.signUpEmail`, handler login akun Better Auth memakai `auth.api.signInEmail`, dan logout mencabut Better Auth session serta bridge API terkait.
+- Untuk kompatibilitas endpoint fitur yang masih menggunakan `Authorization: Bearer`, server membuat token bridge acak dan hanya menyimpan hash-nya pada tabel `sessions`; sesi HttpOnly Better Auth tetap menjadi sesi utama.
+- Akun Neon lama yang belum mempunyai baris `auth_accounts` tetap dapat login melalui verifier lama. Hash SHA-256×5.000 ditingkatkan ke scrypt setelah password benar, tanpa mengganti user ID atau menghapus progres. Ini jalur transisi yang disengaja; belum semua akun lama dikonversi menjadi credential Better Auth.
+- CI pada commit `ef9aff0` menjalankan tes handler aplikasi, bukan hanya library Better Auth: registrasi membuat credential dan session Better Auth, login mengembalikan identitas yang sama, logout mencabut session, dan login akun legacy tetap berhasil.
+- Email verification dan reset password belum diaktifkan; keduanya tetap pada fase roadmap yang sesuai.
+
+## Fase 4 — ekonomi dan hadiah di server
+
+- Operasi ledger XP/koin, pembelian item, klaim misi, streak, Matching, Grammar, kuis bacaan, Story, reward bacaan, dan batch SRS disatukan dalam transaksi database yang sesuai dan memakai kunci baris akun untuk mencegah race condition.
+- Event reward memakai idempotency key di ledger; klaim/replay ganda tidak menggandakan saldo. Batas XP harian Matching dihitung di dalam transaksi setelah akun dikunci.
+- Endpoint reward generik dibatasi ke penyelesaian artikel HABIT resmi. Grammar, Matching, Story, dan kuis bacaan menggunakan endpoint khusus yang memverifikasi konten/jawaban resmi.
+- Tes Fase 4 terakhir: 11/11 lulus. Tes keamanan: 12/12 lulus.
+
+## Fase 5 — sinkronisasi offline-first
+
+- Batch `/api/progress/sync` sekarang atomik: progress_events, progress kata, user_stats, ledger hadiah dan streak dibatalkan bersama bila transaksi gagal.
+- Baris profile dikunci per akun untuk menyerialkan batch dari beberapa perangkat. Re-submit event lama memberi ACK tanpa reward baru dan tanpa memperpanjang streak.
+- Tes Fase 5 terakhir: 8/8 lulus; tes multi-device/concurrent consistency: 8/8 lulus.
+- Antrean IndexedDB dan logika UI sebelumnya tetap menjadi dasar outbox; uji offline fisik di HP dan pemakaian harian masih harus dilakukan oleh pengguna.
+
+## Fase 6 — cakupan fitur dan perbaikan UI
+
+- API kuis Grammar generik yang tidak lagi didukung dihapus dari UI; `QuizRunner` mengirim jawaban per soal dengan ID resmi ke endpoint Grammar agar skor dihitung server.
+- Impor backup akun/progres dari versi lama di Pengaturan dihapus karena keputusan proyek adalah memulai akun V2 dari nol; backup operasional database dilakukan lewat prosedur pengembang.
+- Fallback umum ke Google Apps Script untuk aksi API yang tidak dikenal dihapus. Aksi yang belum didukung sekarang gagal eksplisit (HTTP 501) alih-alih memberikan sukses palsu atau berpindah diam-diam ke Apps Script.
+- Preferensi target harian kini membaca bentuk respons `data.settings.dailyGoal` yang benar dan rollback pilihan UI saat server gagal menyimpan.
+- Preferensi jadwal pengingat menggunakan field schema Neon yang benar, dipisah per user ID, dan menggunakan jam Asia/Jakarta. Pesan UI menjelaskan bahwa jadwal hanya dicek ketika halaman/aplikasi masih terbuka; notifikasi saat aplikasi tertutup belum tersedia.
+- Angka total katalog tidak lagi ditampilkan pada landing, beranda level, daftar Grammar, daftar bacaan, daftar kosakata, dan statistik progres. Angka personal dan penghitung fungsional latihan tetap dipertahankan.
+- Tes Fase 6 backend terakhir: 11/11 lulus; widget summary: 5/5; smoke test SPA: 9 rute dan 5 aset lulus. Tes regresi angka katalog lulus.
+- Tes responsif yang berjalan di CI memeriksa aturan CSS/breakpoint/touch target; belum menggantikan screenshot visual, interaksi browser (klik/formulir) di berbagai viewport, zoom teks 200%, atau tes perangkat fisik.
+
+## Backup, Production, dan data
+
+- `docs/database-backup-restore.md`, `scripts/backup-db.mjs`, dan `scripts/restore-db.mjs` menyediakan backup manual konsisten 23 tabel, dry-run restore, perlindungan ON CONFLICT DO NOTHING, dan reset sequence BIGSERIAL setelah pemulihan.
+- Snapshot Neon Production `sinauuenglish-before-production-cutover-2026-11-07` masih menjadi recovery point. Belum ada ekspor JSON backup Production yang dijalankan pada sesi ini, dan belum ada backup otomatis terjadwal.
+- Database Neon Production tidak di-reset atau diubah selama pekerjaan ini. Pada pemeriksaan terakhir terdapat 11 item katalog, 1 user, 1 profile, 1 sesi kompatibilitas dan belum ada progres kata. Baris akun tersebut dipertahankan karena berpotensi merupakan akun aktif pengguna.
+- Neon Development dipakai untuk CI; beberapa baris uji mungkin tersisa dari run lama. Tidak ada reset massal database Development yang dilakukan.
+- Variable `SINAI_APPS_SCRIPT_URL` masih ada di Vercel. Penghapusan/reset Google Sheets belum dilakukan. Fase 7 tetap menunggu audit pemakaian terakhir dan jumlah baris/tab dari pemilik spreadsheet; jangan mengosongkan Sheets sebelum seluruh UI/API berhenti membacanya/menulisnya.
+
+## Status gerbang stabilitas
+
+- Automated suite di GitHub Actions: lulus untuk commit `ef9aff0`.
+- Economy, SRS transactionality, auth handler Better Auth untuk akun baru, legacy login compatibility, server-side anti-tamper, dan UI catalog count regression: diuji di Neon Development/CI.
+- Belum lulus penuh: deployment Production dari SHA terbaru (tertahan batas deployment Vercel), verifikasi manual browser untuk semua alur UI setelah perubahan terbaru, screenshot visual di 320–1920 px, perangkat Android fisik, 7 hari pemakaian tanpa kehilangan data, audit akhir semua pemanggilan Apps Script, dan reset Sheets Fase 7.
+- Karena syarat-syarat tersebut belum terpenuhi, **GERBANG STABILITAS BELUM DIBUKA**. Fase 12–20 tidak dimulai.
