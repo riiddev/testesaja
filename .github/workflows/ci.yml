@@ -2,7 +2,7 @@ name: SinauEnglish V2 CI
 
 on:
   push:
-    branches: [ main, feat/neon-migration ]
+    branches: [ main, feat/neon-migration, fix/fase4-economy-atomicity ]
   pull_request:
     branches: [ main ]
 
@@ -13,7 +13,7 @@ jobs:
     env:
       # Expose the optional repository secret to step conditions without ever
       # printing it. Backend integration tests run only when it is configured.
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.NEON_DEV_DIRECT_URL != '' && secrets.NEON_DEV_DIRECT_URL || secrets.DATABASE_URL }}
 
     steps:
       - name: Checkout Code
