@@ -1,7 +1,9 @@
 /**
  * POST /api/auth/login
- * 
- * Authenticates user credentials with rate-limiting and session token generation.
+ *
+ * Better Auth is the primary credential provider. Accounts created before
+ * the Better Auth cutover retain a verified legacy-password login path and
+ * are upgraded to Better Auth after a successful compatibility login later.
  */
 
 import crypto from "crypto";
@@ -11,12 +13,18 @@ import {
   verifyPassword,
   needsPasswordRehash,
   hashPassword,
-  getSessionCookieSecurity,
   createSessionToken,
   parseJsonBody,
   checkLoginRateLimit,
   clearLoginRateLimit
 } from "../../_lib/auth.js";
+import { auth } from "../../_lib/better-auth.js";
+import {
+  createApplicationBridgeSession,
+  getBetterAuthSessionFromHeaders,
+  getLegacySessionCookie,
+  getSetCookieHeaders
+} from "../../_lib/app-auth-session.js";
 import {
   sendSuccess,
   sendAuthError,
@@ -25,6 +33,13 @@ import {
   sendServerError,
   sendJson
 } from "../../_lib/response.js";
+
+function isBetterAuthCredentialError(error) {
+  const status = Number(error?.statusCode || error?.status);
+  const code = String(error?.code || error?.body?.code || "").toUpperCase();
+  return status === 400 || status === 401 || code.includes("INVALID_EMAIL") ||
+    code.includes("INVALID_PASSWORD") || code.includes("UNAUTHORIZED");
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -40,19 +55,17 @@ export default async function handler(req, res) {
       return sendValidationError(res, "Email dan kata sandi wajib diisi.");
     }
 
-    // Rate Limiting Protection (Max 5 attempts per 15 minutes per IP + email)
     const forwardedFor = String(req.headers["x-forwarded-for"] || "")
       .split(",")[0]
       .trim();
     const clientIp = forwardedFor || req.socket?.remoteAddress || "127.0.0.1";
-    const rateLimitKey = `${clientIp}:${email}`;
+    const rateLimitKey = clientIp + ":" + email;
     const rateCheck = await checkLoginRateLimit(rateLimitKey);
 
     if (!rateCheck.allowed) {
       return sendRateLimitError(res, rateCheck.remainingSeconds);
     }
 
-    // Query user
     const userList = await db
       .select()
       .from(schema.users)
@@ -64,15 +77,70 @@ export default async function handler(req, res) {
     }
 
     const user = userList[0];
+    const betterAccounts = await db
+      .select({ id: schema.authAccounts.id })
+      .from(schema.authAccounts)
+      .where(eq(schema.authAccounts.userId, user.id))
+      .limit(1);
 
-    // Verify Password
+    if (betterAccounts.length > 0) {
+      let signin;
+      try {
+        signin = await auth.api.signInEmail({
+          returnHeaders: true,
+          body: { email, password }
+        });
+      } catch (error) {
+        if (isBetterAuthCredentialError(error)) {
+          return sendAuthError(res, "Email atau kata sandi tidak cocok.", 401);
+        }
+        if (Number(error?.statusCode || error?.status) === 429) {
+          return sendRateLimitError(res, 900);
+        }
+        throw error;
+      }
+
+      const betterSession = await getBetterAuthSessionFromHeaders(signin?.headers);
+      if (!betterSession?.user?.id || betterSession.user.id !== user.id || !betterSession.session?.id) {
+        return sendAuthError(res, "Sesi masuk tidak dapat diverifikasi. Silakan coba lagi.", 401);
+      }
+
+      await db
+        .update(schema.users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(schema.users.id, user.id));
+
+      const applicationSession = await createApplicationBridgeSession(
+        user.id,
+        betterSession.session
+      );
+
+      await clearLoginRateLimit(rateLimitKey);
+      const cookies = [
+        ...getSetCookieHeaders(signin.headers),
+        getLegacySessionCookie(req, applicationSession.token)
+      ];
+
+      return sendSuccess(
+        res,
+        {
+          token: applicationSession.token,
+          user: applicationSession.user
+        },
+        "Berhasil masuk ke SinauEnglish.",
+        200,
+        { "Set-Cookie": cookies }
+      );
+    }
+
+    // Compatibility for accounts that predate Better Auth. A legacy account
+    // is not migrated or recreated: credentials are verified in place and a
+    // SHA-256 legacy hash is upgraded to scrypt after successful verification.
     const isValid = verifyPassword(password, user.passwordHash, user.salt);
     if (!isValid) {
       return sendAuthError(res, "Email atau kata sandi tidak cocok.", 401);
     }
 
-    // Preserve the same account and transparently upgrade Apps Script password
-    // hashes to scrypt after the user proves possession of the correct password.
     if (needsPasswordRehash(user.passwordHash)) {
       const upgraded = hashPassword(password);
       await db
@@ -84,18 +152,14 @@ export default async function handler(req, res) {
         .where(eq(schema.users.id, user.id));
     }
 
-    // Clear Rate Limit on successful login
     await clearLoginRateLimit(rateLimitKey);
-
-    // Update lastLoginAt
     await db
       .update(schema.users)
       .set({ lastLoginAt: new Date() })
       .where(eq(schema.users.id, user.id));
 
-    // Create session token
     const { rawToken, tokenHash } = createSessionToken();
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     await db.insert(schema.sessions).values({
       id: "sess_" + crypto.randomBytes(8).toString("hex"),
@@ -103,8 +167,6 @@ export default async function handler(req, res) {
       tokenHash,
       expiresAt
     });
-
-    const cookieHeader = `sinau_session=${encodeURIComponent(rawToken)}; Path=/; HttpOnly; SameSite=Lax${getSessionCookieSecurity(req)}; Max-Age=${30 * 24 * 60 * 60}`;
 
     return sendSuccess(
       res,
@@ -119,11 +181,10 @@ export default async function handler(req, res) {
       },
       "Berhasil masuk ke SinauEnglish.",
       200,
-      { "Set-Cookie": cookieHeader }
+      { "Set-Cookie": getLegacySessionCookie(req, rawToken) }
     );
   } catch (err) {
     console.error("[API login] Error:", err);
-    return sendServerError(res, "Gagal memproses login: " + err.message);
+    return sendServerError(res, "Gagal memproses login. Silakan coba lagi.");
   }
 }
-
