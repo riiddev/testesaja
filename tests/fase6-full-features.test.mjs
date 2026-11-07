@@ -332,8 +332,8 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
     assert.equal(mockSaveGrammar.getData().data.status, "completed");
     assert.ok(mockSaveGrammar.getData().data.xpEarned > 0);
 
-    // The compatibility reward endpoint uses the same ledger event ID, so it
-    // cannot mint a second payout after /grammar/save has already granted it.
+    // Generic rewards cannot grant Grammar payouts. This endpoint is restricted
+    // to verified HABIT article completion; Grammar uses /api/grammar/save.
     const duplicateReward = createMockReqRes({
       method: "POST",
       token,
@@ -341,9 +341,8 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
       body: { source: "grammar_quiz", refId: "present-simple", eventId: "forged-second-payment" }
     });
     await rewardGrantHandler(duplicateReward.req, duplicateReward.res);
-    assert.equal(duplicateReward.getStatus(), 200);
-    assert.equal(duplicateReward.getData().data.alreadyRewarded, true);
-    assert.equal(duplicateReward.getData().data.earnedXp, 0);
+    assert.equal(duplicateReward.getStatus(), 400);
+    assert.match(duplicateReward.getData().error, /endpoint penyelesaian resminya/i);
 
     const mockRetake = createMockReqRes({
       method: "POST",
