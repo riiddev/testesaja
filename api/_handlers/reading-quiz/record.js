@@ -152,6 +152,8 @@ export default async function handler(req, res) {
         alreadyRewarded: result.ledger.alreadyProcessed,
         earnedXp: result.ledger.alreadyProcessed ? 0 : result.ledger.xpEarned,
         earnedCoins: result.ledger.alreadyProcessed ? 0 : result.ledger.coinsEarned,
+        totalXp: result.ledger.totalXp,
+        totalCoins: result.ledger.totalCoins,
         streak: result.streak?.streak
       },
       "Kuis bacaan berhasil diselesaikan!"
