@@ -8,7 +8,7 @@ import { api } from "../../services/api.js";
 import { useAuth } from "../../hooks/useAuth.jsx";
 import { getGrammarTopic } from "../../data/grammar/grammarRegistry.js";
 
-export function QuizRunner({ topic, onFinish, onRetry }) {
+export function QuizRunner({ topic, onFinish, onRetry, claimReward }) {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -82,10 +82,18 @@ export function QuizRunner({ topic, onFinish, onRetry }) {
         setSaveStatus("Menyimpan hasil kuis ke akunmu...");
 
         try {
-          const res = await api.saveGrammarProgress({
-            topicId: topic.id,
-            answers: nextAnswers
-          });
+          const payload = {
+            eventId: `grammar:${officialTopic.id}:first_complete`,
+            source: "grammar_quiz",
+            refId: officialTopic.id,
+            meta: { answers: nextAnswers }
+          };
+          const res = claimReward
+            ? await claimReward(payload)
+            : await api.saveGrammarProgress({
+                topicId: officialTopic.id,
+                answers: nextAnswers
+              });
 
           if (!res?.success || !res.data) {
             throw new Error(res?.error || res?.message || "Server belum mengonfirmasi penyimpanan.");

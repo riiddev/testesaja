@@ -147,3 +147,17 @@ test("authenticated mission page offers a retry after server snapshot failure", 
   assert.match(component, /id="missions-refresh-btn"/);
   assert.match(component, /onClick=\{\(\) => void refresh\(\)\}/);
 });
+
+
+test("legacy QuizRunner submits Grammar answers through the profile's shared reward recorder", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [runner, workspace] = await Promise.all([
+    readFile(new URL("../src/features/quiz/QuizRunner.jsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/pages/WorkspacePage.jsx", import.meta.url), "utf8")
+  ]);
+
+  assert.match(runner, /claimReward\(payload\)/);
+  assert.match(runner, /source:\s*"grammar_quiz"/);
+  assert.match(runner, /refId:\s*officialTopic\.id/);
+  assert.match(workspace, /claimReward=\{userProfile\.claimReward\}/);
+});

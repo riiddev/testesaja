@@ -374,6 +374,7 @@ export function WorkspacePage() {
                 topic={quizTopic || grammarTopics[0]}
                 onFinish={() => navigate("/belajar/grammar")}
                 onRetry={setQuizTopic}
+                claimReward={userProfile.claimReward}
               />
             </section>
           )}
