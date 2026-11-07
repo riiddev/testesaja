@@ -6,7 +6,7 @@
  */
 
 import { eq, and } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../db/index.js";
+import { withTransaction, schema } from "../../db/index.js";
 import { getWibDateStr, getWibYesterdayStr } from "./wibDate.js";
 
 export async function evaluateAndRecordStreakInTransaction(tx, userId) {
@@ -82,7 +82,7 @@ export async function evaluateAndRecordStreakInTransaction(tx, userId) {
 }
 
 export async function evaluateAndRecordStreak(userId) {
-  return getTransactionDb().transaction((tx) =>
+  return withTransaction((tx) =>
     evaluateAndRecordStreakInTransaction(tx, userId)
   );
 }
