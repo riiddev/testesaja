@@ -475,6 +475,13 @@ test("FASE 6 TEST SUITE — Complete Feature Handlers & Activity Log", async (t)
       await matchingRecordHandler(mockMatch.req, mockMatch.res);
       assert.equal(mockMatch.getStatus(), 200, JSON.stringify(mockMatch.getData()));
       assert.equal(mockMatch.getData().success, true);
+      const serverBalanceRows = await db
+        .select({ xp: schema.profiles.xp, coins: schema.profiles.coins })
+        .from(schema.profiles)
+        .where(eq(schema.profiles.userId, testUserId))
+        .limit(1);
+      assert.equal(mockMatch.getData().data.totalXp, serverBalanceRows[0].xp);
+      assert.equal(mockMatch.getData().data.totalCoins, serverBalanceRows[0].coins);
       matchingRewards.push(mockMatch.getData().data.earnedXp);
     }
 

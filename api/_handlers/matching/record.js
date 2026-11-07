@@ -173,6 +173,9 @@ export default async function handler(req, res) {
         dailyCapXp: result.dailyCapXp,
         earnedXp: result.ledger.alreadyProcessed ? 0 : result.ledger.xpEarned,
         earnedCoins: result.ledger.alreadyProcessed ? 0 : result.ledger.coinsEarned,
+        totalXp: result.ledger.totalXp,
+        totalCoins: result.ledger.totalCoins,
+        alreadyRewarded: result.ledger.alreadyProcessed,
         streak: result.streak?.streak
       },
       "Sesi matching konteks kalimat berhasil dicatat!"
