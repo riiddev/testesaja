@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { generateDailyQuests } from "../src/features/missions/missionsEngine.js";
+import { hasUnfinishedServerMissions } from "../src/features/missions/missionStatus.js";
+import { QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE } from "../src/services/learningActivity.js";
 
 test("daily missions are deterministic for the same user and WIB date", () => {
   const dateStr = "2026-11-06";
@@ -37,4 +39,60 @@ test("server and client can generate only the known six mission IDs", () => {
     assert.equal(quests.length, 3);
     for (const quest of quests) assert.ok(knownIds.has(quest.id));
   }
+});
+
+
+test("sidebar alert stays hidden until the active account has a current server snapshot", () => {
+  const incomplete = [{ isCompleted: false }, { isCompleted: true }];
+  assert.equal(hasUnfinishedServerMissions({
+    isAuthenticated: true,
+    isLoading: true,
+    hasServerSnapshot: false,
+    quests: incomplete
+  }), false);
+  assert.equal(hasUnfinishedServerMissions({
+    isAuthenticated: true,
+    isLoading: false,
+    hasServerSnapshot: false,
+    quests: incomplete
+  }), false);
+  assert.equal(hasUnfinishedServerMissions({
+    isAuthenticated: false,
+    isLoading: false,
+    hasServerSnapshot: false,
+    quests: incomplete
+  }), false);
+});
+
+test("sidebar alert appears only when a confirmed server mission is unfinished", () => {
+  assert.equal(hasUnfinishedServerMissions({
+    isAuthenticated: true,
+    isLoading: false,
+    hasServerSnapshot: true,
+    quests: [{ isCompleted: false }, { isCompleted: true }]
+  }), true);
+  assert.equal(hasUnfinishedServerMissions({
+    isAuthenticated: true,
+    isLoading: false,
+    hasServerSnapshot: true,
+    quests: [{ isCompleted: true }, { isCompleted: true }]
+  }), false);
+  assert.equal(hasUnfinishedServerMissions({
+    isAuthenticated: true,
+    isLoading: false,
+    hasServerSnapshot: true,
+    quests: []
+  }), false);
+});
+
+test("the shared activity recorder declares all quest sources including offline-first SRS", () => {
+  assert.deepEqual(QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE, {
+    vocabulary_new: "vocab_learn",
+    srs_review: "srs_review",
+    grammar: "grammar",
+    matching: "matching",
+    reading_quiz: "reading_quiz",
+    reading_complete: "reading_complete",
+    story_episode: "story"
+  });
 });
