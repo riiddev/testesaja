@@ -6,7 +6,7 @@
  */
 
 import { eq } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../../db/index.js";
+import { withTransaction, schema } from "../../../db/index.js";
 import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreakInTransaction } from "../../_lib/streak.js";
@@ -98,7 +98,7 @@ export default async function handler(req, res) {
       Math.random().toString(36).slice(2, 8);
     const reward = REWARDS_CONFIG.reading_quiz_first_complete;
 
-    const result = await getTransactionDb().transaction(async (tx) => {
+    const result = await withTransaction(async (tx) => {
       await tx
         .select({ userId: schema.profiles.userId })
         .from(schema.profiles)
