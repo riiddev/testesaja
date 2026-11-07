@@ -83,7 +83,7 @@ export function VocabGrid({ vocabulary = [], progressMap = {}, onStartStudy }) {
         </div>
 
         <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)", fontWeight: 700 }} id="vocab-total-count">
-          Menampilkan {displayedWords.length} dari {filteredWords.length} kata
+          Jelajahi kata yang sesuai dengan filter pilihanmu.
         </span>
       </div>
 
