@@ -54,6 +54,7 @@ export default async function handler(req, res) {
     }
 
     const reward = REWARDS_CONFIG.reading_first_complete;
+    const durationSeconds = Math.max(0, Math.min(3600, Number.parseInt(body.durationSeconds, 10) || 0));
     const eventId = "reading:" + refId + ":first_complete";
 
     const result = await withTransaction(async (tx) => {
@@ -69,13 +70,30 @@ export default async function handler(req, res) {
         return { ledger, streak: null };
       }
 
+      const now = new Date();
       await tx
         .update(schema.userStats)
         .set({
           readingCompleted: sql`${schema.userStats.readingCompleted} + 1`,
-          updatedAt: new Date()
+          updatedAt: now
         })
         .where(eq(schema.userStats.userId, user.id));
+
+      const activityId = "act_" + user.id + "_reading_" + Date.now() + "_" +
+        Math.random().toString(36).slice(2, 8);
+      await tx.insert(schema.activityLog).values({
+        id: activityId,
+        userId: user.id,
+        activityType: "reading_complete",
+        title: ("HABIT Reading: " + officialArticle.title).slice(0, 150),
+        score: 1,
+        totalQuestions: 1,
+        accuracyPercent: 100,
+        durationSeconds,
+        xpEarned: ledger.xpEarned,
+        coinsEarned: ledger.coinsEarned,
+        createdAt: now
+      });
 
       const streak = await evaluateAndRecordStreakInTransaction(tx, user.id);
       return { ledger, streak };
