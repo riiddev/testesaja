@@ -33,3 +33,24 @@ export function normalizeServerProfile(remoteProfile = {}, fallbackDisplayName =
     lastActiveDate: remoteProfile.lastActiveDate ?? null
   };
 }
+
+
+/**
+ * Normalize the authoritative counters returned by /api/profile/get.
+ * The SRS event ledger counts every review attempt; progress.correctCount plus
+ * progress.wrongCount is not equivalent because a wrong answer can lower the
+ * cumulative correct count. Return null only when the server omitted stats,
+ * allowing offline display to fall back to locally cached progress.
+ */
+export function normalizeServerUserStats(remoteStats) {
+  if (!remoteStats || typeof remoteStats !== "object" || Array.isArray(remoteStats)) {
+    return null;
+  }
+
+  return {
+    totalStartedWords: toNonNegativeInteger(remoteStats.wordsStarted),
+    masteredWordsCount: toNonNegativeInteger(remoteStats.wordsMastered),
+    b2MasteredCount: toNonNegativeInteger(remoteStats.b2Mastered),
+    totalReviewsDone: toNonNegativeInteger(remoteStats.totalReviews)
+  };
+}
