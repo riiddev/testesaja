@@ -1,6 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { API_ROUTE_PATHS, resolveApiPath } from "../api/[...segments].js";
+import { API_ROUTE_PATHS, resolveApiPath } from "../api/router.js";
+
+test("static router resolves explicit Vercel rewrite route parameters", () => {
+  assert.equal(
+    resolveApiPath({ query: { route: "matching/round" }, url: "/api/router?route=matching/round&level=A1" }),
+    "/matching/round"
+  );
+  assert.equal(
+    resolveApiPath({ query: { route: "activity/history" }, url: "/api/router?route=activity/history&limit=10" }),
+    "/activity/history"
+  );
+});
 
 test("catch-all router resolves Vercel wildcard segments", () => {
   assert.equal(
