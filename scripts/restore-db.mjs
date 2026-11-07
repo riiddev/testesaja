@@ -22,6 +22,15 @@ const __dirname = path.dirname(__filename);
 
 // Ordered by foreign-key dependency. The drizzle migration journal is
 // intentionally excluded: the target schema must be migrated separately.
+const SERIAL_ID_TABLES = Object.freeze([
+  "progress_events",
+  "transactions",
+  "inventory",
+  "titles",
+  "daily_quests",
+  "quest_claims"
+]);
+
 const RESTORE_ORDER = Object.freeze([
   "users",
   "catalog",
@@ -172,6 +181,30 @@ async function main() {
       await sql.query(query, values);
       restoredTotal += 1;
     }
+  }
+
+  // Explicitly restored BIGSERIAL IDs do not automatically advance their
+  // PostgreSQL sequences. Synchronize each known serial sequence so the next
+  // application insert cannot collide with a restored ID.
+  for (const table of SERIAL_ID_TABLES) {
+    const sequenceRows = await sql`
+      SELECT pg_get_serial_sequence(${"public." + table}, 'id') AS sequence_name
+    `;
+    const sequenceName = sequenceRows[0]?.sequence_name;
+    if (!sequenceName) continue;
+
+    const maxRows = await sql.query(
+      "SELECT COALESCE(MAX(id), 0)::bigint AS max_id FROM public." + quoteIdentifier(table)
+    );
+    const maxId = Number(maxRows[0]?.max_id || 0);
+
+    await sql`
+      SELECT setval(
+        ${sequenceName}::regclass,
+        ${maxId > 0 ? maxId : 1},
+        ${maxId > 0}
+      )
+    `;
   }
 
   console.log("==================================================");
