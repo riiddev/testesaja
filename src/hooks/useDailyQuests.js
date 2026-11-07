@@ -211,9 +211,12 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
 
       if (onRewardClaimed) {
         onRewardClaimed({
+          userId,
           questId,
           xp: res.data.earnedXp,
-          coins: res.data.earnedCoins
+          coins: res.data.earnedCoins,
+          totalXp: res.data.totalXp,
+          totalCoins: res.data.totalCoins
         });
       }
       return true;

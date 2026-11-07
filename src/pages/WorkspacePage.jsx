@@ -70,6 +70,7 @@ export function WorkspacePage() {
     syncStatus,
     outboxCount,
     syncError,
+    serverBalances,
     recordWordReview,
     getWordStatus,
     retrySync
@@ -77,6 +78,13 @@ export function WorkspacePage() {
 
   const vocabulary = vocabData.entries || [];
   const userProfile = useUserProfile({ vocabulary, progressMap });
+
+  useEffect(() => {
+    if (serverBalances?.userId === userProfile.userId) {
+      userProfile.applyServerBalances(serverBalances);
+    }
+  }, [serverBalances, userProfile.userId, userProfile.applyServerBalances]);
+
   const grammarTopics = grammarData.topics || [];
   const habitPassages = habitData.passages || [];
   const stories = storiesData.stories || [];
@@ -299,7 +307,7 @@ export function WorkspacePage() {
           {/* VIEW: MISSIONS */}
           {currentView === "missions" && (
             <section className="view-section is-active" id="view-missions">
-              <MissionsView />
+              <MissionsView onRewardClaimed={userProfile.applyServerBalances} />
             </section>
           )}
 
@@ -308,15 +316,22 @@ export function WorkspacePage() {
             <section className="view-section is-active" id="view-matching">
               <ContextMatching
                 vocabulary={vocabulary}
-                onRecordMatchComplete={({ roundId, roundToken, matchedPairs }) =>
-                  recordLearningActivity({
+                onRecordMatchComplete={async ({ roundId, roundToken, matchedPairs }) => {
+                  const result = await recordLearningActivity({
                     activityType: "matching",
                     refId: roundId,
                     matchedPairs,
                     roundToken,
                     durationSeconds: 30
-                  })
-                }
+                  });
+                  if (result.success) {
+                    userProfile.applyServerBalances({
+                      ...result,
+                      userId: userProfile.userId
+                    });
+                  }
+                  return result;
+                }}
               />
             </section>
           )}

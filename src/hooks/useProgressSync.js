@@ -32,6 +32,7 @@ export function useProgressSync() {
   const [outboxCount, setOutboxCount] = useState(0);
   const [syncStatus, setSyncStatus] = useState("checking"); // "checking" | "saved" | "syncing" | "pending" | "error"
   const [syncError, setSyncError] = useState(null);
+  const [serverBalances, setServerBalances] = useState(null);
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
@@ -108,6 +109,25 @@ export function useProgressSync() {
         .filter((eventId) => submittedIds.has(eventId));
       if (!acknowledgedIds.length) {
         throw new Error("Belum ada event yang dikonfirmasi server. Antrean lokal tetap disimpan.");
+      }
+
+      // The server response includes canonical balances from the same locked
+      // transaction. Keep the owner ID so a late response cannot update a new
+      // account after logout/login.
+      if (
+        Number.isSafeInteger(Number(res.data.totalXp)) &&
+        Number(res.data.totalXp) >= 0 &&
+        Number.isSafeInteger(Number(res.data.totalCoins)) &&
+        Number(res.data.totalCoins) >= 0
+      ) {
+        setServerBalances({
+          userId,
+          totalXp: Number(res.data.totalXp),
+          totalCoins: Number(res.data.totalCoins),
+          streak: Number.isSafeInteger(Number(res.data.streak))
+            ? Number(res.data.streak)
+            : undefined
+        });
       }
 
       const removalSucceeded = await removeConfirmedEvents(userId, acknowledgedIds);
@@ -339,6 +359,7 @@ export function useProgressSync() {
     outboxCount,
     syncError,
     isOnline,
+    serverBalances,
     recordWordReview,
     flushQueue: flushOutbox,
     retrySync: flushOutbox,

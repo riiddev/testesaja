@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "./useAuth.jsx";
 import { api } from "../services/api.js";
 import { recordLearningActivity } from "../services/learningActivity.js";
@@ -14,6 +14,9 @@ const LOCAL_INVENTORY_KEY = "sinau_local_inventory";
 
 export function useUserProfile({ vocabulary = [], progressMap = {} }) {
   const { user, isAuthenticated } = useAuth();
+  const activeUserIdRef = useRef(user?.id || null);
+  activeUserIdRef.current = user?.id || null;
+
   const profileStorageKey = getUserScopedStorageKey(LOCAL_PROFILE_KEY, user?.id);
   const avatarUrlStorageKey = getUserScopedStorageKey(LOCAL_AVATAR_URL_KEY, user?.id);
   const avatarTimeStorageKey = getUserScopedStorageKey(LOCAL_AVATAR_TIME_KEY, user?.id);
@@ -294,6 +297,45 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
   const streakFreezesCount = useMemo(() => {
     return inventory.filter((it) => it.itemId === "streak_freeze").length;
   }, [inventory]);
+
+  // Apply only balances returned by the server's canonical ledger. The
+  // owner check prevents a late response from a previous session from
+  // overwriting the profile after the user switches accounts.
+  const applyServerBalances = useCallback((balances = {}) => {
+    if (!isAuthenticated || !balances.userId || balances.userId !== activeUserIdRef.current) {
+      return false;
+    }
+
+    const hasXp = balances.totalXp !== undefined &&
+      balances.totalXp !== null &&
+      Number.isSafeInteger(Number(balances.totalXp)) &&
+      Number(balances.totalXp) >= 0;
+    const hasCoins = balances.totalCoins !== undefined &&
+      balances.totalCoins !== null &&
+      Number.isSafeInteger(Number(balances.totalCoins)) &&
+      Number(balances.totalCoins) >= 0;
+    const hasStreak = balances.streak !== undefined &&
+      balances.streak !== null &&
+      Number.isSafeInteger(Number(balances.streak)) &&
+      Number(balances.streak) >= 0;
+
+    if (!hasXp && !hasCoins && !hasStreak) return false;
+
+    setProfile((prev) => {
+      const next = {
+        ...prev,
+        xp: hasXp ? Number(balances.totalXp) : prev.xp,
+        coins: hasCoins ? Number(balances.totalCoins) : prev.coins,
+        streak: hasStreak ? Number(balances.streak) : prev.streak
+      };
+      try {
+        localStorage.setItem(profileStorageKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
+    return true;
+  }, [isAuthenticated, profileStorageKey]);
 
   // Update Display Name
   const updateDisplayName = useCallback(async (newName) => {
@@ -597,6 +639,8 @@ export function useUserProfile({ vocabulary = [], progressMap = {} }) {
     streakFreezesCount,
     buyItem,
     equipItem,
-    claimReward
+    claimReward,
+    applyServerBalances,
+    userId: user?.id || null
   };
 }

@@ -249,6 +249,8 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
     assert.deepEqual(result.body.data.processedEvents, eventIds);
     assert.equal(result.body.data.xpGranted, 22, "First word gets 5 XP; B2 first review gets 5 XP and four reviews get 3 XP");
     assert.equal(result.body.data.coinsGranted, 8, "New words get 2 coins each; four reviews get 1 coin each");
+    assert.equal(result.body.data.totalXp, 22, "Sync response must expose the final server XP balance");
+    assert.equal(result.body.data.totalCoins, 8, "Sync response must expose the final server coin balance");
 
     const progressRows = await db.select().from(schema.progress)
       .where(eq(schema.progress.userId, userAId));

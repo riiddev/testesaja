@@ -244,13 +244,25 @@ export default async function handler(req, res) {
         ? await evaluateAndRecordStreakInTransaction(tx, user.id)
         : null;
 
+      const finalProfileRows = await tx
+        .select({
+          xp: schema.profiles.xp,
+          coins: schema.profiles.coins,
+          streak: schema.profiles.streak
+        })
+        .from(schema.profiles)
+        .where(eq(schema.profiles.userId, user.id))
+        .limit(1);
+
       return {
         processedEvents,
         count: processedEvents.length,
         newlyProcessedCount,
         xpGranted: xpGrantedTotal,
         coinsGranted: coinsGrantedTotal,
-        streak: streakResult?.streak
+        totalXp: Number(finalProfileRows[0]?.xp) || 0,
+        totalCoins: Number(finalProfileRows[0]?.coins) || 0,
+        streak: streakResult?.streak ?? (Number(finalProfileRows[0]?.streak) || 0)
       };
     });
 
