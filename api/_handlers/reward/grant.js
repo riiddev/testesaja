@@ -54,7 +54,10 @@ export default async function handler(req, res) {
     }
 
     const reward = REWARDS_CONFIG.reading_first_complete;
-    const durationSeconds = Math.max(0, Math.min(3600, Number.parseInt(body.durationSeconds, 10) || 0));
+    const durationSeconds = Math.max(
+      0,
+      Math.min(3600, Number.parseInt(body.durationSeconds ?? body.meta?.durationSeconds, 10) || 0)
+    );
     const eventId = "reading:" + refId + ":first_complete";
 
     const result = await withTransaction(async (tx) => {
