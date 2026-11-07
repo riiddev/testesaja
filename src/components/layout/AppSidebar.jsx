@@ -179,8 +179,8 @@ export function AppSidebar({
               <span
                 className="sidebar-unread-alert"
                 id="sidebar-missions-alert"
-                aria-label="Ada misi belum selesai hari ini"
-                title="Ada misi belum selesai hari ini"
+                aria-label="Ada misi yang belum selesai"
+                title="Ada misi yang belum selesai"
               >
                 !
               </span>
