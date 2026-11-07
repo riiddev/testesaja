@@ -6,7 +6,7 @@
  */
 
 import { eq, and } from "drizzle-orm";
-import { getTransactionDb, schema } from "../../db/index.js";
+import { withTransaction, schema } from "../../db/index.js";
 
 function validateAmount(value, label) {
   const amount = Number(value);
@@ -129,7 +129,7 @@ export async function recordLedgerTransactionInTransaction(tx, {
 }
 
 export async function recordLedgerTransaction(params) {
-  return getTransactionDb().transaction((tx) =>
+  return withTransaction((tx) =>
     recordLedgerTransactionInTransaction(tx, params)
   );
 }
