@@ -11,7 +11,7 @@ import { authenticateRequest, parseJsonBody } from "../../_lib/auth.js";
 import { recordLedgerTransactionInTransaction } from "../../_lib/ledger.js";
 import { evaluateAndRecordStreakInTransaction } from "../../_lib/streak.js";
 import { REWARDS_CONFIG } from "../../_lib/rewardsConfig.js";
-import { validateOfficialMatchingPairs } from "../../_lib/matchingCatalog.js";
+import { validateOfficialMatchingRound } from "../../_lib/matchingCatalog.js";
 import { getWibDateStr } from "../../_lib/wibDate.js";
 import {
   sendSuccess,
@@ -31,20 +31,26 @@ export default async function handler(req, res) {
     const body = await parseJsonBody(req);
     const matchedPairs = Array.isArray(body.matchedPairs) ? body.matchedPairs : [];
     const sessionId = String(body.sessionId || "").trim();
+    const roundToken = String(body.roundToken || "").trim();
     const durationSeconds = Math.max(0, Math.min(3600, parseInt(body.durationSeconds, 10) || 0));
 
     if (!/^[a-zA-Z0-9_-]{6,120}$/.test(sessionId)) {
       return sendValidationError(res, "ID sesi Matching tidak valid.");
     }
 
-    const matchValidation = validateOfficialMatchingPairs(matchedPairs);
+    const matchValidation = validateOfficialMatchingRound({
+      userId: user.id,
+      roundId: sessionId,
+      roundToken,
+      matchedPairs
+    });
     if (!matchValidation.valid) {
       return sendValidationError(res, matchValidation.message);
     }
 
     const score = matchValidation.score;
     const total = matchValidation.total;
-    const accuracy = 100;
+    const accuracy = Math.round((score / total) * 100);
     const now = new Date();
     const wibDate = getWibDateStr(now);
     const dayStart = new Date(Date.parse(wibDate + "T00:00:00+07:00"));
@@ -122,6 +128,14 @@ export default async function handler(req, res) {
           durationSeconds,
           xpEarned: ledger.xpEarned,
           coinsEarned: ledger.coinsEarned,
+          createdAt: now
+        });
+
+        await tx.insert(schema.attemptDetails).values({
+          activityId,
+          userId: user.id,
+          wrongItems: [],
+          questionsBreakdown: matchValidation.questionsBreakdown,
           createdAt: now
         });
 
