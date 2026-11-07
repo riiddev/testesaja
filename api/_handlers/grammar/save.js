@@ -79,12 +79,20 @@ export default async function handler(req, res) {
     const now = new Date();
 
     const result = await withTransaction(async (tx) => {
-      await tx
-        .select({ userId: schema.profiles.userId })
+      const profileRows = await tx
+        .select({
+          userId: schema.profiles.userId,
+          xp: schema.profiles.xp,
+          coins: schema.profiles.coins
+        })
         .from(schema.profiles)
         .where(eq(schema.profiles.userId, user.id))
         .for("update")
         .limit(1);
+
+      if (!profileRows.length) {
+        throw new Error("Profil pengguna tidak ditemukan.");
+      }
 
       const existing = await tx
         .select()
@@ -124,6 +132,8 @@ export default async function handler(req, res) {
 
       let xpEarned = 0;
       let coinsEarned = 0;
+      let totalXp = Number(profileRows[0].xp) || 0;
+      let totalCoins = Number(profileRows[0].coins) || 0;
 
       if (isCompleted && !wasAlreadyCompleted) {
         const reward = REWARDS_CONFIG.grammar_quiz_complete;
@@ -135,6 +145,8 @@ export default async function handler(req, res) {
           coinsEarned: reward.coins
         });
 
+        totalXp = ledger.totalXp;
+        totalCoins = ledger.totalCoins;
         if (!ledger.alreadyProcessed) {
           xpEarned = ledger.xpEarned;
           coinsEarned = ledger.coinsEarned;
@@ -169,6 +181,8 @@ export default async function handler(req, res) {
       return {
         xpEarned,
         coinsEarned,
+        totalXp,
+        totalCoins,
         status: isCompleted || wasAlreadyCompleted ? "completed" : "in_progress",
         streak
       };
@@ -184,6 +198,8 @@ export default async function handler(req, res) {
         scorePct,
         xpEarned: result.xpEarned,
         coinsEarned: result.coinsEarned,
+        totalXp: result.totalXp,
+        totalCoins: result.totalCoins,
         streak: result.streak?.streak
       },
       "Progres grammar berhasil disimpan."
