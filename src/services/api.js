@@ -215,6 +215,10 @@ async function request(action, payload = {}, requiresAuth = true, retryCount = 0
   if (action === "completeStoryEpisode") {
     return requestApi("/api/story/complete", { method: "POST", body: JSON.stringify(payload) }, true);
   }
+  if (action === "getMatchingRound") {
+    const level = payload?.level ? encodeURIComponent(payload.level) : "all";
+    return requestApi("/api/matching/round?level=" + level, { method: "GET" }, true);
+  }
   if (action === "recordMatchingSession") {
     return requestApi("/api/matching/record", { method: "POST", body: JSON.stringify(payload) }, true);
   }
@@ -375,8 +379,12 @@ export const api = {
   },
 
   // Sentence Context Matching (Fase 6)
-  async recordMatchingSession({ matchedPairs = [], durationSeconds, sessionId }) {
-    return request("recordMatchingSession", { matchedPairs, durationSeconds, sessionId }, true);
+  async getMatchingRound({ level = "all" } = {}) {
+    return request("getMatchingRound", { level }, true);
+  },
+
+  async recordMatchingSession({ matchedPairs = [], durationSeconds, sessionId, roundToken }) {
+    return request("recordMatchingSession", { matchedPairs, durationSeconds, sessionId, roundToken }, true);
   },
 
   // Reading Comprehension Quiz (Fase 6)
