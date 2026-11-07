@@ -22,6 +22,30 @@ export const QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE = Object.freeze({
   story_episode: "story"
 });
 
+const MISSION_ACTIVITY_TYPES = new Set([
+  ...Object.keys(QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE),
+  ...Object.values(QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE)
+]);
+
+function notifyForMissionActivities(activityTypes) {
+  const types = Array.isArray(activityTypes) ? activityTypes : [activityTypes];
+  const hasMappedActivity = types.some((type) => MISSION_ACTIVITY_TYPES.has(type));
+  if (!hasMappedActivity) return false;
+
+  notifyDailyQuestsChanged();
+  return true;
+}
+
+/** Notify mission consumers after a direct feature endpoint confirms success. */
+export function notifyLearningActivityRecorded(activityType) {
+  return notifyForMissionActivities(activityType);
+}
+
+/** Notify mission consumers after the server ACKs an offline-first SRS batch. */
+export function notifyLearningActivitiesSynchronized(activityTypes) {
+  return notifyForMissionActivities(activityTypes);
+}
+
 function copyRewardResult(result, data) {
   result.data = data || null;
   result.earnedXp = Number(data?.earnedXp ?? data?.xpEarned) || 0;
@@ -133,7 +157,7 @@ export async function recordLearningActivity({
 
     // Every consumer (sidebar, mission page, widgets) re-reads the server
     // snapshot. No client-side increment is sent to the mission endpoint.
-    notifyDailyQuestsChanged();
+    notifyLearningActivityRecorded(activityType);
   } catch (err) {
     console.warn(`[LearningActivity] Gagal mencatat ${activityType}:`, err.message);
     result.error = err.message || "Gagal mencatat aktivitas belajar.";

@@ -18,7 +18,7 @@ import {
   loadProgressFromCache
 } from "../services/outboxDb.js";
 import { mergeServerProgressWithPendingEvents } from "../lib/progressSyncMerge.js";
-import { notifyDailyQuestsChanged } from "../services/dailyQuestEvents.js";
+import { notifyLearningActivitiesSynchronized } from "../services/learningActivity.js";
 
 const BATCH_SIZE_THRESHOLD = 5;
 const DEBOUNCE_DELAY_MS = 2500;
@@ -137,7 +137,7 @@ export function useProgressSync() {
 
       // SRS events are first committed to progress_events by the server. Only
       // after that ACK may daily mission consumers refresh their server snapshot.
-      notifyDailyQuestsChanged();
+      notifyLearningActivitiesSynchronized(res.data.questActivityTypes);
 
       const remainingCount = await getOutboxCount(userId);
       setOutboxCount(remainingCount);

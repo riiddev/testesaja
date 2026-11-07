@@ -251,6 +251,11 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
     assert.equal(result.body.data.coinsGranted, 8, "New words get 2 coins each; four reviews get 1 coin each");
     assert.equal(result.body.data.totalXp, 22, "Sync response must expose the final server XP balance");
     assert.equal(result.body.data.totalCoins, 8, "Sync response must expose the final server coin balance");
+    assert.deepEqual(
+      result.body.data.questActivityTypes,
+      ["vocab_learn", "srs_review"],
+      "The server must identify the authoritative mission sources for the acknowledged SRS batch"
+    );
 
     const progressRows = await db.select().from(schema.progress)
       .where(eq(schema.progress.userId, userAId));

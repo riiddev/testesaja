@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { generateDailyQuests } from "../src/features/missions/missionsEngine.js";
 import { hasUnfinishedServerMissions } from "../src/features/missions/missionStatus.js";
-import { QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE } from "../src/services/learningActivity.js";
+import {
+  QUEST_ACTIVITY_SOURCE_BY_LEARNING_TYPE,
+  notifyLearningActivityRecorded,
+  notifyLearningActivitiesSynchronized
+} from "../src/services/learningActivity.js";
 import { getWibDateString } from "../src/features/missions/wibDate.js";
 
 test("daily missions are deterministic for the same user and WIB date", () => {
@@ -174,4 +178,12 @@ test("daily missions refresh from server when the app regains focus or visibilit
   assert.match(hook, /document\.addEventListener\("visibilitychange", refreshWhenVisible\)/);
   assert.match(hook, /window\.removeEventListener\("focus", refreshAfterActivity\)/);
   assert.match(hook, /document\.removeEventListener\("visibilitychange", refreshWhenVisible\)/);
+});
+
+
+test("one shared mission notifier accepts both feature keys and server activity types", () => {
+  assert.equal(notifyLearningActivityRecorded("matching"), true);
+  assert.equal(notifyLearningActivityRecorded("story_episode"), true);
+  assert.equal(notifyLearningActivitiesSynchronized(["vocab_learn", "srs_review"]), true);
+  assert.equal(notifyLearningActivitiesSynchronized(["unknown_activity"]), false);
 });

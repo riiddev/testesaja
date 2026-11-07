@@ -95,6 +95,7 @@ export default async function handler(req, res) {
       }
 
       const processedEvents = [];
+      const questActivityTypes = new Set();
       let newlyProcessedCount = 0;
       let xpGrantedTotal = 0;
       let coinsGrantedTotal = 0;
@@ -103,7 +104,10 @@ export default async function handler(req, res) {
         const { eventId, wordId, officialWord, isCorrect } = item;
 
         const existingEvent = await tx
-          .select({ id: schema.progressEvents.id })
+          .select({
+            id: schema.progressEvents.id,
+            activityType: schema.progressEvents.activityType
+          })
           .from(schema.progressEvents)
           .where(and(
             eq(schema.progressEvents.userId, user.id),
@@ -113,6 +117,9 @@ export default async function handler(req, res) {
 
         if (existingEvent.length > 0) {
           processedEvents.push(eventId);
+          if (existingEvent[0].activityType) {
+            questActivityTypes.add(existingEvent[0].activityType);
+          }
           continue;
         }
 
@@ -151,6 +158,7 @@ export default async function handler(req, res) {
         const isNewlyMastered = masteryStage === "mastered" &&
           existingWord[0]?.masteryStage !== "mastered";
         const activityType = isFirstTimeWord ? "vocab_learn" : "srs_review";
+        questActivityTypes.add(activityType);
 
         await tx.insert(schema.progressEvents).values({
           userId: user.id,
@@ -256,6 +264,7 @@ export default async function handler(req, res) {
 
       return {
         processedEvents,
+        questActivityTypes: [...questActivityTypes],
         count: processedEvents.length,
         newlyProcessedCount,
         xpGranted: xpGrantedTotal,
