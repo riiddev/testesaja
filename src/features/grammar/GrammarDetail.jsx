@@ -41,11 +41,29 @@ export function GrammarDetail({ topic, onBack, onStartQuiz, userProfileHook }) {
   if (!detailedTopic) return null;
 
   const handleSaveProgress = async (data) => {
-    const res = await api.saveGrammarProgress(data);
+    if (!Array.isArray(data?.answers) || data.answers.length === 0) {
+      // The stepped practice is preparation for the official mastery quiz.
+      // It is not a completed quiz and must not create a Grammar mission event.
+      setTopicProgress((prev) => ({ ...(prev || {}), practiceDone: true }));
+      return { success: true, data: topicProgress || {} };
+    }
+
+    if (!userProfileHook?.claimReward) {
+      throw new Error("Sesi akun belum siap untuk menyimpan hasil kuis Grammar.");
+    }
+
+    const res = await userProfileHook.claimReward({
+      eventId: `grammar:${data.topicId}:first_complete`,
+      source: "grammar_quiz",
+      refId: data.topicId,
+      meta: { answers: data.answers }
+    });
+
     if (res?.success && res.data) {
       setTopicProgress(res.data);
-      return res;
+      return { success: true, data: res.data };
     }
+
     throw new Error(res?.error || res?.message || "Gagal menyimpan hasil kuis Grammar.");
   };
 
@@ -396,8 +414,10 @@ export function GrammarDetail({ topic, onBack, onStartQuiz, userProfileHook }) {
         <div id="grammar-tab-praktik-content">
           <GrammarPracticeRunner
             topic={detailedTopic}
-            onFinishPractice={(result) => {
-              handleSaveProgress(result);
+            onFinishPractice={() => {
+              // Practice completion is local preparation, not an official
+              // server-graded quiz and must not advance the Grammar mission.
+              setTopicProgress((prev) => ({ ...(prev || {}), practiceDone: true }));
               setActiveTab("kuis");
             }}
           />
