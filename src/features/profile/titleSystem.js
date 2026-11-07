@@ -57,7 +57,7 @@ export const TITLES_CATALOG = [
     category: "streak",
     iconType: "flame-cadence",
     evaluate: (stats) => {
-      const current = Math.min(stats.streak || 1, 7);
+      const current = Math.min(stats.streak ?? 0, 7);
       return {
         current,
         total: 7,
@@ -117,7 +117,7 @@ export const TITLES_CATALOG = [
     category: "streak",
     iconType: "shield-star",
     evaluate: (stats) => {
-      const current = Math.min(stats.streak || 1, 30);
+      const current = Math.min(stats.streak ?? 0, 30);
       return {
         current,
         total: 30,
