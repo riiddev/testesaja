@@ -184,6 +184,57 @@ test("FASE 4 TEST SUITE — Server-Authoritative Economy, Quests, Streaks & Rewa
     assert.match(result.body.error, /Level cendekiawanmu belum mencukupi/i);
   });
 
+  await t.test("2c. Equip API mounts and unmounts an owned collection item", async () => {
+    const borderRows = await db
+      .select({ id: schema.catalog.id })
+      .from(schema.catalog)
+      .where(eq(schema.catalog.type, "border"))
+      .limit(1);
+    assert.ok(borderRows.length > 0, "A border item must exist in the seeded catalog");
+    const borderId = borderRows[0].id;
+
+    await db.insert(schema.inventory).values({
+      userId: testUserId,
+      itemId: borderId,
+      equipped: false
+    });
+
+    const { req: equipReq, res: equipRes } = createMockReqRes({
+      method: "POST",
+      token: sessionToken,
+      body: { itemId: borderId, type: "border" }
+    });
+    await equipHandler(equipReq, equipRes);
+    assert.equal(equipRes._getResult().statusCode, 200);
+    assert.equal(equipRes._getResult().body.success, true);
+
+    let owned = await db.select({ equipped: schema.inventory.equipped })
+      .from(schema.inventory)
+      .where(and(
+        eq(schema.inventory.userId, testUserId),
+        eq(schema.inventory.itemId, borderId)
+      ));
+    assert.equal(owned[0].equipped, true);
+
+    const { req: removeReq, res: removeRes } = createMockReqRes({
+      method: "POST",
+      token: sessionToken,
+      body: { itemId: "none", type: "border" }
+    });
+    await equipHandler(removeReq, removeRes);
+    assert.equal(removeRes._getResult().statusCode, 200);
+    assert.equal(removeRes._getResult().body.success, true);
+    assert.equal(removeRes._getResult().body.data.equipped, false);
+
+    owned = await db.select({ equipped: schema.inventory.equipped })
+      .from(schema.inventory)
+      .where(and(
+        eq(schema.inventory.userId, testUserId),
+        eq(schema.inventory.itemId, borderId)
+      ));
+    assert.equal(owned[0].equipped, false);
+  });
+
   // TEST 3: Butir A Habit Reading deterministic 1x reward
   await t.test("3. Butir A: Habit Reading grants reward ONCE ever; re-reading gives 0 reward without duplicate tx", async () => {
     const articleRef = habitReadingLibrary.passages?.[0]?.id;
