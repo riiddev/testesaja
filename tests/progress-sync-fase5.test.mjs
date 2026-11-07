@@ -267,6 +267,30 @@ test("FASE 5 TEST SUITE — Offline-First Progress & SRS Ledger Sync", async (t)
     assert.equal(eventsRows.length, 6);
     assert.equal(eventsRows.filter((row) => row.activityType === "vocab_learn").length, 2);
     assert.equal(eventsRows.filter((row) => row.activityType === "srs_review").length, 4);
+
+    // Database evidence for Fase 6.1: the account began at XP=0/Coins=0;
+    // after the completed study batch, the canonical profile and ledger agree.
+    const profileAfterStudy = await db
+      .select({ xp: schema.profiles.xp, coins: schema.profiles.coins, streak: schema.profiles.streak })
+      .from(schema.profiles)
+      .where(eq(schema.profiles.userId, userAId))
+      .limit(1);
+    assert.equal(profileAfterStudy[0].xp, 22);
+    assert.equal(profileAfterStudy[0].coins, 8);
+
+    const transactionRows = await db.select({
+      eventId: schema.transactions.eventId,
+      source: schema.transactions.source,
+      xpAmount: schema.transactions.xpAmount,
+      coinsAmount: schema.transactions.coinsAmount,
+      balanceAfterCoins: schema.transactions.balanceAfterCoins
+    })
+      .from(schema.transactions)
+      .where(eq(schema.transactions.userId, userAId));
+    assert.equal(transactionRows.length, 6, "Every accepted event has one unique ledger row");
+    assert.equal(transactionRows.reduce((sum, row) => sum + row.xpAmount, 0), 22);
+    assert.equal(transactionRows.reduce((sum, row) => sum + row.coinsAmount, 0), 8);
+    assert.equal(new Set(transactionRows.map((row) => row.eventId)).size, 6);
   });
 
   // TEST 4: Idempotency — Re-sending the same batch must ACK without duplicates.
