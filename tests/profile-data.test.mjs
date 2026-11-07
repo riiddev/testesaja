@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   getUserScopedStorageKey,
-  normalizeServerProfile
+  normalizeServerProfile,
+  normalizeServerUserStats
 } from "../src/lib/profileData.js";
 
 test("authenticated profile cache keys are isolated by user", () => {
@@ -51,4 +52,41 @@ test("missing or malformed server counters never reuse stale client values", () 
   assert.equal(profile.xp, 0);
   assert.equal(profile.coins, 0);
   assert.equal(profile.streak, 0);
+});
+
+
+test("server review ledger is mapped to the title-system totalReviewsDone counter", () => {
+  const stats = normalizeServerUserStats({
+    wordsStarted: 12,
+    wordsMastered: 4,
+    b2Mastered: 1,
+    totalReviews: 37
+  });
+
+  assert.deepEqual(stats, {
+    totalStartedWords: 12,
+    masteredWordsCount: 4,
+    b2MasteredCount: 1,
+    totalReviewsDone: 37
+  });
+});
+
+test("server review counters do not derive from progress correct/wrong balances", () => {
+  // A wrong answer decreases correctCount and increases wrongCount, while the
+  // server's totalReviews ledger still advances by exactly one event.
+  const stats = normalizeServerUserStats({
+    wordsStarted: 1,
+    wordsMastered: 0,
+    b2Mastered: 0,
+    totalReviews: 9
+  });
+
+  assert.equal(stats.totalReviewsDone, 9);
+  assert.equal(stats.totalReviewsDone > (2 + 2), true);
+});
+
+test("missing server statistics signal an offline/local fallback rather than fake zero cloud data", () => {
+  assert.equal(normalizeServerUserStats(undefined), null);
+  assert.equal(normalizeServerUserStats(null), null);
+  assert.equal(normalizeServerUserStats([]), null);
 });
