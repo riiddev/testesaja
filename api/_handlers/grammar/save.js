@@ -102,7 +102,7 @@ export default async function handler(req, res) {
         await tx.insert(schema.grammarProgress).values({
           userId: user.id,
           topicId,
-          status: isCompleted ? "completed" : "in_progress",
+          status: result.status,
           score,
           total,
           completedAt: isCompleted ? now : null
