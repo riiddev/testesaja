@@ -23,14 +23,14 @@ export function SettingsPanel() {
   const [dailyGoal, setDailyGoal] = useState(10);
   const [notifFeedback, setNotifFeedback] = useState("");
   const [isSavingGoal, setIsSavingGoal] = useState(false);
+  const [goalFeedback, setGoalFeedback] = useState("");
 
   useEffect(() => {
     let active = true;
     api.getSettings().then((res) => {
-      if (active && res && res.data && res.data.dailyGoal) {
-        setDailyGoal(Number(res.data.dailyGoal));
-      } else if (active && res && res.dailyGoal) {
-        setDailyGoal(Number(res.dailyGoal));
+      const savedGoal = res?.data?.settings?.dailyGoal ?? res?.data?.dailyGoal ?? res?.dailyGoal;
+      if (active && res?.success && Number.isFinite(Number(savedGoal)) && Number(savedGoal) > 0) {
+        setDailyGoal(Number(savedGoal));
       }
     }).catch((err) => {
       console.warn("Gagal memuat preferensi belajar dari server:", err.message);
@@ -40,21 +40,42 @@ export function SettingsPanel() {
 
   const handleDailyGoalChange = async (newVal) => {
     const goal = Number(newVal);
+    const previousGoal = dailyGoal;
     setDailyGoal(goal);
+    setGoalFeedback("");
     setIsSavingGoal(true);
     try {
-      await api.updateSettings({ dailyGoal: goal });
+      const res = await api.updateSettings({ dailyGoal: goal });
+      if (!res?.success) {
+        throw new Error(res?.error || res?.message || "Server belum mengonfirmasi target harian.");
+      }
+      setGoalFeedback("Target harian tersimpan di akun.");
     } catch (err) {
+      setDailyGoal(previousGoal);
+      setGoalFeedback("Gagal menyimpan target. Pilihan sebelumnya dipulihkan.");
       console.error("Gagal menyimpan target harian ke server:", err.message);
     } finally {
       setIsSavingGoal(false);
     }
   };
 
+  const handleReminderChange = async (config) => {
+    const result = await updateReminderConfig(config);
+    if (!result?.success) {
+      setNotifFeedback("Gagal menyimpan jadwal pengingat: " + (result?.error || "Kesalahan server."));
+      return;
+    }
+    setNotifFeedback(
+      result.localOnly
+        ? "Jadwal tersimpan di browser ini saja."
+        : "Jadwal pengingat tersimpan di akun. Pengingat hanya diperiksa saat aplikasi terbuka."
+    );
+  };
+
   const handleEnableNotifications = async () => {
     const perm = await requestNotificationPermission();
     if (perm === "granted") {
-      setNotifFeedback("Izin notifikasi berhasil diaktifkan! Pengingat misi harian akan dikirim otomatis.");
+      setNotifFeedback("Izin notifikasi aktif. Jadwal hanya diperiksa saat aplikasi atau tab masih terbuka; pengingat saat ditutup belum tersedia.");
       setTimeout(() => setNotifFeedback(""), 4000);
     } else if (perm === "denied") {
       setNotifFeedback("Izin notifikasi diblokir oleh browser. Silakan izinkan melalui pengaturan situs di browsermu.");
@@ -67,7 +88,7 @@ export function SettingsPanel() {
       body: "3 misi harian menunggumu hari ini! Selesaikan sekarang untuk mengamankan streak belajarmu.",
       url: "/belajar/missions"
     });
-    setNotifFeedback("Notifikasi pengingat uji coba berhasil dikirim!");
+    setNotifFeedback("Permintaan uji coba dibuat. Tampilan notifikasi bergantung pada izin dan dukungan browser.");
     setTimeout(() => setNotifFeedback(""), 4000);
   };
 
@@ -173,7 +194,7 @@ export function SettingsPanel() {
               Pengingat Misi Harian di HP
             </h3>
             <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", margin: 0 }}>
-              Dapatkan notifikasi pengingat pada jam belajar pilihanmu saat membuka aplikasi atau dalam mode PWA agar streak belajarmu tetap aman.
+              Atur pengingat pada jam pilihan. Jadwal diperiksa ketika halaman SinauEnglish sedang terbuka; notifikasi terjadwal saat aplikasi ditutup belum tersedia.
             </p>
           </div>
 
@@ -194,7 +215,7 @@ export function SettingsPanel() {
           {notificationPermission !== "granted" && (
             <div style={{ padding: "var(--space-3) var(--space-4)", backgroundColor: "var(--color-bg-subtle)", borderRadius: "var(--radius-md)", border: "var(--border-sm)", marginBottom: "var(--space-2)" }}>
               <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)", margin: "0 0 var(--space-2)" }}>
-                Aktifkan izin notifikasi peramban agar pengingat misi muncul saat aplikasi/tab dibuka atau saat terpasang sebagai PWA:
+                Izinkan notifikasi browser agar sistem dapat menampilkan pemberitahuan ketika jadwal terpicu saat SinauEnglish sedang terbuka:
               </p>
               <button
                 type="button"
@@ -224,7 +245,7 @@ export function SettingsPanel() {
               <select
                 id="morning-hour-select"
                 value={reminderConfig.morningHour}
-                onChange={(e) => updateReminderConfig({ morningHour: e.target.value, enabled: true })}
+                onChange={(e) => handleReminderChange({ morningHour: e.target.value, enabled: true })}
                 className="form-input"
                 style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "var(--border-sm)" }}
               >
@@ -246,7 +267,7 @@ export function SettingsPanel() {
               <select
                 id="evening-hour-select"
                 value={reminderConfig.eveningHour}
-                onChange={(e) => updateReminderConfig({ eveningHour: e.target.value, enabled: true })}
+                onChange={(e) => handleReminderChange({ eveningHour: e.target.value, enabled: true })}
                 className="form-input"
                 style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "var(--border-sm)" }}
               >
@@ -271,7 +292,7 @@ export function SettingsPanel() {
             </button>
 
             <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)" }}>
-              Pengingat melayang masuk otomatis di atas layar pada jam yang kamu tentukan.
+              Jadwal dicek saat tab atau aplikasi terbuka. Tidak ada pengiriman terjadwal di latar belakang.
             </span>
           </div>
         </div>
@@ -310,7 +331,7 @@ export function SettingsPanel() {
             <option value="20">20 Kata / Hari (Intensif)</option>
           </select>
           <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)" }}>
-            {isSavingGoal ? "Menyimpan ke server..." : "Target direkomendasikan: 10 kata per hari (tersimpan di akun)."}
+            {isSavingGoal ? "Menyimpan ke server..." : (goalFeedback || "Target direkomendasikan: 10 kata per hari.")}
           </span>
         </div>
       </div>
