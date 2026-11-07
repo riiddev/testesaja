@@ -64,12 +64,20 @@ export default async function handler(req, res) {
 
     const reward = REWARDS_CONFIG.story_episode_complete;
     const result = await withTransaction(async (tx) => {
-      await tx
-        .select({ userId: schema.profiles.userId })
+      const profileRows = await tx
+        .select({
+          userId: schema.profiles.userId,
+          xp: schema.profiles.xp,
+          coins: schema.profiles.coins
+        })
         .from(schema.profiles)
         .where(eq(schema.profiles.userId, user.id))
         .for("update")
         .limit(1);
+
+      if (!profileRows.length) {
+        throw new Error("Profil pengguna tidak ditemukan.");
+      }
 
       const existing = await tx
         .select()
@@ -97,6 +105,8 @@ export default async function handler(req, res) {
           alreadyCompleted: true,
           earnedXp: 0,
           earnedCoins: 0,
+          totalXp: Number(profileRows[0].xp) || 0,
+          totalCoins: Number(profileRows[0].coins) || 0,
           streak: null
         };
       }
@@ -187,6 +197,8 @@ export default async function handler(req, res) {
         alreadyCompleted: false,
         earnedXp: ledger.alreadyProcessed ? 0 : ledger.xpEarned,
         earnedCoins: ledger.alreadyProcessed ? 0 : ledger.coinsEarned,
+        totalXp: ledger.totalXp,
+        totalCoins: ledger.totalCoins,
         streak: streak?.streak
       };
     });
