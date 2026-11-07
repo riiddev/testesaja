@@ -670,7 +670,7 @@
     position: relative;
   }
 
-  .app-sidebar.is-collapsed .sidebar-link span:not(.sidebar-icon) {
+  .app-sidebar.is-collapsed .sidebar-link span:not(.sidebar-icon):not(.sidebar-unread-alert) {
     display: none;
   }
 
@@ -678,7 +678,7 @@
     display: none;
   }
 
-  .app-sidebar.is-collapsed .sidebar-unread-alert {
+  .app-sidebar.is-collapsed .sidebar-link span.sidebar-unread-alert {
     display: inline-flex;
     position: absolute;
     top: 4px;

@@ -110,7 +110,8 @@ test("sidebar alert renders an accessible exclamation using the danger token, in
   assert.match(component, /title="Ada misi yang belum selesai"/);
   assert.match(component, /<span\s+className="sidebar-unread-alert"[\s\S]*?>\s*!\s*<\/span>/);
   assert.match(styles, /\.sidebar-unread-alert\s*\{[\s\S]*?background-color:\s*var\(--color-danger\)/);
-  assert.match(styles, /\.app-sidebar\.is-collapsed \.sidebar-unread-alert\s*\{[\s\S]*?display:\s*inline-flex[\s\S]*?position:\s*absolute/);
+  assert.match(styles, /\.app-sidebar\.is-collapsed \.sidebar-link span:not\(\.sidebar-icon\):not\(\.sidebar-unread-alert\)/);
+  assert.match(styles, /\.app-sidebar\.is-collapsed \.sidebar-link span\.sidebar-unread-alert\s*\{[\s\S]*?display:\s*inline-flex[\s\S]*?position:\s*absolute/);
 });
 
 
@@ -133,4 +134,16 @@ test("daily quest page hides cached quest cards until server confirms the active
   assert.ok(guardIndex >= 0 && listIndex > guardIndex);
   assert.match(component, /Belum terverifikasi/);
   assert.match(component, /Memeriksa.../);
+});
+
+
+test("authenticated mission page offers a retry after server snapshot failure", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const component = await readFile(
+    new URL("../src/features/missions/MissionsView.jsx", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(component, /id="missions-refresh-btn"/);
+  assert.match(component, /onClick=\{\(\) => void refresh\(\)\}/);
 });

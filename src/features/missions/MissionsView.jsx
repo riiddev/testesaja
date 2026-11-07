@@ -18,6 +18,8 @@ export function MissionsView({ onRewardClaimed }) {
     isLoading,
     isServerConfirmed,
     loadError,
+    canRefresh,
+    refresh,
     claimReward
   } = useDailyQuests({ onRewardClaimed });
 
@@ -128,8 +130,19 @@ export function MissionsView({ onRewardClaimed }) {
       )}
 
       {!isLoading && !isServerConfirmed && (
-        <div className="card" role="alert" style={{ padding: "var(--space-3) var(--space-4)", marginBottom: "var(--space-4)", borderLeft: "3px solid var(--color-danger)" }}>
-          {loadError || "Masuk ke akun untuk memuat dan memverifikasi progres misi harian."}
+        <div className="card" role="alert" style={{ padding: "var(--space-3) var(--space-4)", marginBottom: "var(--space-4)", borderLeft: "3px solid var(--color-danger)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--space-3)" }}>
+          <span>{loadError || "Masuk ke akun untuk memuat dan memverifikasi progres misi harian."}</span>
+          {canRefresh && (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              id="missions-refresh-btn"
+              onClick={() => void refresh()}
+              style={{ minHeight: "40px" }}
+            >
+              Coba Lagi
+            </button>
+          )}
         </div>
       )}
 

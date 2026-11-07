@@ -191,6 +191,22 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     return storedQuests;
   }, [isAuthenticated, refreshServerSnapshot, storedQuests]);
 
+  const refresh = useCallback(async () => {
+    if (!isAuthenticated || !userId) return null;
+
+    setIsLoading(true);
+    try {
+      return await refreshServerSnapshot();
+    } catch (err) {
+      console.warn("[DailyQuests] Gagal memuat ulang misi:", err.message);
+      setServerSnapshotKey(null);
+      setLoadError(err?.message || "Misi belum dapat diverifikasi dari server.");
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, userId, refreshServerSnapshot]);
+
   const claimReward = useCallback(async (questId) => {
     const quest = quests.find((q) => q.id === questId);
     if (!quest || !isServerConfirmed || !quest.isCompleted || quest.isClaimed) return false;
@@ -280,8 +296,9 @@ export function useDailyQuests({ onRewardClaimed } = {}) {
     isServerConfirmed,
     hasUnfinishedMissions,
     loadError,
+    canRefresh: Boolean(isAuthenticated && userId),
     updateProgress,
-    refresh: refreshServerSnapshot,
+    refresh,
     claimReward
   };
 }
