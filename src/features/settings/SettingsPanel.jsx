@@ -7,7 +7,7 @@ import { usePWA } from "../../hooks/usePWA.js";
 import { Button } from "../../components/common/Button.jsx";
 import { api } from "../../services/api.js";
 
-export function SettingsPanel({ onProgressReload }) {
+export function SettingsPanel() {
   const { user, isAuthenticated, logout } = useAuth();
   const {
     canInstall,
@@ -21,8 +21,6 @@ export function SettingsPanel({ onProgressReload }) {
   } = usePWA();
 
   const [dailyGoal, setDailyGoal] = useState(10);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importStatus, setImportStatus] = useState("");
   const [notifFeedback, setNotifFeedback] = useState("");
   const [isSavingGoal, setIsSavingGoal] = useState(false);
 
@@ -50,39 +48,6 @@ export function SettingsPanel({ onProgressReload }) {
       console.error("Gagal menyimpan target harian ke server:", err.message);
     } finally {
       setIsSavingGoal(false);
-    }
-  };
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!isAuthenticated) {
-      alert("Silakan login terlebih dahulu agar data dapat diimpor ke akun Anda.");
-      return;
-    }
-
-    setIsImporting(true);
-    setImportStatus("Membaca file cadangan...");
-
-    try {
-      const text = await file.text();
-      const backupData = JSON.parse(text);
-
-      setImportStatus("Mengunggah data ke server...");
-      const res = await api.importBackup(backupData);
-
-      if (res.success) {
-        setImportStatus(`Berhasil mengimpor ${res.count || 0} riwayat kata ke akun Anda!`);
-        if (onProgressReload) onProgressReload();
-      } else {
-        throw new Error(res.error || "Gagal mengimpor.");
-      }
-    } catch (err) {
-      setImportStatus(`Gagal mengimpor: ${err.message}`);
-    } finally {
-      setIsImporting(false);
-      e.target.value = "";
     }
   };
 
@@ -350,44 +315,9 @@ export function SettingsPanel({ onProgressReload }) {
         </div>
       </div>
 
-      {/* 5. Backup Migration Tool */}
-      <div className="card card-tint-sage" style={{ padding: "var(--space-6)" }}>
-        <h3 style={{ fontSize: "var(--text-lg)", marginBottom: "var(--space-2)" }}>
-          Alat Impor Cadangan Data
-        </h3>
-        <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", marginBottom: "var(--space-4)" }}>
-          Punya file cadangan JSON dari versi sebelumnya? Unggah di sini untuk memindahkan seluruh riwayat hafalan kata langsung ke akunmu.
-        </p>
-
-        <label
-          htmlFor="backup-file-input"
-          className={`btn btn-secondary btn-sm ${isImporting ? "disabled" : ""}`}
-          style={{ cursor: "pointer", display: "inline-block", minHeight: "44px", lineHeight: "30px" }}
-        >
-          {isImporting ? "Mengimpor Data..." : "Pilih File Backup (.json)"}
-        </label>
-        <input
-          id="backup-file-input"
-          type="file"
-          accept=".json"
-          onChange={handleFileUpload}
-          disabled={isImporting}
-          style={{ display: "none" }}
-        />
-
-        {importStatus && (
-          <p
-            style={{
-              marginTop: "var(--space-3)",
-              fontSize: "var(--text-xs)",
-              fontWeight: 600,
-              color: !importStatus.toLowerCase().includes("gagal") ? "var(--color-success)" : "var(--color-text-secondary)"
-            }}
-          >
-            {importStatus}
-          </p>
-        )}
-      </div>
+      <p className="form-hint" style={{ marginTop: "var(--space-4)" }}>
+        Pemindahan akun dan progres dari versi lama dinonaktifkan. Akun SinauEnglish V2 dimulai dari nol; backup database operasional dikelola melalui prosedur pemulihan pengembang.
+      </p>
     </div>
   );
 }
