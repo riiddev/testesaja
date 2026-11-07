@@ -30,8 +30,24 @@ export function getCookieHeader(headers) {
     .join("; ");
 }
 
+export function getRequestCookieHeader(headers) {
+  if (!headers) return "";
+  if (typeof headers.get === "function") return headers.get("cookie") || "";
+  return headers.cookie || headers.Cookie || "";
+}
+
 export async function getBetterAuthSessionFromHeaders(headers) {
   const cookie = getCookieHeader(headers);
+  if (!cookie) return null;
+
+  const { auth } = await import("./better-auth.js");
+  return auth.api.getSession({
+    headers: new Headers({ cookie })
+  });
+}
+
+export async function getBetterAuthSessionFromRequestHeaders(headers) {
+  const cookie = getRequestCookieHeader(headers);
   if (!cookie) return null;
 
   const { auth } = await import("./better-auth.js");
