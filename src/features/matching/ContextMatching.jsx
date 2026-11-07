@@ -19,6 +19,10 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
   const [hintsRemaining, setHintsRemaining] = useState(3);
   const [score, setScore] = useState(0);
   const [lines, setLines] = useState([]);
+  const [recordState, setRecordState] = useState("idle");
+  const [recordError, setRecordError] = useState("");
+  const [recordReward, setRecordReward] = useState({ xp: 0, coins: 0 });
+  const recordStateRef = useRef("idle");
 
   // Dragging state
   const [dragState, setDragState] = useState(null); // { startId, startX, startY, currentX, currentY }
@@ -36,6 +40,10 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
         throw new Error(response?.error || response?.message || "Server belum mengirim ronde resmi.");
       }
       setRoundData(response.data);
+      recordStateRef.current = "idle";
+      setRecordState("idle");
+      setRecordError("");
+      setRecordReward({ xp: 0, coins: 0 });
     } catch (error) {
       setRoundData(null);
       setRoundError(error?.message || "Gagal memuat ronde Matching.");
@@ -57,6 +65,10 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
     setHintedPair(null);
     setLines([]);
     setDragState(null);
+    recordStateRef.current = "idle";
+    setRecordState("idle");
+    setRecordError("");
+    setRecordReward({ xp: 0, coins: 0 });
     if (lvl !== levelFilter) {
       setLevelFilter(lvl);
     } else {
@@ -73,6 +85,10 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
     setHintedPair(null);
     setLines([]);
     setDragState(null);
+    recordStateRef.current = "idle";
+    setRecordState("idle");
+    setRecordError("");
+    setRecordReward({ xp: 0, coins: 0 });
     setLevelFilter(lvl);
   };
 
@@ -118,10 +134,47 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
     return () => window.removeEventListener("resize", updateLines);
   }, [updateLines]);
 
-  // Evaluate pair match
+  const saveCompletedRound = useCallback(async (pairs) => {
+    if (recordStateRef.current === "saving" || recordStateRef.current === "saved") return;
+
+    if (!onRecordMatchComplete) {
+      recordStateRef.current = "error";
+      setRecordState("error");
+      setRecordError("Ronde selesai, tetapi pencatatan akun belum terhubung.");
+      return;
+    }
+
+    recordStateRef.current = "saving";
+    setRecordState("saving");
+    setRecordError("");
+
+    try {
+      const result = await onRecordMatchComplete({
+        roundId: roundData.roundId,
+        roundToken: roundData.roundToken,
+        matchedPairs: pairs
+      });
+
+      if (!result?.success) {
+        throw new Error(result?.error || "Server belum mengonfirmasi hasil Matching.");
+      }
+
+      recordStateRef.current = "saved";
+      setRecordState("saved");
+      setRecordReward({
+        xp: Number(result.earnedXp) || 0,
+        coins: Number(result.earnedCoins) || 0
+      });
+    } catch (error) {
+      recordStateRef.current = "error";
+      setRecordState("error");
+      setRecordError(error?.message || "Hasil Matching belum tersimpan. Coba simpan lagi.");
+    }
+  }, [onRecordMatchComplete, roundData]);
+
+  // Evaluate pair match.
   const evaluateMatch = (leftItem, rightItem) => {
     if (leftItem.wordId === rightItem.wordId) {
-      // MATCH SUCCESS
       const newMatched = [...matchedPairs, { leftId: leftItem.id, rightId: rightItem.id, wordId: leftItem.wordId }];
       setMatchedPairs(newMatched);
       setScore((prev) => prev + 20);
@@ -129,18 +182,10 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
       setSelectedRight(null);
       setHintedPair(null);
 
-      // Trigger reward callback if round complete
       if (newMatched.length === roundData.totalPairs) {
-        if (onRecordMatchComplete) {
-          onRecordMatchComplete({
-            roundId: roundData.roundId,
-            roundToken: roundData.roundToken,
-            matchedPairs: newMatched
-          });
-        }
+        void saveCompletedRound(newMatched);
       }
     } else {
-      // MATCH FAILED (Micro-shake & red curve)
       setWrongPair({ leftId: leftItem.id, rightId: rightItem.id });
       setTimeout(() => {
         setWrongPair(null);
@@ -460,7 +505,7 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
               <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
               <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
               <path d="M4 22h16"/>
-              <path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1h10v-1c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-2.34"/>
+              <path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1h10v-1c-.55 0-1-.45-1-1v-2.34"/>
               <path d="M6 4h12v5a6 6 0 0 1-12 0V4Z"/>
             </svg>
           </div>
@@ -470,18 +515,45 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
               Putaran Selesai Sempurna!
             </h3>
             <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--color-text-secondary)" }}>
-              Kamu berhasil mencocokkan seluruh 5 kalimat konteks dengan kata target yang presisi.
+              Seluruh pasangan sudah cocok. Hasilnya perlu dikonfirmasi server sebelum hadiah dan progres misi diperbarui.
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-3)", margin: "var(--space-2) 0" }}>
-            <span className="reward-badge reward-exp" style={{ fontSize: "var(--text-sm)", padding: "6px 14px" }}>
-              +50 EXP
-            </span>
-            <span className="reward-badge reward-coins" style={{ fontSize: "var(--text-sm)", padding: "6px 14px" }}>
-              +20 Koin Sinau
-            </span>
-          </div>
+          {recordState === "saving" && (
+            <p role="status" aria-live="polite">Menyimpan hasil Matching ke akun...</p>
+          )}
+
+          {recordState === "saved" && (
+            <div style={{ display: "flex", gap: "var(--space-3)", margin: "var(--space-2) 0" }} role="status" aria-live="polite">
+              {recordReward.xp > 0 && (
+                <span className="reward-badge reward-exp" style={{ fontSize: "var(--text-sm)", padding: "6px 14px" }}>
+                  +{recordReward.xp} EXP
+                </span>
+              )}
+              {recordReward.coins > 0 && (
+                <span className="reward-badge reward-coins" style={{ fontSize: "var(--text-sm)", padding: "6px 14px" }}>
+                  +{recordReward.coins} Koin Sinau
+                </span>
+              )}
+              {recordReward.xp === 0 && recordReward.coins === 0 && (
+                <span className="scholar-chip chip-neutral">Ronde tersimpan. Batas hadiah harian Matching mungkin sudah tercapai.</span>
+              )}
+            </div>
+          )}
+
+          {recordState === "error" && (
+            <div role="alert" style={{ color: "var(--color-danger)", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+              <span>{recordError}</span>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => void saveCompletedRound(matchedPairs)}
+                style={{ minHeight: "44px", alignSelf: "center" }}
+              >
+                Coba Simpan Lagi
+              </button>
+            </div>
+          )}
 
           <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
             <button
@@ -489,6 +561,7 @@ export function ContextMatching({ vocabulary = [], onRecordMatchComplete }) {
               className="btn btn-primary"
               onClick={() => startNewRound()}
               id="next-matching-round-btn"
+              disabled={recordState !== "saved"}
               style={{ minHeight: "44px" }}
             >
               <><IconRefresh size={13} style={{ marginRight: 4 }} /> Putaran Berikutnya</>
